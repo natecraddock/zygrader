@@ -4,6 +4,9 @@ import json
 # Only change these if you know what you are doing!
 VERSION = "1.0"
 
+# TODO: save this in configuration
+CLASS_CODE = "BYUCS142Fall2019"
+
 DATA_DIRECTORY = ".zygrader_data"
 STUDENT_DATA = os.path.join(DATA_DIRECTORY, "students.json")
 LABS_DATA = os.path.join(DATA_DIRECTORY, "labs.json")

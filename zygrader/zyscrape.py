@@ -1,9 +1,10 @@
 """ zyscrape - A wrapper around the zyBooks API """
-
 import requests
 import io
 import zipfile
 from datetime import datetime, timezone
+
+from . import config
 
 class Zyscrape:
     session = None
@@ -43,7 +44,8 @@ class Zyscrape:
         return score
 
     def get_submission(self, part_id, user_id):
-        submission_url = f"https://zyserver.zybooks.com/v1/zybook/BYUCS142Fall2019/programming_submission/{part_id}/user/{user_id}"
+        class_code = config.zygrader.CLASS_CODE
+        submission_url = f"https://zyserver.zybooks.com/v1/zybook/{class_code}/programming_submission/{part_id}/user/{user_id}"
         payload = {"auth_token": Zyscrape.token}
 
         r = Zyscrape.session.get(submission_url, json=payload)
