@@ -4,6 +4,7 @@ import zipfile
 import requests
 import tempfile
 import subprocess
+import curses
 
 from . import data
 
@@ -60,24 +61,29 @@ def grade(window: Window, scraper, students, assignments):
                 window.create_popup("Sorry...", msg)
                 continue
             
-            # Lock student for grading
-            data.lock.lock_lab(student, assignment)
+            try:
+                # Lock student for grading
+                data.lock.lock_lab(student, assignment)
 
-            submission = scraper.download_assignment(str(student.id), assignment)
+                submission = scraper.download_assignment(str(student.id), assignment)
 
-            open_files(window, submission)
+                open_files(window, submission)
 
-            msg = [f"{student.full_name}'s submission downloaded", ""]
+                msg = [f"{student.full_name}'s submission downloaded", ""]
 
-            for part in submission["parts"]:
-                msg.append(f"{part['name']} {part['score']}/{part['max_score']} {part['date']}")
-            msg.append("")
-            msg.append(f"Total Score: {submission['score']}/{submission['max_score']}")
-            
-            window.create_popup("Downloaded", msg)
+                for part in submission["parts"]:
+                    msg.append(f"{part['name']} {part['score']}/{part['max_score']} {part['date']}")
+                msg.append("")
+                msg.append(f"Total Score: {submission['score']}/{submission['max_score']}")
 
-            # After popup, unlock student
-            data.lock.unlock_lab(student, assignment)
+                window.create_popup("Downloaded", msg)
+
+                # After popup, unlock student
+                data.lock.unlock_lab(student, assignment)
+            except KeyboardInterrupt:
+                data.lock.unlock_lab(student, assignment)
+            except curses.error:
+                data.lock.unlock_lab(student, assignment)
 
 def config_menu(window: Window, scraper, config):
     if config["password"]:
