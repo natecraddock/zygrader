@@ -5,6 +5,7 @@ import requests
 import tempfile
 import subprocess
 import curses
+import sys
 
 from . import data
 
@@ -85,8 +86,8 @@ def grade(window: Window, scraper, students, assignments):
             except curses.error:
                 data.lock.unlock_lab(student, assignment)
 
-def config_menu(window: Window, scraper, config):
-    if config["password"]:
+def config_menu(window: Window, scraper, config_file):
+    if config_file["password"]:
         password_option = "Remove Saved Password"
     else:
         password_option = "Save Password"
@@ -95,36 +96,36 @@ def config_menu(window: Window, scraper, config):
     option = ""
 
     while option != "Back":
-        window.set_header(f"Config | {config['email']}")
+        window.set_header(f"Config | {config_file['email']}")
         option = window.menu_input(options)
 
         if option == "Change Credentials":
             email, password = config.user.create_account(window, scraper)
             save_password = window.create_bool_popup("Save Password", ["Would you like to save your password?"])
 
-            config["email"] = email
+            config_file["email"] = email
 
             if save_password:
-                config.user.encode_password(config, password)
+                config.user.encode_password(config_file, password)
 
-            config.user.write_config(config)
+            config.user.write_config(config_file)
 
         elif option == "Save Password":
             # First, get password and verify it is correct
-            email = config["email"]
+            email = config_file["email"]
             while True:
                 password = config.user.get_password(window)
 
                 if config.user.authenticate(window, scraper, email, password):
-                    config.user.encode_password(config, password)
-                    config.user.write_config(config)
+                    config.user.encode_password(config_file, password)
+                    config.user.write_config(config_file)
                     break
             
             window.create_popup("Saved Password", ["Password successfully saved"])
 
         elif option == "Remove Saved Password":
-            config["password"] = ""
-            config.user.write_config(config)
+            config_file["password"] = ""
+            config.user.write_config(config_file)
 
             window.create_popup("Removed Password", ["Password successfully removed"])
 
@@ -160,8 +161,11 @@ def other_menu(window: Window, students, assignments):
             print(student.full_name)
 
 """ Main program loop """
-def mainloop(window: Window, scraper, students, assignments, config):
-    options = ["Grade", "Config", "String Match", "Quit"]
+def mainloop(window: Window, scraper, students, assignments, config, admin_mode):
+    if admin_mode:
+        options = ["Grade", "Config", "String Match", "Quit"]
+    else:
+        options = ["Grade", "Config", "Quit"]
     option = ""
 
     while option != "Quit":
@@ -177,6 +181,12 @@ def mainloop(window: Window, scraper, students, assignments, config):
 
 """ zygrade startpoint """
 def main(window: Window):
+    # Read args to set admin mode
+    if "-a" in sys.argv:
+        admin = True
+    else:
+        admin = False
+
     # TODO: apply versioning
 
     # Load student and lab data
@@ -190,7 +200,7 @@ def main(window: Window):
     config_data = config.user.initial_config(window)
 
     scraper = Zyscrape()
-    mainloop(window, scraper, students, assignments, config_data)
+    mainloop(window, scraper, students, assignments, config_data, admin)
 
 def start():
     # Create a zygrader window
