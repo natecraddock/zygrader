@@ -39,7 +39,9 @@ def lock_lab(student: Student, lab: Lab):
 def unlock_lab(student: Student, lab: Lab):
     lock = get_lock_file_path(student, lab)
 
-    os.remove(lock)
+    # Only remove the lock if it exists
+    if os.path.exists(lock):
+        os.remove(lock)
 
 def unlock_all_labs_by_grader(username: str):
     # Look at all lock files
