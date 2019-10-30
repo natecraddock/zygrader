@@ -46,13 +46,13 @@ def open_files(window: Window, submission):
 def grade(window: Window, scraper, students, assignments):
     while True:
         # Choose lab
-        assignment = window.filtered_list(assignments, Lab.find)
+        assignment = window.filtered_list(assignments, "Assignment", Lab.find)
         if assignment is 0:
             break
 
         while True:
             # Get student
-            student = window.filtered_list(students, Student.find)
+            student = window.filtered_list(students, "Student", Student.find)
             if student is 0:
                 break
 

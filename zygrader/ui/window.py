@@ -213,8 +213,8 @@ class Window:
         else:
             return text.text
 
-    def filtered_list(self, input_data, filter_function=None):
-        list_input = components.FilteredList(1, 0, self.rows, self.cols, input_data, filter_function)
+    def filtered_list(self, input_data, prompt, filter_function=None):
+        list_input = components.FilteredList(1, 0, self.rows, self.cols, input_data, prompt, filter_function)
         self.operators.append(list_input)
         list_input.draw()
 

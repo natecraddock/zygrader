@@ -126,7 +126,7 @@ class FilteredList(Component):
             self.pad.addstr(line, 0, display_text)
             line += 1
 
-    def __init__(self, y, x, rows, cols, options, filter_function):
+    def __init__(self, y, x, rows, cols, options, prompt, filter_function):
         self.y = y
         self.x = x
 
@@ -141,6 +141,8 @@ class FilteredList(Component):
         self.scroll = 0
         self.selected_index = 1
         self.filter_text = ""
+
+        self.prompt = prompt
 
         # List box
         self.pad = curses.newpad(self.height, self.width)
@@ -175,7 +177,7 @@ class FilteredList(Component):
 
         self.pad.refresh(self.scroll, 0, self.y, self.x, self.available_rows - 1, self.available_cols)
 
-        self.window.addstr(0, 0, self.filter_text)
+        self.window.addstr(0, 0, f"{self.prompt}: {self.filter_text}")
         self.window.refresh()
 
     def clear(self):
