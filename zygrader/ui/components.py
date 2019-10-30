@@ -166,6 +166,11 @@ class FilteredList(Component):
         self.window.erase()
 
         self.data = self.__filter_data(self.options, self.filter_function, self.filter_text)
+
+        # If no matches, set selected index to 0
+        if len(self.data) is 1:
+            self.selected_index = 0
+
         self.__fill_text(self.data, self.selected_index)
 
         self.pad.refresh(self.scroll, 0, self.y, self.x, self.available_rows - 1, self.available_cols)
@@ -179,16 +184,22 @@ class FilteredList(Component):
     def down(self):
         if self.selected_index < len(self.data) - 1:
             self.selected_index += 1
+        if self.selected_index > self.available_rows - 2:
+            self.scroll += 1
 
     def up(self):
         if self.selected_index > 0:
             self.selected_index -= 1
+        if self.selected_index < self.scroll:
+            self.scroll -= 1
 
     def delchar(self):
         self.filter_text = self.filter_text[:-1]
 
     def addchar(self, c):
         self.filter_text += c
+
+        self.selected_index = 1
     
     def selected(self):
         if self.selected_index is 0:
