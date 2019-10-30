@@ -10,7 +10,6 @@ CLASS_CODE = "BYUCS142Fall2019"
 DATA_DIRECTORY = ".zygrader_data"
 STUDENT_DATA = os.path.join(DATA_DIRECTORY, "students.json")
 LABS_DATA = os.path.join(DATA_DIRECTORY, "labs.json")
-DATABASE = os.path.join(DATA_DIRECTORY, "zygrader.pickle")
 
 def setup_data_directory():
     """If no data directory exists, create it"""

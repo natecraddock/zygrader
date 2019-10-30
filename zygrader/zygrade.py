@@ -186,8 +186,6 @@ def main(window: Window):
     # Ensure config directories exist
     config.zygrader.start()
 
-    data.lock.init_database(assignments)
-
     # Get user configuration
     config_data = config.user.initial_config(window)
 
