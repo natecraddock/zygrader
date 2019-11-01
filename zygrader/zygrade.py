@@ -187,7 +187,8 @@ def main(window: Window):
     else:
         admin = False
 
-    # TODO: apply versioning
+    # Apply versioning
+    config.versioning.do_versioning(window)
 
     # Load student and lab data
     students = load_students(config.zygrader.STUDENT_DATA)

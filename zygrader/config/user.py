@@ -25,6 +25,13 @@ def write_config(config):
     with open(config_path, "w") as config_file:
         json.dump(config, config_file)
 
+def get_config():
+    config_dir = os.path.join(os.path.expanduser("~"), ".zygrader/")
+    config_path = os.path.join(config_dir, "config")
+
+    with open(config_path, "r") as config_file:
+        return json.load(config_file)
+
 def decode_password(config):
     return base64.b64decode(config["password"])
 
