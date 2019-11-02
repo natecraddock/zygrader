@@ -23,8 +23,8 @@ def do_versioning(window: Window):
         user_version = 1.0
 
     if compare_versions(1.1, user_version):
-        msg = ["zygrader Version 1.1", "", "Labels were added to the text search filter box",
-        "to prompt what the user can filter the list by."]
+        msg = ["zygrader Version 1.1", "", "Labels were added to the text search filter boxes",
+        "to prompt for a filter string."]
 
         window.create_popup("Version 1.1", msg)
     
