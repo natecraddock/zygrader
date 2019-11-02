@@ -187,9 +187,6 @@ def main(window: Window):
     else:
         admin = False
 
-    # Apply versioning
-    config.versioning.do_versioning(window)
-
     # Load student and lab data
     students = load_students(config.zygrader.STUDENT_DATA)
     assignments = load_assignments(config.zygrader.LABS_DATA)
@@ -199,6 +196,9 @@ def main(window: Window):
 
     # Get user configuration
     config_data = config.user.initial_config(window)
+
+    # Apply versioning
+    config.versioning.do_versioning(window)
 
     scraper = Zyscrape()
     mainloop(window, scraper, students, assignments, config_data, admin)
