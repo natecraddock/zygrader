@@ -75,15 +75,11 @@ class Zyscrape:
 
         recent_submission = r.json()["submissions"][-1] 
         response["zip_url"] = recent_submission["zip_location"]
-        
-        time = recent_submission["date_submitted"]
 
         response["score"] = self._get_score(recent_submission)
         response["max_score"] = self._get_max_score(recent_submission)
 
-        date = datetime.strptime(time, "%Y-%m-%dT%H:%M:%SZ")
-        date = date.replace(tzinfo=timezone.utc).astimezone(tz=None)
-        response["date"] = date.strftime("%I:%M %p - %Y-%m-%d")
+        response["date"] = self.__get_time(recent_submission)
 
         # Success
         response["success"] = True
@@ -122,22 +118,35 @@ class Zyscrape:
             
     def check_submissions(self, user_id, part, string):
         """Check each of a student's submissions for a given string"""
-        sr = self.get_submission(part["id"], user_id)
+        submission_response = self.get_submission(part["id"], user_id)
 
-        if not sr.ok:
-            return False
+        if not submission_response.ok:
+            return {"success": False}
 
-        all_submissions = sr.json()["submissions"]
+        all_submissions = submission_response.json()["submissions"]
+
+        response = {"success": False}
 
         for submission in all_submissions:
             # Get file from zip url
             r = requests.get(submission["zip_location"], stream=True)
-            z = zipfile.ZipFile(io.BytesIO(r.content))
+
+            try:
+                z = zipfile.ZipFile(io.BytesIO(r.content))
+            except zipfile.BadZipFile:
+                response["error"] = "BadZipFile Error"
+                continue
 
             f = self.extract_zip(z)
 
+            # Check each file for the matched string
             for source_file in f.keys():
                 if f[source_file].find(string) != -1:
-                    return True
+
+                    # Get the date and time of the submission and return it
+                    response["time"] = self.__get_time(submission)
+                    response["success"] = True
+
+                    return response
         
-        return False
+        return response
