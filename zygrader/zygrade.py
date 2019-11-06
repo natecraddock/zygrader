@@ -139,7 +139,7 @@ def other_menu(window: Window, students, assignments):
 
     # Select the lab part if needed
     if len(assignment.parts) > 1:
-        p = window.filtered_list([name for name in assignment.parts])
+        p = window.filtered_list([name for name in assignment.parts], "part")
         if p is 0:
             return
         part = assignment.parts[assignment.parts.index(p)]
@@ -148,17 +148,25 @@ def other_menu(window: Window, students, assignments):
 
     search_string = window.text_input("Enter a search string")
 
-    print(search_string)
+    logger = window.new_logger()
 
     matches = []
 
-    f = open("test.txt", "a")
+    f = open("test.txt", "w")
+    student_num = 1
+
     for student in students:
+        logger.log(f"[{student_num}/{len(students)}] Checking {student.full_name}")
         if scraper.check_submissions(str(student.id), part, search_string):
             matches.append(student)
             f.write(student.full_name)
             f.write("\n")
-            print(student.full_name)
+
+            logger.append(f" found {search_string}")
+
+        student_num += 1
+
+    window.remove_logger(logger)
 
 """ Main program loop """
 def mainloop(window: Window, scraper, students, assignments, config, admin_mode):
