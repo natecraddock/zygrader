@@ -7,6 +7,10 @@ from datetime import datetime, timezone
 from . import config
 
 class Zyscrape:
+    NO_ERROR = 0
+    NO_SUBMISSION = 1
+    COMPILE_ERROR = 2
+
     session = None
     token = ""
 
@@ -59,7 +63,7 @@ class Zyscrape:
         return r
 
     def download_submission(self, part_id, user_id):
-        response = {"success": False}
+        response = {"code": Zyscrape.NO_ERROR}
 
         r = self.get_submission(part_id, user_id)
 
@@ -71,32 +75,37 @@ class Zyscrape:
 
         # Student has not submitted
         if not all_submissions:
+            response["code"] = Zyscrape.NO_SUBMISSION
             return response
 
-        recent_submission = r.json()["submissions"][-1] 
-        response["zip_url"] = recent_submission["zip_location"]
+        recent_submission = r.json()["submissions"][-1]
 
-        response["score"] = self._get_score(recent_submission)
+        # If student's code did not compile their score is 0
+        if "compile_error" in recent_submission["results"]:
+            response["score"] = 0
+            response["code"] = Zyscrape.COMPILE_ERROR
+        else:
+            response["score"] = self._get_score(recent_submission)
+
         response["max_score"] = self._get_max_score(recent_submission)
 
         response["date"] = self.__get_time(recent_submission)
+        response["zip_url"] = recent_submission["zip_location"]
 
         # Success
-        response["success"] = True
         return response
 
     def download_assignment(self, user_id, assignment):
-        response = {"success": True, "name": assignment.name, "score": 0, "max_score": 0, "parts": []}
+        response = {"code": Zyscrape.NO_ERROR, "name": assignment.name, "score": 0, "max_score": 0, "parts": []}
         
         has_submitted = False
         for part in assignment.parts:
-            response_part = {"name": part["name"]}
+            response_part = {"code": Zyscrape.NO_ERROR, "name": part["name"]}
             submission = self.download_submission(part["id"], user_id)
 
-            if submission["success"]:
+            if submission["code"] is not Zyscrape.NO_SUBMISSION:
                 has_submitted = True
 
-            if submission["success"]:
                 response["score"] += submission["score"]
                 response["max_score"] += submission["max_score"]
 
@@ -106,10 +115,13 @@ class Zyscrape:
                 response_part["date"] = submission["date"]
 
                 response["parts"].append(response_part)
+
+                if submission["code"] is Zyscrape.COMPILE_ERROR:
+                    response_part["code"] = Zyscrape.COMPILE_ERROR
         
         # If student has not submitted, just return a non-success message
         if not has_submitted:
-            return {"success": False}
+            return {"code": Zyscrape.NO_SUBMISSION}
 
         return response
 
@@ -134,7 +146,7 @@ class Zyscrape:
             try:
                 z = zipfile.ZipFile(io.BytesIO(r.content))
             except zipfile.BadZipFile:
-                response["error"] = "BadZipFile Error"
+                response["error"] = f"BadZipFile Error on submission {self.__get_time(submission)}"
                 continue
 
             f = self.extract_zip(z)
