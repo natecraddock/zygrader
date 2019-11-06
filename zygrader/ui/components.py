@@ -289,3 +289,47 @@ class TextInput(Component):
 
     def close(self):
         curses.curs_set(0)
+
+class Logger(Component):
+
+    PADDING = 2
+
+    def __init__(self, y, x, height, width):
+        self.height = height
+        self.width = width
+
+        self.window = curses.newwin(height, width, y, x)
+
+        # Maintain a log (list) of data to display
+        self.__log = []
+
+    def resize(self, rows, cols):
+        self.height = rows
+        self.width = cols
+
+        self.window.resize(self.height, self.width)
+
+    def draw(self):
+        self.window.erase()
+
+        # Draw the last n elements of the log, with n being the available height
+        # minus PADDING to give a border on the top and bottom
+
+        NUM_LINES = self.height - Logger.PADDING
+
+        liney = Logger.PADDING // 2
+        for line in self.__log[-NUM_LINES:]:
+            self.window.addstr(liney, 0, line)
+            liney += 1
+
+        self.window.refresh()
+
+    def log(self, entry):
+        self.__log.append(entry)
+
+        self.draw()
+
+    def append(self, entry):
+        self.__log[-1] += entry
+
+        self.draw()

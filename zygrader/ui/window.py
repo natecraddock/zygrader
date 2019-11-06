@@ -256,3 +256,14 @@ class Window:
         self.draw()
 
         return menu_input.get_option(self.event_value)
+
+    def new_logger(self):
+        logger = components.Logger(1, 0, self.rows - 1, self.cols)
+        self.operators.append(logger)
+        logger.draw()
+
+        return logger
+
+    def remove_logger(self, logger):
+        self.operators.remove(logger)
+        self.draw()
