@@ -58,8 +58,10 @@ def grade(window: Window, scraper, students, assignments):
 
             # Wait for student's assignment to be available
             if data.lock.is_lab_locked(student, assignment):
-                msg = ["This student is already being graded"]
-                window.create_popup("Sorry...", msg)
+                netid = data.lock.get_locked_netid(student, assignment)
+
+                msg = [f"This student is already being graded by {netid}"]
+                window.create_popup("Student Locked", msg)
                 continue
             
             try:

@@ -22,6 +22,16 @@ def is_lab_locked(student: Student, lab: Lab):
 
     return False
 
+def get_locked_netid(student: Student, lab: Lab):
+    # Try to match this against all the lock files in the directory
+    lock_path_end = f"{lab.parts[0]['id']}.{student.id}.lock"
+
+    for lock in get_lock_files():
+        if lock.endswith(lock_path_end):
+            return lock.split(".")[0]
+
+    return ""
+
 def get_lock_file_path(student: Student, lab: Lab):
     username = getpass.getuser()
     # Use the lab id of the first part (should be unique)
