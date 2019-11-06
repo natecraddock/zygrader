@@ -27,6 +27,12 @@ class Zyscrape:
         Zyscrape.token = r.json()["session"]["auth_token"]
         return True
 
+    def __get_time(self, submission):
+        time = submission["date_submitted"]
+        date = datetime.strptime(time, "%Y-%m-%dT%H:%M:%SZ")
+        date = date.replace(tzinfo=timezone.utc).astimezone(tz=None)
+        return date.strftime("%I:%M %p - %Y-%m-%d")
+
     def _get_score(self, submission):        
         score = 0
         results = submission["results"]["test_results"]
