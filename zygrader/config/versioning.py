@@ -1,3 +1,6 @@
+import os
+from shutil import copyfile
+
 from ..ui.window import Window
 from . import user
 from . import zygrader
@@ -28,5 +31,18 @@ def do_versioning(window: Window):
 
         window.create_popup("Version 1.1", msg)
     
+    if compare_versions(1.2, user_version):
+        # "Reinstall" zygrader so the admin flag works
+        run_path = "/users/groups/cs142ta/tools/zygrader/run"
+        copyfile(run_path, os.path.join(os.path.expanduser("~"), "Desktop/zygrader"))
+        copyfile(run_path, os.path.join(os.path.expanduser("~"), ".zygrader/zygrader"))
+
+        msg = ["zygrader Version 1.2", "",
+               "Show a message when grading a student who has not submitted.",
+               "Show netid of the grading TA when a student's submission is locked.",
+               "Show a warning if the student's code failed to compile."]
+
+        window.create_popup("Version 1.2", msg)
+
     # Write the current version to the user's config file
     write_current_version(config)
