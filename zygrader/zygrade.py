@@ -139,16 +139,17 @@ def config_menu(window: Window, scraper, config_file):
             window.create_popup("Removed Password", ["Password successfully removed"])
 
 def other_menu(window: Window, students, assignments):
+    window.set_header(f"String Match")
     scraper = Zyscrape()
 
     # Choose lab
-    assignment = window.filtered_list(assignments, Lab.find)
+    assignment = window.filtered_list(assignments, "Assignment", Lab.find)
     if assignment is 0:
         return
 
     # Select the lab part if needed
     if len(assignment.parts) > 1:
-        p = window.filtered_list([name for name in assignment.parts], "part")
+        p = window.filtered_list([name for name in assignment.parts], "Part")
         if p is 0:
             return
         part = assignment.parts[assignment.parts.index(p)]
@@ -157,25 +158,31 @@ def other_menu(window: Window, students, assignments):
 
     search_string = window.text_input("Enter a search string")
 
+    output_path = window.text_input("Enter the output path including filename [~ is supported]")
+
     logger = window.new_logger()
 
-    matches = []
-
-    f = open("test.txt", "w")
+    log_file = open(os.path.expanduser(output_path), "w")
     student_num = 1
 
     for student in students:
         logger.log(f"[{student_num}/{len(students)}] Checking {student.full_name}")
-        if scraper.check_submissions(str(student.id), part, search_string):
-            matches.append(student)
-            f.write(student.full_name)
-            f.write("\n")
+
+        match_result = scraper.check_submissions(str(student.id), part, search_string)
+
+        if match_result["success"]:
+            log_file.write(f"{student.full_name} matched {match_result['time']}\n")
 
             logger.append(f" found {search_string}")
+
+        # Check for and log errors
+        if "error" in match_result:
+            log_file.write(f"ERROR on {student.full_name}: {match_result['error']}")
 
         student_num += 1
 
     window.remove_logger(logger)
+    log_file.close()
 
 """ Main program loop """
 def mainloop(window: Window, scraper, students, assignments, config, admin_mode):
