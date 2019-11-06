@@ -71,12 +71,11 @@ def grade(window: Window, scraper, students, assignments):
                 submission = scraper.download_assignment(str(student.id), assignment)
 
                 # Only grade if student has submitted
-                if not submission["success"]:
-                    data.lock.unlock_lab(student, assignment)
-
+                if submission["code"] is Zyscrape.NO_SUBMISSION:
                     msg = [f"{student.full_name} has not submitted"]
                     window.create_popup("No Submissions", msg)
 
+                    data.lock.unlock_lab(student, assignment)
                     continue
 
                 open_files(window, submission)
@@ -85,6 +84,8 @@ def grade(window: Window, scraper, students, assignments):
 
                 for part in submission["parts"]:
                     msg.append(f"{part['name']} {part['score']}/{part['max_score']} {part['date']}")
+                    if part["code"] == Zyscrape.COMPILE_ERROR:
+                        msg[-1] += f" [Compile Error]"
                 msg.append("")
                 msg.append(f"Total Score: {submission['score']}/{submission['max_score']}")
 
