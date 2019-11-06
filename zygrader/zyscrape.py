@@ -84,12 +84,15 @@ class Zyscrape:
         return response
 
     def download_assignment(self, user_id, assignment):
-        # TODO: Check if this assignment is already being graded
         response = {"success": True, "name": assignment.name, "score": 0, "max_score": 0, "parts": []}
         
+        has_submitted = False
         for part in assignment.parts:
             response_part = {"name": part["name"]}
             submission = self.download_submission(part["id"], user_id)
+
+            if submission["success"]:
+                has_submitted = True
 
             if submission["success"]:
                 response["score"] += submission["score"]
@@ -102,6 +105,10 @@ class Zyscrape:
 
                 response["parts"].append(response_part)
         
+        # If student has not submitted, just return a non-success message
+        if not has_submitted:
+            return {"success": False}
+
         return response
 
     def extract_zip(self, input_zip):

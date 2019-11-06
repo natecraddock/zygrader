@@ -68,6 +68,15 @@ def grade(window: Window, scraper, students, assignments):
 
                 submission = scraper.download_assignment(str(student.id), assignment)
 
+                # Only grade if student has submitted
+                if not submission["success"]:
+                    data.lock.unlock_lab(student, assignment)
+
+                    msg = [f"{student.full_name} has not submitted"]
+                    window.create_popup("No Submissions", msg)
+
+                    continue
+
                 open_files(window, submission)
 
                 msg = [f"{student.full_name}'s submission downloaded", ""]
