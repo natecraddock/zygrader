@@ -7,6 +7,12 @@ from ..zyscrape import Zyscrape
 from ..ui.window import Window
 from ..ui.components import TextInput
 
+EDITORS = {
+    "Pluma": "/usr/bin/pluma",
+    "VSCode": "/usr/bin/code",
+    "Atom": "/usr/bin/atom",
+}
+
 def install(config_dir):
     # Create config directory
     if not os.path.exists(config_dir):

@@ -40,8 +40,9 @@ def open_files(window: Window, submission):
             with open(os.path.join(tmp_dir, source_file), 'w') as source_out:
                 source_out.write(zip_files[source_file])
     
-    # TODO: Custom text editor
-    subprocess.Popen(f"/usr/bin/pluma {tmp_dir}/*", shell=True)
+    user_editor = config.user.get_config()["editor"]
+    editor_path = config.user.EDITORS[user_editor]
+    subprocess.Popen(f"{editor_path} {tmp_dir}/*", shell=True)
 
 def grade(window: Window, scraper, students, assignments):
     while True:
@@ -104,7 +105,7 @@ def config_menu(window: Window, scraper, config_file):
     else:
         password_option = "Save Password"
     
-    options = ["Change Credentials", password_option, "Back"]
+    options = ["Change Credentials", password_option, "Set Editor", "Back"]
     option = ""
 
     while option != "Back":
@@ -140,6 +141,12 @@ def config_menu(window: Window, scraper, config_file):
             config.user.write_config(config_file)
 
             window.create_popup("Removed Password", ["Password successfully removed"])
+
+        elif option == "Set Editor":
+            editor = window.filtered_list(list(config.user.EDITORS.keys()), "Editor")
+
+            config_file["editor"] = editor
+            config.user.write_config(config_file)
 
 def other_menu(window: Window, students, assignments):
     window.set_header(f"String Match")
