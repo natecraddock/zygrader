@@ -37,7 +37,10 @@ class Zyscrape:
         date = date.replace(tzinfo=timezone.utc).astimezone(tz=None)
         return date.strftime("%I:%M %p - %Y-%m-%d")
 
-    def _get_score(self, submission):        
+    def _get_score(self, submission):
+        if "compile_error" in submission["results"]:
+            return 0
+
         score = 0
         results = submission["results"]["test_results"]
         for result in results:
@@ -82,11 +85,9 @@ class Zyscrape:
 
         # If student's code did not compile their score is 0
         if "compile_error" in recent_submission["results"]:
-            response["score"] = 0
             response["code"] = Zyscrape.COMPILE_ERROR
-        else:
-            response["score"] = self._get_score(recent_submission)
 
+        response["score"] = self._get_score(recent_submission)
         response["max_score"] = self._get_max_score(recent_submission)
 
         response["date"] = self.__get_time(recent_submission)
