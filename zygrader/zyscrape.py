@@ -11,6 +11,8 @@ class Zyscrape:
     NO_SUBMISSION = 1
     COMPILE_ERROR = 2
 
+    SUBMISSION_HIGHEST = "highest_score"  # Grade the most recent of the highest score
+
     session = None
     token = ""
 
@@ -65,7 +67,18 @@ class Zyscrape:
 
         return r
 
-    def download_submission(self, part_id, user_id):
+    def __get_submission_highest_score(self, submissions):
+        highest_score = max([self._get_score(s) for s in submissions])
+
+        for submission in reversed(submissions):
+            if self._get_score(submission) is highest_score:
+                return submission
+
+
+    def __get_submission_most_recent(self, submissions):
+        return submissions[-1]
+
+    def download_submission(self, part_id, user_id, options):
         response = {"code": Zyscrape.NO_ERROR}
 
         r = self.get_submission(part_id, user_id)
@@ -73,25 +86,28 @@ class Zyscrape:
         if not r.ok:
             return response
 
-        # Strip out important information from the response json
-        all_submissions = r.json()["submissions"]
+        # Get submissions
+        submissions = r.json()["submissions"]
 
         # Student has not submitted
-        if not all_submissions:
+        if not submissions:
             response["code"] = Zyscrape.NO_SUBMISSION
             return response
 
-        recent_submission = r.json()["submissions"][-1]
+        if Zyscrape.SUBMISSION_HIGHEST in options:
+            submission = self.__get_submission_highest_score(submissions)
+        else:
+            submission = self.__get_submission_most_recent(submissions)
 
         # If student's code did not compile their score is 0
-        if "compile_error" in recent_submission["results"]:
+        if "compile_error" in submission["results"]:
             response["code"] = Zyscrape.COMPILE_ERROR
 
-        response["score"] = self._get_score(recent_submission)
-        response["max_score"] = self._get_max_score(recent_submission)
+        response["score"] = self._get_score(submission)
+        response["max_score"] = self._get_max_score(submission)
 
-        response["date"] = self.__get_time(recent_submission)
-        response["zip_url"] = recent_submission["zip_location"]
+        response["date"] = self.__get_time(submission)
+        response["zip_url"] = submission["zip_location"]
 
         # Success
         return response
@@ -102,7 +118,7 @@ class Zyscrape:
         has_submitted = False
         for part in assignment.parts:
             response_part = {"code": Zyscrape.NO_ERROR, "name": part["name"]}
-            submission = self.download_submission(part["id"], user_id)
+            submission = self.download_submission(part["id"], user_id, assignment.options)
 
             if submission["code"] is not Zyscrape.NO_SUBMISSION:
                 has_submitted = True
