@@ -116,25 +116,23 @@ class FilteredList(Component):
         return data
 
     def __fill_text(self, lines, selected_index):
-        self.pad.erase()
         line = 0
-        for l in lines:
-            if line is selected_index:
+        for l in lines[self.scroll:self.scroll+self.height - 1]:
+            if (line + self.scroll) == self.selected_index:
                 display_text = f"> {str(l)}"
+                self.window.addstr(line, 0, display_text, curses.A_BOLD)
             else:
                 display_text = f"  {str(l)}"
-            self.pad.addstr(line, 0, display_text)
+                self.window.addstr(line, 0, display_text, curses.A_DIM)
             line += 1
 
     def __init__(self, y, x, rows, cols, options, prompt, filter_function):
         self.y = y
         self.x = x
 
-        self.available_rows = rows - 1
-        self.available_cols = cols - 1
+        self.height = rows
+        self.width = cols
 
-        self.height = len(options) + 1
-        self.width = 1000
         self.options = options[:]
         self.filter_function = filter_function
 
@@ -145,27 +143,30 @@ class FilteredList(Component):
         self.prompt = prompt
 
         # List box
-        self.pad = curses.newpad(self.height, self.width)
+        self.window = curses.newwin(self.height - 1, self.width, y, x)
 
         # Text input
-        self.window = curses.newwin(1, cols, rows - 1, 0)
-        self.window.bkgd(" ", curses.color_pair(1))
+        self.text_input = curses.newwin(1, cols, self.height, 0)
+        self.text_input.bkgd(" ", curses.color_pair(1))
 
         curses.curs_set(1)
 
-    def resize(self, height, width):
-        self.available_rows = height - 1
-        self.available_cols = width - 1
+    def resize(self, rows, width):
+        self.height = rows - 1
+        self.width = width
 
         try:
-            self.window.mvwin(height - 1, 0)
+            self.window.mvwin(self.y, self.x)
+            self.text_input.mvwin(self.height, 0)
         except:
             pass
-        self.window.resize(1, width)
+
+        self.window.resize(self.height - 1, self.width)
+        self.text_input.resize(1, self.width)
 
     def draw(self):
-        self.pad.erase()
         self.window.erase()
+        self.text_input.erase()
 
         self.data = self.__filter_data(self.options, self.filter_function, self.filter_text)
 
@@ -174,19 +175,18 @@ class FilteredList(Component):
             self.selected_index = 0
 
         self.__fill_text(self.data, self.selected_index)
-
-        self.pad.refresh(self.scroll, 0, self.y, self.x, self.available_rows - 1, self.available_cols)
-
-        self.window.addstr(0, 0, f"{self.prompt}: {self.filter_text}")
         self.window.refresh()
+
+        self.text_input.addstr(0, 0, f"{self.prompt}: {self.filter_text}")
+        self.text_input.refresh()
 
     def clear(self):
         curses.curs_set(0)
 
     def set_scroll(self):
         # Cursor set below view
-        if self.selected_index > self.scroll + self.available_rows - 2:
-            self.scroll = self.selected_index - self.available_rows + 2
+        if (self.selected_index + 1) > self.scroll + self.height - 1:
+            self.scroll = self.selected_index + 2 - self.height
 
         # Cursor set above view
         elif self.selected_index < self.scroll:
@@ -203,9 +203,15 @@ class FilteredList(Component):
     def delchar(self):
         self.filter_text = self.filter_text[:-1]
 
+        self.selected_index = 0
+        self.set_scroll()
+        self.selected_index = 1
+
     def addchar(self, c):
         self.filter_text += c
+        self.selected_index = 0
 
+        self.set_scroll()
         self.selected_index = 1
     
     def selected(self):

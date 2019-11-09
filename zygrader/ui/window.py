@@ -73,7 +73,6 @@ class Window:
             operator.resize(self.rows, self.cols)
 
         self.draw(True)
-        self.draw()
 
     def set_header(self, text="", align=UI_CENTERED):
         """Set the header text"""        
@@ -214,7 +213,7 @@ class Window:
             return text.text
 
     def filtered_list(self, input_data, prompt, filter_function=None):
-        list_input = components.FilteredList(1, 0, self.rows, self.cols, input_data, prompt, filter_function)
+        list_input = components.FilteredList(1, 0, self.rows - 1, self.cols, input_data, prompt, filter_function)
         self.operators.append(list_input)
         list_input.draw()
 
