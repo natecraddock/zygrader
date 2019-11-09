@@ -68,12 +68,7 @@ class Zyscrape:
         return r
 
     def __get_submission_highest_score(self, submissions):
-        highest_score = max([self._get_score(s) for s in submissions])
-
-        for submission in reversed(submissions):
-            if self._get_score(submission) is highest_score:
-                return submission
-
+        return max(reversed(submissions), key=self._get_score) # Thanks Teikn
 
     def __get_submission_most_recent(self, submissions):
         return submissions[-1]
