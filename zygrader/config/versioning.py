@@ -44,5 +44,20 @@ def do_versioning(window: Window):
 
         window.create_popup("Version 1.2", msg)
 
+    if compare_versions(1.3, user_version):
+        # Add Pluma as the default editor to the user config
+        config["editor"] = "Pluma"
+        user.write_config(config)
+
+        msg = ["zygrader Version 1.3", "",
+               "Download highest-scoring submissions for exams.",
+               "Adds a setting to choose a text editor to open submissions with.",
+               "Scrolling past the end of lists will loop back to the beginning.",
+               "Lists now highlight the selected entry.",
+               "Resizing the terminal is more reliable.",
+               "Scrolling through a list quickly has less flickering."]
+
+        window.create_popup("Version 1.3", msg)
+
     # Write the current version to the user's config file
     write_current_version(config)

@@ -145,6 +145,9 @@ def config_menu(window: Window, scraper, config_file):
         elif option == "Set Editor":
             editor = window.filtered_list(list(config.user.EDITORS.keys()), "Editor")
 
+            if editor == 0:
+                break
+
             config_file["editor"] = editor
             config.user.write_config(config_file)
 
