@@ -120,9 +120,9 @@ class FilteredList(Component):
         line = 0
         for l in lines:
             if line is selected_index:
-                display_text = "> " + str(l)
+                display_text = f"> {str(l)}"
             else:
-                display_text = "  " + str(l)
+                display_text = f"  {str(l)}"
             self.pad.addstr(line, 0, display_text)
             line += 1
 
@@ -183,17 +183,22 @@ class FilteredList(Component):
     def clear(self):
         curses.curs_set(0)
 
+    def set_scroll(self):
+        # Cursor set below view
+        if self.selected_index > self.scroll + self.available_rows - 2:
+            self.scroll = self.selected_index - self.available_rows + 2
+
+        # Cursor set above view
+        elif self.selected_index < self.scroll:
+            self.scroll = self.selected_index
+
     def down(self):
-        if self.selected_index < len(self.data) - 1:
-            self.selected_index += 1
-        if self.selected_index > self.available_rows - 2:
-            self.scroll += 1
+        self.selected_index = (self.selected_index + 1) % len(self.data)
+        self.set_scroll()
 
     def up(self):
-        if self.selected_index > 0:
-            self.selected_index -= 1
-        if self.selected_index < self.scroll:
-            self.scroll -= 1
+        self.selected_index = (self.selected_index - 1) % len(self.data)
+        self.set_scroll()
 
     def delchar(self):
         self.filter_text = self.filter_text[:-1]
