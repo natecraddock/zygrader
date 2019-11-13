@@ -210,7 +210,8 @@ def other_menu(window: Window, students, assignments):
     log_file.close()
 
 """ Main program loop """
-def mainloop(window: Window, scraper, students, assignments, config, admin_mode):
+def mainloop(window: Window, scraper, students, assignments, admin_mode):
+    config_file = config.user.get_config()
     if admin_mode:
         options = ["Grade", "Config", "String Match", "Quit"]
     else:
@@ -218,13 +219,13 @@ def mainloop(window: Window, scraper, students, assignments, config, admin_mode)
     option = ""
 
     while option != "Quit":
-        window.set_header(f"Menu | {config['email']}")
+        window.set_header(f"Menu | {config_file['email']}")
         option = window.menu_input(options)
 
         if option == "Grade":
             grade(window, scraper, students, assignments)
         elif option == "Config":
-            config_menu(window, scraper, config)
+            config_menu(window, scraper, config_file)
         elif option == "String Match":
             other_menu(window, students, assignments)
 
@@ -250,7 +251,7 @@ def main(window: Window):
     config.versioning.do_versioning(window)
 
     scraper = Zyscrape()
-    mainloop(window, scraper, students, assignments, config_data, admin)
+    mainloop(window, scraper, students, assignments, admin)
 
 def start():
     # Create a zygrader window
