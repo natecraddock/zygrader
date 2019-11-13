@@ -126,10 +126,15 @@ class Zyscrape:
                 response_part["zip_url"] = submission["zip_url"]
                 response_part["date"] = submission["date"]
 
-                response["parts"].append(response_part)
 
                 if submission["code"] is Zyscrape.COMPILE_ERROR:
                     response_part["code"] = Zyscrape.COMPILE_ERROR
+            else:
+                response_part["code"] = Zyscrape.NO_SUBMISSION
+
+
+            response["parts"].append(response_part)
+
         
         # If student has not submitted, just return a non-success message
         if not has_submitted:
