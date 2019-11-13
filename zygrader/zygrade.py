@@ -19,6 +19,7 @@ from .zyscrape import Zyscrape
 
 from .ui import window
 from .ui.window import Window
+from .ui import components
 
 def extract_zip(file_prefix, input_zip):
     if file_prefix:
@@ -90,7 +91,7 @@ def grade(window: Window, scraper, students, assignments):
                 msg.append("")
                 msg.append(f"Total Score: {submission['score']}/{submission['max_score']}")
 
-                window.create_popup("Downloaded", msg)
+                window.create_popup("Downloaded", msg, components.Popup.ALIGN_LEFT)
 
                 # After popup, unlock student
                 data.lock.unlock_lab(student, assignment)
