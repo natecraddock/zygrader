@@ -9,6 +9,7 @@ from ..ui.components import TextInput
 
 EDITORS = {
     "Pluma": "/usr/bin/pluma",
+    "Gedit": "/usr/bin/gedit",
     "VSCode": "/usr/bin/code",
     "Atom": "/usr/bin/atom",
 }
