@@ -145,9 +145,9 @@ class Window:
         # Draw after receiving input
         self.draw()
 
-    def create_popup(self, title, message):
+    def create_popup(self, title, message, align=components.Popup.ALIGN_CENTER):
         """Create a popup with title and message that returns after enter"""
-        pop = components.Popup(self.rows, self.cols, title, message)
+        pop = components.Popup(self.rows, self.cols, title, message, align)
         self.operators.append(pop)
         pop.draw()
         
@@ -160,9 +160,9 @@ class Window:
         self.operators.pop()
         self.draw()
     
-    def create_bool_popup(self, title, message):
+    def create_bool_popup(self, title, message, align=components.Popup.ALIGN_CENTER):
         """Create a popup with title and message that returns true/false"""
-        popup = components.BoolPopup(self.rows, self.cols, title, message)
+        popup = components.BoolPopup(self.rows, self.cols, title, message, align)
         self.operators.append(popup)
         popup.draw()
         

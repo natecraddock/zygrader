@@ -19,12 +19,16 @@ class Popup(Component):
     COLS_MAX = 100
     PADDING = 3
 
-    def __init__(self, height, width, title, message):
+    ALIGN_LEFT = 0
+    ALIGN_CENTER = 1
+
+    def __init__(self, height, width, title, message, align):
         self.available_rows = height
         self.available_cols = width
 
         self.title = title
         self.message = message
+        self.align = align
 
         self.__calculate_size()
 
@@ -37,11 +41,20 @@ class Popup(Component):
         self.y = (self.available_rows - self.rows) // 2
         self.x = (self.available_cols - self.cols) // 2
 
-    def draw_text(self):
-        self.window.erase()
-        #self.window.box(0, 0)
+    def __draw_message_left(self):
+        longest_line = max([len(l) for l in self.message])
 
-        # Draw lines of message
+        message_x = self.cols // 2 - longest_line // 2
+
+        message_y = self.rows // 2 - len(self.message) // 2
+        message_row = 0
+        for line in self.message:
+            line = line[:self.cols - Popup.PADDING]
+
+            self.window.addstr(message_y + message_row, message_x, line)
+            message_row += 1
+
+    def __draw_message_center(self):
         message_y = self.rows // 2 - len(self.message) // 2
         message_row = 0
         for line in self.message:
@@ -49,6 +62,15 @@ class Popup(Component):
             message_x = self.cols // 2 - len(line) // 2
             self.window.addstr(message_y + message_row, message_x, line)
             message_row += 1
+
+    def draw_text(self):
+        self.window.erase()
+
+        # Draw lines of message
+        if self.align == Popup.ALIGN_CENTER:
+            self.__draw_message_center()
+        elif self.align == Popup.ALIGN_LEFT:
+            self.__draw_message_left()
         
         # Draw title
         title_x = self.cols // 2 - len(self.title) // 2
