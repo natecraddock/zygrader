@@ -117,12 +117,12 @@ def config_menu(window: Window, scraper, config_file):
     else:
         password_option = "Save Password"
     
-    options = ["Change Credentials", password_option, "Set Editor", "Back"]
+    options = ["Change Credentials", password_option, "Set Editor"]
     option = ""
 
-    while option != "Back":
+    while option != components.FilteredList.GO_BACKWARD:
         window.set_header(f"Config | {config_file['email']}")
-        option = window.menu_input(options)
+        option = window.filtered_list(options, "Option")
 
         if option == "Change Credentials":
             email, password = config.user.create_account(window, scraper)
@@ -213,14 +213,14 @@ def other_menu(window: Window, students, assignments):
 def mainloop(window: Window, scraper, students, assignments, admin_mode):
     config_file = config.user.get_config()
     if admin_mode:
-        options = ["Grade", "Config", "String Match", "Quit"]
+        options = ["Grade", "Config", "String Match"]
     else:
-        options = ["Grade", "Config", "Quit"]
+        options = ["Grade", "Config"]
     option = ""
 
-    while option != "Quit":
+    while option != components.FilteredList.GO_BACKWARD:
         window.set_header(f"Menu | {config_file['email']}")
-        option = window.menu_input(options)
+        option = window.filtered_list(options, "Option")
 
         if option == "Grade":
             grade(window, scraper, students, assignments)
