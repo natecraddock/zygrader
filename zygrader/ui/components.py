@@ -131,7 +131,7 @@ class FilteredList(Component):
         data = ["Back"]
         if filter_function is None:
             for x in input_data:
-                if x.find(filter_text) is not -1:
+                if x.lower().find(filter_text.lower()) is not -1:
                     data.append(x)
         else:
             for x in input_data:
