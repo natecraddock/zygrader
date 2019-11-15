@@ -43,6 +43,9 @@ class Zyscrape:
         if "compile_error" in submission["results"]:
             return 0
 
+        if submission["error"]:
+            return 0
+
         score = 0
         results = submission["results"]["test_results"]
         for result in results:
