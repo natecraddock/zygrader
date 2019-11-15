@@ -54,7 +54,11 @@ class Zyscrape:
         return score
     
     def _get_max_score(self, submission):
+        if submission["error"]:
+            return 0
+
         score = 0
+
         tests = submission["results"]["config"]["test_bench"]
         for test in tests:
             score += test["max_score"]
