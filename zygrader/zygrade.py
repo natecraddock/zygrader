@@ -244,8 +244,8 @@ def main(window: Window):
     # Ensure config directories exist
     config.zygrader.start()
 
-    # Get user configuration
-    config_data = config.user.initial_config(window)
+    # Log in user
+    config.user.initial_config(window)
 
     # Apply versioning
     config.versioning.do_versioning(window)
