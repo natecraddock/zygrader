@@ -2,6 +2,7 @@ import os
 from shutil import copyfile
 
 from ..ui.window import Window
+from ..ui import components
 from . import user
 from . import zygrader
 
@@ -58,6 +59,19 @@ def do_versioning(window: Window):
                "Scrolling through a list quickly has less flickering."]
 
         window.create_popup("Version 1.3", msg)
+
+    if compare_versions(1.4, user_version):
+        msg =  ["zygrader Version 1.4", "",
+               "* Add Gedit as text editor.",
+               "* Left align submission results.",
+               "* Replace [l]etter menus with lists. Use the arrow keys to navigate",
+               "  all menus in zygrader. Left arrow to go back. Enter or right arrow",
+               "  to select an entry.",
+               "* Fix: Show all parts of a midterm even if a part was not submitted.",
+               "* Fix: Configuration was being reset after versioning.",
+               "* Fix: Various submission downloading issues."]
+
+        window.create_popup("Version 1.4", msg, components.Popup.ALIGN_LEFT)
 
     # Write the current version to the user's config file
     write_current_version(config)
