@@ -89,8 +89,6 @@ def grade(window: Window, scraper, students, assignments):
                 for part in submission["parts"]:
                     if part["code"] == Zyscrape.NO_SUBMISSION:
                         msg.append(f"{part['name']} No Submission")
-                    elif part["code"] == Zyscrape.COMPILE_ERROR:
-                        msg[-1] += f" [Compile Error]"
                     else:
                         score = f"{part['score']}/{part['max_score']}"
 
@@ -98,6 +96,9 @@ def grade(window: Window, scraper, students, assignments):
                             msg.append(f"{part['name']:4} {score:8} {part['date']}")
                         else:
                             msg.append(f"{score:8} {part['date']}")
+
+                        if part["code"] == Zyscrape.COMPILE_ERROR:
+                            msg[-1] += f" [Compile Error]"
 
                 msg.append("")
                 msg.append(f"Total Score: {submission['score']}/{submission['max_score']}")
