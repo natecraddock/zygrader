@@ -224,11 +224,13 @@ class Window:
                 list_input.down()
             elif self.event == Window.KEY_UP:
                 list_input.up()
+            elif self.event == Window.KEY_LEFT:
+                break
             elif self.event == Window.KEY_BACKSPACE:
                 list_input.delchar()
             elif self.event == Window.KEY_INPUT:
                 list_input.addchar(self.event_value)
-            elif self.event == Window.KEY_ENTER:
+            elif self.event in {Window.KEY_ENTER, Window.KEY_RIGHT}:
                 break
             
             list_input.draw()
@@ -236,6 +238,9 @@ class Window:
         list_input.clear()
         self.operators.pop()
         self.draw()
+
+        if self.event == Window.KEY_LEFT:
+            return components.FilteredList.GO_BACKWARD
 
         return list_input.selected()
 

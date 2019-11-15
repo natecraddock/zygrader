@@ -117,6 +117,9 @@ class BoolPopup(Popup):
         self.window.refresh()
 
 class FilteredList(Component):
+    GO_BACKWARD = 0
+    GO_FORWARD = 1
+
     def __filter_data(self, input_data, filter_function, filter_text):
         # Don't filter if the string is empty
         if filter_text == "":
@@ -238,7 +241,7 @@ class FilteredList(Component):
     
     def selected(self):
         if self.selected_index is 0:
-            return 0
+            return FilteredList.GO_BACKWARD
         else:
             return self.data[self.selected_index]
 
