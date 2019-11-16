@@ -1,9 +1,15 @@
+import datetime
+
 class Lab:
     def __init__(self, name, assignment_type, parts, options):
         self.name = name
         self.type = assignment_type
         self.parts = parts
         self.options = options
+
+        # Convert due datetime strings to objects
+        if "due" in self.options:
+            self.options["due"] = datetime.datetime.strptime(self.options["due"], "%m.%d.%Y:%H.%M.%S").astimezone(tz=None)
 
     def __str__(self):
         return f"{self.name}"
