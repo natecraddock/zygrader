@@ -12,6 +12,7 @@ class Zyscrape:
     COMPILE_ERROR = 2
 
     SUBMISSION_HIGHEST = "highest_score"  # Grade the most recent of the highest score
+    CHECK_LATE_SUBMISSION = "due" # Remove late submissions
 
     session = None
     token = ""
@@ -37,7 +38,11 @@ class Zyscrape:
         time = submission["date_submitted"]
         date = datetime.strptime(time, "%Y-%m-%dT%H:%M:%SZ")
         date = date.replace(tzinfo=timezone.utc).astimezone(tz=None)
-        return date.strftime("%I:%M %p - %Y-%m-%d")
+        return date
+
+    def __get_time_string(self, submission):
+        time = self.__get_time(submission)
+        return time.strftime("%I:%M %p - %m-%d-%Y")
 
     def _get_score(self, submission):
         if "compile_error" in submission["results"]:
@@ -74,6 +79,15 @@ class Zyscrape:
 
         return r
 
+    def __remove_late_submissions(self, submissions, due_time):
+        for submission in submissions[:]:
+            submission_time = self.__get_time(submission)
+
+            if submission_time > due_time:
+                submissions.remove(submission)
+
+        return submissions
+
     def __get_submission_highest_score(self, submissions):
         return max(reversed(submissions), key=self._get_score) # Thanks Teikn
 
@@ -91,11 +105,16 @@ class Zyscrape:
         # Get submissions
         submissions = r.json()["submissions"]
 
-        # Student has not submitted
+        # Strip out late submissions
+        if submissions and Zyscrape.CHECK_LATE_SUBMISSION in options:
+            submissions = self.__remove_late_submissions(submissions, options[Zyscrape.CHECK_LATE_SUBMISSION])
+
+        # Student has not submitted or did not submit before assignment was due
         if not submissions:
             response["code"] = Zyscrape.NO_SUBMISSION
             return response
 
+        # Get highest score
         if Zyscrape.SUBMISSION_HIGHEST in options:
             submission = self.__get_submission_highest_score(submissions)
         else:
@@ -108,7 +127,7 @@ class Zyscrape:
         response["score"] = self._get_score(submission)
         response["max_score"] = self._get_max_score(submission)
 
-        response["date"] = self.__get_time(submission)
+        response["date"] = self.__get_time_string(submission)
         response["zip_url"] = submission["zip_location"]
 
         # Success
@@ -170,7 +189,7 @@ class Zyscrape:
             try:
                 z = zipfile.ZipFile(io.BytesIO(r.content))
             except zipfile.BadZipFile:
-                response["error"] = f"BadZipFile Error on submission {self.__get_time(submission)}"
+                response["error"] = f"BadZipFile Error on submission {self.__get_time_string(submission)}"
                 continue
 
             f = self.extract_zip(z)
@@ -180,7 +199,7 @@ class Zyscrape:
                 if f[source_file].find(string) != -1:
 
                     # Get the date and time of the submission and return it
-                    response["time"] = self.__get_time(submission)
+                    response["time"] = self.__get_time_string(submission)
                     response["success"] = True
 
                     return response
