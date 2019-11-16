@@ -88,7 +88,7 @@ def grade(window: Window, scraper, students, assignments):
 
                 for part in submission["parts"]:
                     if part["code"] == Zyscrape.NO_SUBMISSION:
-                        msg.append(f"{part['name']} No Submission")
+                        msg.append(f"{part['name']:4} No Submission")
                     else:
                         score = f"{part['score']}/{part['max_score']}"
 
