@@ -56,7 +56,7 @@ def student_callback(lab, student):
         data.lock.lock_lab(student, lab)
         window.draw()
 
-        submission = scraper.download_assignment(str(student.id), lab)
+        submission = scraper.download_assignment(student, lab)
 
         # Only grade if student has submitted
         if submission["code"] is Zyscrape.NO_SUBMISSION:

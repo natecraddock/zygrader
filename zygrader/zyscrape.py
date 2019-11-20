@@ -133,7 +133,8 @@ class Zyscrape:
         # Success
         return response
 
-    def download_assignment(self, user_id, assignment):
+    def download_assignment(self, student, assignment):
+        user_id = str(student.id)
         response = {"code": Zyscrape.NO_ERROR, "name": assignment.name, "score": 0, "max_score": 0, "parts": []}
         
         has_submitted = False
