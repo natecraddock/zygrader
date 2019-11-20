@@ -4,24 +4,31 @@ from .model import Student
 from .model import Lab
 from . import lock
 
+g_students = []
+g_labs = []
+
 # Load students from JSON file
-def load_students(path):
-    students = []
+def get_students(path):
+    if g_students:
+        return g_students
+
     with open(path, 'r') as students_file:
         students_json = json.load(students_file)
     
     for student in students_json:
-        students.append(Student(student["first_name"], student["last_name"], student["email"], student["section"], student["id"]))
+        g_students.append(Student(student["first_name"], student["last_name"], student["email"], student["section"], student["id"]))
 
-    return students
+    return g_students
 
-# Load assignments from JSON file
-def load_assignments(path):
-    assignments = []
-    with open(path, 'r') as assignments_file:
-        assignments_json = json.load(assignments_file)
+# Load labs from JSON file
+def get_labs(path):
+    if g_labs:
+        return g_labs
+
+    with open(path, 'r') as labs_file:
+        labs_json = json.load(labs_file)
     
-    for a in assignments_json:
-        assignments.append(Lab(a["name"], a["type"], a["parts"], a["options"]))
+    for a in labs_json:
+        g_labs.append(Lab(a["name"], a["type"], a["parts"], a["options"]))
 
-    return assignments
+    return g_labs

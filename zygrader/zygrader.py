@@ -9,7 +9,7 @@ import sys
 
 from . import data
 
-from .data import load_students, load_assignments
+from .data import get_students, get_labs
 from .data.model import Lab
 from .data.model import Student
 
@@ -47,10 +47,10 @@ def open_files(window: Window, submission):
     editor_path = config.user.EDITORS[user_editor]
     subprocess.Popen(f"{editor_path} {tmp_dir}/*", shell=True)
 
-def grade(window: Window, scraper, students, assignments):
+def grade(window: Window, scraper, students, labs):
     while True:
         # Choose lab
-        assignment = window.filtered_list(assignments, "Assignment", Lab.find)
+        assignment = window.filtered_list(labs, "Assignment", Lab.find)
         if assignment is 0:
             break
 
@@ -164,12 +164,12 @@ def config_menu(window: Window, scraper, config_file):
             config_file["editor"] = editor
             config.user.write_config(config_file)
 
-def other_menu(window: Window, students, assignments):
+def other_menu(window: Window, students, labs):
     window.set_header(f"String Match")
     scraper = Zyscrape()
 
     # Choose lab
-    assignment = window.filtered_list(assignments, "Assignment", Lab.find)
+    assignment = window.filtered_list(labs, "Assignment", Lab.find)
     if assignment is 0:
         return
 
@@ -211,7 +211,7 @@ def other_menu(window: Window, students, assignments):
     log_file.close()
 
 """ Main program loop """
-def mainloop(window: Window, scraper, students, assignments, admin_mode):
+def mainloop(window: Window, scraper, students, labs, admin_mode):
     config_file = config.user.get_config()
     
     if admin_mode:
@@ -225,11 +225,11 @@ def mainloop(window: Window, scraper, students, assignments, admin_mode):
         option = window.filtered_list(options, "Option")
 
         if option == "Grade":
-            grade(window, scraper, students, assignments)
+            grade(window, scraper, students, labs)
         elif option == "Config":
             config_menu(window, scraper, config_file)
         elif option == "String Match":
-            other_menu(window, students, assignments)
+            other_menu(window, students, labs)
 
 """ zygrade startpoint """
 def main(window: Window):
@@ -240,8 +240,8 @@ def main(window: Window):
         admin = False
 
     # Load student and lab data
-    students = load_students(config.zygrader.STUDENT_DATA)
-    assignments = load_assignments(config.zygrader.LABS_DATA)
+    students = get_students(config.zygrader.STUDENT_DATA)
+    labs = get_labs(config.zygrader.LABS_DATA)
     
     # Ensure config directories exist
     config.zygrader.start()
@@ -253,7 +253,7 @@ def main(window: Window):
     config.versioning.do_versioning(window)
 
     scraper = Zyscrape()
-    mainloop(window, scraper, students, assignments, admin)
+    mainloop(window, scraper, students, labs, admin)
 
 def start():
     # Create a zygrader window
