@@ -73,5 +73,16 @@ def do_versioning(window: Window):
 
         window.create_popup("Version 1.4", msg, components.Popup.ALIGN_LEFT)
 
+    if compare_versions(1.5, user_version):
+        msg =  ["zygrader Version 1.5", "",
+               "* Grader: Show students who are already being graded in red.",
+               "* Fix: Various zyBooks download issues.",
+               "* Add ability to not count late submissions.",
+               "* Cleanup output formatting.",
+               "* Refactor windowing system. Now windows are drawn on a stack.",
+               "  This means that lists remember which lab/student you chose."]
+
+        window.create_popup("Version 1.5", msg, components.Popup.ALIGN_LEFT)
+
     # Write the current version to the user's config file
     write_current_version(config)

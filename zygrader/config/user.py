@@ -7,6 +7,8 @@ from ..zyscrape import Zyscrape
 from ..ui.window import Window
 from ..ui.components import TextInput
 
+from . import zygrader
+
 EDITORS = {
     "Pluma": "/usr/bin/pluma",
     "Gedit": "/usr/bin/gedit",
@@ -21,7 +23,7 @@ def install(config_dir):
 
     # Create config file
     if not os.path.exists(os.path.join(config_dir, "config")):
-        config = {"version": "1.0", "email": "", "password":""}
+        config = {"version": zygrader.VERSION, "email": "", "password":""}
         with open(os.path.join(config_dir, "config"), "w") as config_file:
             json.dump(config, config_file)
 
