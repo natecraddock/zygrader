@@ -116,6 +116,44 @@ class BoolPopup(Popup):
 
         self.window.refresh()
 
+
+class OptionsPopup(Popup):
+    def __init__(self, height, width, title, message, options, align):
+        super().__init__(height, width, title, message, align)
+        self.options = options
+
+        self.index = len(options) - 1
+        self.options_length = sum([len(o) for o in options]) + len(options)
+
+    def draw(self):
+        super().draw_text()
+
+        y = self.rows - 2
+
+        previous_length = 0
+        index = 0
+        for option in self.options:
+            x = self.cols - 1 - Popup.PADDING - self.options_length + previous_length
+            if index == self.index:
+                self.window.addstr(y, x, option, curses.A_STANDOUT)
+            else:
+                self.window.addstr(y, x, option)
+
+            previous_length += len(option) + 2
+            index += 1
+
+        self.window.refresh()
+
+    def next(self):
+        self.index = (self.index + 1) % len(self.options)
+
+    def previous(self):
+        self.index = (self.index - 1) % len(self.options)
+
+    def selected(self):
+        return self.options[self.index]
+
+
 class FilteredList(Component):
     GO_BACKWARD = 0
     GO_FORWARD = 1

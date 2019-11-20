@@ -182,6 +182,29 @@ class Window:
         self.draw()
 
         return retval
+
+    def create_options_popup(self, title, message, options, align=components.Popup.ALIGN_CENTER):
+        """Create a popup with multiple options that can be selected with the keyboard"""
+        popup = components.OptionsPopup(self.rows, self.cols, title, message, options, align)
+        self.operators.append(popup)
+        popup.draw()
+
+        while True:
+            self.get_input()
+
+            if self.event == Window.KEY_LEFT:
+                popup.previous()
+            elif self.event == Window.KEY_RIGHT:
+                popup.next()
+            elif self.event == Window.KEY_ENTER:
+                break
+
+            self.draw()
+
+        self.operators.pop()
+        self.draw()
+
+        return popup.selected()
     
     def text_input(self, prompt, callback=None, mask=components.TextInput.TEXT_NORMAL):
         """Get text input from the user"""
