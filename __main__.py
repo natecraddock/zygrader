@@ -2,7 +2,7 @@ import getpass
 import signal
 import sys
 
-from zygrader import zygrade
+from zygrader import zygrader
 from zygrader.data import lock
 
 def lock_cleanup(signum, frame):
@@ -10,7 +10,7 @@ def lock_cleanup(signum, frame):
     sys.exit(0)
 
 # Handle Signals
-signal.signal(signal.SIGTERM, lock_cleanup)
-signal.signal(signal.SIGHUP, lock_cleanup)
+# signal.signal(signal.SIGTERM, lock_cleanup)
+# signal.signal(signal.SIGHUP, lock_cleanup)
 
-zygrade.start()
+zygrader.start()

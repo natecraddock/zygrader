@@ -63,6 +63,7 @@ class Window:
 
     def __init_colors(self):
         curses.init_pair(1, curses.COLOR_BLACK, curses.COLOR_WHITE)
+        curses.init_pair(2, curses.COLOR_RED, curses.COLOR_BLACK)
 
     def __resize_terminal(self):
         """Function to run after resize events in the terminal"""
@@ -212,8 +213,8 @@ class Window:
         else:
             return text.text
 
-    def filtered_list(self, input_data, prompt, filter_function=None):
-        list_input = components.FilteredList(1, 0, self.rows - 1, self.cols, input_data, prompt, filter_function)
+    def filtered_list(self, input_data, prompt, filter_function=None, draw_function=None):
+        list_input = components.FilteredList(1, 0, self.rows - 1, self.cols, input_data, prompt, filter_function, draw_function)
         self.operators.append(list_input)
         list_input.draw()
 

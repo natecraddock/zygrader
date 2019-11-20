@@ -142,16 +142,23 @@ class FilteredList(Component):
 
     def __fill_text(self, lines, selected_index):
         line = 0
+
         for l in lines[self.scroll:self.scroll+self.height - 1]:
+
+            if self.draw_function and self.draw_function(l):
+                color = curses.color_pair(2)
+            else:
+                color = curses.color_pair(0)
+
             if (line + self.scroll) == self.selected_index:
                 display_text = f"> {str(l)}"
-                self.window.addstr(line, 0, display_text, curses.A_BOLD)
+                self.window.addstr(line, 0, display_text, curses.A_BOLD | color)
             else:
                 display_text = f"  {str(l)}"
-                self.window.addstr(line, 0, display_text, curses.A_DIM)
+                self.window.addstr(line, 0, display_text, curses.A_DIM | color)
             line += 1
 
-    def __init__(self, y, x, rows, cols, options, prompt, filter_function):
+    def __init__(self, y, x, rows, cols, options, prompt, filter_function, draw_function):
         self.y = y
         self.x = x
 
@@ -160,6 +167,7 @@ class FilteredList(Component):
 
         self.options = options[:]
         self.filter_function = filter_function
+        self.draw_function = draw_function
 
         self.scroll = 0
         self.selected_index = 1

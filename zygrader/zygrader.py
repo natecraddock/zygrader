@@ -56,7 +56,7 @@ def grade(window: Window, scraper, students, assignments):
 
         while True:
             # Get student
-            student = window.filtered_list(students, "Student", Student.find)
+            student = window.filtered_list(students, "Student", Student.find, draw_function=lambda student : data.lock.is_lab_locked(student, assignment) if type(student) is not str else False)
             if student is 0:
                 break
 
@@ -213,6 +213,7 @@ def other_menu(window: Window, students, assignments):
 """ Main program loop """
 def mainloop(window: Window, scraper, students, assignments, admin_mode):
     config_file = config.user.get_config()
+    
     if admin_mode:
         options = ["Grade", "Config", "String Match"]
     else:
