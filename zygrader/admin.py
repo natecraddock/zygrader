@@ -11,7 +11,7 @@ def submission_search(lab, search_string, output_path):
 
     logger = window.new_logger()
 
-    with open(os.path.expanduser(output_path), "w") as log_file:
+    with open(output_path, "w") as log_file:
         student_num = 1
 
         for student in students:
@@ -54,7 +54,17 @@ def admin_menu_callback(option):
             part = assignment.parts[0]
 
         search_string = window.text_input("Enter a search string")
-        output_path = window.text_input("Enter the output path including filename [~ is supported]")
+
+        # Get a valid output path
+        while True:
+            output_path = window.text_input("Enter the output path including filename [~ is supported]")
+            output_path = os.path.expanduser(output_path)
+
+            if os.path.exists(os.path.dirname(output_path)):
+                break
+
+            msg = [f"Path {os.path.dirname(output_path)} does not exist!"]
+            window.create_popup("Invalid Path", msg)
 
         submission_search(part, search_string, output_path)
 
