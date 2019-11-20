@@ -1,19 +1,13 @@
 import os
-import io
-import zipfile
-import requests
-import tempfile
-import subprocess
-import curses
 import sys
 
 from . import data
+from . import config
+from . import grader
 
 from .data import get_students, get_labs
 from .data.model import Lab
 from .data.model import Student
-
-from . import config
 
 from .zyscrape import Zyscrape
 
@@ -21,98 +15,11 @@ from .ui import window
 from .ui.window import Window
 from .ui import components
 
-def extract_zip(file_prefix, input_zip):
-    if file_prefix:
-        return {f"{file_prefix}_{name}": input_zip.read(name).decode('UTF-8') for name in input_zip.namelist()}
-    else:
-        return {f"{name}": input_zip.read(name).decode('UTF-8') for name in input_zip.namelist()}
+def config_menu():
+    window = Window.get_window()
+    scraper = Zyscrape()
+    config_file = config.user.get_config()
 
-def open_files(window: Window, submission):
-    # Don't actually delete the temporary directory,
-    # Let the system handle it
-    tmp_dir =  tempfile.mkdtemp()
-    
-    for part in submission["parts"]:
-        if part["code"] == Zyscrape.NO_SUBMISSION:
-            continue
-        r = requests.get(part["zip_url"])
-        z = zipfile.ZipFile(io.BytesIO(r.content))
-        zip_files = extract_zip(part["name"], z)
-
-        for source_file in zip_files.keys():
-            with open(os.path.join(tmp_dir, source_file), 'w') as source_out:
-                source_out.write(zip_files[source_file])
-    
-    user_editor = config.user.get_config()["editor"]
-    editor_path = config.user.EDITORS[user_editor]
-    subprocess.Popen(f"{editor_path} {tmp_dir}/*", shell=True)
-
-def grade(window: Window, scraper, students, labs):
-    while True:
-        # Choose lab
-        assignment = window.filtered_list(labs, "Assignment", Lab.find)
-        if assignment is 0:
-            break
-
-        while True:
-            # Get student
-            student = window.filtered_list(students, "Student", Student.find, draw_function=lambda student : data.lock.is_lab_locked(student, assignment) if type(student) is not str else False)
-            if student is 0:
-                break
-
-            # Wait for student's assignment to be available
-            if data.lock.is_lab_locked(student, assignment):
-                netid = data.lock.get_locked_netid(student, assignment)
-
-                msg = [f"This student is already being graded by {netid}"]
-                window.create_popup("Student Locked", msg)
-                continue
-            
-            try:
-                # Lock student for grading
-                data.lock.lock_lab(student, assignment)
-
-                submission = scraper.download_assignment(str(student.id), assignment)
-
-                # Only grade if student has submitted
-                if submission["code"] is Zyscrape.NO_SUBMISSION:
-                    msg = [f"{student.full_name} has not submitted"]
-                    window.create_popup("No Submissions", msg)
-
-                    data.lock.unlock_lab(student, assignment)
-                    continue
-
-                open_files(window, submission)
-
-                msg = [f"{student.full_name}'s submission downloaded", ""]
-
-                for part in submission["parts"]:
-                    if part["code"] == Zyscrape.NO_SUBMISSION:
-                        msg.append(f"{part['name']:4} No Submission")
-                    else:
-                        score = f"{part['score']}/{part['max_score']}"
-
-                        if part["name"]:
-                            msg.append(f"{part['name']:4} {score:8} {part['date']}")
-                        else:
-                            msg.append(f"{score:8} {part['date']}")
-
-                        if part["code"] == Zyscrape.COMPILE_ERROR:
-                            msg[-1] += f" [Compile Error]"
-
-                msg.append("")
-                msg.append(f"Total Score: {submission['score']}/{submission['max_score']}")
-
-                window.create_popup("Downloaded", msg, components.Popup.ALIGN_LEFT)
-
-                # After popup, unlock student
-                data.lock.unlock_lab(student, assignment)
-            except KeyboardInterrupt:
-                data.lock.unlock_lab(student, assignment)
-            except curses.error:
-                data.lock.unlock_lab(student, assignment)
-
-def config_menu(window: Window, scraper, config_file):
     if config_file["password"]:
         password_option = "Remove Saved Password"
     else:
@@ -164,7 +71,11 @@ def config_menu(window: Window, scraper, config_file):
             config_file["editor"] = editor
             config.user.write_config(config_file)
 
-def other_menu(window: Window, students, labs):
+def other_menu():
+    window = Window.get_window()
+    students = get_students()
+    labs = get_labs()
+
     window.set_header(f"String Match")
     scraper = Zyscrape()
 
@@ -210,26 +121,26 @@ def other_menu(window: Window, students, labs):
     window.remove_logger(logger)
     log_file.close()
 
+def mainloop_callback(option):
+    if option == "Grade":
+        grader.grade()
+    elif option == "Config":
+        config_menu()
+    elif option == "String Match":
+        other_menu()
+
 """ Main program loop """
-def mainloop(window: Window, scraper, students, labs, admin_mode):
+def mainloop(admin_mode):
+    window = Window.get_window()
     config_file = config.user.get_config()
     
     if admin_mode:
         options = ["Grade", "Config", "String Match"]
     else:
         options = ["Grade", "Config"]
-    option = ""
 
-    while option != components.FilteredList.GO_BACKWARD:
-        window.set_header(f"Menu | {config_file['email']}")
-        option = window.filtered_list(options, "Option")
-
-        if option == "Grade":
-            grade(window, scraper, students, labs)
-        elif option == "Config":
-            config_menu(window, scraper, config_file)
-        elif option == "String Match":
-            other_menu(window, students, labs)
+    window.set_header(f"Menu | {config_file['email']}")
+    window.filtered_list(options, "Option", mainloop_callback)
 
 """ zygrade startpoint """
 def main(window: Window):
@@ -238,10 +149,6 @@ def main(window: Window):
         admin = True
     else:
         admin = False
-
-    # Load student and lab data
-    students = get_students(config.zygrader.STUDENT_DATA)
-    labs = get_labs(config.zygrader.LABS_DATA)
     
     # Ensure config directories exist
     config.zygrader.start()
@@ -252,8 +159,11 @@ def main(window: Window):
     # Apply versioning
     config.versioning.do_versioning(window)
 
-    scraper = Zyscrape()
-    mainloop(window, scraper, students, labs, admin)
+    # Load student and lab data on startup
+    get_students()
+    get_labs()
+
+    mainloop(admin)
 
 def start():
     # Create a zygrader window

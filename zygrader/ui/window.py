@@ -15,7 +15,16 @@ class Window:
     KEY_RIGHT = 5
     KEY_INPUT = 6
 
+    instance = None
+
+    @staticmethod
+    def get_window() -> "Window":
+        if Window.instance:
+            return Window.instance
+
     def __init__(self, callback, window_name):
+        Window.instance = self
+
         """Initialize screen and run callback function"""
 
         self.name = window_name
@@ -236,7 +245,7 @@ class Window:
         else:
             return text.text
 
-    def filtered_list(self, input_data, prompt, filter_function=None, draw_function=None):
+    def filtered_list(self, input_data, prompt, callback=None, filter_function=None, draw_function=None):
         list_input = components.FilteredList(1, 0, self.rows - 1, self.cols, input_data, prompt, filter_function, draw_function)
         self.operators.append(list_input)
         list_input.draw()
@@ -255,7 +264,10 @@ class Window:
             elif self.event == Window.KEY_INPUT:
                 list_input.addchar(self.event_value)
             elif self.event in {Window.KEY_ENTER, Window.KEY_RIGHT}:
-                break
+                if callback:
+                    callback(list_input.selected())
+                else:
+                    break
             
             list_input.draw()
 

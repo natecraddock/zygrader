@@ -3,15 +3,17 @@ import json
 from .model import Student
 from .model import Lab
 from . import lock
+from .. import config
 
 g_students = []
 g_labs = []
 
 # Load students from JSON file
-def get_students(path):
+def get_students() -> list:
     if g_students:
         return g_students
 
+    path = config.zygrader.STUDENT_DATA
     with open(path, 'r') as students_file:
         students_json = json.load(students_file)
     
@@ -21,10 +23,11 @@ def get_students(path):
     return g_students
 
 # Load labs from JSON file
-def get_labs(path):
+def get_labs() -> list:
     if g_labs:
         return g_labs
 
+    path = config.zygrader.LABS_DATA
     with open(path, 'r') as labs_file:
         labs_json = json.load(labs_file)
     
