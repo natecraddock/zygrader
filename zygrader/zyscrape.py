@@ -10,6 +10,8 @@ class Zyscrape:
     NO_ERROR = 0
     NO_SUBMISSION = 1
     COMPILE_ERROR = 2
+    DOWNLOAD_TIMEOUT = 3
+    ERROR = 4
 
     SUBMISSION_HIGHEST = "highest_score"  # Grade the most recent of the highest score
     CHECK_LATE_SUBMISSION = "due" # Remove late submissions
@@ -177,15 +179,19 @@ class Zyscrape:
         submission_response = self.get_submission(part["id"], user_id)
 
         if not submission_response.ok:
-            return {"success": False}
+            return {"code": Zyscrape.NO_SUBMISSION}
 
         all_submissions = submission_response.json()["submissions"]
 
-        response = {"success": False}
+        response = {"code": Zyscrape.NO_SUBMISSION}
 
         for submission in all_submissions:
             # Get file from zip url
-            r = requests.get(submission["zip_location"], stream=True)
+            try:
+                r = requests.get(submission["zip_location"], stream=True)
+            except requests.exceptions.ConnectionError:
+                # Bad connection, wait a few seconds and try again
+                return {"code": Zyscrape.DOWNLOAD_TIMEOUT}
 
             try:
                 z = zipfile.ZipFile(io.BytesIO(r.content))
@@ -201,7 +207,7 @@ class Zyscrape:
 
                     # Get the date and time of the submission and return it
                     response["time"] = self.__get_time_string(submission)
-                    response["success"] = True
+                    response["code"] = Zyscrape.NO_ERROR
 
                     return response
         

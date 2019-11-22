@@ -1,4 +1,5 @@
 import os
+import time
 
 from .ui.window import Window
 from .zyscrape import Zyscrape
@@ -15,19 +16,27 @@ def submission_search(lab, search_string, output_path):
         student_num = 1
 
         for student in students:
-            counter = f"[{student_num}/{len(students)}]"
-            logger.log(f"{counter:12} Checking {student.full_name}")
+            while True:
+                counter = f"[{student_num}/{len(students)}]"
+                logger.log(f"{counter:12} Checking {student.full_name}")
 
-            match_result = scraper.check_submissions(str(student.id), lab, search_string)
+                match_result = scraper.check_submissions(str(student.id), lab, search_string)
 
-            if match_result["success"]:
+                if match_result["code"] == Zyscrape.DOWNLOAD_TIMEOUT:
+                    logger.log("Download timed out... trying again after a few seconds")
+                    log_file.write("Download timed out... trying again after a few seconds\n")
+                    time.sleep(5)
+                else:
+                    break
+
+            if match_result["code"] == Zyscrape.NO_ERROR:
                 log_file.write(f"{student.full_name} matched {match_result['time']}\n")
 
                 logger.append(f" found {search_string}")
 
             # Check for and log errors
             if "error" in match_result:
-                log_file.write(f"ERROR on {student.full_name}: {match_result['error']}")
+                log_file.write(f"ERROR on {student.full_name}: {match_result['error']}\n")
 
             student_num += 1
 
