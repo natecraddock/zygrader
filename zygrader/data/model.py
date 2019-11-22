@@ -68,7 +68,7 @@ class Submission:
             self.flag = Submission.NO_SUBMISSION
             return
 
-        self.files_directory = self.open_files(response)
+        self.files_directory = self.read_files(response)
 
         self.create_submission_string(response)
 
@@ -94,7 +94,7 @@ class Submission:
 
         self.msg = msg
 
-    def open_files(self, response):
+    def read_files(self, response):
         tmp_dir = tempfile.mkdtemp()
 
         # Look through each part
@@ -119,6 +119,9 @@ class Submission:
         editor_path = config.user.EDITORS[user_editor]
 
         subprocess.Popen(f"{editor_path} {self.files_directory}/*", shell=True)
+
+    def open_folder(self):
+        subprocess.Popen(f"xdg-open {self.files_directory}", shell=True)
 
     def extract_zip(self, file_prefix, input_zip):
         if file_prefix:
