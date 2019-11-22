@@ -3,7 +3,7 @@ import json
 import time
 import base64
 
-from ..zyscrape import Zyscrape
+from .. import zyscrape
 from ..ui.window import Window
 from ..ui.components import TextInput
 
@@ -78,7 +78,7 @@ def create_account(window: Window, scraper):
     return email, password
 
 def initial_config(window: Window):
-    scraper = Zyscrape()
+    scraper = zyscrape.Zyscrape()
 
     config_dir = os.path.join(os.path.expanduser("~"), ".zygrader/")
     config_path = os.path.join(config_dir, "config")

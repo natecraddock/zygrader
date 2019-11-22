@@ -2,6 +2,8 @@ import json
 
 from .model import Student
 from .model import Lab
+from .model import Submission
+
 from . import lock
 from .. import config
 

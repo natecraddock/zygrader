@@ -1,4 +1,13 @@
+import subprocess
 import datetime
+import tempfile
+import requests
+import zipfile
+import io
+import os
+
+from ..zyscrape import Zyscrape
+from .. import config
 
 class Lab:
     def __init__(self, name, assignment_type, parts, options):
@@ -43,3 +52,76 @@ class Student:
 
         return first_name.find(text) is not -1 or last_name.find(text) is not -1 or \
                full_name.find(text) is not -1 or email.find(text) is not -1
+
+class Submission:
+    NO_SUBMISSION = 0
+    OK = 1
+
+    def __init__(self, student, lab, response):
+        self.student = student
+        self.lab = lab
+        self.flag = Submission.OK
+
+        # Read the response data
+        # Only grade if student has submitted
+        if response["code"] is Zyscrape.NO_SUBMISSION:
+            self.flag = Submission.NO_SUBMISSION
+            return
+
+        self.files_directory = self.open_files(response)
+
+        self.create_submission_string(response)
+
+    def create_submission_string(self, response):
+        msg = [f"{self.student.full_name}'s submission downloaded", ""]
+
+        for part in response["parts"]:
+            if part["code"] == Zyscrape.NO_SUBMISSION:
+                msg.append(f"{part['name']:4} No Submission")
+            else:
+                score = f"{part['score']}/{part['max_score']}"
+
+                if part["name"]:
+                    msg.append(f"{part['name']:4} {score:8} {part['date']}")
+                else:
+                    msg.append(f"{score:8} {part['date']}")
+
+                if part["code"] == Zyscrape.COMPILE_ERROR:
+                    msg[-1] += f" [Compile Error]"
+
+        msg.append("")
+        msg.append(f"Total Score: {response['score']}/{response['max_score']}")
+
+        self.msg = msg
+
+    def open_files(self, response):
+        tmp_dir = tempfile.mkdtemp()
+
+        # Look through each part
+        for part in response["parts"]:
+            if part["code"] == Zyscrape.NO_SUBMISSION:
+                continue
+
+            # Open zip of student's file(s) in memory
+            zip_response = requests.get(part["zip_url"])
+            zip_file = zipfile.ZipFile(io.BytesIO(zip_response.content))
+            files = self.extract_zip(part["name"], zip_file)
+
+            # Write file to temporary directory
+            for file_name in files.keys():
+                with open(os.path.join(tmp_dir, file_name), "w") as source_file:
+                    source_file.write(files[file_name])
+
+        return tmp_dir
+
+    def show_files(self):
+        user_editor = config.user.get_config()["editor"]
+        editor_path = config.user.EDITORS[user_editor]
+
+        subprocess.Popen(f"{editor_path} {self.files_directory}/*", shell=True)
+
+    def extract_zip(self, file_prefix, input_zip):
+        if file_prefix:
+            return {f"{file_prefix}_{name}": input_zip.read(name).decode('UTF-8') for name in input_zip.namelist()}
+        else:
+            return {f"{name}": input_zip.read(name).decode('UTF-8') for name in input_zip.namelist()}
