@@ -264,7 +264,7 @@ class Window:
             elif self.event == Window.KEY_INPUT:
                 list_input.addchar(self.event_value)
             elif self.event in {Window.KEY_ENTER, Window.KEY_RIGHT}:
-                if callback:
+                if callback and list_input.selected() != components.FilteredList.GO_BACKWARD:
                     callback(list_input.selected())
                 else:
                     break
