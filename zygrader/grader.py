@@ -1,7 +1,5 @@
 import io
 import os
-import zipfile
-import requests
 import tempfile
 import subprocess
 import curses
