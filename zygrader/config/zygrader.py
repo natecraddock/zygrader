@@ -2,7 +2,7 @@ import os
 import json
 
 # Only change these if you know what you are doing!
-VERSION = 1.5
+VERSION = 1.6
 
 # TODO: save this in configuration
 CLASS_CODE = "BYUCS142Fall2019"

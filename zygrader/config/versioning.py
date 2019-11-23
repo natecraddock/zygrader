@@ -84,5 +84,16 @@ def do_versioning(window: Window):
 
         window.create_popup("Version 1.5", msg, components.Popup.ALIGN_LEFT)
 
+    if compare_versions(1.6, user_version):
+        msg =  ["zygrader Version 1.6", "",
+               "* Fix: Selecting \"Back\" in a list crashed.",
+               "* Add ability to grade pair programming.",
+               "  After selecting a student, an option is presented to",
+               "  select a second student for grading pair programming.",
+               "  This will allow you to select a second student, and it zygrader",
+               "  will diff the files and open a comparison."]
+
+        window.create_popup("Version 1.6", msg, components.Popup.ALIGN_LEFT)
+
     # Write the current version to the user's config file
     write_current_version(config)
