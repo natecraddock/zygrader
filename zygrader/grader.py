@@ -78,7 +78,18 @@ def grade_pair_programming(first_submission):
 
     # Open diffs in favorite browser
     subprocess.Popen(f"xdg-open {os.path.join(tmp_dir, 'submissions.html')}", shell=True)
-    window.create_popup("DIFFED", ["DIFFED"])
+
+    options = [first_submission.student.full_name, second_submission.student.full_name, "Done"]
+
+    while True:
+        option = window.create_options_popup("Pair Programming", ["Pick a student's score to view"], options)
+
+        if option == first_submission.student.full_name:
+            window.create_popup("Downloaded", first_submission.msg, components.Popup.ALIGN_LEFT)
+        elif option == second_submission.student.full_name:
+            window.create_popup("Downloaded", second_submission.msg, components.Popup.ALIGN_LEFT)
+        else:
+            break
 
     data.lock.unlock_lab(student, lab)
 
@@ -112,6 +123,7 @@ def student_callback(lab, student):
 
             if option == "Pair Programming":
                 grade_pair_programming(submission)
+                break
             elif option == "Open Folder":
                 submission.open_folder()
             else:
