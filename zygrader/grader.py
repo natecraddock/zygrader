@@ -25,10 +25,21 @@ def get_submission(lab, student):
     return data.model.Submission(student, lab, submission_response)
 
 def diff_submissions(first, second):
-    window = Window.get_window()
+    diffs = {}
 
+    name_a = first.student.full_name
+    name_b = second.student.full_name
 
-    pass
+    # Read lines into two dictionaries
+    for file_name in os.listdir(first.files_directory):
+        with open(os.path.join(first.files_directory, file_name), 'r') as file_a:
+            with open(os.path.join(second.files_directory, file_name), 'r') as file_b:
+                html = difflib.HtmlDiff(4, 80)
+                diff = html.make_file(file_a.readlines(), file_b.readlines(), name_a, name_b, context=True)
+
+                diffs[file_name] = diff
+
+    return diffs
 
 def grade_pair_programming(first_submission):
     # Get second student
@@ -58,7 +69,18 @@ def grade_pair_programming(first_submission):
         return
 
     # Diff the two students
-    diff_submissions(first_submission, second_submission)
+    diffs = diff_submissions(first_submission, second_submission)
+
+    tmp_dir = tempfile.mkdtemp()
+    with open(f"{os.path.join(tmp_dir, 'submissions.html')}", 'w') as diff_file:
+        for diff in diffs:
+            diff_file.write(diffs[diff])
+
+    # Open diffs in favorite browser
+    subprocess.Popen(f"xdg-open {os.path.join(tmp_dir, 'submissions.html')}", shell=True)
+    window.create_popup("DIFFED", ["DIFFED"])
+
+    data.lock.unlock_lab(student, lab)
 
 def student_callback(lab, student):
     window = Window.get_window()
