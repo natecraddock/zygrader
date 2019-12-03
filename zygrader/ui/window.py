@@ -273,6 +273,7 @@ class Window:
             elif self.event in {Window.KEY_ENTER, Window.KEY_RIGHT}:
                 if callback and list_input.selected() != components.FilteredList.GO_BACKWARD:
                     callback(list_input.selected())
+                    list_input.clear_filter()
                 else:
                     break
             

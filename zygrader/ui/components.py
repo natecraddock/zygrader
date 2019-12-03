@@ -297,6 +297,9 @@ class FilteredList(Component):
         else:
             return self.data[self.selected_index]
 
+    def clear_filter(self):
+        self.filter_text = ""
+
 class Menu(Component):
     def __init__(self, y, x, height, width, options):
         self.height = height
