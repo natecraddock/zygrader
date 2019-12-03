@@ -45,6 +45,7 @@ class Window:
         # Create header
         self.header = curses.newwin(1, self.cols, 0, 0)
         self.header.bkgd(" ", curses.color_pair(1))
+        self.header_offset = 0 # Used for animated themes
         self.set_header()
 
         # Create window for input
@@ -73,6 +74,8 @@ class Window:
     def __init_colors(self):
         curses.init_pair(1, curses.COLOR_BLACK, curses.COLOR_WHITE)
         curses.init_pair(2, curses.COLOR_RED, curses.COLOR_BLACK)
+        curses.init_pair(3, curses.COLOR_WHITE, curses.COLOR_GREEN)
+        curses.init_pair(4, curses.COLOR_WHITE, curses.COLOR_RED)
 
     def __resize_terminal(self):
         """Function to run after resize events in the terminal"""
@@ -103,6 +106,14 @@ class Window:
             x = self.cols - len(display_text) - 1
         
         self.header.addstr(0, x, display_text)
+
+        # Christmas theme
+        for x in range(self.cols):
+            if ((x // 2) + self.header_offset) % 2 is 0:
+                self.header.chgat(0, x, curses.color_pair(3) | curses.A_BOLD)
+            else:
+                self.header.chgat(0, x, curses.color_pair(4) | curses.A_BOLD)
+
         self.header.refresh()
 
     def draw(self, flush=False):
@@ -158,7 +169,8 @@ class Window:
                 self.event = Window.KEY_INPUT
                 self.event_value = input_code[0]
                 break
-                
+
+        self.header_offset += 1
         # Draw after receiving input
         self.draw()
 
