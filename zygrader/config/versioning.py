@@ -95,5 +95,18 @@ def do_versioning(window: Window):
 
         window.create_popup("Version 1.6", msg, components.Popup.ALIGN_LEFT)
 
+    if compare_versions(1.7, user_version):
+        msg =  ["zygrader Version 1.7", "",
+               "                                    /\\",
+               "                               __   \\/   __",
+               "* Clear filter after grading   \\_\\_\\/\\/_/_/",
+               "* Reduce flashing                _\\_\\/_/_",
+               "* Merry Christmas!!!            __/_/\\_\\__",
+               "                               /_/ /\\/\\ \\_\\",
+               "                                    /\\",
+               "                                    \\/",]
+
+        window.create_popup("Version 1.7", msg, components.Popup.ALIGN_LEFT)
+
     # Write the current version to the user's config file
     write_current_version(config)
