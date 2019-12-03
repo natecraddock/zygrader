@@ -233,7 +233,7 @@ class Window:
 
             if self.event == Window.KEY_ENTER:
                 if callback:
-                    return callback(self, text.text)
+                    return callback(self, text.text) # Bad! fix this
                 break
             elif self.event == Window.KEY_BACKSPACE:
                 text.text = text.text[:-1]
