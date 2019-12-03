@@ -2,7 +2,8 @@ import curses
 
 class Component:
     def __init__(self):
-        raise NotImplementedError
+        # This determines if a component blocks layers beneath it completely
+        self.blocking = True
         
     def resize(self, rows, cols):
         raise NotImplementedError
@@ -23,6 +24,9 @@ class Popup(Component):
     ALIGN_CENTER = 1
 
     def __init__(self, height, width, title, message, align):
+        # Popups only obscure the screen partially
+        self.blocking = False
+
         self.available_rows = height
         self.available_cols = width
 
@@ -197,6 +201,8 @@ class FilteredList(Component):
             line += 1
 
     def __init__(self, y, x, rows, cols, options, prompt, filter_function, draw_function):
+        self.blocking = True
+
         self.y = y
         self.x = x
 
@@ -333,6 +339,8 @@ class TextInput(Component):
     TEXT_MASKED = 1
 
     def __init__(self, y, x, height, width, prompt, mask=TEXT_NORMAL):
+        self.blocking = True
+
         self.y = y
         self.x = x
         self.height = height
@@ -373,10 +381,11 @@ class TextInput(Component):
         curses.curs_set(0)
 
 class Logger(Component):
-
     PADDING = 2
 
     def __init__(self, y, x, height, width):
+        self.blocking = True
+
         self.height = height
         self.width = width
 

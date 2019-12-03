@@ -112,7 +112,14 @@ class Window:
         
         self.set_header(self.__header_text)
         
-        for operator in self.operators:
+        # Find last blocking component
+        block_index = 0
+        for index in reversed(range(len(self.operators))):
+            if self.operators[index].blocking:
+                block_index = index
+                break
+
+        for operator in self.operators[block_index:]:
             operator.draw()
         
         if flush:
