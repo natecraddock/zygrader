@@ -108,5 +108,15 @@ def do_versioning(window: Window):
 
         window.create_popup("Version 1.7", msg, components.Popup.ALIGN_LEFT)
 
+    if compare_versions(1.8, user_version):
+        msg = ["zygrader Version 1.8", "",
+               "* Stop showing diffs and files immediately.",
+               "* Add option to show submitted files.",
+               "* Add option to show diff when grading pair programming.",
+               "* Fix pair programming sometimes leaving students locked.",
+               "* Add lock file remover (run with -a)."]
+
+        window.create_popup("Version 1.8", msg, components.Popup.ALIGN_LEFT)
+
     # Write the current version to the user's config file
     write_current_version(config)
