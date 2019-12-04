@@ -76,11 +76,20 @@ def admin_menu_callback(option):
             window.create_popup("Invalid Path", msg)
 
         submission_search(part, search_string, output_path)
+    elif option == "Remove Locks":
+
+        while True:
+            all_locks = data.lock.get_lock_files()
+            selection = window.filtered_list(all_locks, "Choose a lock file")
+            if selection != 0:
+                data.lock.remove_lock_file(selection)
+            else:
+                break
 
 
 def admin_menu():
     window = Window.get_window()
 
-    options = ["Submissions Search"]
+    options = ["Submissions Search", "Remove Locks"]
 
     window.filtered_list(options, "Option", admin_menu_callback)

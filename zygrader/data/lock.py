@@ -65,3 +65,8 @@ def unlock_all_labs_by_grader(username: str):
 def unlock_all_labs():
     for lock in get_lock_files():
         os.remove(os.path.join(config.zygrader.DATA_DIRECTORY, lock))
+
+def remove_lock_file(_file):
+    locks_directory = config.zygrader.DATA_DIRECTORY
+
+    os.remove(os.path.join(locks_directory, _file))
