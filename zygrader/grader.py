@@ -41,6 +41,20 @@ def diff_submissions(first, second):
 
     return diffs
 
+def pair_programming_submission_callback(submission):
+    window = Window.get_window()
+
+    options = ["Open Folder", "View Code", "Done"]
+    while True:
+        option = window.create_options_popup("Downloaded", submission.msg, options, components.Popup.ALIGN_LEFT)
+
+        if option == "View Code":
+            submission.show_files()
+        elif option == "Open Folder":
+            submission.open_folder()
+        else:
+            break
+
 def grade_pair_programming(first_submission):
     # Get second student
     window = Window.get_window()
@@ -59,39 +73,45 @@ def grade_pair_programming(first_submission):
         window.create_popup("Student Locked", msg)
         return
 
-    second_submission = get_submission(lab, student)
+    try:
+        second_submission = get_submission(lab, student)
 
-    if second_submission.flag == data.model.Submission.NO_SUBMISSION:
-        msg = [f"{student.full_name} has not submitted"]
-        window.create_popup("No Submissions", msg)
+        if second_submission.flag == data.model.Submission.NO_SUBMISSION:
+            msg = [f"{student.full_name} has not submitted"]
+            window.create_popup("No Submissions", msg)
+
+            data.lock.unlock_lab(student, lab)
+            return
+
+        # Diff the two students
+        diffs = diff_submissions(first_submission, second_submission)
+
+        tmp_dir = tempfile.mkdtemp()
+        with open(f"{os.path.join(tmp_dir, 'submissions.html')}", 'w') as diff_file:
+            for diff in diffs:
+                diff_file.write(f"<h1>{diff}</h1>")
+                diff_file.write(diffs[diff])
+
+        options = [first_submission.student.full_name, second_submission.student.full_name, "View Diff", "Done"]
+        msg = ["Pick a student's submission to view", "or view the diff"]
+        while True:
+            option = window.create_options_popup("Pair Programming", msg, options)
+
+            if option == first_submission.student.full_name:
+                pair_programming_submission_callback(first_submission)
+            elif option == second_submission.student.full_name:
+                pair_programming_submission_callback(second_submission)
+            elif option == "View Diff":
+                # Open diffs in favorite browser
+                subprocess.Popen(f"xdg-open {os.path.join(tmp_dir, 'submissions.html')}", shell=True)
+            else:
+                break
 
         data.lock.unlock_lab(student, lab)
-        return
-
-    # Diff the two students
-    diffs = diff_submissions(first_submission, second_submission)
-
-    tmp_dir = tempfile.mkdtemp()
-    with open(f"{os.path.join(tmp_dir, 'submissions.html')}", 'w') as diff_file:
-        for diff in diffs:
-            diff_file.write(diffs[diff])
-
-    # Open diffs in favorite browser
-    subprocess.Popen(f"xdg-open {os.path.join(tmp_dir, 'submissions.html')}", shell=True)
-
-    options = [first_submission.student.full_name, second_submission.student.full_name, "Done"]
-
-    while True:
-        option = window.create_options_popup("Pair Programming", ["Pick a student's score to view"], options)
-
-        if option == first_submission.student.full_name:
-            window.create_popup("Downloaded", first_submission.msg, components.Popup.ALIGN_LEFT)
-        elif option == second_submission.student.full_name:
-            window.create_popup("Downloaded", second_submission.msg, components.Popup.ALIGN_LEFT)
-        else:
-            break
-
-    data.lock.unlock_lab(student, lab)
+    except KeyboardInterrupt:
+        data.lock.unlock_lab(student, lab)
+    except curses.error:
+        data.lock.unlock_lab(student, lab)
 
 def student_callback(lab, student):
     window = Window.get_window()
