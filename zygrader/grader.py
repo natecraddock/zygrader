@@ -115,15 +115,15 @@ def student_callback(lab, student):
             data.lock.unlock_lab(student, lab)
             return
 
-        submission.show_files()
-
-        options = ["Open Folder", "Pair Programming", "Done"]
+        options = ["Open Folder", "Pair Programming", "View Code", "Done"]
         while True:
             option = window.create_options_popup("Downloaded", submission.msg, options, components.Popup.ALIGN_LEFT)
 
             if option == "Pair Programming":
                 grade_pair_programming(submission)
                 break
+            elif option == "View Code":
+                submission.show_files()
             elif option == "Open Folder":
                 submission.open_folder()
             else:
