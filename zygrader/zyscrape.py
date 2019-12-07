@@ -172,7 +172,7 @@ class Zyscrape:
         return response
 
     def extract_zip(self, input_zip):
-        return {name: input_zip.read(name).decode('UTF-8') for name in input_zip.namelist()}
+        return {name: input_zip.read(name).decode('UTF-8', "replace") for name in input_zip.namelist()}
             
     def check_submissions(self, user_id, part, string):
         """Check each of a student's submissions for a given string"""
