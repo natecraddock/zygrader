@@ -36,6 +36,18 @@ class Zyscrape:
         Zyscrape.token = r.json()["session"]["auth_token"]
         return True
 
+    def get_roster(self):
+        roles = '["TA","Student","Temporary","Dropped"]'
+        roster_url = f"https://zyserver.zybooks.com/v1/zybook/{config.zygrader.CLASS_CODE}/roster?zybook_roles={roles}"
+
+        payload = {"auth_token": Zyscrape.token}
+        r = Zyscrape.session.get(roster_url, json=payload)
+
+        if not r.ok:
+            return False
+
+        return r.json()
+
     def __get_time(self, submission):
         time = submission["date_submitted"]
         date = datetime.strptime(time, "%Y-%m-%dT%H:%M:%SZ")
