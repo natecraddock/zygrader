@@ -1,4 +1,5 @@
 import json
+import os
 
 from .model import Student
 from .model import Lab
@@ -16,6 +17,9 @@ def get_students() -> list:
         return g_students
 
     path = config.zygrader.STUDENT_DATA
+    if not os.path.exists(path):
+        return []
+
     with open(path, 'r') as students_file:
         students_json = json.load(students_file)
     
@@ -30,6 +34,9 @@ def get_labs() -> list:
         return g_labs
 
     path = config.zygrader.LABS_DATA
+    if not os.path.exists(path):
+        return []
+
     with open(path, 'r') as labs_file:
         labs_json = json.load(labs_file)
     
