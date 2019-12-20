@@ -62,6 +62,16 @@ class Zyscrape:
 
         return response
 
+    def check_valid_class(self, code):
+        url = f"https://zyserver.zybooks.com/v1/zybooks?zybooks=[\"{code}\"]"
+        payload = {"auth_token": Zyscrape.token}
+        r = Zyscrape.session.get(url, json=payload)
+
+        if r.ok:
+            return r.json()["zybooks"]
+
+        return False
+
     def __get_time(self, submission):
         time = submission["date_submitted"]
         date = datetime.strptime(time, "%Y-%m-%dT%H:%M:%SZ")

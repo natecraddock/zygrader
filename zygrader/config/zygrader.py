@@ -40,33 +40,35 @@ def setup_data_directory():
     # Ensure the config file exists in the directory
     if not os.path.exists(GLOBAL_CONFIG_PATH):
         global_config = {"class_code": "", "class_codes": []}
-        write_global_config(global_config)    
-    # Ensure the config file exists in the directory
-    if not os.path.exists(GLOBAL_CONFIG_PATH):
-        global_config = {"class_code": "", "class_codes": []}
         write_global_config(global_config)
 
-def start():
+def setup_class_directory(code):
     global CLASS_CODE
     global CLASS_DIRECTORY
     global STUDENT_DATA
     global LABS_DATA
 
+    CLASS_CODE = code
+    CLASS_DIRECTORY = os.path.join(DATA_DIRECTORY, code)
+
+    if not os.path.exists(CLASS_DIRECTORY):
+        os.mkdir(CLASS_DIRECTORY)
+
+    STUDENT_DATA = os.path.join(CLASS_DIRECTORY, "students.json")
+    LABS_DATA = os.path.join(CLASS_DIRECTORY, "labs.json")
+
+    # Load data for the current class
+    data.get_students()
+    data.get_labs()
+
+def start():
     setup_data_directory()
     global_config = get_global_config()
 
     # Look for the current class directory
     current_class_code = global_config["class_code"]
     if current_class_code:
-        CLASS_CODE = current_class_code
-        CLASS_DIRECTORY = os.path.join(DATA_DIRECTORY, current_class_code)
-
-        STUDENT_DATA = os.path.join(CLASS_DIRECTORY, "students.json")
-        LABS_DATA = os.path.join(CLASS_DIRECTORY, "labs.json")
-
-        # Load data for the current class
-        data.get_students()
-        data.get_labs()
+        setup_class_directory(current_class_code)
 
 def get_class_codes():
     config = get_global_config()
@@ -86,4 +88,18 @@ def set_current_class_code(code):
     config = get_global_config()
     config["class_code"] = code
 
+    # If the code is not in the list, add it
+    if code not in config["class_codes"]:
+        config["class_codes"].append(code)
+
+    setup_class_directory(code)
     write_global_config(config)
+
+def add_class(code):
+    config = get_global_config()
+
+    # Don't allow duplicates
+    if code in config["class_codes"]:
+        return
+
+    set_current_class_code(code)
