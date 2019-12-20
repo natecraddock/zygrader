@@ -178,7 +178,7 @@ class Window:
         """Create a popup with title and message that returns after enter"""
         pop = components.Popup(self.rows, self.cols, title, message, align)
         self.operators.append(pop)
-        pop.draw()
+        self.draw()
         
         while True:
             self.get_input()
@@ -193,7 +193,7 @@ class Window:
         """Create a popup with title and message that returns true/false"""
         popup = components.BoolPopup(self.rows, self.cols, title, message, align)
         self.operators.append(popup)
-        popup.draw()
+        self.draw()
         
         while True:
             self.get_input()
@@ -215,7 +215,7 @@ class Window:
         """Create a popup with multiple options that can be selected with the keyboard"""
         popup = components.OptionsPopup(self.rows, self.cols, title, message, options, align)
         self.operators.append(popup)
-        popup.draw()
+        self.draw()
 
         while True:
             self.get_input()
@@ -238,7 +238,7 @@ class Window:
         """Get text input from the user"""
         text = components.TextInput(1, 0, self.rows, self.cols, prompt, mask)
         self.operators.append(text)
-        text.draw()
+        self.draw()
 
         while True:
             self.get_input()
@@ -267,7 +267,7 @@ class Window:
     def filtered_list(self, input_data, prompt, callback=None, filter_function=None, draw_function=None):
         list_input = components.FilteredList(1, 0, self.rows - 1, self.cols, input_data, prompt, filter_function, draw_function)
         self.operators.append(list_input)
-        list_input.draw()
+        self.draw()
 
         while True:
             self.get_input()
@@ -303,7 +303,7 @@ class Window:
     def menu_input(self, options):
         menu_input = components.Menu(1, 0, self.rows, self.cols, options)
         self.operators.append(menu_input)
-        menu_input.draw()
+        self.draw()
 
         while True:
             self.get_input()
@@ -320,7 +320,7 @@ class Window:
     def new_logger(self):
         logger = components.Logger(1, 0, self.rows - 1, self.cols)
         self.operators.append(logger)
-        logger.draw()
+        self.draw()
 
         return logger
 
