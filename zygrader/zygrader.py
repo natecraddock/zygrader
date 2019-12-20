@@ -97,7 +97,7 @@ def main(window: Window):
     else:
         admin = False
     
-    # Ensure config directories exist
+    # Start application and load data
     config.zygrader.start()
 
     # Log in user
@@ -105,10 +105,6 @@ def main(window: Window):
 
     # Apply versioning
     config.versioning.do_versioning(window)
-
-    # Load student and lab data on startup
-    data.get_students()
-    data.get_labs()
 
     mainloop(admin)
 
