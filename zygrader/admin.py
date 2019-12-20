@@ -6,6 +6,7 @@ from .ui.window import Window
 from .zyscrape import Zyscrape
 from . import data
 from . import config
+from . import class_manager
 
 def submission_search(lab, search_string, output_path):
     window = Window.get_window()
@@ -44,46 +45,13 @@ def submission_search(lab, search_string, output_path):
 
         window.remove_logger(logger)
 
-def download_roster():
-    window = Window.get_window()
-    scraper = Zyscrape()
-
-    roster = scraper.get_roster()
-    if not roster:
-        window.create_popup("Failed", ["Failed to download student roster"])
-        return
-
-    roster = roster["roster"] # It is stored under "roster" in the json
-
-    # Download students (and others)
-    students = []
-    for role in roster:
-        for person in roster[role]:
-            student = {}
-            student["first_name"] = person["first_name"]
-            student["last_name"] = person["last_name"]
-            student["email"] = person["primary_email"]
-            student["id"] = person["user_id"]
-
-            if "class_section" in person:
-                student["section"] = person["class_section"]["value"]
-            else:
-                student["section"] = -1
-
-            students.append(student)
-
-    out_path = config.zygrader.STUDENT_DATA
-    with open(out_path, 'w') as _file:
-        json.dump(students, _file, indent=2)
-
-    window.create_popup("Finished", ["Successfully downloaded student roster"])
-
 def admin_menu_callback(option):
     window = Window.get_window()
-    labs = data.get_labs()
 
     if option == "Submissions Search":
+        labs = data.get_labs()
         # Choose lab
+
         assignment = window.filtered_list(labs, "Assignment", filter_function=data.Lab.find)
         if assignment is 0:
             return
@@ -113,7 +81,6 @@ def admin_menu_callback(option):
 
         submission_search(part, search_string, output_path)
     elif option == "Remove Locks":
-
         while True:
             all_locks = data.lock.get_lock_files()
             selection = window.filtered_list(all_locks, "Choose a lock file")
@@ -121,12 +88,12 @@ def admin_menu_callback(option):
                 data.lock.remove_lock_file(selection)
             else:
                 break
-    elif option == "Download Student Roster":
-        download_roster()
+    elif option == "Class Management":
+        class_manager.start()
 
 def admin_menu():
     window = Window.get_window()
 
-    options = ["Submissions Search", "Remove Locks", "Download Student Roster"]
+    options = ["Submissions Search", "Remove Locks", "Class Management"]
 
     window.filtered_list(options, "Option", admin_menu_callback)
