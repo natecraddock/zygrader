@@ -48,6 +48,20 @@ class Zyscrape:
 
         return r.json()
 
+    def get_zybook_section(self, url):
+        r = Zyscrape.session.get(url)
+        response = {"success": False}
+
+        if r.ok:
+            section = r.json()["section"]
+            content = section["content_resources"][1]
+
+            response["success"] = True
+            response["id"] = content["id"]
+            respone["name"] = content["caption"]
+
+        return response
+
     def __get_time(self, submission):
         time = submission["date_submitted"]
         date = datetime.strptime(time, "%Y-%m-%dT%H:%M:%SZ")
