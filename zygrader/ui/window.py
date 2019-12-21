@@ -234,9 +234,9 @@ class Window:
 
         return popup.selected()
     
-    def text_input(self, prompt, callback=None, mask=components.TextInput.TEXT_NORMAL):
+    def text_input(self, prompt, text="", callback=None, mask=components.TextInput.TEXT_NORMAL):
         """Get text input from the user"""
-        text = components.TextInput(1, 0, self.rows, self.cols, prompt, mask)
+        text = components.TextInput(1, 0, self.rows, self.cols, prompt, text, mask)
         self.operators.append(text)
         self.draw()
 
@@ -248,11 +248,15 @@ class Window:
                     return callback(self, text.text) # Bad! fix this
                 break
             elif self.event == Window.KEY_BACKSPACE:
-                text.text = text.text[:-1]
-                text.draw()
+                text.delchar()
             elif self.event == Window.KEY_INPUT:
-                text.text += self.event_value
-                text.draw()
+                text.addchar(self.event_value)
+            elif self.event == Window.KEY_LEFT:
+                text.left()
+            elif self.event == Window.KEY_RIGHT:
+                text.right()
+
+            self.draw()
 
         self.operators.pop()
         self.draw()

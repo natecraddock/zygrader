@@ -59,7 +59,7 @@ def authenticate(window: Window, scraper, email, password):
 def get_password(window: Window):
     window.set_header("Sign In")
 
-    password = window.text_input("Enter your zyBooks password", None, TextInput.TEXT_MASKED)
+    password = window.text_input("Enter your zyBooks password", mask=TextInput.TEXT_MASKED)
 
     return password
 

@@ -341,7 +341,7 @@ class TextInput(Component):
     TEXT_NORMAL = 0
     TEXT_MASKED = 1
 
-    def __init__(self, y, x, height, width, prompt, mask=TEXT_NORMAL):
+    def __init__(self, y, x, height, width, prompt, text, mask=TEXT_NORMAL):
         self.blocking = True
 
         self.y = y
@@ -351,7 +351,10 @@ class TextInput(Component):
         self.prompt = prompt
         self.masked = (mask is TextInput.TEXT_MASKED)
 
-        self.text = ""
+        self.text = text
+
+        # Set cursor to the location of text
+        self.cursor_index = len(self.text)
 
         # Always position text input at the bottom of the screen
         self.window = curses.newwin(1, self.width, self.height - 1, 0)
@@ -378,10 +381,31 @@ class TextInput(Component):
             display_text = self.text
         
         self.window.addstr(0, 0, f"{self.prompt}: {display_text}")
+
+        self.window.move(0, len(self.prompt) + 2 + self.cursor_index)
         self.window.refresh()
 
     def close(self):
         curses.curs_set(0)
+
+    def addchar(self, c):
+        # Insert character at cursor location and move cursor
+        self.text = self.text[:self.cursor_index] + c + self.text[self.cursor_index:]
+        self.right()
+
+    def delchar(self):
+        if self.cursor_index == 0:
+            return
+
+        # Remove character at cursor location
+        self.text = self.text[:self.cursor_index - 1] + self.text[self.cursor_index:]
+        self.left()
+
+    def right(self):
+        self.cursor_index = min(len(self.text), self.cursor_index + 1)
+
+    def left(self):
+        self.cursor_index = max(0, self.cursor_index - 1)
 
 class Logger(Component):
     PADDING = 2
