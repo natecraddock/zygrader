@@ -54,8 +54,9 @@ class Student:
                full_name.find(text) is not -1 or email.find(text) is not -1
 
 class Submission:
-    NO_SUBMISSION = 0
-    OK = 1
+    NO_SUBMISSION = (1 << 0)
+    OK = (1 << 1)
+    BAD_ZIP_URL = (1 << 2)
 
     def __init__(self, student, lab, response):
         self.student = student
@@ -104,6 +105,14 @@ class Submission:
 
             # Open zip of student's file(s) in memory
             zip_response = requests.get(part["zip_url"])
+
+            # Sometimes the zip file URL reported by zyBooks is invalid. Not sure if this
+            # is an error with Amazon (the host) or zyBooks but in this rare case, just skip
+            # the file. Also flag this Submission as having missing file(s).
+            if not zip_response.ok:
+                self.flag |= Submission.BAD_ZIP_URL
+                continue
+
             zip_file = zipfile.ZipFile(io.BytesIO(zip_response.content))
             files = self.extract_zip(part["name"], zip_file)
 

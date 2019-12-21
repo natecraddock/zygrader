@@ -22,7 +22,16 @@ def get_submission(lab, student):
     window.draw()
 
     submission_response = scraper.download_assignment(student, lab)
-    return data.model.Submission(student, lab, submission_response)
+    submission = data.model.Submission(student, lab, submission_response)
+
+    # Report missing files
+    if submission.flag & data.model.Submission.BAD_ZIP_URL:
+        msg = [f"One or more URLs for {student.full_name}'s code submission are bad.",
+               "Some files could not be downloaded. Please",
+               "View the most recent submission on zyBooks."]
+        window.create_popup("Warning", msg)
+
+    return submission
 
 def diff_submissions(first, second):
     diffs = {}
