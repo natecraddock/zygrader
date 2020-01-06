@@ -89,6 +89,48 @@ def add_lab():
 
     data.write_labs(all_labs)
 
+def move_lab(lab, step):
+    labs = data.get_labs()
+    index = labs.index(lab)
+    labs[index] = labs[index + step]
+    labs[index + step] = lab
+
+    data.write_labs(labs)
+
+def edit_labs_callback(lab):
+    window = Window.get_window()
+
+    options = ["Cancel", "Remove", "Move Up", "Move Down", "Edit"]
+    option = window.create_options_popup("Edit Lab", ["Select an option"], options)
+
+    if option == "Remove":
+        msg = [f"Are you sure you want to remove {lab.name}?"]
+        remove = window.create_bool_popup("Confirm", msg)
+
+        if remove:
+            labs = data.get_labs()
+            labs.remove(lab)
+            data.write_labs(labs)
+
+    elif option == "Move Up":
+        move_lab(lab, -1)
+
+    elif option == "Move Down":
+        move_lab(lab, -1)
+
+    elif option == "Edit":
+        pass
+
+def edit_labs():
+    window = Window.get_window()
+    labs = data.get_labs()
+
+    while True:
+        lab = window.filtered_list(labs, "Lab")
+        if lab is 0:
+            break
+
+        edit_labs_callback(lab)
 
 def download_roster():
     window = Window.get_window()
@@ -117,6 +159,8 @@ def class_manager_callback(option):
         setup_new_class()
     elif option == "Add Lab":
         add_lab()
+    elif option == "Edit Labs":
+        edit_labs()
     elif option == "Change Class":
         change_class()
     elif option == "Download Student Roster":
@@ -125,6 +169,6 @@ def class_manager_callback(option):
 def start():
     window = Window.get_window()
 
-    options = ["Setup New Class", "Add Lab", "Download Student Roster", "Change Class"]
+    options = ["Setup New Class", "Add Lab", "Edit Labs", "Download Student Roster", "Change Class"]
 
     window.filtered_list(options, "Option", callback=class_manager_callback)

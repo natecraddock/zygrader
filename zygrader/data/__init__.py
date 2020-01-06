@@ -46,6 +46,7 @@ def get_labs() -> list:
     return g_labs
 
 def write_labs(labs):
+    global g_labs
     g_labs = labs
 
     labs_json = []
