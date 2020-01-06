@@ -2,6 +2,7 @@ import os
 import json
 
 from .ui.window import Window
+from .ui import components
 from .zyscrape import Zyscrape
 from . import data
 from . import config
@@ -89,6 +90,76 @@ def add_lab():
 
     data.write_labs(all_labs)
 
+def set_due_date(lab):
+    window = Window.get_window()
+
+    labs = data.get_labs()
+
+    old_date = ""
+    if "due" in lab.options:
+        old_date = lab.options["due"]
+
+    due_date = window.text_input("Enter due date [m.d.Y:H.M.S]", text=old_date)
+
+    # Clearing the due date
+    if due_date == "" and "due" in lab.options:
+        del lab.options["due"]
+    else:
+        lab.options["due"] = due_date
+
+    data.write_labs(labs)
+
+def toggle_grade_highest_score(lab):
+    if "highest_score" in lab.options:
+        del lab.options["highest_score"]
+    else:
+        lab.options["highest_score"] = ""
+
+    labs = data.get_labs()
+    data.write_labs(labs)
+
+def rename_lab(lab):
+    window = Window.get_window()
+
+    labs = data.get_labs()
+
+    name = window.text_input("Enter Lab's new name", text=lab.name)
+
+    lab.name = name
+    data.write_labs(labs)
+
+def edit_lab(lab):
+    window = Window.get_window()
+
+    while True:
+        highest_score = " "
+        date = " "
+        due_date = ""
+        if "highest_score" in lab.options:
+            highest_score = "X"
+        if "due" in lab.options:
+            date = "X"
+            due_date = lab.options["due"]
+        message = [f"Editing {lab.name}",
+                   f"[{highest_score}] Grade Highest Scoring Submission",
+                   f"[{date}] Due Date: {due_date}",
+                   "",
+                   "Due dates are formatted m.d.Y:H.M.S. For example",
+                   "November 15, 2019 at midnight is 11.15.2019:23.59.59"]
+
+        options = ["Cancel", "Set Due Date", "Toggle Highest Score", "Rename"]
+
+        option = window.create_options_popup("Edit Lab", message, options, align=components.Popup.ALIGN_LEFT)
+
+        if option == "Cancel":
+            break
+        elif option == "Set Due Date":
+            set_due_date(lab)
+        elif option == "Toggle Highest Score":
+            toggle_grade_highest_score(lab)
+        elif option == "Rename":
+            rename_lab(lab)
+
 def move_lab(lab, step):
     labs = data.get_labs()
     index = labs.index(lab)
@@ -119,7 +190,7 @@ def edit_labs_callback(lab):
         move_lab(lab, -1)
 
     elif option == "Edit":
-        pass
+        edit_lab(lab)
 
 def edit_labs():
     window = Window.get_window()
