@@ -53,6 +53,43 @@ def setup_new_class():
     save_roster(roster)
     window.create_popup("Finished", ["Successfully downloaded student roster"])
 
+def add_lab():
+    window = Window.get_window()
+    scraper = Zyscrape()
+
+    lab_name = window.text_input("Lab Name")
+
+    # Get lab part(s)
+    parts = []
+    url = window.text_input("Part URL (enter \"done\" to finish)")
+    while url != "done":
+        part = {}
+
+        response = scraper.get_zybook_section(url)
+        if not response["success"]:
+            window.create_popup("Error", ["Invalid URL"])
+            continue
+
+        part_id = response["id"]
+        name = response["name"]
+
+        # Name lab part and add to list of parts
+        name = window.text_input("Edit part name", name)
+        part["name"] = name
+        part["id"] = part_id
+        parts.append(part)
+
+        # Get next part
+        url = window.text_input("Part URL (enter \"done\" to finish)")
+
+    new_lab = data.model.Lab(lab_name, parts, {})
+
+    all_labs = data.get_labs()
+    all_labs.append(new_lab)
+
+    data.write_labs(all_labs)
+
+
 def download_roster():
     window = Window.get_window()
     scraper = Zyscrape()
@@ -78,7 +115,9 @@ def change_class():
 def class_manager_callback(option):
     if option == "Setup New Class":
         setup_new_class()
-    if option == "Change Class":
+    elif option == "Add Lab":
+        add_lab()
+    elif option == "Change Class":
         change_class()
     elif option == "Download Student Roster":
         download_roster()
@@ -86,6 +125,6 @@ def class_manager_callback(option):
 def start():
     window = Window.get_window()
 
-    options = ["Setup New Class", "Download Student Roster", "Change Class"]
+    options = ["Setup New Class", "Add Lab", "Download Student Roster", "Change Class"]
 
     window.filtered_list(options, "Option", callback=class_manager_callback)

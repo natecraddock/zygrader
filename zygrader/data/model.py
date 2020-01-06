@@ -10,9 +10,8 @@ from ..zyscrape import Zyscrape
 from .. import config
 
 class Lab:
-    def __init__(self, name, assignment_type, parts, options):
+    def __init__(self, name, parts, options):
         self.name = name
-        self.type = assignment_type
         self.parts = parts
         self.options = options
 
@@ -29,6 +28,14 @@ class Lab:
         text = text.lower()
 
         return name.find(text) is not -1
+
+    def to_json(self):
+        lab = {"name": self.name, "parts": self.parts, "options": self.options}
+        if "due" in lab["options"]:
+            lab["options"]["due"] = lab["options"]["due"].strftime("%m.%d.%Y:%H.%M.%S")
+
+        return lab
+
 
 class Student:
     def __init__(self, first_name, last_name, email, section, id):

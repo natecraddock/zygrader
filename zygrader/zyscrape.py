@@ -49,7 +49,10 @@ class Zyscrape:
         return r.json()
 
     def get_zybook_section(self, url):
-        r = Zyscrape.session.get(url)
+        url = url.replace("learn", "zyserver").replace("zybook/", "v1/zybook/")
+
+        payload = {"auth_token": Zyscrape.token}
+        r = Zyscrape.session.get(url, json=payload)
         response = {"success": False}
 
         if r.ok:
@@ -58,7 +61,7 @@ class Zyscrape:
 
             response["success"] = True
             response["id"] = content["id"]
-            respone["name"] = content["caption"]
+            response["name"] = content["caption"]
 
         return response
 

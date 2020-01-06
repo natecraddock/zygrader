@@ -41,6 +41,18 @@ def get_labs() -> list:
         labs_json = json.load(labs_file)
     
     for a in labs_json:
-        g_labs.append(Lab(a["name"], a["type"], a["parts"], a["options"]))
+        g_labs.append(Lab(a["name"], a["parts"], a["options"]))
 
     return g_labs
+
+def write_labs(labs):
+    g_labs = labs
+
+    labs_json = []
+
+    for lab in labs:
+        labs_json.append(lab.to_json())
+
+    path = config.zygrader.LABS_DATA
+    with open(path, 'w') as _file:
+        json.dump(labs_json, _file, indent=2)
