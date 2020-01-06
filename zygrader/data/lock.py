@@ -7,7 +7,7 @@ from .model import Lab
 from .. import config
 
 def get_lock_files():
-    return [l for l in os.listdir(config.zygrader.DATA_DIRECTORY) if l.endswith(".lock")]
+    return [l for l in os.listdir(config.zygrader.CLASS_DIRECTORY) if l.endswith(".lock")]
 
 def is_lab_locked(student: Student, lab: Lab):
     # Try to match this against all the lock files in the directory
@@ -39,7 +39,7 @@ def get_lock_file_path(student: Student, lab: Lab):
     student_id = student.id
 
     lock_path = f"{username}.{lab_id}.{student_id}.lock"
-    return os.path.join(config.zygrader.DATA_DIRECTORY, lock_path)
+    return os.path.join(config.zygrader.CLASS_DIRECTORY, lock_path)
 
 def lock_lab(student: Student, lab: Lab):
     lock = get_lock_file_path(student, lab)
@@ -60,13 +60,13 @@ def unlock_all_labs_by_grader(username: str):
 
         # Only look at the lock files graded by the current grader
         if lock_parts[0] == username:
-            os.remove(os.path.join(config.zygrader.DATA_DIRECTORY, lock))
+            os.remove(os.path.join(config.zygrader.CLASS_DIRECTORY, lock))
 
 def unlock_all_labs():
     for lock in get_lock_files():
-        os.remove(os.path.join(config.zygrader.DATA_DIRECTORY, lock))
+        os.remove(os.path.join(config.zygrader.CLASS_DIRECTORY, lock))
 
 def remove_lock_file(_file):
-    locks_directory = config.zygrader.DATA_DIRECTORY
+    locks_directory = config.zygrader.CLASS_DIRECTORY
 
     os.remove(os.path.join(locks_directory, _file))
