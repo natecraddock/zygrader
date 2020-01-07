@@ -118,5 +118,13 @@ def do_versioning(window: Window):
 
         window.create_popup("Version 1.8", msg, components.Popup.ALIGN_LEFT)
 
+    if compare_versions(2.0, user_version):
+        msg = ["zygrader Version 2.0", "",
+               "* Removed Christmas Theme",
+               "* Adds options to setup new zybooks classes",
+               "* Adds option to update student roster"]
+
+        window.create_popup("Version 2.0", msg, components.Popup.ALIGN_LEFT)
+
     # Write the current version to the user's config file
     write_current_version(config)

@@ -4,7 +4,7 @@ import json
 from .. import data
 
 # Only change these if you know what you are doing!
-VERSION = 1.8
+VERSION = 2.0
 
 # TODO: save this in configuration
 CLASS_CODE = ""
