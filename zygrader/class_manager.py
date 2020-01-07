@@ -62,11 +62,12 @@ def add_lab():
 
     # Get lab part(s)
     parts = []
-    url = window.text_input("Part URL (enter \"done\" to finish)")
-    while url != "done":
+    number = window.text_input("Enter Chapter.section, e.g. 2.26 (enter \"done\" to finish)")
+    while number != "done":
         part = {}
+        chapter, section = number.split(".")
 
-        response = scraper.get_zybook_section(url)
+        response = scraper.get_zybook_section(chapter, section)
         if not response["success"]:
             window.create_popup("Error", ["Invalid URL"])
             continue
@@ -81,7 +82,7 @@ def add_lab():
         parts.append(part)
 
         # Get next part
-        url = window.text_input("Part URL (enter \"done\" to finish)")
+        number = window.text_input("Enter Chapter.section, e.g. 2.26 (enter \"done\" to finish)")
 
     new_lab = data.model.Lab(lab_name, parts, {})
 

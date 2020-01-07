@@ -48,10 +48,11 @@ class Zyscrape:
 
         return r.json()
 
-    def get_zybook_section(self, url):
-        url = url.replace("learn", "zyserver").replace("zybook/", "v1/zybook/")
-
+    def get_zybook_section(self, chapter, section):
+        class_code = config.zygrader.CLASS_CODE
+        url = f"https://zyserver.zybooks.com/v1/zybook/{class_code}/chapter/{chapter}/section/{section}"
         payload = {"auth_token": Zyscrape.token}
+
         r = Zyscrape.session.get(url, json=payload)
         response = {"success": False}
 
