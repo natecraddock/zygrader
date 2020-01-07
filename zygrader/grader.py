@@ -178,5 +178,9 @@ def grade():
     window = Window.get_window()
     labs = data.get_labs()
 
+    if not labs:
+        window.create_popup("Error", ["No labs have been created yet"])
+        return
+
     # Pick a lab
     window.filtered_list(labs, "Assignment", lab_callback, data.Lab.find)
