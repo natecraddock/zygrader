@@ -53,7 +53,7 @@ def diff_submissions(first, second):
 def pair_programming_submission_callback(submission):
     window = Window.get_window()
 
-    options = ["Open Folder", "View Code", "Done"]
+    options = ["Open Folder", "Run Code", "View Code", "Done"]
     while True:
         option = window.create_options_popup("Downloaded", submission.msg, options, components.Popup.ALIGN_LEFT)
 
@@ -61,6 +61,9 @@ def pair_programming_submission_callback(submission):
             submission.show_files()
         elif option == "Open Folder":
             submission.open_folder()
+        elif option == "Run Code":
+            if not submission.run_code():
+                window.create_popup("Error", ["Could not compile and run code"])
         else:
             break
 
@@ -144,13 +147,16 @@ def student_callback(lab, student):
             data.lock.unlock_lab(student, lab)
             return
 
-        options = ["Open Folder", "Pair Programming", "View Code", "Done"]
+        options = ["Open Folder", "Pair Programming", "Run Code", "View Code", "Done"]
         while True:
             option = window.create_options_popup("Downloaded", submission.msg, options, components.Popup.ALIGN_LEFT)
 
             if option == "Pair Programming":
                 grade_pair_programming(submission)
                 break
+            elif option == "Run Code":
+                if not submission.run_code():
+                    window.create_popup("Error", ["Could not compile and run code"])
             elif option == "View Code":
                 submission.show_files()
             elif option == "Open Folder":

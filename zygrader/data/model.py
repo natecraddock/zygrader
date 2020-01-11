@@ -144,3 +144,24 @@ class Submission:
             return {f"{file_prefix}_{name}": input_zip.read(name).decode('UTF-8') for name in input_zip.namelist()}
         else:
             return {f"{name}": input_zip.read(name).decode('UTF-8') for name in input_zip.namelist()}
+
+    def run_code(self):
+        PAUSE_COMMAND = "read -p \"Press any key to continue\""
+
+        executable_name = os.path.join(self.files_directory, "run")
+        source_files = [os.path.join(self.files_directory, f) for f in os.listdir(self.files_directory) if f.endswith(".cpp")]
+        compile_command = ["g++", "-o", executable_name] + source_files
+
+        compile_exit = subprocess.run(compile_command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+        if compile_exit.returncode != 0:
+            return False
+
+        # Compiled successfully, run code
+        executable = os.path.abspath(executable_name)
+        cmd = executable + f"; {PAUSE_COMMAND}"
+        subprocess.run(["xterm", "-e", cmd])
+
+        os.remove(executable)
+
+        return True
