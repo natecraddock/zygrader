@@ -71,11 +71,13 @@ def config_menu():
 def prep_lab_score_calc():
     window = Window.get_window()
 
-    score = int(window.text_input("What was the student's original score"))
+    try:
+        score = int(window.text_input("What was the student's original score"))
+        new_score = score + ((100 - score) * 0.6)
 
-    new_score = score + ((100 - score) * 0.6)
-
-    window.create_popup("New Score", [f"The student's new score is: {new_score}"])
+        window.create_popup("New Score", [f"The student's new score is: {new_score}"])
+    except ValueError:
+        window.create_popup("Error", ["Invalid input"])
 
 def mainloop_callback(option):
     if option == "Grade":
