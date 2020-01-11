@@ -68,11 +68,22 @@ def config_menu():
             config_file["editor"] = editor
             config.user.write_config(config_file)
 
+def prep_lab_score_calc():
+    window = Window.get_window()
+
+    score = int(window.text_input("What was the student's original score"))
+
+    new_score = score + ((100 - score) * 0.6)
+
+    window.create_popup("New Score", [f"The student's new score is: {new_score}"])
+
 def mainloop_callback(option):
     if option == "Grade":
         grader.grade()
     elif option == "Config":
         config_menu()
+    elif option == "Prep Lab Score Calculator":
+        prep_lab_score_calc()
     elif option == "Admin":
         admin.admin_menu()
 
@@ -81,7 +92,7 @@ def mainloop(admin_mode):
     window = Window.get_window()
     config_file = config.user.get_config()
     
-    options = ["Grade", "Config"]
+    options = ["Grade", "Config", "Prep Lab Score Calculator"]
 
     if admin_mode:
         options.append("Admin")
