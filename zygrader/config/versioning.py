@@ -130,7 +130,8 @@ def do_versioning(window: Window):
         msg = ["zygrader Version 2.1", "",
                "* Silence stdout, stderr for external processes.",
                "* Add option to compile and run student code.",
-               "  Select a student and then choose \"Run Code\"."]
+               "  Select a student and then choose \"Run Code\".",
+               "* Add a Prep Lab score calculator (for late Prep Labs)"]
 
         window.create_popup("Version 2.1", msg, components.Popup.ALIGN_LEFT)
 
