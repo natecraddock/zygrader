@@ -76,7 +76,7 @@ def add_lab():
         name = response["name"]
 
         # Name lab part and add to list of parts
-        name = window.text_input("Edit part name", name)
+        name = window.text_input("Edit part name")
         part["name"] = name
         part["id"] = part_id
         parts.append(part)
@@ -100,7 +100,7 @@ def set_due_date(lab):
     if "due" in lab.options:
         old_date = lab.options["due"]
 
-    due_date = window.text_input("Enter due date [m.d.Y:H.M.S]", text=old_date)
+    due_date = window.text_input("Enter due date [MM.DD.YY:HH.MM.SS]", text=old_date)
 
     # Clearing the due date
     if due_date == "" and "due" in lab.options:
@@ -145,7 +145,7 @@ def edit_lab(lab):
                    f"[{highest_score}] Grade Highest Scoring Submission",
                    f"[{date}] Due Date: {due_date}",
                    "",
-                   "Due dates are formatted m.d.Y:H.M.S. For example",
+                   "Due dates are formatted MM.DD.YY:HH.MM.SS. For example",
                    "November 15, 2019 at midnight is 11.15.2019:23.59.59"]
 
         options = ["Cancel", "Set Due Date", "Toggle Highest Score", "Rename"]
