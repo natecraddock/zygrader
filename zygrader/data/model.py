@@ -134,10 +134,10 @@ class Submission:
         user_editor = config.user.get_config()["editor"]
         editor_path = config.user.EDITORS[user_editor]
 
-        subprocess.Popen(f"{editor_path} {self.files_directory}/*", shell=True)
+        subprocess.Popen(f"{editor_path} {self.files_directory}/*", shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
     def open_folder(self):
-        subprocess.Popen(f"xdg-open {self.files_directory}", shell=True)
+        subprocess.Popen(f"xdg-open {self.files_directory}", shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
     def extract_zip(self, file_prefix, input_zip):
         if file_prefix:

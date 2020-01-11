@@ -112,7 +112,7 @@ def grade_pair_programming(first_submission):
                 pair_programming_submission_callback(second_submission)
             elif option == "View Diff":
                 # Open diffs in favorite browser
-                subprocess.Popen(f"xdg-open {os.path.join(tmp_dir, 'submissions.html')}", shell=True)
+                subprocess.Popen(f"xdg-open {os.path.join(tmp_dir, 'submissions.html')}", shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
             else:
                 break
 
