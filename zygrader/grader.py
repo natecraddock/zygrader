@@ -124,6 +124,8 @@ def grade_pair_programming(first_submission):
         data.lock.unlock_lab(student, lab)
     except curses.error:
         data.lock.unlock_lab(student, lab)
+    except Exception:
+        data.lock.unlock_lab(student, lab)
 
 def student_callback(lab, student):
     window = Window.get_window()
@@ -169,6 +171,8 @@ def student_callback(lab, student):
     except KeyboardInterrupt:
         data.lock.unlock_lab(student, lab)
     except curses.error:
+        data.lock.unlock_lab(student, lab)
+    except Exception:
         data.lock.unlock_lab(student, lab)
 
 
