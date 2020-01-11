@@ -37,7 +37,7 @@ class Zyscrape:
         return True
 
     def get_roster(self):
-        roles = '["TA","Student","Temporary","Dropped"]'
+        roles = '["Student","Temporary"]'
         roster_url = f"https://zyserver.zybooks.com/v1/zybook/{config.zygrader.CLASS_CODE}/roster?zybook_roles={roles}"
 
         payload = {"auth_token": Zyscrape.token}
