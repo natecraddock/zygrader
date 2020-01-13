@@ -69,7 +69,7 @@ def create_account(window: Window, scraper):
 
     while True:
         # Get user account information
-        email = window.text_input("Enter your zyBooks email", None)
+        email = window.text_input("Enter your zyBooks email", mask=None)
         password = get_password(window)
 
         if authenticate(window, scraper, email, password):
