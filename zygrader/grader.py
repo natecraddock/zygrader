@@ -53,7 +53,7 @@ def diff_submissions(first, second):
 def pair_programming_submission_callback(submission):
     window = Window.get_window()
 
-    options = ["Open Folder", "Run Code", "View Code", "Done"]
+    options = ["Open Folder", "Run", "View", "Done"]
     while True:
         option = window.create_options_popup("Downloaded", submission.msg, options, components.Popup.ALIGN_LEFT)
 
@@ -149,7 +149,7 @@ def student_callback(lab, student):
             data.lock.unlock_lab(student, lab)
             return
 
-        options = ["Open Folder", "Pair Programming", "Run Code", "View Code", "Done"]
+        options = ["Open Folder", "Pair Programming", "Run", "View", "Done"]
         while True:
             option = window.create_options_popup("Downloaded", submission.msg, options, components.Popup.ALIGN_LEFT)
 
