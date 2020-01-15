@@ -179,12 +179,16 @@ class Submission:
         part_prefixes = [part["name"] for part in self.lab.parts]
         part_files = os.listdir(self.files_directory)
 
-        parts = [os.path.join(self.files_directory, part) for part in part_files]
+        parts = []
+        for pre in part_prefixes:
+            for part in part_files:
+                if part.startswith(pre):
+                    parts.append(os.path.join(self.files_directory, part))
 
         with open(parts[0], 'r') as part_a:
             with open(parts[1], 'r') as part_b:
                 html = difflib.HtmlDiff(4, 80)
-                diff = html.make_file(part_a.readlines(), part_b.readlines(), part_files[0], part_files[1], context=True)
+                diff = html.make_file(part_a.readlines(), part_b.readlines(), parts[0], parts[1], context=True)
 
                 tmp_dir = tempfile.mkdtemp()
                 with open(f"{os.path.join(tmp_dir, 'parts.html')}", 'w') as diff_file:
