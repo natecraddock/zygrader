@@ -119,6 +119,16 @@ def toggle_grade_highest_score(lab):
     labs = data.get_labs()
     data.write_labs(labs)
 
+# TODO: Abstract this
+def toggle_part_diffing(lab):
+    if "diff_parts" in lab.options:
+        del lab.options["diff_parts"]
+    else:
+        lab.options["diff_parts"] = ""
+
+    labs = data.get_labs()
+    data.write_labs(labs)
+
 def rename_lab(lab):
     window = Window.get_window()
 
@@ -135,29 +145,35 @@ def edit_lab(lab):
     while True:
         highest_score = " "
         date = " "
+        diff_parts = " "
         due_date = ""
         if "highest_score" in lab.options:
             highest_score = "X"
+        if "diff_parts" in lab.options:
+            diff_parts = "X"
         if "due" in lab.options:
             date = "X"
             due_date = lab.options["due"]
         message = [f"Editing {lab.name}",
                    f"[{highest_score}] Grade Highest Scoring Submission",
+                   f"[{diff_parts}] Diff Submission Parts",
                    f"[{date}] Due Date: {due_date}",
                    "",
                    "Due dates are formatted MM.DD.YY:HH.MM.SS. For example",
                    "November 15, 2019 at midnight is 11.15.2019:23.59.59"]
 
-        options = ["Cancel", "Set Due Date", "Toggle Highest Score", "Rename"]
+        options = ["Set Due Date", "Toggle Highest Score", "Toggle Part Diffing", "Rename", "Done"]
 
         option = window.create_options_popup("Edit Lab", message, options, align=components.Popup.ALIGN_LEFT)
 
-        if option == "Cancel":
+        if option == "Done":
             break
         elif option == "Set Due Date":
             set_due_date(lab)
         elif option == "Toggle Highest Score":
             toggle_grade_highest_score(lab)
+        elif option == "Toggle Part Diffing":
+            toggle_part_diffing(lab)
         elif option == "Rename":
             rename_lab(lab)
 
@@ -172,7 +188,7 @@ def move_lab(lab, step):
 def edit_labs_callback(lab):
     window = Window.get_window()
 
-    options = ["Cancel", "Remove", "Move Up", "Move Down", "Edit"]
+    options = ["Remove", "Move Up", "Move Down", "Edit", "Done"]
     option = window.create_options_popup("Edit Lab", ["Select an option"], options)
 
     if option == "Remove":
