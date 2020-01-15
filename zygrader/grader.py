@@ -150,6 +150,11 @@ def student_callback(lab, student):
             return
 
         options = ["Open Folder", "Pair Programming", "Run", "View", "Done"]
+
+        # Add option to diff parts if this lab requires it
+        if submission.flag & data.model.Submission.DIFF_PARTS:
+            options.insert(1, "Diff Parts")
+
         while True:
             option = window.create_options_popup("Downloaded", submission.msg, options, components.Popup.ALIGN_LEFT)
 

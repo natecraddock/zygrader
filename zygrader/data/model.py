@@ -64,6 +64,7 @@ class Submission:
     NO_SUBMISSION = (1 << 0)
     OK = (1 << 1)
     BAD_ZIP_URL = (1 << 2)
+    DIFF_PARTS = (1 << 3)
 
     def __init__(self, student, lab, response):
         self.student = student
@@ -79,6 +80,9 @@ class Submission:
         self.files_directory = self.read_files(response)
 
         self.create_submission_string(response)
+
+        if "diff_parts" in lab.options:
+            self.flag |= Submission.DIFF_PARTS
 
     def create_submission_string(self, response):
         msg = [f"{self.student.full_name}'s submission downloaded", ""]
