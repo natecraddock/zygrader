@@ -110,21 +110,12 @@ def set_due_date(lab):
 
     data.write_labs(labs)
 
-def toggle_grade_highest_score(lab):
-    if "highest_score" in lab.options:
-        del lab.options["highest_score"]
+# Toggle a boolean lab option (T/F value)
+def toggle_lab_option(lab, option):
+    if option in lab.options:
+        del lab.options[option]
     else:
-        lab.options["highest_score"] = ""
-
-    labs = data.get_labs()
-    data.write_labs(labs)
-
-# TODO: Abstract this
-def toggle_part_diffing(lab):
-    if "diff_parts" in lab.options:
-        del lab.options["diff_parts"]
-    else:
-        lab.options["diff_parts"] = ""
+        lab.options[option] = ""
 
     labs = data.get_labs()
     data.write_labs(labs)
@@ -171,9 +162,9 @@ def edit_lab(lab):
         elif option == "Set Due Date":
             set_due_date(lab)
         elif option == "Toggle Highest Score":
-            toggle_grade_highest_score(lab)
+            toggle_lab_option(lab, "highest_score")
         elif option == "Toggle Part Diffing":
-            toggle_part_diffing(lab)
+            toggle_lab_option(lab, "diff_parts")
         elif option == "Rename":
             rename_lab(lab)
 
