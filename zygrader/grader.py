@@ -57,11 +57,11 @@ def pair_programming_submission_callback(submission):
     while True:
         option = window.create_options_popup("Downloaded", submission.msg, options, components.Popup.ALIGN_LEFT)
 
-        if option == "View Code":
+        if option == "View":
             submission.show_files()
         elif option == "Open Folder":
             submission.open_folder()
-        elif option == "Run Code":
+        elif option == "Run":
             if not submission.run_code():
                 window.create_popup("Error", ["Could not compile and run code"])
         else:
@@ -161,10 +161,10 @@ def student_callback(lab, student):
             if option == "Pair Programming":
                 grade_pair_programming(submission)
                 break
-            elif option == "Run Code":
+            elif option == "Run":
                 if not submission.run_code():
                     window.create_popup("Error", ["Could not compile and run code"])
-            elif option == "View Code":
+            elif option == "View":
                 submission.show_files()
             elif option == "Open Folder":
                 submission.open_folder()
