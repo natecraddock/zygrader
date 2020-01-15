@@ -168,6 +168,8 @@ def student_callback(lab, student):
                 submission.show_files()
             elif option == "Open Folder":
                 submission.open_folder()
+            elif option == "Diff Parts":
+                submission.diff_parts()
             else:
                 break
 

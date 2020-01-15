@@ -5,6 +5,7 @@ import requests
 import zipfile
 import io
 import os
+import difflib
 
 from ..zyscrape import Zyscrape
 from .. import config
@@ -169,3 +170,24 @@ class Submission:
         os.remove(executable)
 
         return True
+
+    def diff_parts(self):
+        # This runs under the assumption that we only want to compare parts A and B
+        if len(self.lab.parts) != 2:
+            return
+
+        part_prefixes = [part["name"] for part in self.lab.parts]
+        part_files = os.listdir(self.files_directory)
+
+        parts = [os.path.join(self.files_directory, part) for part in part_files]
+
+        with open(parts[0], 'r') as part_a:
+            with open(parts[1], 'r') as part_b:
+                html = difflib.HtmlDiff(4, 80)
+                diff = html.make_file(part_a.readlines(), part_b.readlines(), part_files[0], part_files[1], context=True)
+
+                tmp_dir = tempfile.mkdtemp()
+                with open(f"{os.path.join(tmp_dir, 'parts.html')}", 'w') as diff_file:
+                    diff_file.write(diff)
+
+                subprocess.Popen(f"xdg-open {os.path.join(tmp_dir, 'parts.html')}", shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
