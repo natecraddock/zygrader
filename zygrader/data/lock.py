@@ -1,3 +1,4 @@
+import datetime
 import getpass
 import os
 
@@ -8,6 +9,18 @@ from .. import config
 
 def get_lock_files():
     return [l for l in os.listdir(config.zygrader.CLASS_DIRECTORY) if l.endswith(".lock")]
+
+def get_lock_log_path():
+    return os.path.join(config.zygrader.CLASS_DIRECTORY, "locks_log.csv")
+
+def log(name, lab, lock="LOCK"):
+    lock_log = get_lock_log_path()
+    # Get timestamp
+    timestamp = datetime.datetime.now().isoformat()
+
+    line = f"{timestamp},{name},{lab},{getpass.getuser()},{lock}\n"
+    with open(lock_log, 'a') as _log:
+        _log.write(line);
 
 def is_lab_locked(student: Student, lab: Lab):
     # Try to match this against all the lock files in the directory
@@ -46,12 +59,16 @@ def lock_lab(student: Student, lab: Lab):
 
     open(lock, 'w').close()
 
+    log(student.full_name, lab.name)
+
 def unlock_lab(student: Student, lab: Lab):
     lock = get_lock_file_path(student, lab)
 
     # Only remove the lock if it exists
     if os.path.exists(lock):
         os.remove(lock)
+
+    log(student.full_name, lab.name, "UNLOCK")
 
 def unlock_all_labs_by_grader(username: str):
     # Look at all lock files
