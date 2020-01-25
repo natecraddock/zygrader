@@ -72,7 +72,7 @@ def prep_lab_score_calc():
     window = Window.get_window()
 
     try:
-        score = int(window.text_input("What was the student's original score"))
+        score = float(window.text_input("What was the student's original score"))
         new_score = score + ((100 - score) * 0.6)
 
         window.create_popup("New Score", [f"The student's new score is: {new_score}"])
