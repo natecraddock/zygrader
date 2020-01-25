@@ -58,18 +58,20 @@ def get_locked_netid(student: Student, lab: Lab):
 def get_lock_file_path(student: Student, lab: Lab):
     """Return path for lock file"""
     username = getpass.getuser()
-    # Use the lab id of the first part (should be unique)
-    lab_id = lab.parts[0]["id"]
-    student_id = student.id
 
-    lock_path = f"{username}.{lab_id}.{student_id}.lock"
+    # Get the lab and student names without spaces
+    lab_name = "".join(lab.name.split())
+    student_name = "".join(student.full_name.split())
+
+    lock_path = f"{username}.{lab_name}.{student_name}.lock"
     return os.path.join(config.zygrader.CLASS_DIRECTORY, lock_path)
 
 def lock_lab(student: Student, lab: Lab):
     """Lock the submission for the given student and lab
 
     Locking is done by creating a file with of the following format:
-    username.lab.student.lock
+        username.lab.student.lock
+    Where username is the grader's username.
     These files are used to determine if a submission is being graded.
     """
     lock = get_lock_file_path(student, lab)
