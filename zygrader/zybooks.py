@@ -1,7 +1,5 @@
 """ A wrapper around the zyBooks API """
 import requests
-import io
-import zipfile
 from datetime import datetime, timezone
 
 from . import config
@@ -23,6 +21,7 @@ class Zybooks:
         Zybooks.session = requests.session()
 
     def authenticate(self, username, password):
+        """Authenticate a user to zyBooks"""
         auth_url = "https://zyserver.zybooks.com/v1/signin"
         payload = {"email": username, "password": password}
         
@@ -37,6 +36,7 @@ class Zybooks:
         return True
 
     def get_roster(self):
+        """Download the roster of regular and temporary students. TAs can be added by adding "TA" to the roles array"""
         roles = '["Student","Temporary"]'
         roster_url = f"https://zyserver.zybooks.com/v1/zybook/{config.zygrader.CLASS_CODE}/roster?zybook_roles={roles}"
 
@@ -49,6 +49,11 @@ class Zybooks:
         return r.json()
 
     def get_zybook_section(self, chapter, section):
+        """Given a chapter and section ID, get section information like the zybooks internal ID
+
+        This is useful for running the class manager. To download a submission, the zybooks sectionID
+        must be used. It is hard to get manually, but this function returns the id and name.
+        """
         class_code = config.zygrader.CLASS_CODE
         url = f"https://zyserver.zybooks.com/v1/zybook/{class_code}/chapter/{chapter}/section/{section}"
         payload = {"auth_token": Zybooks.token}
@@ -67,6 +72,10 @@ class Zybooks:
         return response
 
     def check_valid_class(self, code):
+        """Return a boolean indicating if the zybooks class code is valid
+
+        The class code is in the format: BYUCS142Winter2020
+        """
         url = f"https://zyserver.zybooks.com/v1/zybooks?zybooks=[\"{code}\"]"
         payload = {"auth_token": Zybooks.token}
         r = Zybooks.session.get(url, json=payload)
@@ -82,7 +91,7 @@ class Zybooks:
         date = date.replace(tzinfo=timezone.utc).astimezone(tz=None)
         return date
 
-    def __get_time_string(self, submission):
+    def get_time_string(self, submission):
         time = self.__get_time(submission)
         return time.strftime("%I:%M %p - %m-%d-%Y")
 
@@ -112,7 +121,8 @@ class Zybooks:
         
         return score
 
-    def get_submission(self, part_id, user_id):
+    def get_all_submissions(self, part_id, user_id):
+        """Get the JSON representing all submissions of a given lab"""
         class_code = config.zygrader.CLASS_CODE
         submission_url = f"https://zyserver.zybooks.com/v1/zybook/{class_code}/programming_submission/{part_id}/user/{user_id}"
         payload = {"auth_token": Zybooks.token}
@@ -137,9 +147,16 @@ class Zybooks:
         return submissions[-1]
 
     def download_submission(self, part_id, user_id, options):
+        """Used for grading. Download a single submission and return information for grading.
+        This is used together with self.download_assignment, as some labs have multiple submission "parts"
+        (such as midterms)
+
+        The Lab fetched and information returns depends on the lab options.
+        Usually, the most recent score is returned, but the highest score can also be requested.
+        """
         response = {"code": Zybooks.NO_ERROR}
 
-        r = self.get_submission(part_id, user_id)
+        r = self.get_all_submissions(part_id, user_id)
 
         if not r.ok:
             return response
@@ -169,13 +186,18 @@ class Zybooks:
         response["score"] = self._get_score(submission)
         response["max_score"] = self._get_max_score(submission)
 
-        response["date"] = self.__get_time_string(submission)
+        response["date"] = self.get_time_string(submission)
         response["zip_url"] = submission["zip_location"]
 
         # Success
         return response
 
     def download_assignment(self, student, assignment):
+        """Get information from a student's assignment
+
+        An assignment can have multiple submissions within it (midterms...)
+        So this function compiles the individual scores from each part
+        """
         user_id = str(student.id)
         response = {"code": Zybooks.NO_ERROR, "name": assignment.name, "score": 0, "max_score": 0, "parts": []}
         
@@ -195,60 +217,15 @@ class Zybooks:
                 response_part["zip_url"] = submission["zip_url"]
                 response_part["date"] = submission["date"]
 
-
                 if submission["code"] is Zybooks.COMPILE_ERROR:
                     response_part["code"] = Zybooks.COMPILE_ERROR
             else:
                 response_part["code"] = Zybooks.NO_SUBMISSION
 
-
             response["parts"].append(response_part)
-
         
         # If student has not submitted, just return a non-success message
         if not has_submitted:
             return {"code": Zybooks.NO_SUBMISSION}
 
-        return response
-
-    def extract_zip(self, input_zip):
-        return {name: input_zip.read(name).decode('UTF-8', "replace") for name in input_zip.namelist()}
-            
-    def check_submissions(self, user_id, part, string):
-        """Check each of a student's submissions for a given string"""
-        submission_response = self.get_submission(part["id"], user_id)
-
-        if not submission_response.ok:
-            return {"code": Zybooks.NO_SUBMISSION}
-
-        all_submissions = submission_response.json()["submissions"]
-
-        response = {"code": Zybooks.NO_SUBMISSION}
-
-        for submission in all_submissions:
-            # Get file from zip url
-            try:
-                r = requests.get(submission["zip_location"], stream=True)
-            except requests.exceptions.ConnectionError:
-                # Bad connection, wait a few seconds and try again
-                return {"code": Zybooks.DOWNLOAD_TIMEOUT}
-
-            try:
-                z = zipfile.ZipFile(io.BytesIO(r.content))
-            except zipfile.BadZipFile:
-                response["error"] = f"BadZipFile Error on submission {self.__get_time_string(submission)}"
-                continue
-
-            f = self.extract_zip(z)
-
-            # Check each file for the matched string
-            for source_file in f.keys():
-                if f[source_file].find(string) != -1:
-
-                    # Get the date and time of the submission and return it
-                    response["time"] = self.__get_time_string(submission)
-                    response["code"] = Zybooks.NO_ERROR
-
-                    return response
-        
         return response

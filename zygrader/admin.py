@@ -1,12 +1,57 @@
 import os
 import time
 import json
+import requests
+import zipfile
+import io
 
 from .ui.window import Window
 from .zybooks import Zybooks
 from . import data
 from . import config
 from . import class_manager
+
+def extract_zip(input_zip):
+    return {name: input_zip.read(name).decode('UTF-8', "replace") for name in input_zip.namelist()}
+
+def check_student_submissions(zy_api, student_id, lab, search_string):
+    """Search for a substring in all of a student's submissions for a given lab"""
+    submission_response = zy_api.get_all_submissions(lab["id"], student_id)
+
+    if not submission_response.ok:
+        return {"code": Zybooks.NO_SUBMISSION}
+
+    all_submissions = submission_response.json()["submissions"]
+
+    response = {"code": Zybooks.NO_SUBMISSION}
+
+    for submission in all_submissions:
+        # Get file from zip url
+        try:
+            r = requests.get(submission["zip_location"], stream=True)
+        except requests.exceptions.ConnectionError:
+            # Bad connection, wait a few seconds and try again
+            return {"code": Zybooks.DOWNLOAD_TIMEOUT}
+
+        try:
+            z = zipfile.ZipFile(io.BytesIO(r.content))
+        except zipfile.BadZipFile:
+            response["error"] = f"BadZipFile Error on submission {zy_api.get_time_string(submission)}"
+            continue
+
+        f = extract_zip(z)
+
+        # Check each file for the matched string
+        for source_file in f.keys():
+            if f[source_file].find(search_string) != -1:
+
+                # Get the date and time of the submission and return it
+                response["time"] = zy_api.get_time_string(submission)
+                response["code"] = Zybooks.NO_ERROR
+
+                return response
+
+    return response
 
 def submission_search(lab, search_string, output_path):
     window = Window.get_window()
@@ -23,7 +68,7 @@ def submission_search(lab, search_string, output_path):
                 counter = f"[{student_num}/{len(students)}]"
                 logger.log(f"{counter:12} Checking {student.full_name}")
 
-                match_result = zy_api.check_submissions(str(student.id), lab, search_string)
+                match_result = check_student_submissions(zy_api, str(student.id), lab, search_string)
 
                 if match_result["code"] == Zybooks.DOWNLOAD_TIMEOUT:
                     logger.log("Download timed out... trying again after a few seconds")
@@ -45,41 +90,47 @@ def submission_search(lab, search_string, output_path):
 
         window.remove_logger(logger)
 
+
+def submission_search_init(window, labs):
+    """Get lab part and string from the user for searching"""
+    # Choose lab
+    assignment = window.filtered_list(labs, "Assignment", filter_function=data.Lab.find)
+    if assignment is 0:
+        return
+
+    # Select the lab part if needed
+    if len(assignment.parts) > 1:
+        part_name = window.filtered_list([name["name"] for name in assignment.parts], "Part")
+        if part_name is 0:
+            return
+        index = [assignment.parts.index(p) for p in assignment.parts if p["name"] == part_name][0]
+        part = assignment.parts[index]
+    else:
+        part = assignment.parts[0]
+
+    search_string = window.text_input("Enter a search string")
+
+    # Get a valid output path
+    while True:
+        output_path = window.text_input("Enter the output path including filename [~ is supported]")
+        output_path = os.path.expanduser(output_path)
+
+        if os.path.exists(os.path.dirname(output_path)):
+            break
+
+        msg = [f"Path {os.path.dirname(output_path)} does not exist!"]
+        window.create_popup("Invalid Path", msg)
+
+    # Run the submission search
+    submission_search(part, search_string, output_path)
+
 def admin_menu_callback(option):
     window = Window.get_window()
 
     if option == "Submissions Search":
         labs = data.get_labs()
-        # Choose lab
 
-        assignment = window.filtered_list(labs, "Assignment", filter_function=data.Lab.find)
-        if assignment is 0:
-            return
-
-        # Select the lab part if needed
-        if len(assignment.parts) > 1:
-            part_name = window.filtered_list([name["name"] for name in assignment.parts], "Part")
-            if part_name is 0:
-                return
-            index = [assignment.parts.index(p) for p in assignment.parts if p["name"] == part_name][0]
-            part = assignment.parts[index]
-        else:
-            part = assignment.parts[0]
-
-        search_string = window.text_input("Enter a search string")
-
-        # Get a valid output path
-        while True:
-            output_path = window.text_input("Enter the output path including filename [~ is supported]")
-            output_path = os.path.expanduser(output_path)
-
-            if os.path.exists(os.path.dirname(output_path)):
-                break
-
-            msg = [f"Path {os.path.dirname(output_path)} does not exist!"]
-            window.create_popup("Invalid Path", msg)
-
-        submission_search(part, search_string, output_path)
+        submission_search_init(window, labs)
     elif option == "Remove Locks":
         while True:
             all_locks = data.lock.get_lock_files()
