@@ -1,3 +1,5 @@
+"""Lock files are created to prevent multiple people from grading an assignment simultaneously."""
+
 import datetime
 import getpass
 import os
