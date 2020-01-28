@@ -7,7 +7,7 @@ import io
 import os
 import difflib
 
-from ..zyscrape import Zyscrape
+from ..zybooks import Zybooks
 from .. import config
 
 class Lab:
@@ -74,7 +74,7 @@ class Submission:
 
         # Read the response data
         # Only grade if student has submitted
-        if response["code"] is Zyscrape.NO_SUBMISSION:
+        if response["code"] is Zybooks.NO_SUBMISSION:
             self.flag = Submission.NO_SUBMISSION
             return
 
@@ -89,7 +89,7 @@ class Submission:
         msg = [f"{self.student.full_name}'s submission downloaded", ""]
 
         for part in response["parts"]:
-            if part["code"] == Zyscrape.NO_SUBMISSION:
+            if part["code"] == Zybooks.NO_SUBMISSION:
                 msg.append(f"{part['name']:4} No Submission")
             else:
                 score = f"{part['score']}/{part['max_score']}"
@@ -99,7 +99,7 @@ class Submission:
                 else:
                     msg.append(f"{score:8} {part['date']}")
 
-                if part["code"] == Zyscrape.COMPILE_ERROR:
+                if part["code"] == Zybooks.COMPILE_ERROR:
                     msg[-1] += f" [Compile Error]"
 
         msg.append("")
@@ -112,7 +112,7 @@ class Submission:
 
         # Look through each part
         for part in response["parts"]:
-            if part["code"] == Zyscrape.NO_SUBMISSION:
+            if part["code"] == Zybooks.NO_SUBMISSION:
                 continue
 
             # Open zip of student's file(s) in memory

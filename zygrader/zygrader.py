@@ -6,7 +6,7 @@ from . import config
 from . import grader
 from . import admin
 
-from .zyscrape import Zyscrape
+from .zybooks import Zybooks
 
 from .ui import window
 from .ui.window import Window
@@ -14,7 +14,7 @@ from .ui import components
 
 def config_menu():
     window = Window.get_window()
-    scraper = Zyscrape()
+    zy_api = Zybooks()
     config_file = config.user.get_config()
 
     if config_file["password"]:
@@ -30,7 +30,7 @@ def config_menu():
         option = window.filtered_list(options, "Option")
 
         if option == "Change Credentials":
-            email, password = config.user.create_account(window, scraper)
+            email, password = config.user.create_account(window, zy_api)
             save_password = window.create_bool_popup("Save Password", ["Would you like to save your password?"])
 
             config_file["email"] = email
@@ -46,7 +46,7 @@ def config_menu():
             while True:
                 password = config.user.get_password(window)
 
-                if config.user.authenticate(window, scraper, email, password):
+                if config.user.authenticate(window, zy_api, email, password):
                     config.user.encode_password(config_file, password)
                     config.user.write_config(config_file)
                     break

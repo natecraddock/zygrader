@@ -3,7 +3,7 @@ import time
 import json
 
 from .ui.window import Window
-from .zyscrape import Zyscrape
+from .zybooks import Zybooks
 from . import data
 from . import config
 from . import class_manager
@@ -11,7 +11,7 @@ from . import class_manager
 def submission_search(lab, search_string, output_path):
     window = Window.get_window()
     students = data.get_students()
-    scraper = Zyscrape()
+    zy_api = Zybooks()
 
     logger = window.new_logger()
 
@@ -23,16 +23,16 @@ def submission_search(lab, search_string, output_path):
                 counter = f"[{student_num}/{len(students)}]"
                 logger.log(f"{counter:12} Checking {student.full_name}")
 
-                match_result = scraper.check_submissions(str(student.id), lab, search_string)
+                match_result = zy_api.check_submissions(str(student.id), lab, search_string)
 
-                if match_result["code"] == Zyscrape.DOWNLOAD_TIMEOUT:
+                if match_result["code"] == Zybooks.DOWNLOAD_TIMEOUT:
                     logger.log("Download timed out... trying again after a few seconds")
                     log_file.write("Download timed out... trying again after a few seconds\n")
                     time.sleep(5)
                 else:
                     break
 
-            if match_result["code"] == Zyscrape.NO_ERROR:
+            if match_result["code"] == Zybooks.NO_ERROR:
                 log_file.write(f"{student.full_name} matched {match_result['time']}\n")
 
                 logger.append(f" found {search_string}")

@@ -3,7 +3,7 @@ import json
 
 from .ui.window import Window
 from .ui import components
-from .zyscrape import Zyscrape
+from .zybooks import Zybooks
 from . import data
 from . import config
 
@@ -33,12 +33,12 @@ def save_roster(roster):
 
 def setup_new_class():
     window = Window.get_window()
-    scraper = Zyscrape()
+    zy_api = Zybooks()
     
     code = window.text_input("Enter class code")
 
     # Check if class code is valid
-    valid = scraper.check_valid_class(code)
+    valid = zy_api.check_valid_class(code)
     if valid:
         window.create_popup("Valid", [f"{code} is valid"])
     else:
@@ -49,14 +49,14 @@ def setup_new_class():
     config.zygrader.add_class(code)
 
     # Download the list of students
-    roster = scraper.get_roster()
+    roster = zy_api.get_roster()
 
     save_roster(roster)
     window.create_popup("Finished", ["Successfully downloaded student roster"])
 
 def add_lab():
     window = Window.get_window()
-    scraper = Zyscrape()
+    zy_api = Zybooks()
 
     lab_name = window.text_input("Lab Name")
 
@@ -67,7 +67,7 @@ def add_lab():
         part = {}
         chapter, section = number.split(".")
 
-        response = scraper.get_zybook_section(chapter, section)
+        response = zy_api.get_zybook_section(chapter, section)
         if not response["success"]:
             window.create_popup("Error", ["Invalid URL"])
             continue
@@ -213,9 +213,9 @@ def edit_labs():
 
 def download_roster():
     window = Window.get_window()
-    scraper = Zyscrape()
+    zy_api = Zybooks()
 
-    roster = scraper.get_roster()
+    roster = zy_api.get_roster()
     if not roster:
         window.create_popup("Failed", ["Failed to download student roster"])
         return

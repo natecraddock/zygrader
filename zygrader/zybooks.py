@@ -1,4 +1,4 @@
-""" zyscrape - A wrapper around the zyBooks API """
+""" A wrapper around the zyBooks API """
 import requests
 import io
 import zipfile
@@ -6,7 +6,7 @@ from datetime import datetime, timezone
 
 from . import config
 
-class Zyscrape:
+class Zybooks:
     NO_ERROR = 0
     NO_SUBMISSION = 1
     COMPILE_ERROR = 2
@@ -20,28 +20,28 @@ class Zyscrape:
     token = ""
 
     def __init__(self):
-        Zyscrape.session = requests.session()
+        Zybooks.session = requests.session()
 
     def authenticate(self, username, password):
         auth_url = "https://zyserver.zybooks.com/v1/signin"
         payload = {"email": username, "password": password}
         
-        r = Zyscrape.session.post(auth_url, json=payload)
+        r = Zybooks.session.post(auth_url, json=payload)
 
         # Authentification failed
         if not r.json()["success"]:
             return False
         
         # Store auth token
-        Zyscrape.token = r.json()["session"]["auth_token"]
+        Zybooks.token = r.json()["session"]["auth_token"]
         return True
 
     def get_roster(self):
         roles = '["Student","Temporary"]'
         roster_url = f"https://zyserver.zybooks.com/v1/zybook/{config.zygrader.CLASS_CODE}/roster?zybook_roles={roles}"
 
-        payload = {"auth_token": Zyscrape.token}
-        r = Zyscrape.session.get(roster_url, json=payload)
+        payload = {"auth_token": Zybooks.token}
+        r = Zybooks.session.get(roster_url, json=payload)
 
         if not r.ok:
             return False
@@ -51,9 +51,9 @@ class Zyscrape:
     def get_zybook_section(self, chapter, section):
         class_code = config.zygrader.CLASS_CODE
         url = f"https://zyserver.zybooks.com/v1/zybook/{class_code}/chapter/{chapter}/section/{section}"
-        payload = {"auth_token": Zyscrape.token}
+        payload = {"auth_token": Zybooks.token}
 
-        r = Zyscrape.session.get(url, json=payload)
+        r = Zybooks.session.get(url, json=payload)
         response = {"success": False}
 
         if r.ok:
@@ -68,8 +68,8 @@ class Zyscrape:
 
     def check_valid_class(self, code):
         url = f"https://zyserver.zybooks.com/v1/zybooks?zybooks=[\"{code}\"]"
-        payload = {"auth_token": Zyscrape.token}
-        r = Zyscrape.session.get(url, json=payload)
+        payload = {"auth_token": Zybooks.token}
+        r = Zybooks.session.get(url, json=payload)
 
         if r.ok:
             return r.json()["zybooks"]
@@ -115,9 +115,9 @@ class Zyscrape:
     def get_submission(self, part_id, user_id):
         class_code = config.zygrader.CLASS_CODE
         submission_url = f"https://zyserver.zybooks.com/v1/zybook/{class_code}/programming_submission/{part_id}/user/{user_id}"
-        payload = {"auth_token": Zyscrape.token}
+        payload = {"auth_token": Zybooks.token}
 
-        r = Zyscrape.session.get(submission_url, json=payload)
+        r = Zybooks.session.get(submission_url, json=payload)
 
         return r
 
@@ -137,7 +137,7 @@ class Zyscrape:
         return submissions[-1]
 
     def download_submission(self, part_id, user_id, options):
-        response = {"code": Zyscrape.NO_ERROR}
+        response = {"code": Zybooks.NO_ERROR}
 
         r = self.get_submission(part_id, user_id)
 
@@ -148,23 +148,23 @@ class Zyscrape:
         submissions = r.json()["submissions"]
 
         # Strip out late submissions
-        if submissions and Zyscrape.CHECK_LATE_SUBMISSION in options:
-            submissions = self.__remove_late_submissions(submissions, options[Zyscrape.CHECK_LATE_SUBMISSION])
+        if submissions and Zybooks.CHECK_LATE_SUBMISSION in options:
+            submissions = self.__remove_late_submissions(submissions, options[Zybooks.CHECK_LATE_SUBMISSION])
 
         # Student has not submitted or did not submit before assignment was due
         if not submissions:
-            response["code"] = Zyscrape.NO_SUBMISSION
+            response["code"] = Zybooks.NO_SUBMISSION
             return response
 
         # Get highest score
-        if Zyscrape.SUBMISSION_HIGHEST in options:
+        if Zybooks.SUBMISSION_HIGHEST in options:
             submission = self.__get_submission_highest_score(submissions)
         else:
             submission = self.__get_submission_most_recent(submissions)
 
         # If student's code did not compile their score is 0
         if "compile_error" in submission["results"]:
-            response["code"] = Zyscrape.COMPILE_ERROR
+            response["code"] = Zybooks.COMPILE_ERROR
 
         response["score"] = self._get_score(submission)
         response["max_score"] = self._get_max_score(submission)
@@ -177,14 +177,14 @@ class Zyscrape:
 
     def download_assignment(self, student, assignment):
         user_id = str(student.id)
-        response = {"code": Zyscrape.NO_ERROR, "name": assignment.name, "score": 0, "max_score": 0, "parts": []}
+        response = {"code": Zybooks.NO_ERROR, "name": assignment.name, "score": 0, "max_score": 0, "parts": []}
         
         has_submitted = False
         for part in assignment.parts:
-            response_part = {"code": Zyscrape.NO_ERROR, "name": part["name"]}
+            response_part = {"code": Zybooks.NO_ERROR, "name": part["name"]}
             submission = self.download_submission(part["id"], user_id, assignment.options)
 
-            if submission["code"] is not Zyscrape.NO_SUBMISSION:
+            if submission["code"] is not Zybooks.NO_SUBMISSION:
                 has_submitted = True
 
                 response["score"] += submission["score"]
@@ -196,10 +196,10 @@ class Zyscrape:
                 response_part["date"] = submission["date"]
 
 
-                if submission["code"] is Zyscrape.COMPILE_ERROR:
-                    response_part["code"] = Zyscrape.COMPILE_ERROR
+                if submission["code"] is Zybooks.COMPILE_ERROR:
+                    response_part["code"] = Zybooks.COMPILE_ERROR
             else:
-                response_part["code"] = Zyscrape.NO_SUBMISSION
+                response_part["code"] = Zybooks.NO_SUBMISSION
 
 
             response["parts"].append(response_part)
@@ -207,7 +207,7 @@ class Zyscrape:
         
         # If student has not submitted, just return a non-success message
         if not has_submitted:
-            return {"code": Zyscrape.NO_SUBMISSION}
+            return {"code": Zybooks.NO_SUBMISSION}
 
         return response
 
@@ -219,11 +219,11 @@ class Zyscrape:
         submission_response = self.get_submission(part["id"], user_id)
 
         if not submission_response.ok:
-            return {"code": Zyscrape.NO_SUBMISSION}
+            return {"code": Zybooks.NO_SUBMISSION}
 
         all_submissions = submission_response.json()["submissions"]
 
-        response = {"code": Zyscrape.NO_SUBMISSION}
+        response = {"code": Zybooks.NO_SUBMISSION}
 
         for submission in all_submissions:
             # Get file from zip url
@@ -231,7 +231,7 @@ class Zyscrape:
                 r = requests.get(submission["zip_location"], stream=True)
             except requests.exceptions.ConnectionError:
                 # Bad connection, wait a few seconds and try again
-                return {"code": Zyscrape.DOWNLOAD_TIMEOUT}
+                return {"code": Zybooks.DOWNLOAD_TIMEOUT}
 
             try:
                 z = zipfile.ZipFile(io.BytesIO(r.content))
@@ -247,7 +247,7 @@ class Zyscrape:
 
                     # Get the date and time of the submission and return it
                     response["time"] = self.__get_time_string(submission)
-                    response["code"] = Zyscrape.NO_ERROR
+                    response["code"] = Zybooks.NO_ERROR
 
                     return response
         

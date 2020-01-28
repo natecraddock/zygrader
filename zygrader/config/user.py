@@ -3,7 +3,7 @@ import json
 import time
 import base64
 
-from .. import zyscrape
+from .. import zybooks
 from ..ui.window import Window
 from ..ui.components import TextInput
 
@@ -48,8 +48,8 @@ def encode_password(config, password):
     encode = base64.b64encode(password.encode("ascii"))
     config["password"] = str(encode, "utf-8")
 
-def authenticate(window: Window, scraper, email, password):
-    if scraper.authenticate(email, password):
+def authenticate(window: Window, zy_api, email, password):
+    if zy_api.authenticate(email, password):
         window.create_popup("Success", [f"Successfully Authenticated {email}"])
         return True
     else:
@@ -64,7 +64,7 @@ def get_password(window: Window):
     return password
 
 # Create a user account
-def create_account(window: Window, scraper):
+def create_account(window: Window, zy_api):
     window.set_header("Sign In")
 
     while True:
@@ -72,13 +72,13 @@ def create_account(window: Window, scraper):
         email = window.text_input("Enter your zyBooks email", mask=None)
         password = get_password(window)
 
-        if authenticate(window, scraper, email, password):
+        if authenticate(window, zy_api, email, password):
             break
     
     return email, password
 
 def initial_config(window: Window):
-    scraper = zyscrape.Zyscrape()
+    zy_api = zybooks.Zybooks()
 
     config_dir = os.path.join(os.path.expanduser("~"), ".zygrader/")
     config_path = os.path.join(config_dir, "config")
@@ -93,12 +93,12 @@ def initial_config(window: Window):
     # If user email and password exists, authenticate and return
     if config["email"] and config["password"]:
         password = decode_password(config)
-        authenticate(window, scraper, config["email"], password)
+        authenticate(window, zy_api, config["email"], password)
         return config
 
     # User does not have account created
     if not config["email"]:
-        email, password = create_account(window, scraper)
+        email, password = create_account(window, zy_api)
 
         save_password = window.create_bool_popup("Save Password", ["Would you like to save your password?"])
 
@@ -116,7 +116,7 @@ def initial_config(window: Window):
         while True:
             password = get_password(window)
 
-            if authenticate(window, scraper, email, password):
+            if authenticate(window, zy_api, email, password):
                 break
 
     return config

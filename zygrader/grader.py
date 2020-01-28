@@ -9,19 +9,19 @@ from . import data
 
 from .ui import components
 from .ui.window import Window
-from .zyscrape import Zyscrape
+from .zybooks import Zybooks
 from . import config
 
 def get_submission(lab, student):
     window = Window.get_window()
-    scraper = Zyscrape()
+    zy_api = Zybooks()
 
     # Lock student
     data.lock.lock_lab(student, lab)
     # Update the window to draw the student in red
     window.draw()
 
-    submission_response = scraper.download_assignment(student, lab)
+    submission_response = zy_api.download_assignment(student, lab)
     submission = data.model.Submission(student, lab, submission_response)
 
     # Report missing files
