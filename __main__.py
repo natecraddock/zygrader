@@ -10,7 +10,7 @@ def lock_cleanup(signum, frame):
     sys.exit(0)
 
 # Handle Signals
-# signal.signal(signal.SIGTERM, lock_cleanup)
+signal.signal(signal.SIGINT, lock_cleanup)
 # signal.signal(signal.SIGHUP, lock_cleanup)
 
 zygrader.start()
