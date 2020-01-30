@@ -142,5 +142,17 @@ def do_versioning(window: Window):
 
         window.create_popup("Version 2.2", msg, components.Popup.ALIGN_LEFT)
 
+    if compare_versions(2.3, user_version):
+        msg = ["zygrader Version 2.3", "",
+               "* Allow floating point input for prep lab score calc.",
+               "*   (also allows scientific notation too!)",
+               "* Use names rather than IDs in lock files.",
+               "* Logging of basic data.",
+               "* Restructure data directory.",
+               "* Docstrings throughout the code.",
+               "* Cleanups throughout the code."]
+
+        window.create_popup("Version 2.3", msg, components.Popup.ALIGN_LEFT)
+
     # Write the current version to the user's config file
     write_current_version(config)
