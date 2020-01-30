@@ -122,5 +122,5 @@ def main(window: Window):
     mainloop(admin)
 
 def start():
-    # Create a zygrader window
+    # Create a zygrader window, callback to main function
     Window(main, "zygrader")
