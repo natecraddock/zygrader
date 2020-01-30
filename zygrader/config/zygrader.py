@@ -14,9 +14,14 @@ CLASS_CODE = ""
 # and the folders for each semester/class that zygrader has been initialized
 # for. This folder is automatically created when zygrader is executed
 # if the folder does not exist.
-DATA_DIRECTORY = ".zygrader_data"
+ZYGRADER_DATA_DIRECTORY = ".zygrader_data"
 CLASS_DIRECTORY = ""
-GLOBAL_CONFIG_PATH = os.path.join(DATA_DIRECTORY, "config")
+LOGS_DIRECTORY = "logs"
+DATA_DIRECTORY = ".data"
+CACHE_DIRECTORY = ".cache"
+LOCKS_DIRECTORY = ".locks"
+
+GLOBAL_CONFIG_PATH = os.path.join(ZYGRADER_DATA_DIRECTORY, "config")
 
 STUDENT_DATA = ""
 LABS_DATA = ""
@@ -32,10 +37,29 @@ def write_global_config(config):
     with open(GLOBAL_CONFIG_PATH, 'w') as _file:
         json.dump(config, _file)
 
-def setup_data_directory():
+def get_config_directory(config_type):
+    """Return path of config directory. Create directory if it does not exist"""
+    _path =  os.path.join(CLASS_DIRECTORY, config_type)
+    if not os.path.exists(_path):
+        os.mkdir(_path)
+    return _path
+
+def get_logs_directory():
+    return get_config_directory(LOGS_DIRECTORY)
+
+def get_data_directory():
+    return get_config_directory(DATA_DIRECTORY)
+
+def get_cache_directory():
+    return get_config_directory(CACHE_DIRECTORY)
+
+def get_locks_directory():
+    return get_config_directory(LOCKS_DIRECTORY)
+
+def setup_zygrader_data_directory():
     """If no data directory exists, create it"""
-    if not os.path.exists(DATA_DIRECTORY):
-        os.mkdir(DATA_DIRECTORY)
+    if not os.path.exists(ZYGRADER_DATA_DIRECTORY):
+        os.mkdir(ZYGRADER_DATA_DIRECTORY)
     
     # Ensure the config file exists in the directory
     if not os.path.exists(GLOBAL_CONFIG_PATH):
@@ -49,7 +73,7 @@ def setup_class_directory(code):
     global LABS_DATA
 
     CLASS_CODE = code
-    CLASS_DIRECTORY = os.path.join(DATA_DIRECTORY, code)
+    CLASS_DIRECTORY = os.path.join(ZYGRADER_DATA_DIRECTORY, code)
 
     if not os.path.exists(CLASS_DIRECTORY):
         os.mkdir(CLASS_DIRECTORY)
@@ -62,7 +86,7 @@ def setup_class_directory(code):
     data.get_labs()
 
 def start():
-    setup_data_directory()
+    setup_zygrader_data_directory()
     global_config = get_global_config()
 
     # Look for the current class directory
