@@ -21,10 +21,12 @@ DATA_DIRECTORY = ".data"
 CACHE_DIRECTORY = ".cache"
 LOCKS_DIRECTORY = ".locks"
 
+STUDENTS_FILE = "students.json"
+LABS_FILE = "labs.json"
+
+
 GLOBAL_CONFIG_PATH = os.path.join(ZYGRADER_DATA_DIRECTORY, "config")
 
-STUDENT_DATA = ""
-LABS_DATA = ""
 
 def get_global_config():
     config = {}
@@ -56,6 +58,12 @@ def get_cache_directory():
 def get_locks_directory():
     return get_config_directory(LOCKS_DIRECTORY)
 
+def get_student_data():
+    return os.path.join(get_data_directory(), STUDENTS_FILE)
+
+def get_labs_data():
+    return os.path.join(get_data_directory(), LABS_FILE)
+
 def setup_zygrader_data_directory():
     """If no data directory exists, create it"""
     if not os.path.exists(ZYGRADER_DATA_DIRECTORY):
@@ -69,17 +77,12 @@ def setup_zygrader_data_directory():
 def setup_class_directory(code):
     global CLASS_CODE
     global CLASS_DIRECTORY
-    global STUDENT_DATA
-    global LABS_DATA
 
     CLASS_CODE = code
     CLASS_DIRECTORY = os.path.join(ZYGRADER_DATA_DIRECTORY, code)
 
     if not os.path.exists(CLASS_DIRECTORY):
         os.mkdir(CLASS_DIRECTORY)
-
-    STUDENT_DATA = os.path.join(CLASS_DIRECTORY, "students.json")
-    LABS_DATA = os.path.join(CLASS_DIRECTORY, "labs.json")
 
     # Load data for the current class
     data.get_students()

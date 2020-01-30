@@ -27,7 +27,7 @@ def save_roster(roster):
 
             students.append(student)
 
-    out_path = config.g_data.STUDENT_DATA
+    out_path = config.g_data.get_student_data()
     with open(out_path, 'w') as _file:
         json.dump(students, _file, indent=2)
 

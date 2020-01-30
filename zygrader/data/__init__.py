@@ -16,7 +16,7 @@ def get_students() -> list:
     if g_students:
         return g_students
 
-    path = config.g_data.STUDENT_DATA
+    path = config.g_data.get_student_data()
     if not os.path.exists(path):
         return []
 
@@ -33,7 +33,7 @@ def get_labs() -> list:
     if g_labs:
         return g_labs
 
-    path = config.g_data.LABS_DATA
+    path = config.g_data.get_labs_data()
     if not os.path.exists(path):
         return []
 
@@ -54,6 +54,6 @@ def write_labs(labs):
     for lab in labs:
         labs_json.append(lab.to_json())
 
-    path = config.g_data.LABS_DATA
+    path = config.g_data.get_labs_data()
     with open(path, 'w') as _file:
         json.dump(labs_json, _file, indent=2)
