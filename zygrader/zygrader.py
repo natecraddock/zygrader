@@ -111,7 +111,7 @@ def main(window: Window):
         admin = False
     
     # Start application and load data
-    config.zygrader.start()
+    config.g_data.start()
 
     # Log in user
     config.user.initial_config(window)

@@ -4,13 +4,13 @@ from shutil import copyfile
 from ..ui.window import Window
 from ..ui import components
 from . import user
-from . import zygrader
+from . import g_data
 
 def compare_versions(zygrader_version, user_version):
     return user_version < zygrader_version
 
 def write_current_version(config):
-    config["version"] = zygrader.VERSION
+    config["version"] = g_data.VERSION
     user.write_config(config)
 
 def do_versioning(window: Window):

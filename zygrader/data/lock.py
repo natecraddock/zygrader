@@ -11,11 +11,11 @@ from .. import config
 
 def get_lock_files():
     """Return a list of all lock files"""
-    return [l for l in os.listdir(config.zygrader.get_locks_directory()) if l.endswith(".lock")]
+    return [l for l in os.listdir(config.g_data.get_locks_directory()) if l.endswith(".lock")]
 
 def get_lock_log_path():
     """Return path to lock log file"""
-    return os.path.join(config.zygrader.get_logs_directory(), "locks_log.csv")
+    return os.path.join(config.g_data.get_logs_directory(), "locks_log.csv")
 
 def log(name, lab, lock="LOCK"):
     """Logging utility for lock files
@@ -66,7 +66,7 @@ def get_lock_file_path(student: Student, lab: Lab):
     student_name = "".join(student.full_name.split())
 
     lock_path = f"{username}.{lab_name}.{student_name}.lock"
-    return os.path.join(config.zygrader.get_locks_directory(), lock_path)
+    return os.path.join(config.g_data.get_locks_directory(), lock_path)
 
 def lock_lab(student: Student, lab: Lab):
     """Lock the submission for the given student and lab
@@ -100,15 +100,15 @@ def unlock_all_labs_by_grader(username: str):
 
         # Only look at the lock files graded by the current grader
         if lock_parts[0] == username:
-            os.remove(os.path.join(config.zygrader.get_locks_directory(), lock))
+            os.remove(os.path.join(config.g_data.get_locks_directory(), lock))
 
 def unlock_all_labs():
     """Remove all locks"""
     for lock in get_lock_files():
-        os.remove(os.path.join(config.zygrader.get_locks_directory(), lock))
+        os.remove(os.path.join(config.g_data.get_locks_directory(), lock))
 
 def remove_lock_file(_file):
     """Remove a specific lock file (not logged)"""
-    locks_directory = config.zygrader.get_locks_directory()
+    locks_directory = config.g_data.get_locks_directory()
 
     os.remove(os.path.join(locks_directory, _file))

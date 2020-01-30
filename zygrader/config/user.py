@@ -7,7 +7,7 @@ from .. import zybooks
 from ..ui.window import Window
 from ..ui.components import TextInput
 
-from . import zygrader
+from . import g_data
 
 EDITORS = {
     "Pluma": "/usr/bin/pluma",
@@ -23,7 +23,7 @@ def install(config_dir):
 
     # Create config file
     if not os.path.exists(os.path.join(config_dir, "config")):
-        config = {"version": zygrader.VERSION, "email": "", "password":""}
+        config = {"version": g_data.VERSION, "email": "", "password":""}
         with open(os.path.join(config_dir, "config"), "w") as config_file:
             json.dump(config, config_file)
 

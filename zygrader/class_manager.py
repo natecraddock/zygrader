@@ -27,7 +27,7 @@ def save_roster(roster):
 
             students.append(student)
 
-    out_path = config.zygrader.STUDENT_DATA
+    out_path = config.g_data.STUDENT_DATA
     with open(out_path, 'w') as _file:
         json.dump(students, _file, indent=2)
 
@@ -46,7 +46,7 @@ def setup_new_class():
         return
 
     # If code is valid, add it to the global configuration
-    config.zygrader.add_class(code)
+    config.g_data.add_class(code)
 
     # Download the list of students
     roster = zy_api.get_roster()
@@ -225,11 +225,11 @@ def download_roster():
 
 def change_class():
     window = Window.get_window()
-    class_codes = config.zygrader.get_class_codes()
+    class_codes = config.g_data.get_class_codes()
 
     code = window.filtered_list(class_codes, "Class")
     if code != 0:
-        config.zygrader.set_current_class_code(code)
+        config.g_data.set_current_class_code(code)
 
         window.create_popup("Changed Class", [f"Class changed to {code}"])
 

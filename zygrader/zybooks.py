@@ -38,7 +38,7 @@ class Zybooks:
     def get_roster(self):
         """Download the roster of regular and temporary students. TAs can be added by adding "TA" to the roles array"""
         roles = '["Student","Temporary"]'
-        roster_url = f"https://zyserver.zybooks.com/v1/zybook/{config.zygrader.CLASS_CODE}/roster?zybook_roles={roles}"
+        roster_url = f"https://zyserver.zybooks.com/v1/zybook/{config.g_data.CLASS_CODE}/roster?zybook_roles={roles}"
 
         payload = {"auth_token": Zybooks.token}
         r = Zybooks.session.get(roster_url, json=payload)
@@ -54,7 +54,7 @@ class Zybooks:
         This is useful for running the class manager. To download a submission, the zybooks sectionID
         must be used. It is hard to get manually, but this function returns the id and name.
         """
-        class_code = config.zygrader.CLASS_CODE
+        class_code = config.g_data.CLASS_CODE
         url = f"https://zyserver.zybooks.com/v1/zybook/{class_code}/chapter/{chapter}/section/{section}"
         payload = {"auth_token": Zybooks.token}
 
@@ -123,7 +123,7 @@ class Zybooks:
 
     def get_all_submissions(self, part_id, user_id):
         """Get the JSON representing all submissions of a given lab"""
-        class_code = config.zygrader.CLASS_CODE
+        class_code = config.g_data.CLASS_CODE
         submission_url = f"https://zyserver.zybooks.com/v1/zybook/{class_code}/programming_submission/{part_id}/user/{user_id}"
         payload = {"auth_token": Zybooks.token}
 
