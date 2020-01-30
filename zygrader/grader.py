@@ -5,12 +5,13 @@ import subprocess
 import curses
 import difflib
 
+from . import config
 from . import data
+from . import logger
 
 from .ui import components
 from .ui.window import Window
 from .zybooks import Zybooks
-from . import config
 
 def get_submission(lab, student):
     window = Window.get_window()

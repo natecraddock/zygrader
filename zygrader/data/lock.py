@@ -8,6 +8,7 @@ from .model import Student
 from .model import Lab
 
 from .. import config
+from .. import logger
 
 def get_lock_files():
     """Return a list of all lock files"""
@@ -22,6 +23,7 @@ def log(name, lab, lock="LOCK"):
 
     This logs when each lab is locked and unlocked,
     along with when and by whom.
+    This also logs to the global log file
     """
 
     lock_log = get_lock_log_path()
@@ -31,6 +33,8 @@ def log(name, lab, lock="LOCK"):
     line = f"{timestamp},{name},{lab},{getpass.getuser()},{lock}\n"
     with open(lock_log, 'a') as _log:
         _log.write(line)
+
+    logger.log(f"{name},{lab},{lock}")
 
 def is_lab_locked(student: Student, lab: Lab):
     """Check if a submission is locked for a given student and lab"""
@@ -102,13 +106,17 @@ def unlock_all_labs_by_grader(username: str):
         if lock_parts[0] == username:
             os.remove(os.path.join(config.g_data.get_locks_directory(), lock))
 
+    logger.log("All locks under the current grader were removed", logger.WARNING)
+
 def unlock_all_labs():
     """Remove all locks"""
     for lock in get_lock_files():
         os.remove(os.path.join(config.g_data.get_locks_directory(), lock))
 
 def remove_lock_file(_file):
-    """Remove a specific lock file (not logged)"""
+    """Remove a specific lock file (not logged to locks_log.csv)"""
     locks_directory = config.g_data.get_locks_directory()
 
     os.remove(os.path.join(locks_directory, _file))
+
+    logger.log("lock file was removed manually", _file, logger.WARNING)

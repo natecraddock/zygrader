@@ -86,8 +86,10 @@ def mainloop_callback(option):
     elif option == "Config":
         config_menu()
     elif option == "Prep Lab Score Calculator":
+        logger.log("prep lab score calculator tool accessed")
         prep_lab_score_calc()
     elif option == "Admin":
+        logger.log("admin menu accessed")
         admin.admin_menu()
 
 """ Main program loop """
