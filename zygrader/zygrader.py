@@ -5,6 +5,7 @@ from . import data
 from . import config
 from . import grader
 from . import admin
+from . import logger
 
 from .zybooks import Zybooks
 
@@ -118,6 +119,8 @@ def main(window: Window):
 
     # Apply versioning
     config.versioning.do_versioning(window)
+
+    logger.log("zygrader started")
 
     mainloop(admin)
 
