@@ -179,9 +179,13 @@ class Submission:
 
         # Compiled successfully, run code
         executable = os.path.abspath(executable_name)
-        cmd = executable + f"; {PAUSE_COMMAND}"
-        subprocess.run(["xterm", "-e", cmd])
-
+        cmd = executable
+        curses.endwin()
+        print(f"\nRunning {self.student.full_name}'s code\n\n")
+        subprocess.run([cmd])
+        print("\nPress ENTER to continue")
+        input()
+        curses.initscr()
         os.remove(executable)
 
         return True
