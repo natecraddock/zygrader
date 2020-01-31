@@ -65,7 +65,8 @@ def is_lab_locked(student: Student, lab: Lab):
 def get_locked_netid(student: Student, lab: Lab):
     """Return netid of locked submission"""
     # Try to match this against all the lock files in the directory
-    lock_path_end = f"{lab.parts[0]['id']}.{student.id}.lock"
+    lock_path = os.path.basename(get_lock_file_path(student, lab))
+    lock_path_end = ".".join(lock_path.split(".")[1:])
 
     for lock in get_lock_files():
         if lock.endswith(lock_path_end):
