@@ -3,12 +3,15 @@ import datetime
 import tempfile
 import requests
 import zipfile
+import curses
+import glob
 import io
 import os
 import difflib
 
 from ..zybooks import Zybooks
 from .. import config
+from .. import logger
 
 class Lab:
     def __init__(self, name, parts, options):
@@ -138,6 +141,13 @@ class Submission:
     def show_files(self):
         user_editor = config.user.get_config()["editor"]
         editor_path = config.user.EDITORS[user_editor]
+
+        if user_editor == "Vim":
+            curses.endwin()
+            # Use "-p" to open in tabs
+            subprocess.run([editor_path, "-p"] + glob.glob(f"{self.files_directory}/*"))
+            curses.initscr()
+            return
 
         subprocess.Popen(f"{editor_path} {self.files_directory}/*", shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 

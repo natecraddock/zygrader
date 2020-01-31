@@ -14,6 +14,7 @@ EDITORS = {
     "Gedit": "/usr/bin/gedit",
     "VSCode": "/usr/bin/code",
     "Atom": "/usr/bin/atom",
+    "Vim": "/usr/bin/vim",
 }
 
 def install(config_dir):
