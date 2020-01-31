@@ -15,6 +15,7 @@ EDITORS = {
     "VSCode": "/usr/bin/code",
     "Atom": "/usr/bin/atom",
     "Vim": "/usr/bin/vim",
+    "Emacs": "/usr/bin/emacs",
 }
 
 def install(config_dir):

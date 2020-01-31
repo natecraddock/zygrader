@@ -142,12 +142,17 @@ class Submission:
         user_editor = config.user.get_config()["editor"]
         editor_path = config.user.EDITORS[user_editor]
 
-        if user_editor == "Vim":
+        if user_editor in {"Vim", "Emacs"}:
             curses.endwin()
-            # Use "-p" to open in tabs
-            subprocess.run([editor_path, "-p"] + glob.glob(f"{self.files_directory}/*"))
+
+            if user_editor == "Vim":
+                # Use "-p" to open in tabs
+                subprocess.run([editor_path, "-p"] + glob.glob(f"{self.files_directory}/*"))
+            elif user_editor == "Emacs":
+                subprocess.run([editor_path] + glob.glob(f"{self.files_directory}/*"))
             curses.initscr()
             return
+
 
         subprocess.Popen(f"{editor_path} {self.files_directory}/*", shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
