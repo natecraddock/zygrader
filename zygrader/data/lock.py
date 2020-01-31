@@ -36,10 +36,22 @@ def log(name, lab, lock="LOCK"):
 
     logger.log(f"{name},{lab},{lock}")
 
+def get_lock_file_path(student: Student, lab: Lab):
+    """Return path for lock file"""
+    username = getpass.getuser()
+
+    # Get the lab and student names without spaces
+    lab_name = "".join(lab.name.split())
+    student_name = "".join(student.full_name.split())
+
+    lock_path = f"{username}.{lab_name}.{student_name}.lock"
+    return os.path.join(config.g_data.get_locks_directory(), lock_path)
+
 def is_lab_locked(student: Student, lab: Lab):
     """Check if a submission is locked for a given student and lab"""
     # Try to match this against all the lock files in the directory
-    lock_path_end = f"{lab.parts[0]['id']}.{student.id}.lock"
+    lock_path = os.path.basename(get_lock_file_path(student, lab))
+    lock_path_end = ".".join(lock_path.split(".")[1:])
 
     for lock in get_lock_files():
         # Strip off username
@@ -60,17 +72,6 @@ def get_locked_netid(student: Student, lab: Lab):
             return lock.split(".")[0]
 
     return ""
-
-def get_lock_file_path(student: Student, lab: Lab):
-    """Return path for lock file"""
-    username = getpass.getuser()
-
-    # Get the lab and student names without spaces
-    lab_name = "".join(lab.name.split())
-    student_name = "".join(student.full_name.split())
-
-    lock_path = f"{username}.{lab_name}.{student_name}.lock"
-    return os.path.join(config.g_data.get_locks_directory(), lock_path)
 
 def lock_lab(student: Student, lab: Lab):
     """Lock the submission for the given student and lab
