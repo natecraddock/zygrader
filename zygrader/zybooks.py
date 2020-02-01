@@ -74,7 +74,7 @@ class Zybooks:
     def check_valid_class(self, code):
         """Return a boolean indicating if the zybooks class code is valid
 
-        The class code is in the format: BYUCS142Winter2020
+        The class code is of the format: BYUCS142Winter2020
         """
         url = f"https://zyserver.zybooks.com/v1/zybooks?zybooks=[\"{code}\"]"
         payload = {"auth_token": Zybooks.token}
