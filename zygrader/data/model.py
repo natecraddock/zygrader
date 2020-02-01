@@ -118,18 +118,17 @@ class Submission:
             if part["code"] == Zybooks.NO_SUBMISSION:
                 continue
 
-            # Open zip of student's file(s) in memory
-            zip_response = requests.get(part["zip_url"])
+            zy_api = Zybooks()
+            zip_file = zy_api.get_submission_zip(part["zip_url"])
 
             # Sometimes the zip file URL reported by zyBooks is invalid. Not sure if this
             # is an error with Amazon (the host) or zyBooks but in this rare case, just skip
             # the file. Also flag this Submission as having missing file(s).
-            if not zip_response.ok:
+            if zip_file == Zybooks.ERROR:
                 self.flag |= Submission.BAD_ZIP_URL
                 continue
 
-            zip_file = zipfile.ZipFile(io.BytesIO(zip_response.content))
-            files = self.extract_zip(part["name"], zip_file)
+            files = zy_api.extract_zip(zip_file, part["name"])
 
             # Write file to temporary directory
             for file_name in files.keys():
@@ -159,15 +158,7 @@ class Submission:
     def open_folder(self):
         subprocess.Popen(f"xdg-open {self.files_directory}", shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
-    def extract_zip(self, file_prefix, input_zip):
-        if file_prefix:
-            return {f"{file_prefix}_{name}": input_zip.read(name).decode('UTF-8') for name in input_zip.namelist()}
-        else:
-            return {f"{name}": input_zip.read(name).decode('UTF-8') for name in input_zip.namelist()}
-
     def run_code(self):
-        PAUSE_COMMAND = "read -p \"Press any key to continue\""
-
         executable_name = os.path.join(self.files_directory, "run")
         source_files = [os.path.join(self.files_directory, f) for f in os.listdir(self.files_directory) if f.endswith(".cpp")]
         compile_command = ["g++", "-o", executable_name] + source_files

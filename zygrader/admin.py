@@ -11,9 +11,6 @@ from . import data
 from . import config
 from . import class_manager
 
-def extract_zip(input_zip):
-    return {name: input_zip.read(name).decode('UTF-8', "replace") for name in input_zip.namelist()}
-
 def check_student_submissions(zy_api, student_id, lab, search_string):
     """Search for a substring in all of a student's submissions for a given lab"""
     submission_response = zy_api.get_all_submissions(lab["id"], student_id)
@@ -28,18 +25,17 @@ def check_student_submissions(zy_api, student_id, lab, search_string):
     for submission in all_submissions:
         # Get file from zip url
         try:
-            r = requests.get(submission["zip_location"], stream=True)
+            zip_file = zy_api.get_submission_zip(submission["zip_location"])
         except requests.exceptions.ConnectionError:
             # Bad connection, wait a few seconds and try again
             return {"code": Zybooks.DOWNLOAD_TIMEOUT}
 
-        try:
-            z = zipfile.ZipFile(io.BytesIO(r.content))
-        except zipfile.BadZipFile:
-            response["error"] = f"BadZipFile Error on submission {zy_api.get_time_string(submission)}"
+        # If there was an error
+        if zip_file == Zybooks.ERROR:
+            response["error"] = f"Error fetching submission {zy_api.get_time_string(submission)}"
             continue
 
-        f = extract_zip(z)
+        f = zy_api.extract_zip(zip_file)
 
         # Check each file for the matched string
         for source_file in f.keys():
