@@ -159,7 +159,7 @@ def do_versioning(window: Window):
                "* More text editors/viewers! (Vim, Emacs, Nano, Less).",
                "    These all open inside the terminal, which means",
                "    grading is now possible over ssh!",
-               "    Go to Config > Set Editor to change."
+               "    Go to Config > Set Editor to change.",
                "* Run student code in same terminal window.",
                "    Instead of opening in xterm.",
                "* Caching of submission files.",
