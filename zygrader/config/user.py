@@ -16,6 +16,8 @@ EDITORS = {
     "Atom": "/usr/bin/atom",
     "Vim": "/usr/bin/vim",
     "Emacs": "/usr/bin/emacs",
+    "Nano": "/bin/nano",
+    "Less": "/usr/bin/less"
 }
 
 def install(config_dir):
