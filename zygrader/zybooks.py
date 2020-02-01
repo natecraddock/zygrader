@@ -1,6 +1,8 @@
 """ A wrapper around the zyBooks API """
-import requests
 from datetime import datetime, timezone
+import os
+import requests
+import zipfile
 
 from . import config
 
@@ -229,3 +231,38 @@ class Zybooks:
             return {"code": Zybooks.NO_SUBMISSION}
 
         return response
+
+    def get_submission_zip(self, url):
+        """Download the submission at the given URL, or from a local cache if available
+
+        While this is technically accessing files at Amazon's servers, it is coupled closely
+        enough to zyBooks to include it in this file, rather than making a new file for just
+        this feature.
+
+        The cache is stored in the .zygrader_data/SEMESTER_FOLDER/.cache/ directory
+
+        Returns a ZipFile
+        """
+        # Check if the zip file is already cached. Only use the basename of the url
+        cached_name = os.path.join(config.g_data.get_cache_directory(), os.path.basename(url))
+        if os.path.exists(cached_name):
+            return zipfile.ZipFile(cached_name)
+
+        # If not cached, download
+        zip_response = requests.get(url)
+        if not zip_response.ok:
+            return Zybooks.ERROR
+
+        # Write zip to cache
+        with open(cached_name, 'wb') as _file:
+            _file.write(zip_response.content)
+        return zipfile.ZipFile(cached_name)
+
+    def extract_zip(self, input_zip, file_prefix=None):
+        """Given a ZipFile object, return a dictionary of the files of the form
+            {"filename": "contents...", ...}
+        """
+        if file_prefix:
+            return {f"{file_prefix}_{name}": input_zip.read(name).decode('UTF-8') for name in input_zip.namelist()}
+        else:
+            return {f"{name}": input_zip.read(name).decode('UTF-8') for name in input_zip.namelist()}
