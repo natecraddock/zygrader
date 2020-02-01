@@ -1,9 +1,10 @@
-import io
-import os
-import tempfile
-import subprocess
 import curses
 import difflib
+import getpass
+import io
+import os
+import subprocess
+import tempfile
 
 from . import config
 from . import data
@@ -134,9 +135,11 @@ def student_callback(lab, student):
     if data.lock.is_lab_locked(student, lab):
         netid = data.lock.get_locked_netid(student, lab)
 
-        msg = [f"This student is already being graded by {netid}"]
-        window.create_popup("Student Locked", msg)
-        return
+        # If being graded by the user who locked it, allow grading
+        if netid != getpass.getuser():
+            msg = [f"This student is already being graded by {netid}"]
+            window.create_popup("Student Locked", msg)
+            return
 
     try:
         # Get the student's submission
