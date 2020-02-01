@@ -154,5 +154,18 @@ def do_versioning(window: Window):
 
         window.create_popup("Version 2.3", msg, components.Popup.ALIGN_LEFT)
 
+    if compare_versions(2.4, user_version):
+        msg = ["zygrader Version 2.4", "",
+               "* More text editors/viewers! (Vim, Emacs, Nano, Less).",
+               "    These all open inside the terminal, which means",
+               "    grading is now possible over ssh!",
+               "* Run student code in same terminal window.",
+               "    Instead of opening in xterm.",
+               "* Caching of submission files",
+               "* Fixed a few issues with lock files.",
+               "    You can open submissions that you locked."]
+
+        window.create_popup("Version 2.4", msg, components.Popup.ALIGN_LEFT)
+
     # Write the current version to the user's config file
     write_current_version(config)
