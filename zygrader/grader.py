@@ -69,6 +69,8 @@ def pair_programming_submission_callback(submission):
         else:
             break
 
+    config.g_data.running_process = None
+
 def grade_pair_programming(first_submission):
     # Get second student
     window = Window.get_window()
@@ -175,6 +177,8 @@ def student_callback(lab, student):
                 submission.diff_parts()
             else:
                 break
+
+        config.g_data.running_process = None
 
         # After popup, unlock student
         data.lock.unlock_lab(student, lab)

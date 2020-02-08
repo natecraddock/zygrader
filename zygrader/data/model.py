@@ -169,9 +169,8 @@ class Submission:
             config.g_data.RUNNING_CODE = True
             curses.endwin()
             process.send_signal(signal.SIGCONT)
-            print("Resumed student code\n")
+            print("Resumed student code")
             print("#############################################################")
-            print()
             return True
         return False
 
