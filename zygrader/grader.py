@@ -164,7 +164,6 @@ def student_callback(lab, student):
 
             if option == "Pair Programming":
                 grade_pair_programming(submission)
-                break
             elif option == "Run":
                 if not submission.run_code():
                     window.create_popup("Error", ["Could not compile and run code"])
