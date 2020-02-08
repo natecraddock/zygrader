@@ -14,6 +14,7 @@ class Window:
     KEY_LEFT = 4
     KEY_RIGHT = 5
     KEY_INPUT = 6
+    KEY_NONE = -1
 
     instance = None
 
@@ -143,7 +144,10 @@ class Window:
 
         while input_code == "KEY_RESIZE":
             # getkey is blocking
-            input_code = self.input_win.getkey()
+            try:
+                input_code = self.input_win.getkey()
+            except curses.error:
+                self.event = Window.KEY_NONE
 
             if input_code == "KEY_RESIZE":
                 self.__resize_terminal()
