@@ -24,9 +24,11 @@ LOCKS_DIRECTORY = ".locks"
 STUDENTS_FILE = "students.json"
 LABS_FILE = "labs.json"
 
+# This is a global to represent if student code is being executed
+RUNNING_CODE = False
+running_process = None
 
 GLOBAL_CONFIG_PATH = os.path.join(ZYGRADER_DATA_DIRECTORY, "config")
-
 
 def get_global_config():
     config = {}

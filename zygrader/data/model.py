@@ -1,17 +1,19 @@
-import subprocess
-import datetime
-import tempfile
-import requests
-import zipfile
 import curses
+import datetime
+import difflib
 import glob
 import io
 import os
-import difflib
+import requests
+import signal
+import subprocess
+import tempfile
+import time
+import zipfile
 
-from ..zybooks import Zybooks
 from .. import config
 from .. import logger
+from ..zybooks import Zybooks
 
 class Lab:
     def __init__(self, name, parts, options):
@@ -141,6 +143,7 @@ class Submission:
         user_editor = config.user.get_config()["editor"]
         editor_path = config.user.EDITORS[user_editor]
 
+        # Terminal-based editors
         if user_editor in {"Vim", "Emacs", "Nano", "Less"}:
             curses.endwin()
 
@@ -154,15 +157,58 @@ class Submission:
                 subprocess.run([editor_path] + glob.glob(f"{self.files_directory}/*"))
 
             curses.initscr()
-            return
-
-        subprocess.Popen(f"{editor_path} {self.files_directory}/*", shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        # Graphical editors
+        else:
+            subprocess.Popen(f"{editor_path} {self.files_directory}/*", shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
     def open_folder(self):
         subprocess.Popen(f"xdg-open {self.files_directory}", shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
-    def run_code(self):
-        executable_name = os.path.join(self.files_directory, "run")
+    def do_resume_code(self, process):
+        if process:
+            config.g_data.RUNNING_CODE = True
+            curses.endwin()
+            process.send_signal(signal.SIGCONT)
+            print("Resumed student code\n")
+            print("#############################################################")
+            print()
+            return True
+        return False
+
+    def compile_and_run_code(self):
+        if self.do_resume_code(config.g_data.running_process):
+            stopped = self.wait_on_child(config.g_data.running_process)
+        else:
+            # Get path to executable
+            executable = self.compile_code()
+            if not executable:
+                return False # Could not compile code
+
+            # Suspend curses
+            config.g_data.RUNNING_CODE = True
+            curses.endwin()
+
+            stopped = self.run_code(executable)
+
+        if not stopped:
+            config.g_data.running_process = None
+
+            config.g_data.RUNNING_CODE = False
+            print("\n#############################################################")
+            print("Press ENTER to continue")
+            input()
+        else:
+            print("\n#############################################################")
+            print("Paused student code\n")
+
+            # curses.initscr()
+
+        return True
+
+    def compile_code(self):
+        # Use a separate tmp dir to avoid opening the binary in a text editor
+        tmp_dir = tempfile.mkdtemp()
+        executable_name = os.path.join(tmp_dir, "run")
         source_files = [os.path.join(self.files_directory, f) for f in os.listdir(self.files_directory) if f.endswith(".cpp")]
         compile_command = ["g++", "-o", executable_name] + source_files
 
@@ -172,17 +218,33 @@ class Submission:
             return False
 
         # Compiled successfully, run code
-        executable = os.path.abspath(executable_name)
-        cmd = executable
-        curses.endwin()
-        print(f"\nRunning {self.student.full_name}'s code\n\n")
-        subprocess.run([cmd])
-        print("\nPress ENTER to continue")
-        input()
-        curses.initscr()
-        os.remove(executable)
+        return os.path.abspath(executable_name)
 
-        return True
+    def wait_on_child(self, child):
+        while child.poll() is None:
+            time.sleep(0.1)
+            if not config.g_data.RUNNING_CODE:
+                break
+
+        # If the running process still exists
+        if config.g_data.running_process and config.g_data.running_process.poll() is None:
+            return True
+
+        return False
+
+    def run_code(self, executable):
+        print(chr(27) + "[2J", end='') # Clear the terminal
+        print("#############################################################")
+        print(f"Running {self.student.full_name}'s code")
+        print("CTRL+C to terminate")
+        print("CTRL+Z to stop (pause)")
+        print("#############################################################\n")
+
+        process = subprocess.Popen([executable])
+        config.g_data.running_process = process
+
+        # Return indicator if child terminated or stopped
+        return self.wait_on_child(process)
 
     def diff_parts(self):
         # This runs under the assumption that we only want to compare parts A and B
