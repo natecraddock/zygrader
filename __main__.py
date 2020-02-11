@@ -11,8 +11,11 @@ from zygrader.data import lock
 from zygrader import logger
 from zygrader import ui
 
-def lock_cleanup(signum, frame):
+def lock_cleanup():
     lock.unlock_all_labs_by_grader(getpass.getuser())
+
+def sighup_handler(signum, frame):
+    lock_cleanup()
 
 def sigint_handler(signum, frame):
     if config.g_data.RUNNING_CODE:
@@ -22,7 +25,7 @@ def sigint_handler(signum, frame):
             config.g_data.running_process.send_signal(signal.SIGINT)
             config.g_data.running_process = None
     else:
-        lock_cleanup(None, None)
+        lock_cleanup()
         sys.exit(0)
 
 def sigtstp_handler(signum, frame):
@@ -35,7 +38,7 @@ def sigtstp_handler(signum, frame):
 # Handle Signals
 signal.signal(signal.SIGINT, sigint_handler)
 signal.signal(signal.SIGTSTP, sigtstp_handler)
-# signal.signal(signal.SIGHUP, lock_cleanup)
+signal.signal(signal.SIGHUP, sighup_handler)
 
 # Ensure zygrader starts in the proper directory (one level up from the __main__.py file)
 zygrader_path = os.path.dirname(os.path.realpath(__file__))
