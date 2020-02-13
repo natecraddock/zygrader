@@ -42,9 +42,11 @@ def get_lock_file_path(student: Student, lab: Lab):
 
     # Get the lab and student names without spaces
     lab_name = "".join(lab.name.split())
+    lab_id = lab.parts[0]["id"]
     student_name = "".join(student.full_name.split())
+    student_id = student.id
 
-    lock_path = f"{username}.{lab_name}.{student_name}.lock"
+    lock_path = f"{username}.{lab_name}_{lab_id}.{student_name}_{student_id}.lock"
     return os.path.join(config.g_data.get_locks_directory(), lock_path)
 
 def is_lab_locked(student: Student, lab: Lab):
