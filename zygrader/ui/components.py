@@ -1,5 +1,7 @@
 import curses
 
+from .utils import add_str, resize_window
+
 class Component:
     def __init__(self):
         # This determines if a component blocks layers beneath it completely
@@ -54,8 +56,7 @@ class Popup(Component):
         message_row = 0
         for line in self.message:
             line = line[:self.cols - Popup.PADDING]
-
-            self.window.addstr(message_y + message_row, message_x, line)
+            add_str(self.window, message_y + message_row, message_x, line)
             message_row += 1
 
     def __draw_message_center(self):
@@ -64,7 +65,7 @@ class Popup(Component):
         for line in self.message:
             line = line[:self.cols - Popup.PADDING]
             message_x = self.cols // 2 - len(line) // 2
-            self.window.addstr(message_y + message_row, message_x, line)
+            add_str(self.window, message_y + message_row, message_x, line)
             message_row += 1
 
     def draw_text(self):
@@ -78,7 +79,7 @@ class Popup(Component):
         
         # Draw title
         title_x = self.cols // 2 - len(self.title) // 2
-        self.window.addstr(0, title_x, self.title)
+        add_str(self.window, 0, title_x, self.title)
 
 
     def draw(self):        
@@ -90,7 +91,7 @@ class Popup(Component):
         
         y = self.rows - 2
         x = self.cols - 1 - Popup.PADDING - len(enter_string)
-        self.window.addstr(y, x, enter_string)
+        add_str(self.window, y, x, enter_string)
 
         self.window.refresh()
 
@@ -105,7 +106,7 @@ class Popup(Component):
         except:
             pass
 
-        self.window.resize(self.rows, self.cols)
+        resize_window(self.window, self.rows, self.cols)
 
 
 class BoolPopup(Popup):
@@ -115,8 +116,8 @@ class BoolPopup(Popup):
         # Draw prompt to exit popup
         y = self.rows - 3
         x = self.cols - 1 - Popup.PADDING - len("[Y]es")
-        self.window.addstr(y, x, "[Y]es")
-        self.window.addstr(y + 1, x, "[N]o")
+        add_str(self.window, y, x, "[Y]es")
+        add_str(self.window, y + 1, x, "[N]o")
 
         self.window.refresh()
 
@@ -139,9 +140,9 @@ class OptionsPopup(Popup):
         for option in self.options:
             x = self.cols - 1 - Popup.PADDING - self.options_length + previous_length
             if index == self.index:
-                self.window.addstr(y, x, option, curses.A_STANDOUT)
+                add_str(self.window, y, x, option, curses.A_STANDOUT)
             else:
-                self.window.addstr(y, x, option)
+                add_str(self.window, y, x, option)
 
             previous_length += len(option) + 2
             index += 1
@@ -194,10 +195,10 @@ class FilteredList(Component):
 
             if (line + self.scroll) == self.selected_index:
                 display_text = f"> {str(l)}"
-                self.window.addstr(line, 0, display_text, curses.A_BOLD | color)
+                add_str(self.window, line, 0, display_text, curses.A_BOLD | color)
             else:
                 display_text = f"  {str(l)}"
-                self.window.addstr(line, 0, display_text, curses.A_DIM | color)
+                add_str(self.window, line, 0, display_text, curses.A_DIM | color)
             line += 1
 
     def __init__(self, y, x, rows, cols, options, prompt, filter_function, draw_function):
@@ -238,8 +239,8 @@ class FilteredList(Component):
         except:
             pass
 
-        self.window.resize(self.height - 1, self.width)
-        self.text_input.resize(1, self.width)
+        resize_window(self.window, self.height - 1, self.width)
+        resize_window(self.text_input, 1, self.width)
 
     def draw(self):
         self.window.erase()
@@ -254,7 +255,7 @@ class FilteredList(Component):
         self.__fill_text(self.data, self.selected_index)
         self.window.refresh()
 
-        self.text_input.addstr(0, 0, f"{self.prompt}: {self.filter_text}")
+        add_str(self.text_input, 0, 0, f"{self.prompt}: {self.filter_text}")
         self.text_input.refresh()
 
     def clear(self):
@@ -316,7 +317,7 @@ class Menu(Component):
         self.height = rows
         self.width = cols
 
-        self.window.resize(self.height, self.width)
+        resize_window(self.window, self.height, self.width)
 
     def draw(self):
         self.window.erase()
@@ -326,7 +327,7 @@ class Menu(Component):
             line = self.valid_options[key]
             
             display_str = f"[{key}] - {line}"
-            self.window.addstr(line_num, 0, display_str)
+            add_str(self.window, line_num, 0, display_str)
             line_num += 1
     
         self.window.refresh()
@@ -370,7 +371,7 @@ class TextInput(Component):
             self.window.mvwin(self.height - 1, 0)
         except:
             pass
-        self.window.resize(1, self.width)
+        resize_window(self.window, 1, self.width)
     
     def draw(self):
         self.window.erase()
@@ -380,7 +381,7 @@ class TextInput(Component):
         else:
             display_text = self.text
         
-        self.window.addstr(0, 0, f"{self.prompt}: {display_text}")
+        add_str(self.window, 0, 0, f"{self.prompt}: {display_text}")
 
         self.window.move(0, len(self.prompt) + 2 + self.cursor_index)
         self.window.refresh()
@@ -425,7 +426,7 @@ class Logger(Component):
         self.height = rows
         self.width = cols
 
-        self.window.resize(self.height, self.width)
+        resize_window(self.window, self.height, self.width)
 
     def draw(self):
         self.window.erase()
@@ -437,7 +438,7 @@ class Logger(Component):
 
         liney = Logger.PADDING // 2
         for line in self.__log[-NUM_LINES:]:
-            self.window.addstr(liney, 0, line)
+            add_str(self.window, liney, 0, line)
             liney += 1
 
         self.window.refresh()

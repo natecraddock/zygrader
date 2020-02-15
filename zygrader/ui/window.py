@@ -1,6 +1,7 @@
 import curses
 
 from . import components
+from .utils import add_str, resize_window
 
 UI_LEFT = 0
 UI_RIGHT = 1
@@ -91,7 +92,7 @@ class Window:
     def set_header(self, text="", align=UI_CENTERED):
         """Set the header text"""        
         self.header.erase()
-        self.header.resize(1, self.cols)
+        resize_window(self.header, 1, self.cols)
         self.__header_text = text
 
         if text:
@@ -106,7 +107,7 @@ class Window:
         elif align is UI_RIGHT:
             x = self.cols - len(display_text) - 1
         
-        self.header.addstr(0, x, display_text)
+        add_str(self.header, 0, x, display_text)
 
         # Christmas theme
         # for x in range(self.cols):
