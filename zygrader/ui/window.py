@@ -60,8 +60,8 @@ class Window:
         curses.flushinp()
         self.input_win.nodelay(False)
 
-        # Stack for operators
-        self.operators = []
+        # Stack for Components
+        self.components = []
 
         # Execute callback with a reference to the window object
         callback(self)
@@ -84,8 +84,8 @@ class Window:
         self.__get_window_dimensions()
         curses.resizeterm(self.rows, self.cols)
 
-        for operator in self.operators:
-            operator.resize(self.rows, self.cols)
+        for component in self.components:
+            component.resize(self.rows, self.cols)
 
         self.draw(True)
 
@@ -119,7 +119,7 @@ class Window:
         self.header.refresh()
 
     def draw(self, flush=False):
-        """Draw each operator in the stack"""
+        """Draw each component in the stack"""
         self.stdscr.erase()
         self.stdscr.refresh()
         
@@ -127,13 +127,13 @@ class Window:
         
         # Find last blocking component
         block_index = 0
-        for index in reversed(range(len(self.operators))):
-            if self.operators[index].blocking:
+        for index in reversed(range(len(self.components))):
+            if self.components[index].blocking:
                 block_index = index
                 break
 
-        for operator in self.operators[block_index:]:
-            operator.draw()
+        for component in self.components[block_index:]:
+            component.draw()
         
         if flush:
             curses.flushinp()
@@ -182,7 +182,7 @@ class Window:
     def create_popup(self, title, message, align=components.Popup.ALIGN_CENTER):
         """Create a popup with title and message that returns after enter"""
         pop = components.Popup(self.rows, self.cols, title, message, align)
-        self.operators.append(pop)
+        self.components.append(pop)
         self.draw()
         
         while True:
@@ -191,13 +191,13 @@ class Window:
             if self.event == Window.KEY_ENTER:
                 break
 
-        self.operators.pop()
+        self.components.pop()
         self.draw()
     
     def create_bool_popup(self, title, message, align=components.Popup.ALIGN_CENTER):
         """Create a popup with title and message that returns true/false"""
         popup = components.BoolPopup(self.rows, self.cols, title, message, align)
-        self.operators.append(popup)
+        self.components.append(popup)
         self.draw()
         
         while True:
@@ -211,7 +211,7 @@ class Window:
                     retval = False
                     break
 
-        self.operators.pop()
+        self.components.pop()
         self.draw()
 
         return retval
@@ -219,7 +219,7 @@ class Window:
     def create_options_popup(self, title, message, options, align=components.Popup.ALIGN_CENTER):
         """Create a popup with multiple options that can be selected with the keyboard"""
         popup = components.OptionsPopup(self.rows, self.cols, title, message, options, align)
-        self.operators.append(popup)
+        self.components.append(popup)
         self.draw()
 
         while True:
@@ -234,7 +234,7 @@ class Window:
 
             self.draw()
 
-        self.operators.pop()
+        self.components.pop()
         self.draw()
 
         return popup.selected()
@@ -242,7 +242,7 @@ class Window:
     def text_input(self, prompt, text="", callback=None, mask=components.TextInput.TEXT_NORMAL):
         """Get text input from the user"""
         text = components.TextInput(1, 0, self.rows, self.cols, prompt, text, mask)
-        self.operators.append(text)
+        self.components.append(text)
         self.draw()
 
         while True:
@@ -263,7 +263,7 @@ class Window:
 
             self.draw()
 
-        self.operators.pop()
+        self.components.pop()
         self.draw()
 
         text.close()
@@ -275,7 +275,7 @@ class Window:
 
     def filtered_list(self, input_data, prompt, callback=None, filter_function=None, draw_function=None):
         list_input = components.FilteredList(1, 0, self.rows - 1, self.cols, input_data, prompt, filter_function, draw_function)
-        self.operators.append(list_input)
+        self.components.append(list_input)
         self.draw()
 
         while True:
@@ -301,7 +301,7 @@ class Window:
             list_input.draw()
 
         list_input.clear()
-        self.operators.pop()
+        self.components.pop()
         self.draw()
 
         if self.event == Window.KEY_LEFT:
@@ -311,7 +311,7 @@ class Window:
 
     def menu_input(self, options):
         menu_input = components.Menu(1, 0, self.rows, self.cols, options)
-        self.operators.append(menu_input)
+        self.components.append(menu_input)
         self.draw()
 
         while True:
@@ -321,18 +321,18 @@ class Window:
                 if menu_input.valid_option(self.event_value):
                     break
         
-        self.operators.pop()
+        self.components.pop()
         self.draw()
 
         return menu_input.get_option(self.event_value)
 
     def new_logger(self):
         logger = components.Logger(1, 0, self.rows - 1, self.cols)
-        self.operators.append(logger)
+        self.components.append(logger)
         self.draw()
 
         return logger
 
     def remove_logger(self, logger):
-        self.operators.remove(logger)
+        self.components.remove(logger)
         self.draw()
