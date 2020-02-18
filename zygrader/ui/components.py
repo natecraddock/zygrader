@@ -109,19 +109,6 @@ class Popup(Component):
         resize_window(self.window, self.rows, self.cols)
 
 
-class BoolPopup(Popup):
-    def draw(self):
-        super().draw_text()
-        
-        # Draw prompt to exit popup
-        y = self.rows - 3
-        x = self.cols - 1 - Popup.PADDING - len("[Y]es")
-        add_str(self.window, y, x, "[Y]es")
-        add_str(self.window, y + 1, x, "[N]o")
-
-        self.window.refresh()
-
-
 class OptionsPopup(Popup):
     def __init__(self, height, width, title, message, options, align):
         super().__init__(height, width, title, message, align)

@@ -96,7 +96,7 @@ def mainloop_callback(option):
 def mainloop(admin_mode):
     window = Window.get_window()
     config_file = config.user.get_config()
-    
+
     options = ["Grade", "Config", "Prep Lab Score Calculator"]
 
     if admin_mode:

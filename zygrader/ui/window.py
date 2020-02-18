@@ -196,25 +196,27 @@ class Window:
     
     def create_bool_popup(self, title, message, align=components.Popup.ALIGN_CENTER):
         """Create a popup with title and message that returns true/false"""
-        popup = components.BoolPopup(self.rows, self.cols, title, message, align)
+        options = ["YES", "NO"]
+        popup = components.OptionsPopup(self.rows, self.cols, title, message, options, align)
         self.components.append(popup)
         self.draw()
         
         while True:
             self.get_input()
 
-            if self.event == Window.KEY_INPUT:
-                if self.event_value.lower() == "y":
-                    retval = True
-                    break
-                elif self.event_value.lower() == "n":
-                    retval = False
-                    break
+            if self.event == Window.KEY_LEFT:
+                popup.previous()
+            elif self.event == Window.KEY_RIGHT:
+                popup.next()
+            elif self.event == Window.KEY_ENTER:
+                break
+
+            self.draw()
 
         self.components.pop()
         self.draw()
 
-        return retval
+        return popup.selected() == options[0]
 
     def create_options_popup(self, title, message, options, align=components.Popup.ALIGN_CENTER):
         """Create a popup with multiple options that can be selected with the keyboard"""
