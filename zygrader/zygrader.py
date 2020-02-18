@@ -37,7 +37,6 @@ def mainloop_callback(option):
         logger.log("admin menu accessed")
         admin.admin_menu()
 
-""" Main program loop """
 def mainloop(admin_mode):
     window = Window.get_window()
     config_file = config.user.get_config()
@@ -50,7 +49,6 @@ def mainloop(admin_mode):
     window.set_header(f"Menu | {config_file['email']}")
     window.filtered_list(options, "Option", mainloop_callback)
 
-""" zygrade startpoint """
 def main(window: Window):
     # Read args to set admin mode
     if "-a" in sys.argv:
