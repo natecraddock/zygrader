@@ -5,7 +5,7 @@ import base64
 
 from .. import zybooks
 from ..ui.window import Window
-from ..ui.components import TextInput
+from ..ui.components import TextInput, FilteredList
 
 from . import g_data
 
@@ -95,7 +95,7 @@ def initial_config(window: Window):
         config = json.load(config_file)
 
     # If user email and password exists, authenticate and return
-    if config["email"] and config["password"]:
+    if "email" in config and "password" in config:
         password = decode_password(config)
         authenticate(window, zy_api, config["email"], password)
         return config
@@ -114,7 +114,7 @@ def initial_config(window: Window):
         write_config(config)
 
     # User has not saved password, reprompt
-    elif not config["password"]:
+    elif "password" not in config:
         email = config["email"]
 
         while True:
@@ -124,3 +124,61 @@ def initial_config(window: Window):
                 break
 
     return config
+
+def config_menu():
+    window = Window.get_window()
+    zy_api = zybooks.Zybooks()
+    config_file = get_config()
+
+    if "password" in config_file:
+        password_option = "Remove Saved Password"
+    else:
+        password_option = "Save Password"
+    
+    options = ["Change Credentials", password_option, "Set Editor"]
+    option = ""
+
+    while option != FilteredList.GO_BACKWARD:
+        window.set_header(f"Config | {config_file['email']}")
+        option = window.filtered_list(options, "Option")
+
+        if option == "Change Credentials":
+            email, password = create_account(window, zy_api)
+            save_password = window.create_bool_popup("Save Password", ["Would you like to save your password?"])
+
+            config_file["email"] = email
+
+            if save_password:
+                encode_password(config_file, password)
+            else:
+                pass
+
+            write_config(config_file)
+
+        elif option == "Save Password":
+            # First, get password and verify it is correct
+            email = config_file["email"]
+            while True:
+                password = get_password(window)
+
+                if authenticate(window, zy_api, email, password):
+                    encode_password(config_file, password)
+                    write_config(config_file)
+                    break
+            
+            window.create_popup("Saved Password", ["Password successfully saved"])
+
+        elif option == "Remove Saved Password":
+            config_file["password"] = ""
+            write_config(config_file)
+
+            window.create_popup("Removed Password", ["Password successfully removed"])
+
+        elif option == "Set Editor":
+            editor = window.filtered_list(list(EDITORS.keys()), "Editor")
+
+            if editor == 0:
+                break
+
+            config_file["editor"] = editor
+            write_config(config_file)

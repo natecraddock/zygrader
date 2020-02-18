@@ -13,61 +13,6 @@ from .ui import window
 from .ui.window import Window
 from .ui import components
 
-def config_menu():
-    window = Window.get_window()
-    zy_api = Zybooks()
-    config_file = config.user.get_config()
-
-    if config_file["password"]:
-        password_option = "Remove Saved Password"
-    else:
-        password_option = "Save Password"
-    
-    options = ["Change Credentials", password_option, "Set Editor"]
-    option = ""
-
-    while option != components.FilteredList.GO_BACKWARD:
-        window.set_header(f"Config | {config_file['email']}")
-        option = window.filtered_list(options, "Option")
-
-        if option == "Change Credentials":
-            email, password = config.user.create_account(window, zy_api)
-            save_password = window.create_bool_popup("Save Password", ["Would you like to save your password?"])
-
-            config_file["email"] = email
-
-            if save_password:
-                config.user.encode_password(config_file, password)
-
-            config.user.write_config(config_file)
-
-        elif option == "Save Password":
-            # First, get password and verify it is correct
-            email = config_file["email"]
-            while True:
-                password = config.user.get_password(window)
-
-                if config.user.authenticate(window, zy_api, email, password):
-                    config.user.encode_password(config_file, password)
-                    config.user.write_config(config_file)
-                    break
-            
-            window.create_popup("Saved Password", ["Password successfully saved"])
-
-        elif option == "Remove Saved Password":
-            config_file["password"] = ""
-            config.user.write_config(config_file)
-
-            window.create_popup("Removed Password", ["Password successfully removed"])
-
-        elif option == "Set Editor":
-            editor = window.filtered_list(list(config.user.EDITORS.keys()), "Editor")
-
-            if editor == 0:
-                break
-
-            config_file["editor"] = editor
-            config.user.write_config(config_file)
 
 def prep_lab_score_calc():
     window = Window.get_window()
@@ -84,7 +29,7 @@ def mainloop_callback(option):
     if option == "Grade":
         grader.grade()
     elif option == "Config":
-        config_menu()
+        config.user.config_menu()
     elif option == "Prep Lab Score Calculator":
         logger.log("prep lab score calculator tool accessed")
         prep_lab_score_calc()
