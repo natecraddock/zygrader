@@ -185,5 +185,13 @@ def do_versioning(window: Window):
 
         window.create_popup("Version 2.51", msg, components.Popup.ALIGN_LEFT)
 
+    if compare_versions(2.6, user_version):
+        msg = ["zygrader Version 2.6", "",
+               "* Handle all window resizing crashes.",
+               "* Code quality and cleanup.",
+               "* Refactor Boolean (yes/no) popup windows."]
+
+        window.create_popup("Version 2.6", msg, components.Popup.ALIGN_LEFT)
+
     # Write the current version to the user's config file
     write_current_version(config)
