@@ -95,7 +95,7 @@ def initial_config(window: Window):
         config = json.load(config_file)
 
     # If user email and password exists, authenticate and return
-    if "email" in config and "password" in config:
+    if "email" in config and "password" in config and config["password"]:
         password = decode_password(config)
         authenticate(window, zy_api, config["email"], password)
         return config
@@ -114,7 +114,7 @@ def initial_config(window: Window):
         write_config(config)
 
     # User has not saved password, reprompt
-    elif "password" not in config:
+    elif "password" in config and not config["password"]:
         email = config["email"]
 
         while True:
