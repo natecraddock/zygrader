@@ -28,6 +28,8 @@ def prep_lab_score_calc():
 def mainloop_callback(option):
     if option == "Grade":
         grader.grade()
+    elif option == "Run For Fun":
+        grader.grade(False)
     elif option == "Config":
         config.user.config_menu()
     elif option == "Prep Lab Score Calculator":
@@ -41,7 +43,7 @@ def mainloop(admin_mode):
     window = Window.get_window()
     config_file = config.user.get_config()
 
-    options = ["Grade", "Config", "Prep Lab Score Calculator"]
+    options = ["Grade", "Config", "Prep Lab Score Calculator", "Run For Fun"]
 
     if admin_mode:
         options.append("Admin")
