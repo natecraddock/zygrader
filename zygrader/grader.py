@@ -186,12 +186,9 @@ def student_callback(lab, student, useLocks=True):
         # After popup, unlock student
         if useLocks:
             data.lock.unlock_lab(student, lab)
-    except KeyboardInterrupt:
-        data.lock.unlock_lab(student, lab)
-    except curses.error:
-        data.lock.unlock_lab(student, lab)
-    except Exception:
-        data.lock.unlock_lab(student, lab)
+    except (KeyboardInterrupt, curses.error, Exception):
+        if useLocks:
+            data.lock.unlock_lab(student, lab)
 
 
 def lab_callback(lab, useLocks=True):
