@@ -14,12 +14,12 @@ from .ui import components
 from .ui.window import Window
 from .zybooks import Zybooks
 
-def get_submission(lab, student, useLocks=True):
+def get_submission(lab, student, use_locks=True):
     window = Window.get_window()
     zy_api = Zybooks()
 
     # Lock student
-    if useLocks:
+    if use_locks:
         data.lock.lock_lab(student, lab)
     # Update the window to draw the student in red
     window.draw()
@@ -132,10 +132,10 @@ def grade_pair_programming(first_submission):
     except Exception:
         data.lock.unlock_lab(student, lab)
 
-def student_callback(lab, student, useLocks=True):
+def student_callback(lab, student, use_locks=True):
     window = Window.get_window()
     # Wait for student's assignment to be available
-    if useLocks and data.lock.is_lab_locked(student, lab):
+    if use_locks and data.lock.is_lab_locked(student, lab):
         netid = data.lock.get_locked_netid(student, lab)
 
         # If being graded by the user who locked it, allow grading
@@ -146,18 +146,18 @@ def student_callback(lab, student, useLocks=True):
 
     try:
         # Get the student's submission
-        submission = get_submission(lab, student, useLocks)
+        submission = get_submission(lab, student, use_locks)
 
         # Unlock if student has not submitted
         if submission.flag == data.model.Submission.NO_SUBMISSION:
             msg = [f"{student.full_name} has not submitted"]
             window.create_popup("No Submissions", msg)
 
-            if useLocks:
+            if use_locks:
                 data.lock.unlock_lab(student, lab)
             return
         options = ["Open Folder", "Run", "View", "Done"]
-        if useLocks:
+        if use_locks:
             options.insert(1, "Pair Programming")
 
         # Add option to diff parts if this lab requires it
@@ -184,22 +184,22 @@ def student_callback(lab, student, useLocks=True):
         config.g_data.running_process = None
 
         # After popup, unlock student
-        if useLocks:
+        if use_locks:
             data.lock.unlock_lab(student, lab)
     except (KeyboardInterrupt, curses.error, Exception):
-        if useLocks:
+        if use_locks:
             data.lock.unlock_lab(student, lab)
 
 
-def lab_callback(lab, useLocks=True):
+def lab_callback(lab, use_locks=True):
     window = Window.get_window()
     students = data.get_students()
 
     # Get student
     line_lock = lambda student : data.lock.is_lab_locked(student, lab) if type(student) is not str else False
-    window.filtered_list(students, "Student", lambda student : student_callback(lab, student, useLocks), data.Student.find, draw_function=line_lock)
+    window.filtered_list(students, "Student", lambda student : student_callback(lab, student, use_locks), data.Student.find, draw_function=line_lock)
 
-def grade(useLocks=True):
+def grade(use_locks=True):
     window = Window.get_window()
     labs = data.get_labs()
 
@@ -208,4 +208,4 @@ def grade(useLocks=True):
         return
 
     # Pick a lab
-    window.filtered_list(labs, "Assignment", lambda lab : lab_callback(lab, useLocks), data.Lab.find)
+    window.filtered_list(labs, "Assignment", lambda lab : lab_callback(lab, use_locks), data.Lab.find)

@@ -196,8 +196,8 @@ def do_versioning(window: Window):
     if compare_versions(2.7, user_version):
         msg = ["zygrader Version 2.7", "",
                "* Add 'Run For Fun' option.",
-               "    This allows for running students' code",
-               "    without locking submissions."]
+               "  This allows for running students' code",
+               "  without locking submissions."]
 
         window.create_popup("Version 2.7", msg, components.Popup.ALIGN_LEFT)
 

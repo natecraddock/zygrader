@@ -29,7 +29,7 @@ def mainloop_callback(option):
     if option == "Grade":
         grader.grade()
     elif option == "Run For Fun":
-        grader.grade(False)
+        grader.grade(use_locks=False)
     elif option == "Config":
         config.user.config_menu()
     elif option == "Prep Lab Score Calculator":
