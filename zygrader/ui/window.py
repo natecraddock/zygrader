@@ -33,6 +33,8 @@ class Window:
         """Initialize screen and run callback function"""
 
         self.name = window_name
+        self.insert_mode = False
+        self.event = Window.KEY_NONE
 
         curses.wrapper(self.__init_curses, callback)
 
@@ -147,6 +149,10 @@ class Window:
             curses.init_pair(1, curses.COLOR_WHITE, curses.COLOR_BLACK)
         else:
             curses.init_pair(1, curses.COLOR_BLACK, curses.COLOR_WHITE)
+        if self.insert_mode:
+            self.set_header("INSERT MODE")
+        else:
+            self.set_header("NO INSERT MODE")
 
     def get_input(self):
         """Get input and handle resize events"""
@@ -161,6 +167,9 @@ class Window:
 
             if input_code == "KEY_RESIZE":
                 self.__resize_terminal()
+            elif config.user.get_preference("vim_mode"):
+                self.get_input_vim(input_code)
+                break
             elif input_code == "\x1b":
                 self.input_win.nodelay(True)
                 n = self.input_win.getch()
@@ -168,6 +177,7 @@ class Window:
                     pass
                 self.event = Window.KEY_ESC
                 self.input_win.nodelay(False)
+                break
             elif input_code == "KEY_BACKSPACE":
                 self.event = Window.KEY_BACKSPACE
                 break
@@ -194,6 +204,49 @@ class Window:
         # self.header_offset += 1
         # Draw after receiving input
         self.draw()
+
+    def get_input_vim(self, input_code):
+        if input_code in {"KEY_ENTER", "\n", "\r"}:
+            self.event = Window.KEY_ENTER
+        elif input_code == "KEY_UP":
+            self.event = Window.KEY_UP
+        elif input_code == "KEY_DOWN":
+            self.event = Window.KEY_DOWN
+        elif input_code == "KEY_LEFT":
+            self.event = Window.KEY_LEFT
+        elif input_code == "KEY_RIGHT":
+            self.event = Window.KEY_RIGHT
+        elif input_code == "KEY_BACKSPACE":
+            if self.insert_mode:
+                self.event = Window.KEY_BACKSPACE
+        elif input_code == "\x1b":
+            self.input_win.nodelay(True)
+            # n = self.input_win.getch()
+            # if n == -1:
+            #     pass
+            self.event = Window.KEY_ESC
+            if self.insert_mode:
+                self.insert_mode = False
+            self.input_win.nodelay(False)
+        else:
+            if not self.insert_mode and input_code[0] == "i":
+                self.insert_mode = True
+                self.event = Window.KEY_NONE
+            elif not self.insert_mode:
+                if input_code[0] == "h":
+                    self.event = Window.KEY_LEFT
+                elif input_code[0] == "j":
+                    self.event = Window.KEY_DOWN
+                elif input_code[0] == "k":
+                    self.event = Window.KEY_UP
+                elif input_code[0] == "l":
+                    self.event = Window.KEY_RIGHT
+                else:
+                    self.event = Window.KEY_NONE
+            elif self.insert_mode:
+                self.event = Window.KEY_INPUT
+                self.event_value = input_code[0]
+
 
     def create_popup(self, title, message, align=components.Popup.ALIGN_CENTER):
         """Create a popup with title and message that returns after enter"""

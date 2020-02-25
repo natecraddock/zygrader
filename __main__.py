@@ -45,6 +45,8 @@ zygrader_path = os.path.dirname(os.path.realpath(__file__))
 os.chdir(zygrader_path)
 os.chdir("..")
 
+os.environ.setdefault('ESCDELAY', '25')
+
 zygrader.start()
 
 logger.log("zygrader exited normally")
