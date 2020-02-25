@@ -2,6 +2,8 @@ import curses
 
 from . import components
 from .utils import add_str, resize_window
+from .. import logger
+from .. import config
 
 UI_LEFT = 0
 UI_RIGHT = 1
@@ -15,6 +17,7 @@ class Window:
     KEY_LEFT = 4
     KEY_RIGHT = 5
     KEY_INPUT = 6
+    KEY_ESC = 7
     KEY_NONE = -1
 
     instance = None
@@ -74,7 +77,7 @@ class Window:
         self.rows, self.cols = self.stdscr.getmaxyx()
 
     def __init_colors(self):
-        curses.init_pair(1, curses.COLOR_BLACK, curses.COLOR_WHITE)
+        curses.init_pair(1, curses.COLOR_WHITE, curses.COLOR_BLACK)
         curses.init_pair(2, curses.COLOR_RED, curses.COLOR_BLACK)
         curses.init_pair(3, curses.COLOR_WHITE, curses.COLOR_GREEN)
         curses.init_pair(4, curses.COLOR_WHITE, curses.COLOR_RED)
@@ -120,6 +123,7 @@ class Window:
 
     def draw(self, flush=False):
         """Draw each component in the stack"""
+        self.update_window()
         self.stdscr.erase()
         self.stdscr.refresh()
         
@@ -138,9 +142,14 @@ class Window:
         if flush:
             curses.flushinp()
 
+    def update_window(self):
+        if config.user.get_preference("dark_mode"):
+            curses.init_pair(1, curses.COLOR_WHITE, curses.COLOR_BLACK)
+        else:
+            curses.init_pair(1, curses.COLOR_BLACK, curses.COLOR_WHITE)
+
     def get_input(self):
         """Get input and handle resize events"""
-
         input_code = "KEY_RESIZE"
 
         while input_code == "KEY_RESIZE":
@@ -152,6 +161,13 @@ class Window:
 
             if input_code == "KEY_RESIZE":
                 self.__resize_terminal()
+            elif input_code == "\x1b":
+                self.input_win.nodelay(True)
+                n = self.input_win.getch()
+                if n == -1:
+                    pass
+                self.event = Window.KEY_ESC
+                self.input_win.nodelay(False)
             elif input_code == "KEY_BACKSPACE":
                 self.event = Window.KEY_BACKSPACE
                 break

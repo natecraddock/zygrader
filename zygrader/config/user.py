@@ -5,7 +5,7 @@ import base64
 
 from .. import zybooks
 from ..ui.window import Window
-from ..ui.components import TextInput, FilteredList
+from ..ui.components import TextInput, FilteredList, Popup
 
 from . import g_data
 
@@ -125,6 +125,20 @@ def initial_config(window: Window):
 
     return config
 
+def toggle_preference(pref):
+    config = get_config()
+
+    if pref in config:
+        del config[pref]
+    else:
+        config[pref] = ""
+
+    write_config(config)
+
+def get_preference(pref):
+    """Return True if a preference is set, False otherwise"""
+    return pref in get_config()
+
 def config_menu():
     window = Window.get_window()
     zy_api = zybooks.Zybooks()
@@ -135,7 +149,7 @@ def config_menu():
     else:
         password_option = "Save Password"
     
-    options = ["Change Credentials", password_option, "Set Editor"]
+    options = ["Change Credentials", password_option, "Set Editor", "Preferences"]
     option = ""
 
     while option != FilteredList.GO_BACKWARD:
@@ -182,3 +196,26 @@ def config_menu():
 
             config_file["editor"] = editor
             write_config(config_file)
+
+        elif option == "Preferences":
+            NONE = " "
+            prefs = ["Toggle Vim Mode", "Toggle Dark Mode", "Done"]
+            while True:
+                msg = ["User Preferences Toggles:"]
+                using_dark_mode = NONE
+                if "dark_mode" in get_config():
+                    using_dark_mode = "X"
+                msg.append(f"[{using_dark_mode}] Dark Mode")
+
+                using_vim_mode = NONE
+                if "vim_mode" in get_config():
+                    using_vim_mode = "X"
+                msg.append(f"[{using_vim_mode}] Vim Mode")
+                pref = window.create_options_popup("Preferences", msg, prefs, Popup.ALIGN_LEFT)
+
+                if pref == "Done":
+                    break
+                elif pref == "Toggle Vim Mode":
+                    toggle_preference("vim_mode")
+                elif pref == "Toggle Dark Mode":
+                    toggle_preference("dark_mode")
