@@ -149,10 +149,10 @@ class Window:
             curses.init_pair(1, curses.COLOR_WHITE, curses.COLOR_BLACK)
         else:
             curses.init_pair(1, curses.COLOR_BLACK, curses.COLOR_WHITE)
-        if self.insert_mode:
-            self.set_header("INSERT MODE")
-        else:
-            self.set_header("NO INSERT MODE")
+        if self.insert_mode and "INSERT MODE" not in self.__header_text:
+            self.__header_text += " | INSERT MODE"
+        elif "INSERT MODE" in self.__header_text:
+            self.__header_text = self.__header_text[:-len(" | INSERT MODE")]
 
     def get_input(self):
         """Get input and handle resize events"""
