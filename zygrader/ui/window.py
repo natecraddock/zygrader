@@ -369,23 +369,6 @@ class Window:
 
         return list_input.selected()
 
-    def menu_input(self, options):
-        menu_input = components.Menu(1, 0, self.rows, self.cols, options)
-        self.components.append(menu_input)
-        self.draw()
-
-        while True:
-            self.get_input()
-
-            if self.event == Window.KEY_INPUT:
-                if menu_input.valid_option(self.event_value):
-                    break
-        
-        self.components.pop()
-        self.draw()
-
-        return menu_input.get_option(self.event_value)
-
     def new_logger(self):
         logger = components.Logger(1, 0, self.rows - 1, self.cols)
         self.components.append(logger)
