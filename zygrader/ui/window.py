@@ -167,20 +167,6 @@ class Window:
 
             if input_code == "KEY_RESIZE":
                 self.__resize_terminal()
-            elif config.user.get_preference("vim_mode"):
-                self.get_input_vim(input_code)
-                break
-            elif input_code == "\x1b":
-                self.input_win.nodelay(True)
-                n = self.input_win.getch()
-                if n == -1:
-                    pass
-                self.event = Window.KEY_ESC
-                self.input_win.nodelay(False)
-                break
-            elif input_code == "KEY_BACKSPACE":
-                self.event = Window.KEY_BACKSPACE
-                break
             elif input_code in {"KEY_ENTER", "\n", "\r"}:
                 self.event = Window.KEY_ENTER
                 break
@@ -196,6 +182,20 @@ class Window:
             elif input_code == "KEY_RIGHT":
                 self.event = Window.KEY_RIGHT
                 break
+            elif config.user.get_preference("vim_mode"):
+                self.get_input_vim(input_code)
+                break
+            elif input_code == "\x1b":
+                self.input_win.nodelay(True)
+                n = self.input_win.getch()
+                if n == -1:
+                    pass
+                self.event = Window.KEY_ESC
+                self.input_win.nodelay(False)
+                break
+            elif input_code == "KEY_BACKSPACE":
+                self.event = Window.KEY_BACKSPACE
+                break
             else:
                 self.event = Window.KEY_INPUT
                 self.event_value = input_code[0]
@@ -206,19 +206,8 @@ class Window:
         self.draw()
 
     def get_input_vim(self, input_code):
-        if input_code in {"KEY_ENTER", "\n", "\r"}:
-            self.event = Window.KEY_ENTER
-        elif input_code == "KEY_UP":
-            self.event = Window.KEY_UP
-        elif input_code == "KEY_DOWN":
-            self.event = Window.KEY_DOWN
-        elif input_code == "KEY_LEFT":
-            self.event = Window.KEY_LEFT
-        elif input_code == "KEY_RIGHT":
-            self.event = Window.KEY_RIGHT
-        elif input_code == "KEY_BACKSPACE":
-            if self.insert_mode:
-                self.event = Window.KEY_BACKSPACE
+        if input_code == "KEY_BACKSPACE" and self.insert_mode:
+            self.event = Window.KEY_BACKSPACE
         elif input_code == "\x1b":
             self.input_win.nodelay(True)
             # n = self.input_win.getch()
