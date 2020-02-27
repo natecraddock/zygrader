@@ -27,6 +27,11 @@ class Window:
         if Window.instance:
             return Window.instance
 
+    def update_preferences(self):
+        self.dark_mode = config.user.get_preference("dark_mode")
+        self.christmas_mode = config.user.get_preference("christmas_mode")
+        self.vim_mode = config.user.get_preference("vim_mode")
+
     def __init__(self, callback, window_name):
         Window.instance = self
 
@@ -35,6 +40,9 @@ class Window:
         self.name = window_name
         self.insert_mode = False
         self.event = Window.KEY_NONE
+
+        # Set user preference variables
+        self.update_preferences()
 
         curses.wrapper(self.__init_curses, callback)
 
@@ -55,6 +63,7 @@ class Window:
 
         # Used for animated themes
         self.header_offset = 0
+        self.__header_text = ""
         self.set_header()
 
         # Create window for input
@@ -83,8 +92,14 @@ class Window:
     def __init_colors(self):
         curses.init_pair(1, curses.COLOR_WHITE, curses.COLOR_BLACK)
         curses.init_pair(2, curses.COLOR_RED, curses.COLOR_BLACK)
+
+        # Holiday LIGHT variant
         curses.init_pair(3, curses.COLOR_WHITE, curses.COLOR_GREEN)
         curses.init_pair(4, curses.COLOR_WHITE, curses.COLOR_RED)
+
+        # Holiday DARK variant
+        curses.init_pair(5, curses.COLOR_GREEN, curses.COLOR_BLACK)
+        curses.init_pair(6, curses.COLOR_RED, curses.COLOR_BLACK)
 
     def __resize_terminal(self):
         """Function to run after resize events in the terminal"""
@@ -96,16 +111,26 @@ class Window:
 
         self.draw(True)
 
+    def get_header_colors(self):
+        if self.dark_mode:
+            return curses.color_pair(5), curses.color_pair(6)
+        return curses.color_pair(3), curses.color_pair(4)
+
     def set_header(self, text="", align=UI_CENTERED):
         """Set the header text"""        
         self.header.erase()
         resize_window(self.header, 1, self.cols)
-        self.__header_text = text
+
+        if text:
+            self.__header_text = text
 
         if text:
             display_text = f"{self.name} | {self.__header_text}"
         else:
             display_text = self.name
+
+        if self.insert_mode:
+            display_text += " | INSERT"
 
         if align is UI_LEFT:
             x = 0
@@ -117,12 +142,14 @@ class Window:
         add_str(self.header, 0, x, display_text)
 
         # Christmas theme
-        if config.user.get_preference("christmas_mode"):
+        if self.christmas_mode:
+            red, green = self.get_header_colors()
+
             for x in range(self.cols):
                 if ((x // 2) + self.header_offset) % 2 is 0:
-                    self.header.chgat(0, x, curses.color_pair(3) | curses.A_BOLD)
+                    self.header.chgat(0, x, red | curses.A_BOLD)
                 else:
-                    self.header.chgat(0, x, curses.color_pair(4) | curses.A_BOLD)
+                    self.header.chgat(0, x, green | curses.A_BOLD)
 
         self.header.refresh()
 
@@ -148,14 +175,11 @@ class Window:
             curses.flushinp()
 
     def update_window(self):
-        if config.user.get_preference("dark_mode"):
+        if self.dark_mode:
             curses.init_pair(1, curses.COLOR_WHITE, curses.COLOR_BLACK)
         else:
             curses.init_pair(1, curses.COLOR_BLACK, curses.COLOR_WHITE)
-        if self.insert_mode and "INSERT MODE" not in self.__header_text:
-            self.__header_text += " | INSERT MODE"
-        elif "INSERT MODE" in self.__header_text:
-            self.__header_text = self.__header_text[:-len(" | INSERT MODE")]
+        self.set_header()
 
     def get_input(self):
         """Get input and handle resize events"""
@@ -185,7 +209,7 @@ class Window:
             elif input_code == "KEY_RIGHT":
                 self.event = Window.KEY_RIGHT
                 break
-            elif config.user.get_preference("vim_mode"):
+            elif self.vim_mode:
                 self.get_input_vim(input_code)
                 break
             elif input_code == "\x1b":

@@ -227,3 +227,6 @@ def config_menu():
                     toggle_preference("dark_mode")
                 elif pref == "Christmas":
                     toggle_preference("christmas_mode")
+
+                # Update window preferences
+                window.update_preferences()
