@@ -52,7 +52,9 @@ class Window:
         # Create header
         self.header = curses.newwin(1, self.cols, 0, 0)
         self.header.bkgd(" ", curses.color_pair(1))
-        # self.header_offset = 0 # Used for animated themes
+
+        # Used for animated themes
+        self.header_offset = 0
         self.set_header()
 
         # Create window for input
@@ -115,11 +117,12 @@ class Window:
         add_str(self.header, 0, x, display_text)
 
         # Christmas theme
-        # for x in range(self.cols):
-        #     if ((x // 2) + self.header_offset) % 2 is 0:
-        #         self.header.chgat(0, x, curses.color_pair(3) | curses.A_BOLD)
-        #     else:
-        #         self.header.chgat(0, x, curses.color_pair(4) | curses.A_BOLD)
+        if config.user.get_preference("christmas_mode"):
+            for x in range(self.cols):
+                if ((x // 2) + self.header_offset) % 2 is 0:
+                    self.header.chgat(0, x, curses.color_pair(3) | curses.A_BOLD)
+                else:
+                    self.header.chgat(0, x, curses.color_pair(4) | curses.A_BOLD)
 
         self.header.refresh()
 
@@ -201,7 +204,7 @@ class Window:
                 self.event_value = input_code[0]
                 break
 
-        # self.header_offset += 1
+        self.header_offset += 1
         # Draw after receiving input
         self.draw()
 

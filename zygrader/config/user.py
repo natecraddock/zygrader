@@ -199,7 +199,7 @@ def config_menu():
 
         elif option == "Preferences":
             NONE = " "
-            prefs = ["Toggle Vim Mode", "Toggle Dark Mode", "Done"]
+            prefs = ["Christmas", "Vim Mode", "Dark Mode", "Done"]
             while True:
                 msg = ["User Preferences Toggles:"]
                 using_dark_mode = NONE
@@ -211,11 +211,19 @@ def config_menu():
                 if "vim_mode" in get_config():
                     using_vim_mode = "X"
                 msg.append(f"[{using_vim_mode}] Vim Mode")
+
+                using_christmas_mode = NONE
+                if "christmas_mode" in get_config():
+                    using_christmas_mode = "X"
+                msg.append(f"[{using_christmas_mode}] Christmas Mode")
+
                 pref = window.create_options_popup("Preferences", msg, prefs, Popup.ALIGN_LEFT)
 
                 if pref == "Done":
                     break
-                elif pref == "Toggle Vim Mode":
+                elif pref == "Vim Mode":
                     toggle_preference("vim_mode")
-                elif pref == "Toggle Dark Mode":
+                elif pref == "Dark Mode":
                     toggle_preference("dark_mode")
+                elif pref == "Christmas":
+                    toggle_preference("christmas_mode")
