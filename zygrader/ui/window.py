@@ -262,9 +262,9 @@ class Window:
         while True:
             self.get_input()
 
-            if self.event == Window.KEY_LEFT:
+            if self.event in {Window.KEY_LEFT, Window.KEY_UP}:
                 popup.previous()
-            elif self.event == Window.KEY_RIGHT:
+            elif self.event in {Window.KEY_RIGHT, Window.KEY_DOWN}:
                 popup.next()
             elif self.event == Window.KEY_ENTER:
                 break
@@ -285,9 +285,9 @@ class Window:
         while True:
             self.get_input()
 
-            if self.event == Window.KEY_LEFT:
+            if self.event in {Window.KEY_LEFT, Window.KEY_UP}:
                 popup.previous()
-            elif self.event == Window.KEY_RIGHT:
+            elif self.event in {Window.KEY_RIGHT, Window.KEY_DOWN}:
                 popup.next()
             elif self.event == Window.KEY_ENTER:
                 break
