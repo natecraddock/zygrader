@@ -45,6 +45,7 @@ zygrader_path = os.path.dirname(os.path.realpath(__file__))
 os.chdir(zygrader_path)
 os.chdir("..")
 
+# Set a short ESC key delay (curses environment variable)
 os.environ.setdefault('ESCDELAY', '25')
 
 zygrader.start()
