@@ -209,5 +209,13 @@ def do_versioning(window: Window):
 
         window.create_popup("Version 2.8", msg, components.Popup.ALIGN_LEFT)
 
+    if compare_versions(2.81, user_version):
+        msg = ["zygrader Version 2.81", "",
+               "* Fix Vim mode.",
+               "* Add Christmas Theme to Config > Preferences."
+               "* Small optimizations."]
+
+        window.create_popup("Version 2.81", msg, components.Popup.ALIGN_LEFT)
+
     # Write the current version to the user's config file
     write_current_version(config)
