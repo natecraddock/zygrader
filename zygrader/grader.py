@@ -28,7 +28,7 @@ def get_submission(lab, student, use_locks=True):
     submission = data.model.Submission(student, lab, submission_response)
 
     # Report missing files
-    if submission.flag & data.model.Submission.BAD_ZIP_URL:
+    if submission.flag & data.model.SubmissionFlag.BAD_ZIP_URL:
         msg = [f"One or more URLs for {student.full_name}'s code submission are bad.",
                "Some files could not be downloaded. Please",
                "View the most recent submission on zyBooks."]
@@ -93,7 +93,7 @@ def grade_pair_programming(first_submission):
     try:
         second_submission = get_submission(lab, student)
 
-        if second_submission.flag == data.model.Submission.NO_SUBMISSION:
+        if second_submission.flag == data.model.SubmissionFlag.NO_SUBMISSION:
             msg = [f"{student.full_name} has not submitted"]
             window.create_popup("No Submissions", msg)
 
@@ -149,7 +149,7 @@ def student_callback(lab, student, use_locks=True):
         submission = get_submission(lab, student, use_locks)
 
         # Unlock if student has not submitted
-        if submission.flag == data.model.Submission.NO_SUBMISSION:
+        if submission.flag == data.model.SubmissionFlag.NO_SUBMISSION:
             msg = [f"{student.full_name} has not submitted"]
             window.create_popup("No Submissions", msg)
 
@@ -161,7 +161,7 @@ def student_callback(lab, student, use_locks=True):
             options.insert(1, "Pair Programming")
 
         # Add option to diff parts if this lab requires it
-        if submission.flag & data.model.Submission.DIFF_PARTS:
+        if submission.flag & data.model.SubmissionFlag.DIFF_PARTS:
             options.insert(1, "Diff Parts")
 
         while True:

@@ -1,6 +1,7 @@
 import curses
 import datetime
 import difflib
+import enum
 import glob
 import io
 import os
@@ -66,21 +67,25 @@ class Student:
         return first_name.find(text) is not -1 or last_name.find(text) is not -1 or \
                full_name.find(text) is not -1 or email.find(text) is not -1
 
+
+class SubmissionFlag(enum.Flag):
+    NO_SUBMISSION = enum.auto()
+    OK = enum.auto()
+    BAD_ZIP_URL = enum.auto()
+    DIFF_PARTS = enum.auto()
+
+
 class Submission:
-    NO_SUBMISSION = (1 << 0)
-    OK = (1 << 1)
-    BAD_ZIP_URL = (1 << 2)
-    DIFF_PARTS = (1 << 3)
 
     def __init__(self, student, lab, response):
         self.student = student
         self.lab = lab
-        self.flag = Submission.OK
+        self.flag = SubmissionFlag.OK
 
         # Read the response data
         # Only grade if student has submitted
         if response["code"] is Zybooks.NO_SUBMISSION:
-            self.flag = Submission.NO_SUBMISSION
+            self.flag = SubmissionFlag.NO_SUBMISSION
             return
 
         self.files_directory = self.read_files(response)
@@ -88,7 +93,7 @@ class Submission:
         self.create_submission_string(response)
 
         if "diff_parts" in lab.options:
-            self.flag |= Submission.DIFF_PARTS
+            self.flag |= SubmissionFlag.DIFF_PARTS
 
     def create_submission_string(self, response):
         msg = [f"{self.student.full_name}'s submission downloaded", ""]
@@ -127,7 +132,7 @@ class Submission:
             # is an error with Amazon (the host) or zyBooks but in this rare case, just skip
             # the file. Also flag this Submission as having missing file(s).
             if zip_file == Zybooks.ERROR:
-                self.flag |= Submission.BAD_ZIP_URL
+                self.flag |= SubmissionFlag.BAD_ZIP_URL
                 continue
 
             files = zy_api.extract_zip(zip_file, part["name"])
