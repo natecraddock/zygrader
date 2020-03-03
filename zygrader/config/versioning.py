@@ -217,5 +217,20 @@ def do_versioning(window: Window):
 
         window.create_popup("Version 2.81", msg, components.Popup.ALIGN_LEFT)
 
+    if compare_versions(2.82, user_version):
+        # Add left right arrow navigation on the menu to default config
+        config["left_right_arrow_nav"] = ""
+        user.write_config(config)
+        window.update_preferences()
+
+    # if compare_versions(2.9, user_version):
+    #     msg = ["zygrader Version 2.9", "",
+    #            "* Add ESC as a key to go back from string inputs",
+    #            "* Add preference to disable left and right arrow keys",
+    #            "  for menu navigation. [For Dallin ;)]",
+    #            "* Lots of code cleanup"]
+
+    #     window.create_popup("Version 2.9", msg, components.Popup.ALIGN_LEFT)
+
     # Write the current version to the user's config file
     write_current_version(config)

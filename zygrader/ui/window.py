@@ -33,6 +33,7 @@ class Window:
         self.dark_mode = config.user.get_preference("dark_mode")
         self.christmas_mode = config.user.get_preference("christmas_mode")
         self.vim_mode = config.user.get_preference("vim_mode")
+        self.left_right_menu_nav = config.user.get_preference("left_right_arrow_nav")
 
     def __init__(self, callback, window_name):
         Window.instance = self
@@ -370,13 +371,13 @@ class Window:
                 list_input.down()
             elif self.event == Window.KEY_UP:
                 list_input.up()
-            elif self.event == Window.KEY_LEFT:
+            elif self.event == Window.KEY_LEFT and self.left_right_menu_nav:
                 break
             elif self.event == Window.KEY_BACKSPACE:
                 list_input.delchar()
             elif self.event == Window.KEY_INPUT:
                 list_input.addchar(self.event_value)
-            elif self.event in {Window.KEY_ENTER, Window.KEY_RIGHT}:
+            elif (self.event == Window.KEY_ENTER) or (self.event == Window.KEY_RIGHT and self.left_right_menu_nav):
                 if callback and list_input.selected() != components.FilteredList.GO_BACKWARD:
                     callback(list_input.selected())
                     list_input.clear_filter()

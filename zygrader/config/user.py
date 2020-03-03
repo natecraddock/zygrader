@@ -203,7 +203,7 @@ def config_menu():
 
         elif option == "Preferences":
             NONE = " "
-            prefs = ["Christmas", "Vim Mode", "Dark Mode", "Done"]
+            prefs = ["Left/Right Navigation", "Christmas", "Vim Mode", "Dark Mode", "Done"]
             while True:
                 msg = ["User Preferences Toggles:"]
                 using_dark_mode = NONE
@@ -221,6 +221,11 @@ def config_menu():
                     using_christmas_mode = "X"
                 msg.append(f"[{using_christmas_mode}] Christmas Mode")
 
+                using_left_right_nav = NONE
+                if "left_right_arrow_nav" in get_config():
+                    using_left_right_nav = "X"
+                msg.append(f"[{using_left_right_nav}] Left/Right Arrow Menu Navigation")
+
                 pref = window.create_options_popup("Preferences", msg, prefs, Popup.ALIGN_LEFT)
 
                 if pref == "Done":
@@ -231,6 +236,8 @@ def config_menu():
                     toggle_preference("dark_mode")
                 elif pref == "Christmas":
                     toggle_preference("christmas_mode")
+                elif pref == "Left/Right Navigation":
+                    toggle_preference("left_right_arrow_nav")
 
                 # Update window preferences
                 window.update_preferences()
