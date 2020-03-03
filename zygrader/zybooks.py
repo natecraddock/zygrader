@@ -6,6 +6,14 @@ import zipfile
 
 from . import config
 
+
+class SectionResponse:
+    def __init__(self):
+        self.success = False
+        self.id = ""
+        self.name = ""
+
+
 class Zybooks:
     NO_ERROR = 0
     NO_SUBMISSION = 1
@@ -50,26 +58,26 @@ class Zybooks:
 
         return r.json()
 
-    def get_zybook_section(self, chapter, section):
+    def get_zybook_section(self, chapter, section) -> SectionResponse:
         """Given a chapter and section ID, get section information like the zybooks internal ID
 
         This is useful for running the class manager. To download a submission, the zybooks sectionID
-        must be used. It is hard to get manually, but this function returns the id and name.
+        must be used. It is hard to get manually, so this function returns the id and name.
         """
         class_code = config.g_data.CLASS_CODE
         url = f"https://zyserver.zybooks.com/v1/zybook/{class_code}/chapter/{chapter}/section/{section}"
         payload = {"auth_token": Zybooks.token}
 
         r = Zybooks.session.get(url, json=payload)
-        response = {"success": False}
+        response = SectionResponse()
 
         if r.ok:
             section = r.json()["section"]
             content = section["content_resources"][1]
 
-            response["success"] = True
-            response["id"] = content["id"]
-            response["name"] = content["caption"]
+            response.success = True
+            response.id = content["id"]
+            response.name = content["caption"]
 
         return response
 
