@@ -105,12 +105,16 @@ def submission_search_init(window, labs):
         part = assignment.parts[0]
 
     search_string = window.text_input("Enter a search string")
+    if search_string == Window.CANCEL:
+        return
 
     # Get a valid output path
     while True:
         output_path = window.text_input("Enter the output path including filename [~ is supported]")
-        output_path = os.path.expanduser(output_path)
+        if output_path == Window.CANCEL:
+            return
 
+        output_path = os.path.expanduser(output_path)
         if os.path.exists(os.path.dirname(output_path)):
             break
 

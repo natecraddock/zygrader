@@ -20,6 +20,8 @@ class Window:
     KEY_ESC = 7
     KEY_NONE = -1
 
+    CANCEL = 0
+
     instance = None
 
     @staticmethod
@@ -186,12 +188,15 @@ class Window:
         input_code = "KEY_RESIZE"
 
         while input_code == "KEY_RESIZE":
+            self.event = Window.KEY_NONE
+
             # getkey is blocking
             try:
                 input_code = self.input_win.getkey()
             except curses.error:
-                self.event = Window.KEY_NONE
+                pass
 
+            # Cases for each type of input
             if input_code == "KEY_RESIZE":
                 self.__resize_terminal()
             elif input_code in {"KEY_ENTER", "\n", "\r"}:
@@ -214,9 +219,6 @@ class Window:
                 break
             elif input_code == "\x1b":
                 self.input_win.nodelay(True)
-                n = self.input_win.getch()
-                if n == -1:
-                    pass
                 self.event = Window.KEY_ESC
                 self.input_win.nodelay(False)
                 break
@@ -237,12 +239,10 @@ class Window:
             self.event = Window.KEY_BACKSPACE
         elif input_code == "\x1b":
             self.input_win.nodelay(True)
-            # n = self.input_win.getch()
-            # if n == -1:
-            #     pass
-            self.event = Window.KEY_ESC
             if self.insert_mode:
                 self.insert_mode = False
+            else:
+                self.event = Window.KEY_ESC
             self.input_win.nodelay(False)
         else:
             if not self.insert_mode and input_code[0] == "i":
@@ -262,7 +262,6 @@ class Window:
             elif self.insert_mode:
                 self.event = Window.KEY_INPUT
                 self.event_value = input_code[0]
-
 
     def create_popup(self, title, message, align=components.Popup.ALIGN_CENTER):
         """Create a popup with title and message that returns after enter"""
@@ -326,7 +325,7 @@ class Window:
 
         return popup.selected()
     
-    def text_input(self, prompt, text="", callback=None, mask=components.TextInput.TEXT_NORMAL):
+    def text_input(self, prompt, text="", mask=components.TextInput.TEXT_NORMAL):
         """Get text input from the user"""
         text = components.TextInput(1, 0, self.rows, self.cols, prompt, text, mask)
         self.components.append(text)
@@ -336,8 +335,6 @@ class Window:
             self.get_input()
 
             if self.event == Window.KEY_ENTER:
-                if callback:
-                    return callback(self, text.text) # Bad! fix this
                 break
             elif self.event == Window.KEY_BACKSPACE:
                 text.delchar()
@@ -347,6 +344,8 @@ class Window:
                 text.left()
             elif self.event == Window.KEY_RIGHT:
                 text.right()
+            elif self.event == Window.KEY_ESC:
+                break
 
             self.draw()
 
@@ -355,10 +354,9 @@ class Window:
 
         text.close()
         
-        if callback:
-            return callback(self, text.text)
-        else:
-            return text.text
+        if self.event == Window.KEY_ESC:
+            return Window.CANCEL
+        return text.text
 
     def filtered_list(self, input_data, prompt, callback=None, filter_function=None, draw_function=None):
         list_input = components.FilteredList(1, 0, self.rows - 1, self.cols, input_data, prompt, filter_function, draw_function)

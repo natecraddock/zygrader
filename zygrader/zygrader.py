@@ -19,8 +19,10 @@ def prep_lab_score_calc():
 
     try:
         score = float(window.text_input("What was the student's original score"))
-        new_score = score + ((100 - score) * 0.6)
+        if score == Window.CANCEL:
+            return
 
+        new_score = score + ((100 - score) * 0.6)
         window.create_popup("New Score", [f"The student's new score is: {new_score}"])
     except ValueError:
         window.create_popup("Error", ["Invalid input"])

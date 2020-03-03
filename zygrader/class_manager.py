@@ -36,6 +36,8 @@ def setup_new_class():
     zy_api = Zybooks()
     
     code = window.text_input("Enter class code")
+    if code == Window.CANCEL:
+        return
 
     # Check if class code is valid
     valid = zy_api.check_valid_class(code)
@@ -59,11 +61,14 @@ def add_lab():
     zy_api = Zybooks()
 
     lab_name = window.text_input("Lab Name")
+    if lab_name == Window.CANCEL:
+        return
 
     # Get lab part(s)
     parts = []
-    number = window.text_input("Enter Chapter.section, e.g. 2.26 (enter \"done\" to finish)")
-    while number != "done":
+    number = window.text_input("Enter Chapter.section, e.g. 2.26 (ESC to cancel)")
+
+    while number != Window.CANCEL:
         part = {}
         chapter, section = number.split(".")
 
@@ -73,15 +78,16 @@ def add_lab():
             continue
 
         # Name lab part and add to list of parts
-        name = response.name
         name = window.text_input("Edit part name")
+        if name == Window.CANCEL:
+            name = response.name
 
         part["name"] = name
         part["id"] = response.id
         parts.append(part)
 
         # Get next part
-        number = window.text_input("Enter Chapter.section, e.g. 2.26 (enter \"done\" to finish)")
+        number = window.text_input("Enter Chapter.section, e.g. 2.26 (ESC to finish)")
 
     new_lab = data.model.Lab(lab_name, parts, {})
 
@@ -100,6 +106,8 @@ def set_due_date(lab):
         old_date = lab.options["due"]
 
     due_date = window.text_input("Enter due date [MM.DD.YY:HH.MM.SS]", text=old_date)
+    if due_date == Window.CANCEL:
+        return
 
     # Clearing the due date
     if due_date == "" and "due" in lab.options:
@@ -125,9 +133,9 @@ def rename_lab(lab):
     labs = data.get_labs()
 
     name = window.text_input("Enter Lab's new name", text=lab.name)
-
-    lab.name = name
-    data.write_labs(labs)
+    if name != Window.CANCEL:
+        lab.name = name
+        data.write_labs(labs)
 
 def edit_lab(lab):
     window = Window.get_window()
