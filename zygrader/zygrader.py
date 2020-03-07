@@ -27,7 +27,11 @@ def prep_lab_score_calc():
     except ValueError:
         window.create_popup("Error", ["Invalid input"])
 
-def mainloop_callback(option):
+main_menu_options = ["Grade", "Config", "Prep Lab Score Calculator", "Run For Fun"]
+
+def mainloop_callback(option_index):
+    option = main_menu_options[option_index]
+
     if option == "Grade":
         grader.grade()
     elif option == "Run For Fun":
@@ -45,13 +49,11 @@ def mainloop(admin_mode):
     window = Window.get_window()
     config_file = config.user.get_config()
 
-    options = ["Grade", "Config", "Prep Lab Score Calculator", "Run For Fun"]
-
     if admin_mode:
-        options.append("Admin")
+        main_menu_options.append("Admin")
 
     window.set_header(f"Menu | {config_file['email']}")
-    window.filtered_list(options, "Option", mainloop_callback)
+    window.filtered_list(main_menu_options, "Option", mainloop_callback)
 
 def main(window: Window):
     # Read args to set admin mode

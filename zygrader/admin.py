@@ -6,6 +6,7 @@ import zipfile
 import io
 
 from .ui.window import Window
+from .ui import UI_GO_BACK
 from .zybooks import Zybooks
 from . import data
 from . import config
@@ -90,17 +91,18 @@ def submission_search(lab, search_string, output_path):
 def submission_search_init(window, labs):
     """Get lab part and string from the user for searching"""
     # Choose lab
-    assignment = window.filtered_list(labs, "Assignment", filter_function=data.Lab.find)
-    if assignment is 0:
+    assignment_index = window.filtered_list(labs, "Assignment", filter_function=data.Lab.find)
+    if assignment_index is UI_GO_BACK:
         return
+
+    assignment = labs[assignment_index]
 
     # Select the lab part if needed
     if len(assignment.parts) > 1:
-        part_name = window.filtered_list([name["name"] for name in assignment.parts], "Part")
-        if part_name is 0:
+        part_index = window.filtered_list([name["name"] for name in assignment.parts], "Part")
+        if part_index is UI_GO_BACK:
             return
-        index = [assignment.parts.index(p) for p in assignment.parts if p["name"] == part_name][0]
-        part = assignment.parts[index]
+        part = assignment.parts[part_index]
     else:
         part = assignment.parts[0]
 
@@ -124,8 +126,12 @@ def submission_search_init(window, labs):
     # Run the submission search
     submission_search(part, search_string, output_path)
 
-def admin_menu_callback(option):
+admin_menu_options = ["Submissions Search", "Remove Locks", "Class Management"]
+
+def admin_menu_callback(menu_index):
     window = Window.get_window()
+
+    option = admin_menu_options[menu_index]
 
     if option == "Submissions Search":
         labs = data.get_labs()
@@ -134,9 +140,9 @@ def admin_menu_callback(option):
     elif option == "Remove Locks":
         while True:
             all_locks = data.lock.get_lock_files()
-            selection = window.filtered_list(all_locks, "Choose a lock file")
-            if selection != 0:
-                data.lock.remove_lock_file(selection)
+            lock_index = window.filtered_list(all_locks, "Choose a lock file")
+            if lock_index != UI_GO_BACK:
+                data.lock.remove_lock_file(all_locks[lock_index])
             else:
                 break
     elif option == "Class Management":
@@ -145,6 +151,4 @@ def admin_menu_callback(option):
 def admin_menu():
     window = Window.get_window()
 
-    options = ["Submissions Search", "Remove Locks", "Class Management"]
-
-    window.filtered_list(options, "Option", admin_menu_callback)
+    window.filtered_list(admin_menu_options, "Option", admin_menu_callback)

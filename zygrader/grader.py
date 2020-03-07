@@ -10,7 +10,7 @@ from . import config
 from . import data
 from . import logger
 
-from .ui import components
+from .ui import components, UI_GO_BACK
 from .ui.window import Window
 from .zybooks import Zybooks
 
@@ -81,7 +81,11 @@ def grade_pair_programming(first_submission):
 
     # Get student
     line_lock = lambda student : data.lock.is_lab_locked(student, lab) if type(student) is not str else False
-    student = window.filtered_list(students, "Student", filter_function=data.Student.find, draw_function=line_lock)
+    student_index = window.filtered_list(students, "Student", filter_function=data.Student.find, draw_function=line_lock)
+    if student_index is UI_GO_BACK:
+        return
+
+    student = students[student_index]
 
     if data.lock.is_lab_locked(student, lab):
         netid = data.lock.get_locked_netid(student, lab)
@@ -132,8 +136,11 @@ def grade_pair_programming(first_submission):
     except Exception:
         data.lock.unlock_lab(student, lab)
 
-def student_callback(lab, student, use_locks=True):
+def student_callback(lab, student_index, use_locks=True):
     window = Window.get_window()
+
+    student = data.get_students()[student_index]
+
     # Wait for student's assignment to be available
     if use_locks and data.lock.is_lab_locked(student, lab):
         netid = data.lock.get_locked_netid(student, lab)
@@ -191,14 +198,17 @@ def student_callback(lab, student, use_locks=True):
             data.lock.unlock_lab(student, lab)
 
 
-def lab_callback(lab, use_locks=True):
+def lab_callback(lab_index, use_locks=True):
     window = Window.get_window()
+
+    lab = data.get_labs()[lab_index]
+
     students = data.get_students()
 
     # Get student
     line_lock = lambda student : data.lock.is_lab_locked(student, lab) if type(student) is not str else False
     window.filtered_list(students, "Student", \
-        lambda student : student_callback(lab, student, use_locks), data.Student.find, draw_function=line_lock)
+        lambda student_index : student_callback(lab, student_index, use_locks), data.Student.find, draw_function=line_lock)
 
 def grade(use_locks=True):
     window = Window.get_window()
@@ -209,4 +219,4 @@ def grade(use_locks=True):
         return
 
     # Pick a lab
-    window.filtered_list(labs, "Assignment", lambda lab : lab_callback(lab, use_locks), data.Lab.find)
+    window.filtered_list(labs, "Assignment", lambda lab_index : lab_callback(lab_index, use_locks), data.Lab.find)

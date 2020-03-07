@@ -4,6 +4,7 @@ import time
 import base64
 
 from .. import zybooks
+from ..ui import UI_GO_BACK
 from ..ui.window import Window
 from ..ui.components import TextInput, FilteredList, Popup
 
@@ -162,7 +163,7 @@ def draw_preferences():
 def preferences_callback(selected_index):
     window = Window.get_window()
 
-    toggle_preference(list(preferences.keys())[selected_index - 1])
+    toggle_preference(list(preferences.keys())[selected_index])
     window.update_preferences()
 
 def config_menu():
@@ -178,10 +179,13 @@ def config_menu():
     options = ["Change Credentials", password_option, "Set Editor", "Preferences"]
     option = ""
 
-    while option != FilteredList.GO_BACKWARD:
+    while True:
         window.set_header(f"Config | {config_file['email']}")
-        option = window.filtered_list(options, "Option")
+        option_index = window.filtered_list(options, "Option")
+        if option_index is UI_GO_BACK:
+            break
 
+        option = options[option_index]
         if option == "Change Credentials":
             email, password = create_account(window, zy_api)
             save_password = window.create_bool_popup("Save Password", ["Would you like to save your password?"])
@@ -215,12 +219,12 @@ def config_menu():
             window.create_popup("Removed Password", ["Password successfully removed"])
 
         elif option == "Set Editor":
-            editor = window.filtered_list(list(EDITORS.keys()), "Editor")
+            editor_index = window.filtered_list(list(EDITORS.keys()), "Editor")
 
-            if editor == 0:
+            if editor_index is UI_GO_BACK:
                 break
 
-            config_file["editor"] = editor
+            config_file["editor"] = list(EDITORS.keys())[editor_index]
             write_config(config_file)
 
         elif option == "Preferences":

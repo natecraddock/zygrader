@@ -2,7 +2,7 @@ import os
 import json
 
 from .ui.window import Window
-from .ui import components
+from .ui import components, UI_GO_BACK
 from .zybooks import Zybooks
 from . import data
 from . import config
@@ -212,11 +212,11 @@ def edit_labs():
     labs = data.get_labs()
 
     while True:
-        lab = window.filtered_list(labs, "Lab")
-        if lab is 0:
+        lab_index = window.filtered_list(labs, "Lab")
+        if lab_index is UI_GO_BACK:
             break
 
-        edit_labs_callback(lab)
+        edit_labs_callback(labs[lab_index])
 
 def download_roster():
     window = Window.get_window()
@@ -234,13 +234,17 @@ def change_class():
     window = Window.get_window()
     class_codes = config.g_data.get_class_codes()
 
-    code = window.filtered_list(class_codes, "Class")
-    if code != 0:
-        config.g_data.set_current_class_code(code)
+    code_index = window.filtered_list(class_codes, "Class")
+    if code_index != UI_GO_BACK:
+        config.g_data.set_current_class_code(class_codes[code_index])
 
-        window.create_popup("Changed Class", [f"Class changed to {code}"])
+        window.create_popup("Changed Class", [f"Class changed to {class_codes[code_index]}"])
 
-def class_manager_callback(option):
+class_manager_options = ["Setup New Class", "Add Lab", "Edit Labs", "Download Student Roster", "Change Class"]
+
+def class_manager_callback(option_index):
+    option = class_manager_options[option_index]
+
     if option == "Setup New Class":
         setup_new_class()
     elif option == "Add Lab":
@@ -255,6 +259,4 @@ def class_manager_callback(option):
 def start():
     window = Window.get_window()
 
-    options = ["Setup New Class", "Add Lab", "Edit Labs", "Download Student Roster", "Change Class"]
-
-    window.filtered_list(options, "Option", callback=class_manager_callback)
+    window.filtered_list(class_manager_options, "Option", callback=class_manager_callback)

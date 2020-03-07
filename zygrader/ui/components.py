@@ -1,6 +1,7 @@
 import curses
 
 from .utils import add_str, resize_window
+from . import UI_GO_BACK
 
 class Component:
     def __init__(self):
@@ -148,46 +149,47 @@ class OptionsPopup(Popup):
 
 
 class FilteredList(Component):
-    GO_BACKWARD = 0
-    GO_FORWARD = 1
-
     def __filter_data(self, input_data, filter_function, filter_text):
         # Don't filter if the string is empty
         if filter_text == "":
-            data = input_data[:]
-            data.insert(0, "Back")
-            return data
+            return input_data[:]
 
         # Apply filter (via function)
-        data = ["Back"]
+        data = [input_data[0]]
         if filter_function is None:
-            for x in input_data:
-                if x.lower().find(filter_text.lower()) is not -1:
+            for x in input_data[1:]:
+                if x[1].lower().find(filter_text.lower()) is not -1:
                     data.append(x)
         else:
-            for x in input_data:
-                if filter_function(x, filter_text):
+            for x in input_data[1:]:
+                if filter_function(x[1], filter_text):
                     data.append(x)
 
         return data
 
-    def __fill_text(self, lines, selected_index):
+    def __fill_text(self, lines):
         line = 0
 
         for l in lines[self.scroll:self.scroll+self.rows - 1]:
-
-            if self.draw_function and self.draw_function(l):
+            if self.draw_function and self.draw_function(l[1]):
                 color = curses.color_pair(2)
             else:
                 color = curses.color_pair(0)
 
             if (line + self.scroll) == self.selected_index:
-                display_text = f"> {str(l)}"
+                display_text = f"> {str(l[1])}"
                 add_str(self.window, line, 0, display_text, curses.A_BOLD | color)
             else:
-                display_text = f"  {str(l)}"
+                display_text = f"  {str(l[1])}"
                 add_str(self.window, line, 0, display_text, curses.A_DIM | color)
+
             line += 1
+
+    def init_lines(self, options):
+        lines = [(0, "Back")]
+        for i in range(len(options)):
+            lines.append((i + 1, options[i]))
+        return lines
 
     def __init__(self, y, x, rows, cols, options, prompt, filter_function, draw_function):
         self.blocking = True
@@ -198,12 +200,13 @@ class FilteredList(Component):
         self.rows = rows
         self.cols = cols
 
-        self.options = options[:]
+        self.options = self.init_lines(options)
         self.filter_function = filter_function
         self.draw_function = draw_function
 
         self.scroll = 0
         self.selected_index = 1
+        self.selected_index = self.selected_index
         self.filter_text = ""
 
         self.prompt = prompt
@@ -240,7 +243,7 @@ class FilteredList(Component):
         if len(self.data) is 1:
             self.selected_index = 0
 
-        self.__fill_text(self.data, self.selected_index)
+        self.__fill_text(self.data)
         self.window.refresh()
 
         add_str(self.text_input, 0, 0, f"{self.prompt}: {self.filter_text}")
@@ -281,13 +284,13 @@ class FilteredList(Component):
         self.selected_index = 1
     
     def selected(self):
-        if self.selected_index is 0:
-            return FilteredList.GO_BACKWARD
-        else:
-            return self.data[self.selected_index]
+        return self.data[self.selected_index][0] - 1
 
     def clear_filter(self):
         self.filter_text = ""
+        self.selected_index = 0
+        self.set_scroll()
+        self.selected_index = 1
 
 
 class TextInput(Component):
@@ -457,6 +460,4 @@ class ListPopup(FilteredList, Popup):
         Popup.resize(self, rows, cols)
 
     def selected(self):
-        if self.selected_index is 0:
-            return FilteredList.GO_BACKWARD
-        return self.data[self.selected_index]
+        return self.selected_index - 1

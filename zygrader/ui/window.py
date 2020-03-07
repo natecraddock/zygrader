@@ -5,9 +5,12 @@ from .utils import add_str, resize_window
 from .. import logger
 from .. import config
 
+from . import UI_GO_BACK
+
 UI_LEFT = 0
 UI_RIGHT = 1
 UI_CENTERED = 2
+
 
 class Window:
     KEY_BACKSPACE = 0
@@ -347,10 +350,10 @@ class Window:
             elif self.event == Window.KEY_LEFT and self.left_right_menu_nav:
                 break
             elif (self.event == Window.KEY_ENTER) or (self.event == Window.KEY_RIGHT and self.left_right_menu_nav):
-                if popup.selected() is 0:
+                if popup.selected() is UI_GO_BACK:
                     break
-                if callback:
-                    callback(popup.selected_index)
+                elif callback:
+                    callback(popup.selected())
                 else:
                     break
 
@@ -358,9 +361,6 @@ class Window:
 
         self.components.pop()
         self.draw()
-
-        if self.event == Window.KEY_LEFT:
-            return components.FilteredList.GO_BACKWARD
 
         return popup.selected()
     
@@ -416,8 +416,10 @@ class Window:
             elif self.event == Window.KEY_INPUT:
                 list_input.addchar(self.event_value)
             elif (self.event == Window.KEY_ENTER) or (self.event == Window.KEY_RIGHT and self.left_right_menu_nav):
-                if callback and list_input.selected() != components.FilteredList.GO_BACKWARD:
+                if callback and list_input.selected() != UI_GO_BACK:
                     callback(list_input.selected())
+
+                    # TODO: Make this a preference
                     list_input.clear_filter()
                 else:
                     break
@@ -427,9 +429,6 @@ class Window:
         list_input.clear()
         self.components.pop()
         self.draw()
-
-        if self.event == Window.KEY_LEFT:
-            return components.FilteredList.GO_BACKWARD
 
         return list_input.selected()
 
