@@ -289,42 +289,6 @@ class FilteredList(Component):
     def clear_filter(self):
         self.filter_text = ""
 
-class Menu(Component):
-    def __init__(self, y, x, height, width, options):
-        self.height = height
-        self.width = width
-
-        self.valid_options = {}
-        for line in options:
-            letter = line[0].lower()
-            self.valid_options[letter] = line
-
-        self.window = curses.newwin(height, width, y, x)
-        
-    def resize(self, rows, cols):
-        self.height = rows
-        self.width = cols
-
-        resize_window(self.window, self.height, self.width)
-
-    def draw(self):
-        self.window.erase()
-
-        line_num = 0
-        for key in self.valid_options.keys():
-            line = self.valid_options[key]
-            
-            display_str = f"[{key}] - {line}"
-            add_str(self.window, line_num, 0, display_str)
-            line_num += 1
-    
-        self.window.refresh()
-
-    def valid_option(self, key):
-        return key in self.valid_options.keys()
-    
-    def get_option(self, key):
-        return self.valid_options[key]
 
 class TextInput(Component):
     TEXT_NORMAL = 0
