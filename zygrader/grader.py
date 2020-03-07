@@ -197,7 +197,8 @@ def lab_callback(lab, use_locks=True):
 
     # Get student
     line_lock = lambda student : data.lock.is_lab_locked(student, lab) if type(student) is not str else False
-    window.filtered_list(students, "Student", lambda student : student_callback(lab, student, use_locks), data.Student.find, draw_function=line_lock)
+    window.filtered_list(students, "Student", \
+        lambda student : student_callback(lab, student, use_locks), data.Student.find, draw_function=line_lock)
 
 def grade(use_locks=True):
     window = Window.get_window()
