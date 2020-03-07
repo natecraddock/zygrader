@@ -33,10 +33,10 @@ class Window:
             return Window.instance
 
     def update_preferences(self):
-        self.dark_mode = config.user.get_preference("dark_mode")
-        self.christmas_mode = config.user.get_preference("christmas_mode")
-        self.vim_mode = config.user.get_preference("vim_mode")
-        self.left_right_menu_nav = config.user.get_preference("left_right_arrow_nav")
+        self.dark_mode = config.user.is_preference_set("dark_mode")
+        self.christmas_mode = config.user.is_preference_set("christmas_mode")
+        self.vim_mode = config.user.is_preference_set("vim_mode")
+        self.left_right_menu_nav = config.user.is_preference_set("left_right_arrow_nav")
 
     def __init__(self, callback, window_name):
         Window.instance = self

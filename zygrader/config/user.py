@@ -2,6 +2,7 @@ import os
 import json
 import time
 import base64
+from .. import logger
 
 from .. import zybooks
 from ..ui import UI_GO_BACK
@@ -130,6 +131,34 @@ def initial_config(window: Window):
 
     return config
 
+def is_preference_set(pref):
+    """Return True if a preference is set, False otherwise"""
+    return pref in get_config()
+
+def get_preference(pref):
+    config = get_config()
+    if pref in config:
+        return config[pref]
+    return ""
+
+def draw_text_editors():
+    list = []
+    current_editor = get_preference("editor")
+
+    logger.log(current_editor)
+    for name in EDITORS.keys():
+        if current_editor == name:
+            list.append(f"[X] {name}")
+        else:
+            list.append(f"[ ] {name}")
+
+    return list
+
+def editor_callback(editor_index):
+    config_file = get_config()
+    config_file["editor"] = list(EDITORS.keys())[editor_index]
+    write_config(config_file)
+
 def toggle_preference(pref):
     config = get_config()
 
@@ -140,10 +169,6 @@ def toggle_preference(pref):
 
     write_config(config)
 
-def get_preference(pref):
-    """Return True if a preference is set, False otherwise"""
-    return pref in get_config()
-
 preferences = {"left_right_arrow_nav": "Left/Right Arrow Navigation",
                 "vim_mode": "Vim Mode",
                 "dark_mode": "Dark Mode",
@@ -153,7 +178,7 @@ preferences = {"left_right_arrow_nav": "Left/Right Arrow Navigation",
 def draw_preferences():
     list = []
     for pref, name in preferences.items():
-        if get_preference(pref):
+        if is_preference_set(pref):
             list.append(f"[X] {name}")
         else:
             list.append(f"[ ] {name}")
@@ -219,13 +244,7 @@ def config_menu():
             window.create_popup("Removed Password", ["Password successfully removed"])
 
         elif option == "Set Editor":
-            editor_index = window.filtered_list(list(EDITORS.keys()), "Editor")
-
-            if editor_index is UI_GO_BACK:
-                break
-
-            config_file["editor"] = list(EDITORS.keys())[editor_index]
-            write_config(config_file)
+            window.create_list_popup("Set Editor", callback=editor_callback, list_fill=draw_text_editors)
 
         elif option == "Preferences":
             window.create_list_popup("User Preferences", callback=preferences_callback, list_fill=draw_preferences)
