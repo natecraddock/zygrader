@@ -68,6 +68,10 @@ class Popup(Component):
             add_str(self.window, message_y + message_row, message_x, line)
             message_row += 1
 
+    def draw_title(self):
+        title_x = self.cols // 2 - len(self.title) // 2
+        add_str(self.window, 0, title_x, self.title)
+
     def draw_text(self):
         self.window.erase()
 
@@ -77,10 +81,7 @@ class Popup(Component):
         elif self.align == Popup.ALIGN_LEFT:
             self.__draw_message_left()
         
-        # Draw title
-        title_x = self.cols // 2 - len(self.title) // 2
-        add_str(self.window, 0, title_x, self.title)
-
+        self.draw_title()
 
     def draw(self):        
         self.draw_text()
@@ -173,7 +174,7 @@ class FilteredList(Component):
     def __fill_text(self, lines, selected_index):
         line = 0
 
-        for l in lines[self.scroll:self.scroll+self.height - 1]:
+        for l in lines[self.scroll:self.scroll+self.rows - 1]:
 
             if self.draw_function and self.draw_function(l):
                 color = curses.color_pair(2)
@@ -194,8 +195,8 @@ class FilteredList(Component):
         self.y = y
         self.x = x
 
-        self.height = rows
-        self.width = cols
+        self.rows = rows
+        self.cols = cols
 
         self.options = options[:]
         self.filter_function = filter_function
@@ -208,26 +209,26 @@ class FilteredList(Component):
         self.prompt = prompt
 
         # List box
-        self.window = curses.newwin(self.height - 1, self.width, y, x)
+        self.window = curses.newwin(self.rows - 1, self.cols, y, x)
 
         # Text input
-        self.text_input = curses.newwin(1, cols, self.height, 0)
+        self.text_input = curses.newwin(1, cols, self.rows, 0)
         self.text_input.bkgd(" ", curses.color_pair(1))
 
         curses.curs_set(1)
 
     def resize(self, rows, width):
-        self.height = rows - 1
-        self.width = width
+        self.rows = rows - 1
+        self.cols = width
 
         try:
             self.window.mvwin(self.y, self.x)
-            self.text_input.mvwin(self.height, 0)
+            self.text_input.mvwin(self.rows, 0)
         except:
             pass
 
-        resize_window(self.window, self.height - 1, self.width)
-        resize_window(self.text_input, 1, self.width)
+        resize_window(self.window, self.rows - 1, self.cols)
+        resize_window(self.text_input, 1, self.cols)
 
     def draw(self):
         self.window.erase()
@@ -250,8 +251,8 @@ class FilteredList(Component):
 
     def set_scroll(self):
         # Cursor set below view
-        if (self.selected_index + 1) > self.scroll + self.height - 1:
-            self.scroll = self.selected_index + 2 - self.height
+        if (self.selected_index + 1) > self.scroll + self.rows - 1:
+            self.scroll = self.selected_index + 2 - self.rows
 
         # Cursor set above view
         elif self.selected_index < self.scroll:
@@ -439,3 +440,59 @@ class Logger(Component):
         self.__log[-1] += entry
 
         self.draw()
+
+class ListPopup(FilteredList, Popup):
+    """A list in a popup view"""
+    V_PADDING = Popup.PADDING * 2
+
+    def __init__(self, rows, cols, title, input_data, list_fill):
+        self.blocking = False
+        Popup.__init__(self, rows, cols, title, None, None)
+
+        if input_data:
+            self.data = ["Back"] + input_data[:]
+        else:
+            self.data = []
+        self.list_fill = list_fill
+
+        self.scroll = 0
+        self.selected_index = 1
+
+    def set_scroll(self):
+        if (self.selected_index + 1) > self.scroll + self.rows - ListPopup.V_PADDING:
+            self.scroll = self.selected_index + ListPopup.V_PADDING - self.rows + 1
+        # Cursor set above view
+        elif self.selected_index < self.scroll:
+            self.scroll = self.selected_index
+
+    def draw_list(self):
+        line = 0
+
+        for l in self.data[self.scroll:self.scroll + self.rows - ListPopup.V_PADDING]:
+            if (line + self.scroll) == self.selected_index:
+                display_text = f"> {str(l)}"
+                add_str(self.window, Popup.PADDING + line, Popup.PADDING, display_text, curses.A_DIM)
+            else:
+                display_text = f"  {str(l)}"
+                add_str(self.window, Popup.PADDING + line, Popup.PADDING, display_text, curses.A_BOLD)
+            line += 1
+
+    def draw(self):
+        self.window.erase()
+
+        self.draw_title()
+
+        if self.list_fill:
+            self.data = ["Back"] + self.list_fill()
+
+        self.draw_list()
+
+        self.window.refresh()
+
+    def resize(self, rows, cols):
+        Popup.resize(self, rows, cols)
+
+    def selected(self):
+        if self.selected_index is 0:
+            return FilteredList.GO_BACKWARD
+        return self.data[self.selected_index]

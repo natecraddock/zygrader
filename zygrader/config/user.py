@@ -143,6 +143,28 @@ def get_preference(pref):
     """Return True if a preference is set, False otherwise"""
     return pref in get_config()
 
+preferences = {"left_right_arrow_nav": "Left/Right Arrow Navigation",
+                "vim_mode": "Vim Mode",
+                "dark_mode": "Dark Mode",
+                "christmas_mode": "Christmas Theme",
+                }
+
+def draw_preferences():
+    list = []
+    for pref, name in preferences.items():
+        if get_preference(pref):
+            list.append(f"[X] {name}")
+        else:
+            list.append(f"[ ] {name}")
+
+    return list
+
+def preferences_callback(selected_index):
+    window = Window.get_window()
+
+    toggle_preference(list(preferences.keys())[selected_index - 1])
+    window.update_preferences()
+
 def config_menu():
     window = Window.get_window()
     zy_api = zybooks.Zybooks()
@@ -202,42 +224,4 @@ def config_menu():
             write_config(config_file)
 
         elif option == "Preferences":
-            NONE = " "
-            prefs = ["Left/Right Navigation", "Christmas", "Vim Mode", "Dark Mode", "Done"]
-            while True:
-                msg = ["User Preferences Toggles:"]
-                using_dark_mode = NONE
-                if "dark_mode" in get_config():
-                    using_dark_mode = "X"
-                msg.append(f"[{using_dark_mode}] Dark Mode")
-
-                using_vim_mode = NONE
-                if "vim_mode" in get_config():
-                    using_vim_mode = "X"
-                msg.append(f"[{using_vim_mode}] Vim Mode")
-
-                using_christmas_mode = NONE
-                if "christmas_mode" in get_config():
-                    using_christmas_mode = "X"
-                msg.append(f"[{using_christmas_mode}] Christmas Mode")
-
-                using_left_right_nav = NONE
-                if "left_right_arrow_nav" in get_config():
-                    using_left_right_nav = "X"
-                msg.append(f"[{using_left_right_nav}] Left/Right Arrow Menu Navigation")
-
-                pref = window.create_options_popup("Preferences", msg, prefs, Popup.ALIGN_LEFT)
-
-                if pref == "Done":
-                    break
-                elif pref == "Vim Mode":
-                    toggle_preference("vim_mode")
-                elif pref == "Dark Mode":
-                    toggle_preference("dark_mode")
-                elif pref == "Christmas":
-                    toggle_preference("christmas_mode")
-                elif pref == "Left/Right Navigation":
-                    toggle_preference("left_right_arrow_nav")
-
-                # Update window preferences
-                window.update_preferences()
+            window.create_list_popup("User Preferences", callback=preferences_callback, list_fill=draw_preferences)

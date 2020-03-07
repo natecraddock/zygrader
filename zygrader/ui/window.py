@@ -325,6 +325,44 @@ class Window:
         self.draw()
 
         return popup.selected()
+
+    def create_list_popup(self, title, input_data=None, callback=None, list_fill=None):
+        """Create a popup with a list of options that can be scrolled and selected
+
+        If input_data (list) is supplied, the list will be drawn from the string representations
+        of that data. If list_fill (function) is supplied, then list_fill will be called to generate
+        a list to be drawn.
+        """
+        popup = components.ListPopup(self.rows, self.cols, title, input_data, list_fill)
+        self.components.append(popup)
+        self.draw()
+
+        while True:
+            self.get_input()
+
+            if self.event == Window.KEY_DOWN:
+                popup.down()
+            elif self.event == Window.KEY_UP:
+                popup.up()
+            elif self.event == Window.KEY_LEFT and self.left_right_menu_nav:
+                break
+            elif (self.event == Window.KEY_ENTER) or (self.event == Window.KEY_RIGHT and self.left_right_menu_nav):
+                if popup.selected() is 0:
+                    break
+                if callback:
+                    callback(popup.selected_index)
+                else:
+                    break
+
+            self.draw()
+
+        self.components.pop()
+        self.draw()
+
+        if self.event == Window.KEY_LEFT:
+            return components.FilteredList.GO_BACKWARD
+
+        return popup.selected()
     
     def text_input(self, prompt, text="", mask=components.TextInput.TEXT_NORMAL):
         """Get text input from the user"""
