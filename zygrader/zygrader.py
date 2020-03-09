@@ -18,7 +18,7 @@ def prep_lab_score_calc():
     window = Window.get_window()
 
     try:
-        score = float(window.text_input("What was the student's original score"))
+        score = float(window.create_text_input("What was the student's original score"))
         if score == Window.CANCEL:
             return
 
@@ -53,7 +53,7 @@ def mainloop(admin_mode):
         main_menu_options.append("Admin")
 
     window.set_header(f"Menu | {config_file['email']}")
-    window.filtered_list(main_menu_options, "Option", mainloop_callback)
+    window.create_filtered_list(main_menu_options, "Option", mainloop_callback)
 
 def main(window: Window):
     # Read args to set admin mode

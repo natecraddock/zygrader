@@ -35,7 +35,7 @@ def setup_new_class():
     window = Window.get_window()
     zy_api = Zybooks()
     
-    code = window.text_input("Enter class code")
+    code = window.create_text_input("Enter class code")
     if code == Window.CANCEL:
         return
 
@@ -60,13 +60,13 @@ def add_lab():
     window = Window.get_window()
     zy_api = Zybooks()
 
-    lab_name = window.text_input("Lab Name")
+    lab_name = window.create_text_input("Lab Name")
     if lab_name == Window.CANCEL:
         return
 
     # Get lab part(s)
     parts = []
-    number = window.text_input("Enter Chapter.section, e.g. 2.26 (ESC to cancel)")
+    number = window.create_text_input("Enter Chapter.section, e.g. 2.26 (ESC to cancel)")
 
     while number != Window.CANCEL:
         part = {}
@@ -78,7 +78,7 @@ def add_lab():
             continue
 
         # Name lab part and add to list of parts
-        name = window.text_input("Edit part name")
+        name = window.create_text_input("Edit part name")
         if name == Window.CANCEL:
             name = response.name
 
@@ -87,7 +87,7 @@ def add_lab():
         parts.append(part)
 
         # Get next part
-        number = window.text_input("Enter Chapter.section, e.g. 2.26 (ESC to finish)")
+        number = window.create_text_input("Enter Chapter.section, e.g. 2.26 (ESC to finish)")
 
     new_lab = data.model.Lab(lab_name, parts, {})
 
@@ -105,7 +105,7 @@ def set_due_date(lab):
     if "due" in lab.options:
         old_date = lab.options["due"]
 
-    due_date = window.text_input("Enter due date [MM.DD.YY:HH.MM.SS]", text=old_date)
+    due_date = window.create_text_input("Enter due date [MM.DD.YY:HH.MM.SS]", text=old_date)
     if due_date == Window.CANCEL:
         return
 
@@ -132,7 +132,7 @@ def rename_lab(lab):
 
     labs = data.get_labs()
 
-    name = window.text_input("Enter Lab's new name", text=lab.name)
+    name = window.create_text_input("Enter Lab's new name", text=lab.name)
     if name != Window.CANCEL:
         lab.name = name
         data.write_labs(labs)
@@ -212,7 +212,7 @@ def edit_labs():
     labs = data.get_labs()
 
     while True:
-        lab_index = window.filtered_list(labs, "Lab")
+        lab_index = window.create_filtered_list(labs, "Lab")
         if lab_index is UI_GO_BACK:
             break
 
@@ -234,7 +234,7 @@ def change_class():
     window = Window.get_window()
     class_codes = config.g_data.get_class_codes()
 
-    code_index = window.filtered_list(class_codes, "Class")
+    code_index = window.create_filtered_list(class_codes, "Class")
     if code_index != UI_GO_BACK:
         config.g_data.set_current_class_code(class_codes[code_index])
 
@@ -259,4 +259,4 @@ def class_manager_callback(option_index):
 def start():
     window = Window.get_window()
 
-    window.filtered_list(class_manager_options, "Option", callback=class_manager_callback)
+    window.create_filtered_list(class_manager_options, "Option", callback=class_manager_callback)

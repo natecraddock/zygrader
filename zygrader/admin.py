@@ -91,7 +91,7 @@ def submission_search(lab, search_string, output_path):
 def submission_search_init(window, labs):
     """Get lab part and string from the user for searching"""
     # Choose lab
-    assignment_index = window.filtered_list(labs, "Assignment", filter_function=data.Lab.find)
+    assignment_index = window.create_filtered_list(labs, "Assignment", filter_function=data.Lab.find)
     if assignment_index is UI_GO_BACK:
         return
 
@@ -106,13 +106,13 @@ def submission_search_init(window, labs):
     else:
         part = assignment.parts[0]
 
-    search_string = window.text_input("Enter a search string")
+    search_string = window.create_text_input("Enter a search string")
     if search_string == Window.CANCEL:
         return
 
     # Get a valid output path
     while True:
-        output_path = window.text_input("Enter the output path including filename [~ is supported]")
+        output_path = window.create_text_input("Enter the output path including filename [~ is supported]")
         if output_path == Window.CANCEL:
             return
 
@@ -140,7 +140,7 @@ def admin_menu_callback(menu_index):
     elif option == "Remove Locks":
         while True:
             all_locks = data.lock.get_lock_files()
-            lock_index = window.filtered_list(all_locks, "Choose a lock file")
+            lock_index = window.create_filtered_list(all_locks, "Choose a lock file")
             if lock_index != UI_GO_BACK:
                 data.lock.remove_lock_file(all_locks[lock_index])
             else:
@@ -151,4 +151,4 @@ def admin_menu_callback(menu_index):
 def admin_menu():
     window = Window.get_window()
 
-    window.filtered_list(admin_menu_options, "Option", admin_menu_callback)
+    window.create_filtered_list(admin_menu_options, "Option", admin_menu_callback)

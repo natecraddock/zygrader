@@ -364,7 +364,7 @@ class Window:
 
         return popup.selected()
     
-    def text_input(self, prompt, text="", mask=components.TextInput.TEXT_NORMAL):
+    def create_text_input(self, prompt, text="", mask=components.TextInput.TEXT_NORMAL):
         """Get text input from the user"""
         text = components.TextInput(1, 0, self.rows, self.cols, prompt, text, mask)
         self.components.append(text)
@@ -397,7 +397,7 @@ class Window:
             return Window.CANCEL
         return text.text
 
-    def filtered_list(self, input_data, prompt, callback=None, filter_function=None, draw_function=None):
+    def create_filtered_list(self, input_data, prompt, callback=None, filter_function=None, draw_function=None):
         list_input = components.FilteredList(1, 0, self.rows - 1, self.cols, input_data, prompt, filter_function, draw_function)
         self.components.append(list_input)
         self.draw()

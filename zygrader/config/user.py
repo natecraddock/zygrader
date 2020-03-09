@@ -65,7 +65,7 @@ def authenticate(window: Window, zy_api, email, password):
 def get_password(window: Window):
     window.set_header("Sign In")
 
-    password = window.text_input("Enter your zyBooks password", mask=TextInput.TEXT_MASKED)
+    password = window.create_text_input("Enter your zyBooks password", mask=TextInput.TEXT_MASKED)
     if password == Window.CANCEL:
         password = ""
 
@@ -77,7 +77,7 @@ def create_account(window: Window, zy_api):
 
     while True:
         # Get user account information
-        email = window.text_input("Enter your zyBooks email", mask=None)
+        email = window.create_text_input("Enter your zyBooks email", mask=None)
         if email == Window.CANCEL:
             email = ""
         password = get_password(window)
@@ -205,7 +205,7 @@ def config_menu():
 
     while True:
         window.set_header(f"Config | {config_file['email']}")
-        option_index = window.filtered_list(options, "Option")
+        option_index = window.create_filtered_list(options, "Option")
         if option_index is UI_GO_BACK:
             break
 

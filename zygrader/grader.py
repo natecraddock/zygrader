@@ -81,7 +81,7 @@ def grade_pair_programming(first_submission):
 
     # Get student
     line_lock = lambda student : data.lock.is_lab_locked(student, lab) if type(student) is not str else False
-    student_index = window.filtered_list(students, "Student", filter_function=data.Student.find, draw_function=line_lock)
+    student_index = window.create_filtered_list(students, "Student", filter_function=data.Student.find, draw_function=line_lock)
     if student_index is UI_GO_BACK:
         return
 
@@ -207,7 +207,7 @@ def lab_callback(lab_index, use_locks=True):
 
     # Get student
     line_lock = lambda student : data.lock.is_lab_locked(student, lab) if type(student) is not str else False
-    window.filtered_list(students, "Student", \
+    window.create_filtered_list(students, "Student", \
         lambda student_index : student_callback(lab, student_index, use_locks), data.Student.find, draw_function=line_lock)
 
 def grade(use_locks=True):
@@ -219,4 +219,4 @@ def grade(use_locks=True):
         return
 
     # Pick a lab
-    window.filtered_list(labs, "Assignment", lambda lab_index : lab_callback(lab_index, use_locks), data.Lab.find)
+    window.create_filtered_list(labs, "Assignment", lambda lab_index : lab_callback(lab_index, use_locks), data.Lab.find)
