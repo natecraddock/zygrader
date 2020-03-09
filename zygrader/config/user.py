@@ -145,7 +145,6 @@ def draw_text_editors():
     list = []
     current_editor = get_preference("editor")
 
-    logger.log(current_editor)
     for name in EDITORS.keys():
         if current_editor == name:
             list.append(f"[X] {name}")

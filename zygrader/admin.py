@@ -99,7 +99,7 @@ def submission_search_init(window, labs):
 
     # Select the lab part if needed
     if len(assignment.parts) > 1:
-        part_index = window.filtered_list([name["name"] for name in assignment.parts], "Part")
+        part_index = window.create_list_popup("Select Part", input_data=[name["name"] for name in assignment.parts])
         if part_index is UI_GO_BACK:
             return
         part = assignment.parts[part_index]
