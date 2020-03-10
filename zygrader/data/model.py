@@ -30,7 +30,9 @@ class Lab:
         return f"{self.name}"
     
     @classmethod
-    def find(cls, assignment, text):
+    def find(cls, line, text):
+        assignment = line.data
+
         name = assignment.name.lower()
         text = text.lower()
 
@@ -57,7 +59,9 @@ class Student:
         return f"{self.full_name} - {self.email} - Section {self.section}"
 
     @classmethod
-    def find(cls, student, text):
+    def find(cls, line, text):
+        student = line.data
+
         first_name = student.first_name.lower()
         last_name = student.last_name.lower()
         full_name = student.full_name.lower()

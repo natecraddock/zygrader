@@ -149,50 +149,75 @@ class OptionsPopup(Popup):
 
 
 class FilteredList(Component):
+
+    class ListLine():
+        """Represents a single line of the list"""
+        def __init__(self, index, data):
+            self.index = index
+            self.data = data
+            self.text = str(data)
+            self.marked = False
+
+        def set_marked(self, set):
+            self.marked = set
+
+    def filter_string(self, line, filter):
+        return line.text.lower().find(filter.lower()) is not -1
+
     def __filter_data(self, input_data, filter_function, filter_text):
         # Don't filter if the string is empty
         if filter_text == "":
             return input_data[:]
 
         # Apply filter (via function)
-        data = [input_data[0]]
-        if filter_function is None:
-            for x in input_data[1:]:
-                if x[1].lower().find(filter_text.lower()) is not -1:
-                    data.append(x)
-        else:
-            for x in input_data[1:]:
-                if filter_function(x[1], filter_text):
-                    data.append(x)
+        data = input_data[:1]
 
+        for line in input_data[1:]:
+            if filter_function(line, filter_text):
+                if self.draw_function and self.draw_function(line.data):
+                    line.marked = True
+                else:
+                    line.marked = False
+
+                data.append(line)
+
+        self.dirty = False
         return data
 
     def __fill_text(self, lines):
-        line = 0
+        line_number = 0
 
-        for l in lines[self.scroll:self.scroll+self.rows - 1]:
-            if self.draw_function and self.draw_function(l[1]):
+        draw_lines = lines[self.scroll:self.scroll+self.rows - 1]
+
+        for line in draw_lines:
+            if line.marked:
                 color = curses.color_pair(2)
             else:
                 color = curses.color_pair(0)
 
-            if (line + self.scroll) == self.selected_index:
-                display_text = f"> {str(l[1])}"
-                add_str(self.window, line, 0, display_text, curses.A_BOLD | color)
+            if (line_number + self.scroll) == self.selected_index:
+                display_text = f"> {line.text}"
+                add_str(self.window, line_number, 0, display_text, curses.A_BOLD | color)
             else:
-                display_text = f"  {str(l[1])}"
-                add_str(self.window, line, 0, display_text, curses.A_DIM | color)
+                display_text = f"  {line.text}"
+                add_str(self.window, line_number, 0, display_text, curses.A_DIM | color)
 
-            line += 1
+            line_number += 1
 
-    def init_lines(self, options):
-        lines = [(0, "Back")]
-        for i in range(len(options)):
-            lines.append((i + 1, options[i]))
+    def create_lines(self, options):
+        lines = [FilteredList.ListLine(0, "Back")]
+
+        for i, option in enumerate(options):
+            lines.append(FilteredList.ListLine(i + 1, option))
         return lines
 
     def __init__(self, y, x, rows, cols, options, prompt, filter_function, draw_function):
         self.blocking = True
+
+        # Flag to determine if the list needs to be updated.
+        # Only scrolling the list does not require an update of the list items,
+        # but after filtering the list should be regenerated.
+        self.dirty = True
 
         self.y = y
         self.x = x
@@ -200,8 +225,13 @@ class FilteredList(Component):
         self.rows = rows
         self.cols = cols
 
-        self.options = self.init_lines(options)
-        self.filter_function = filter_function
+        self.options = self.create_lines(options)
+
+        if filter_function:
+            self.filter_function = filter_function
+        else:
+            self.filter_function = self.filter_string
+
         self.draw_function = draw_function
 
         self.scroll = 0
@@ -237,7 +267,8 @@ class FilteredList(Component):
         self.window.erase()
         self.text_input.erase()
 
-        self.data = self.__filter_data(self.options, self.filter_function, self.filter_text)
+        if self.dirty:
+            self.data = self.__filter_data(self.options, self.filter_function, self.filter_text)
 
         # If no matches, set selected index to 0
         if len(self.data) is 1:
@@ -276,15 +307,19 @@ class FilteredList(Component):
         self.set_scroll()
         self.selected_index = 1
 
+        self.dirty = True
+
     def addchar(self, c):
         self.filter_text += c
         self.selected_index = 0
 
         self.set_scroll()
         self.selected_index = 1
+
+        self.dirty = True
     
     def selected(self):
-        return self.data[self.selected_index][0] - 1
+        return self.data[self.selected_index].index - 1
 
     def clear_filter(self):
         self.filter_text = ""
