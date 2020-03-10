@@ -206,7 +206,7 @@ def lab_callback(lab_index, use_locks=True):
     students = data.get_students()
 
     # Get student
-    line_lock = lambda student : data.lock.is_lab_locked(student, lab) if type(student) is not str else False
+    line_lock = lambda student : data.lock.is_lab_locked(student, lab) if type(student) is not str else False; logger.log("Testing line")
     window.create_filtered_list(students, "Student", \
         lambda student_index : student_callback(lab, student_index, use_locks), data.Student.find, draw_function=line_lock)
 

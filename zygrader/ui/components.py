@@ -2,6 +2,7 @@ import curses
 
 from .utils import add_str, resize_window
 from . import UI_GO_BACK
+from .. import logger
 
 class Component:
     def __init__(self):
@@ -158,22 +159,15 @@ class FilteredList(Component):
             self.text = str(data)
             self.marked = False
 
-        def set_marked(self, set):
-            self.marked = set
-
     def filter_string(self, line, filter):
         return line.text.lower().find(filter.lower()) is not -1
 
     def __filter_data(self, input_data, filter_function, filter_text):
-        # Don't filter if the string is empty
-        if filter_text == "":
-            return input_data[:]
-
         # Apply filter (via function)
         data = input_data[:1]
 
         for line in input_data[1:]:
-            if filter_function(line, filter_text):
+            if filter_text == "" or filter_function(line, filter_text):
                 if self.draw_function and self.draw_function(line.data):
                     line.marked = True
                 else:
@@ -326,6 +320,9 @@ class FilteredList(Component):
         self.selected_index = 0
         self.set_scroll()
         self.selected_index = 1
+
+    def flag_dirty(self):
+        self.dirty = True
 
 
 class TextInput(Component):
