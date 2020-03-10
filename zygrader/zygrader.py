@@ -27,7 +27,7 @@ def prep_lab_score_calc():
     except ValueError:
         window.create_popup("Error", ["Invalid input"])
 
-main_menu_options = ["Grade", "Config", "Prep Lab Score Calculator", "Run For Fun"]
+main_menu_options = ["Grade", "Config", "Prep Lab Score Calculator", "Run For Fun", "Changelog"]
 
 def mainloop_callback(option_index):
     option = main_menu_options[option_index]
@@ -44,6 +44,9 @@ def mainloop_callback(option_index):
     elif option == "Admin":
         logger.log("admin menu accessed")
         admin.admin_menu()
+    elif option == "Changelog":
+        lines = config.versioning.load_changelog()
+        Window.get_window().create_list_popup("Changelog", lines)
 
 def mainloop(admin_mode):
     window = Window.get_window()

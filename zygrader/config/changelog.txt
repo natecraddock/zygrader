@@ -1,0 +1,135 @@
+# Try to keep lines shorter than 70 characters
+
+2.9
+Add ESC as a key to go back from string inputs.
+Add preference to disable left and right arrow keys
+for menu navigation. For Dallin ;)
+Lots of code cleanup.
+
+2.81
+Fix Vim mode.
+Add Christmas Theme to Config > Preferences.
+Small optimizations.
+
+2.8
+Add user preferences. Now you can use Vim-style
+keybindings or toggle a very dark mode. :)
+Config > Preferences
+
+2.7
+Add 'Run For Fun' option.
+This allows for running students' code
+without locking submissions.
+
+2.6
+Handle all window resizing crashes.
+Code quality and cleanup.
+Refactor Boolean (yes/no) popup windows.
+
+This means that lists remember which lab/student you chose.
+
+2.51
+Small fixes.
+Handle SIGHUP to remove locks.
+Add IDs to lock file names to ensure unique locks.
+
+2.5
+Allow stopping and pausing student code.
+Press CTRL+C to stop and CTRL+Z to pause.
+Fix pressing \"done\" in pair programming menu.
+Clear the terminal when running student code.
+
+2.4
+More text editors/viewers! (Vim, Emacs, Nano, Less).
+  These all open inside the terminal, which means
+  grading is now possible over ssh!
+  Go to Config > Set Editor to change.
+Run student code in same terminal window.
+  Instead of opening in xterm.
+Caching of submission files.
+Fixed a few issues with lock files.
+  You can open submissions that you locked.
+
+2.3
+Allow floating point input for prep lab score calc.
+  (also allows scientific notation too!)
+Use names rather than IDs in lock files.
+Logging of basic data.
+Restructure data directory.
+Docstrings throughout the code.
+Cleanups throughout the code.
+
+2.2
+Add option to diff submission parts.
+Small cleanups.
+
+2.1
+Silence stdout, stderr for external processes.
+Add option to compile and run student code.
+Select a student and then choose "Run Code".
+Add a Prep Lab score calculator (for late Prep Labs)
+
+2.0
+Removed Christmas Theme
+Adds options to setup new zybooks classes
+Adds option to update student roster
+
+1.8
+Stop showing diffs and files immediately.
+Add option to show submitted files.
+Add option to show diff when grading pair programming.
+Fix pair programming sometimes leaving students locked.
+Add lock file remover (run with -a).
+
+1.7
+                                  /\
+                             __   \/   __
+Clear filter after grading   \_\_\/\/_/_/
+Reduce flashing                _\_\/_/_
+Merry Christmas!!!            __/_/\_\__
+                             /_/ /\/\ \_\
+                                  /\
+                                  \/
+
+1.6
+Fix: Selecting "Back" in a list crashed.
+Add ability to grade pair programming.
+After selecting a student, an option is presented to
+select a second student for grading pair programming.
+This will allow you to select a second student, and it zygrader
+will diff the files and open a comparison.
+
+1.5
+Grader: Show students who are already being graded in red.
+Fix: Various zyBooks download issues.
+Add ability to not count late submissions.
+Cleanup output formatting.
+Refactor windowing system. Now windows are drawn on a stack.
+
+1.4
+Add Gedit as text editor.
+Left align submission results.
+Replace [l]etter menus with lists. Use the arrow keys to navigate
+all menus in zygrader. Left arrow to go back. Enter or right arrow
+to select an entry.
+Fix: Show all parts of a midterm even if a part was not submitted.
+Fix: Configuration was being reset after versioning.
+Fix: Various submission downloading issues.
+
+1.3
+Download highest-scoring submissions for exams.
+Adds a setting to choose a text editor to open submissions with.
+Scrolling past the end of lists will loop back to the beginning.
+Lists now highlight the selected entry.
+Resizing the terminal is more reliable.
+Scrolling through a list quickly has less flickering.
+
+1.2
+Show a message when grading a student who has not submitted.
+Show netid of the grading TA when a student's submission is locked.
+Show a warning if the student's code failed to compile.
+
+1.1
+Labels were added to the text search filter boxes
+to prompt for a filter string
+

@@ -6,6 +6,36 @@ from ..ui import components
 from . import user
 from . import g_data
 
+def load_changelog():
+    """Load the changelog into an array of lines"""
+    lines = []
+    changelog = os.path.join(os.path.dirname(__file__), "changelog.txt")
+    with open(changelog, "r") as _file:
+        for line in _file:
+            # Ignore comments in the changelog
+            if not line.startswith("#"):
+                lines.append(line.rstrip())
+    return lines
+
+def get_version_message(version):
+    """Get the message for the zygrader version from the changelog"""
+    changelog = load_changelog()
+
+    msg = [f"zygrader version {version}", ""]
+
+    version_index = 0
+    for line in changelog:
+        if line == str(version):
+            version_index = changelog.index(line) + 1
+
+    line = changelog[version_index]
+    while line:
+        msg.append(line)
+        version_index += 1
+        line = changelog[version_index]
+
+    return msg
+
 def compare_versions(zygrader_version, user_version):
     return user_version < zygrader_version
 
@@ -27,193 +57,101 @@ def do_versioning(window: Window):
         user_version = 1.0
 
     if compare_versions(1.1, user_version):
-        msg = ["zygrader Version 1.1", "", "Labels were added to the text search filter boxes",
-        "to prompt for a filter string."]
+        msg = get_version_message(1.1)
 
-        window.create_popup("Version 1.1", msg)
+        window.create_popup("Version 1.1", msg, components.Popup.ALIGN_LEFT)
     
     if compare_versions(1.2, user_version):
-        # "Reinstall" zygrader so the admin flag works
-        run_path = "/users/groups/cs142ta/tools/zygrader/run"
-        copyfile(run_path, os.path.join(os.path.expanduser("~"), "Desktop/zygrader"))
-        copyfile(run_path, os.path.join(os.path.expanduser("~"), ".zygrader/zygrader"))
+        msg = get_version_message(1.2)
 
-        msg = ["zygrader Version 1.2", "",
-               "Show a message when grading a student who has not submitted.",
-               "Show netid of the grading TA when a student's submission is locked.",
-               "Show a warning if the student's code failed to compile."]
-
-        window.create_popup("Version 1.2", msg)
+        window.create_popup("Version 1.2", msg, components.Popup.ALIGN_LEFT)
 
     if compare_versions(1.3, user_version):
         # Add Pluma as the default editor to the user config
         config["editor"] = "Pluma"
         user.write_config(config)
 
-        msg = ["zygrader Version 1.3", "",
-               "Download highest-scoring submissions for exams.",
-               "Adds a setting to choose a text editor to open submissions with.",
-               "Scrolling past the end of lists will loop back to the beginning.",
-               "Lists now highlight the selected entry.",
-               "Resizing the terminal is more reliable.",
-               "Scrolling through a list quickly has less flickering."]
+        msg = get_version_message(1.3)
 
-        window.create_popup("Version 1.3", msg)
+        window.create_popup("Version 1.3", msg, components.Popup.ALIGN_LEFT)
 
     if compare_versions(1.4, user_version):
-        msg =  ["zygrader Version 1.4", "",
-               "* Add Gedit as text editor.",
-               "* Left align submission results.",
-               "* Replace [l]etter menus with lists. Use the arrow keys to navigate",
-               "  all menus in zygrader. Left arrow to go back. Enter or right arrow",
-               "  to select an entry.",
-               "* Fix: Show all parts of a midterm even if a part was not submitted.",
-               "* Fix: Configuration was being reset after versioning.",
-               "* Fix: Various submission downloading issues."]
+        msg =  get_version_message(1.4)
 
         window.create_popup("Version 1.4", msg, components.Popup.ALIGN_LEFT)
 
     if compare_versions(1.5, user_version):
-        msg =  ["zygrader Version 1.5", "",
-               "* Grader: Show students who are already being graded in red.",
-               "* Fix: Various zyBooks download issues.",
-               "* Add ability to not count late submissions.",
-               "* Cleanup output formatting.",
-               "* Refactor windowing system. Now windows are drawn on a stack.",
-               "  This means that lists remember which lab/student you chose."]
+        msg =  get_version_message(1.5)
 
         window.create_popup("Version 1.5", msg, components.Popup.ALIGN_LEFT)
 
     if compare_versions(1.6, user_version):
-        msg =  ["zygrader Version 1.6", "",
-               "* Fix: Selecting \"Back\" in a list crashed.",
-               "* Add ability to grade pair programming.",
-               "  After selecting a student, an option is presented to",
-               "  select a second student for grading pair programming.",
-               "  This will allow you to select a second student, and it zygrader",
-               "  will diff the files and open a comparison."]
+        msg =  get_version_message(1.6)
 
         window.create_popup("Version 1.6", msg, components.Popup.ALIGN_LEFT)
 
     if compare_versions(1.7, user_version):
-        msg =  ["zygrader Version 1.7", "",
-               "                                    /\\",
-               "                               __   \\/   __",
-               "* Clear filter after grading   \\_\\_\\/\\/_/_/",
-               "* Reduce flashing                _\\_\\/_/_",
-               "* Merry Christmas!!!            __/_/\\_\\__",
-               "                               /_/ /\\/\\ \\_\\",
-               "                                    /\\",
-               "                                    \\/",]
+        msg =  get_version_message(1.7)
 
         window.create_popup("Version 1.7", msg, components.Popup.ALIGN_LEFT)
 
     if compare_versions(1.8, user_version):
-        msg = ["zygrader Version 1.8", "",
-               "* Stop showing diffs and files immediately.",
-               "* Add option to show submitted files.",
-               "* Add option to show diff when grading pair programming.",
-               "* Fix pair programming sometimes leaving students locked.",
-               "* Add lock file remover (run with -a)."]
+        msg = get_version_message(1.8)
 
         window.create_popup("Version 1.8", msg, components.Popup.ALIGN_LEFT)
 
     if compare_versions(2.0, user_version):
-        msg = ["zygrader Version 2.0", "",
-               "* Removed Christmas Theme",
-               "* Adds options to setup new zybooks classes",
-               "* Adds option to update student roster"]
+        msg = get_version_message(2.0)
 
         window.create_popup("Version 2.0", msg, components.Popup.ALIGN_LEFT)
 
     if compare_versions(2.1, user_version):
-        msg = ["zygrader Version 2.1", "",
-               "* Silence stdout, stderr for external processes.",
-               "* Add option to compile and run student code.",
-               "  Select a student and then choose \"Run Code\".",
-               "* Add a Prep Lab score calculator (for late Prep Labs)"]
+        msg = get_version_message(2.1)
 
         window.create_popup("Version 2.1", msg, components.Popup.ALIGN_LEFT)
 
     if compare_versions(2.2, user_version):
-        msg = ["zygrader Version 2.2", "",
-               "* Add option to diff submission parts.",
-               "* Small cleanups."]
+        msg = get_version_message(2.2)
 
         window.create_popup("Version 2.2", msg, components.Popup.ALIGN_LEFT)
 
     if compare_versions(2.3, user_version):
-        msg = ["zygrader Version 2.3", "",
-               "* Allow floating point input for prep lab score calc.",
-               "*   (also allows scientific notation too!)",
-               "* Use names rather than IDs in lock files.",
-               "* Logging of basic data.",
-               "* Restructure data directory.",
-               "* Docstrings throughout the code.",
-               "* Cleanups throughout the code."]
+        msg = get_version_message(2.3)
 
         window.create_popup("Version 2.3", msg, components.Popup.ALIGN_LEFT)
 
     if compare_versions(2.4, user_version):
-        msg = ["zygrader Version 2.4", "",
-               "* More text editors/viewers! (Vim, Emacs, Nano, Less).",
-               "    These all open inside the terminal, which means",
-               "    grading is now possible over ssh!",
-               "    Go to Config > Set Editor to change.",
-               "* Run student code in same terminal window.",
-               "    Instead of opening in xterm.",
-               "* Caching of submission files.",
-               "* Fixed a few issues with lock files.",
-               "    You can open submissions that you locked."]
+        msg = get_version_message(2.4)
 
         window.create_popup("Version 2.4", msg, components.Popup.ALIGN_LEFT)
 
     if compare_versions(2.5, user_version):
-        msg = ["zygrader Version 2.5", "",
-               "* Allow stopping and pausing student code.",
-               "  Press CTRL+C to stop and CTRL+Z to pause.",
-               "* Fix pressing \"done\" in pair programming menu.",
-               "* Clear the terminal when running student code."]
+        msg = get_version_message(2.5)
 
         window.create_popup("Version 2.5", msg, components.Popup.ALIGN_LEFT)
 
     if compare_versions(2.51, user_version):
-        msg = ["zygrader Version 2.51", "",
-               "* Small fixes.",
-               "* Handle SIGHUP to remove locks.",
-               "* Add IDs to lock file names to ensure unique locks."]
+        msg = get_version_message(2.51)
 
         window.create_popup("Version 2.51", msg, components.Popup.ALIGN_LEFT)
 
     if compare_versions(2.6, user_version):
-        msg = ["zygrader Version 2.6", "",
-               "* Handle all window resizing crashes.",
-               "* Code quality and cleanup.",
-               "* Refactor Boolean (yes/no) popup windows."]
+        msg = get_version_message(2.6)
 
         window.create_popup("Version 2.6", msg, components.Popup.ALIGN_LEFT)
 
     if compare_versions(2.7, user_version):
-        msg = ["zygrader Version 2.7", "",
-               "* Add 'Run For Fun' option.",
-               "  This allows for running students' code",
-               "  without locking submissions."]
+        msg = get_version_message(2.7)
 
         window.create_popup("Version 2.7", msg, components.Popup.ALIGN_LEFT)
 
     if compare_versions(2.8, user_version):
-        msg = ["zygrader Version 2.8", "",
-               "* Add user preferences. Now you can use Vim-style",
-               "  keybindings or toggle a very dark mode. :)",
-               "  Config > Preferences"]
+        msg = get_version_message(2.8)
 
         window.create_popup("Version 2.8", msg, components.Popup.ALIGN_LEFT)
 
     if compare_versions(2.81, user_version):
-        msg = ["zygrader Version 2.81", "",
-               "* Fix Vim mode.",
-               "* Add Christmas Theme to Config > Preferences.",
-               "* Small optimizations."]
+        msg = get_version_message(2.81)
 
         window.create_popup("Version 2.81", msg, components.Popup.ALIGN_LEFT)
 
@@ -224,11 +162,7 @@ def do_versioning(window: Window):
         window.update_preferences()
 
     if compare_versions(2.9, user_version):
-        msg = ["zygrader Version 2.9", "",
-               "* Add ESC as a key to go back from string inputs.",
-               "* Add preference to disable left and right arrow keys",
-               "  for menu navigation. For Dallin ;)",
-               "* Lots of code cleanup."]
+        msg = get_version_message(2.9)
 
         window.create_popup("Version 2.9", msg, components.Popup.ALIGN_LEFT)
 
