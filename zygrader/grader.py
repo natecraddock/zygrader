@@ -143,7 +143,11 @@ def grade_pair_programming(first_submission):
             return
 
         options = [first_submission.student.full_name, second_submission.student.full_name, "View Diff", "Done"]
-        msg = ["Pick a student's submission to view", "or view the diff"]
+
+        msg = [f"{first_submission.student.full_name} {first_submission.latest_submission}",
+               f"{second_submission.student.full_name} {second_submission.latest_submission}",
+               "", "Pick a student's submission to view or view the diff"]
+
         while True:
             option = window.create_options_popup("Pair Programming", msg, options)
 
@@ -221,7 +225,7 @@ def student_callback(lab, student_index, use_locks=True):
         # After popup, unlock student
         if use_locks:
             data.lock.unlock_lab(student, lab)
-    except (KeyboardInterrupt, curses.error, Exception):
+    except (KeyboardInterrupt, curses.error):
         if use_locks:
             data.lock.unlock_lab(student, lab)
 

@@ -95,9 +95,18 @@ class Submission:
         self.files_directory = self.read_files(response)
 
         self.create_submission_string(response)
+        self.latest_submission = self.get_latest_submission(response)
 
         if "diff_parts" in lab.options:
             self.flag |= SubmissionFlag.DIFF_PARTS
+
+    def get_latest_submission(self, response):
+        latest = time.strptime(response["parts"][0]["date"], "%I:%M %p - %m-%d-%Y")
+        for part in response["parts"]:
+            t = time.strptime(part["date"], "%I:%M %p - %m-%d-%Y")
+            if time.mktime(latest) < time.mktime(t):
+                latest = t
+        return time.strftime("%I:%M %p - %m-%d-%Y", latest)
 
     def create_submission_string(self, response):
         msg = [f"{self.student.full_name}'s submission downloaded", ""]
