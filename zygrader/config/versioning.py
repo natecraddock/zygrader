@@ -166,5 +166,10 @@ def do_versioning(window: Window):
 
         window.create_popup("Version 2.9", msg, components.Popup.ALIGN_LEFT)
 
+    if compare_versions(2.91, user_version):
+        # Configure users to use the browser diffing by default
+        # config["browser_diff"] = ""
+        user.write_config(config)
+
     # Write the current version to the user's config file
     write_current_version(config)

@@ -172,6 +172,7 @@ preferences = {"left_right_arrow_nav": "Left/Right Arrow Navigation",
                 "vim_mode": "Vim Mode",
                 "dark_mode": "Dark Mode",
                 "christmas_mode": "Christmas Theme",
+                "browser_diff": "Open Diffs in Browser"
                 }
 
 def draw_preferences():
