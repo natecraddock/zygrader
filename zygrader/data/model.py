@@ -103,6 +103,9 @@ class Submission:
     def get_latest_submission(self, response):
         latest = time.strptime(response["parts"][0]["date"], "%I:%M %p - %m-%d-%Y")
         for part in response["parts"]:
+            if part["code"] is Zybooks.NO_SUBMISSION:
+                continue
+
             t = time.strptime(part["date"], "%I:%M %p - %m-%d-%Y")
             if time.mktime(latest) < time.mktime(t):
                 latest = t
