@@ -430,6 +430,9 @@ class Window:
         self.components.pop()
         self.draw()
 
+        if self.event == Window.KEY_LEFT and self.left_right_menu_nav:
+            return UI_GO_BACK
+
         return list_input.selected()
 
     def new_logger(self):
