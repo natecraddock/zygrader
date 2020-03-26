@@ -421,6 +421,7 @@ class Window:
 
                     # TODO: Make this a preference
                     list_input.clear_filter()
+                    list_input.dirty = True
                 else:
                     break
             
