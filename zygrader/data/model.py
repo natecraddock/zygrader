@@ -168,14 +168,17 @@ class Submission:
         if user_editor in {"Vim", "Emacs", "Nano", "Less"}:
             curses.endwin()
 
+            files = glob.glob(f"{self.files_directory}/*")
+            files.sort()
+
             if user_editor == "Vim":
                 # Use "-p" to open in tabs
-                subprocess.run([editor_path, "-p"] + glob.glob(f"{self.files_directory}/*"))
+                subprocess.run([editor_path, "-p"] + files)
             elif user_editor == "Emacs":
                 # Force terminal with "-nw"
-                subprocess.run([editor_path, "-nw"] + glob.glob(f"{self.files_directory}/*"))
+                subprocess.run([editor_path, "-nw"] + files)
             else:
-                subprocess.run([editor_path] + glob.glob(f"{self.files_directory}/*"))
+                subprocess.run([editor_path] + files)
 
             curses.initscr()
         # Graphical editors
