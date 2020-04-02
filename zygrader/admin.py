@@ -14,14 +14,11 @@ from . import class_manager
 
 def check_student_submissions(zy_api, student_id, lab, search_string):
     """Search for a substring in all of a student's submissions for a given lab"""
-    submission_response = zy_api.get_all_submissions(lab["id"], student_id)
-
-    if not submission_response.ok:
-        return {"code": Zybooks.NO_SUBMISSION}
-
-    all_submissions = submission_response.json()["submissions"]
-
     response = {"code": Zybooks.NO_SUBMISSION}
+
+    all_submissions = zy_api.get_all_submissions(lab["id"], student_id)
+    if not all_submissions:
+        return response
 
     for submission in all_submissions:
         # Get file from zip url

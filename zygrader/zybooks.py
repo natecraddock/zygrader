@@ -138,8 +138,17 @@ class Zybooks:
         payload = {"auth_token": Zybooks.token}
 
         r = Zybooks.session.get(submission_url, json=payload)
+        if not r.ok:
+            return None
 
-        return r
+        return r.json()["submissions"]
+
+    def get_submissions_list(self, part_id, user_id):
+        submissions = self.get_all_submissions(part_id, user_id)
+        if not submissions:
+            return []
+
+        return [s["date_submitted"] for s in submissions]
 
     def __remove_late_submissions(self, submissions, due_time):
         for submission in submissions[:]:
@@ -156,7 +165,7 @@ class Zybooks:
     def __get_submission_most_recent(self, submissions):
         return submissions[-1]
 
-    def download_submission(self, part_id, user_id, options):
+    def download_submission(self, part_id, user_id, options, submission_index):
         """Used for grading. Download a single submission and return information for grading.
         This is used together with self.download_assignment, as some labs have multiple submission "parts"
         (such as midterms)
@@ -166,28 +175,28 @@ class Zybooks:
         """
         response = {"code": Zybooks.NO_ERROR}
 
-        r = self.get_all_submissions(part_id, user_id)
+        submissions = self.get_all_submissions(part_id, user_id)
 
-        if not r.ok:
-            return response
-
-        # Get submissions
-        submissions = r.json()["submissions"]
-
-        # Strip out late submissions
-        if submissions and Zybooks.CHECK_LATE_SUBMISSION in options:
-            submissions = self.__remove_late_submissions(submissions, options[Zybooks.CHECK_LATE_SUBMISSION])
-
-        # Student has not submitted or did not submit before assignment was due
         if not submissions:
-            response["code"] = Zybooks.NO_SUBMISSION
             return response
 
-        # Get highest score
-        if Zybooks.SUBMISSION_HIGHEST in options:
-            submission = self.__get_submission_highest_score(submissions)
+        if submission_index is not None:
+            submission = submissions[submission_index]
         else:
-            submission = self.__get_submission_most_recent(submissions)
+            # Strip out late submissions
+            if submissions and Zybooks.CHECK_LATE_SUBMISSION in options:
+                submissions = self.__remove_late_submissions(submissions, options[Zybooks.CHECK_LATE_SUBMISSION])
+
+            # Student has not submitted or did not submit before assignment was due
+            if not submissions:
+                response["code"] = Zybooks.NO_SUBMISSION
+                return response
+
+            # Get highest score
+            if Zybooks.SUBMISSION_HIGHEST in options:
+                submission = self.__get_submission_highest_score(submissions)
+            else:
+                submission = self.__get_submission_most_recent(submissions)
 
         # If student's code did not compile their score is 0
         if "compile_error" in submission["results"]:
@@ -202,6 +211,23 @@ class Zybooks:
         # Success
         return response
 
+    def download_assignment_part(self, assignment, user_id, part, submission_index=None):
+        response_part = {"code": Zybooks.NO_ERROR, "name": part["name"]}
+        submission = self.download_submission(part["id"], user_id, assignment.options, submission_index)
+
+        if submission["code"] is not Zybooks.NO_SUBMISSION:
+            response_part["score"] = submission["score"]
+            response_part["max_score"] = submission["max_score"]
+            response_part["zip_url"] = submission["zip_url"]
+            response_part["date"] = submission["date"]
+
+            if submission["code"] is Zybooks.COMPILE_ERROR:
+                response_part["code"] = Zybooks.COMPILE_ERROR
+        else:
+            response_part["code"] = Zybooks.NO_SUBMISSION
+
+        return response_part
+
     def download_assignment(self, student, assignment):
         """Get information from a student's assignment
 
@@ -213,24 +239,12 @@ class Zybooks:
         
         has_submitted = False
         for part in assignment.parts:
-            response_part = {"code": Zybooks.NO_ERROR, "name": part["name"]}
-            submission = self.download_submission(part["id"], user_id, assignment.options)
-
-            if submission["code"] is not Zybooks.NO_SUBMISSION:
+            response_part = self.download_assignment_part(assignment, user_id, part)
+            if response_part["code"] is not Zybooks.NO_SUBMISSION:
                 has_submitted = True
 
-                response["score"] += submission["score"]
-                response["max_score"] += submission["max_score"]
-
-                response_part["score"] = submission["score"]
-                response_part["max_score"] = submission["max_score"]
-                response_part["zip_url"] = submission["zip_url"]
-                response_part["date"] = submission["date"]
-
-                if submission["code"] is Zybooks.COMPILE_ERROR:
-                    response_part["code"] = Zybooks.COMPILE_ERROR
-            else:
-                response_part["code"] = Zybooks.NO_SUBMISSION
+                response["score"] += response_part["score"]
+                response["max_score"] += response_part["max_score"]
 
             response["parts"].append(response_part)
         
