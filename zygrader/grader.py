@@ -35,6 +35,33 @@ def get_submission(lab, student, use_locks=True):
 
     return submission
 
+def pick_submission(lab: data.model.Lab, student: data.model.Student, submission: data.model.Submission):
+    """Allow the user to pick a submission to view"""
+    window = Window.get_window()
+    zy_api = Zybooks()
+
+    # If the lab has multiple parts, prompt to pick a part
+    part_index = 0
+    if len(lab.parts) > 1:
+        part_index = window.create_list_popup("Select Part", input_data=[name["name"] for name in lab.parts])
+        if part_index is UI_GO_BACK:
+            return
+
+    # Get list of all submissions for that part
+    part = lab.parts[part_index]
+    all_submissions = zy_api.get_submissions_list(part["id"], student.id)
+    if not all_submissions:
+        window.create_popup("No Submissions", ["The student did not submit this part"])
+        return
+
+    submission_index = window.create_list_popup("Select Submission", all_submissions)
+    if submission_index is UI_GO_BACK:
+        return
+
+    # Fetch that submission
+    part_response = zy_api.download_assignment_part(lab, student.id, part, submission_index)
+    submission.update_part(part_response, part_index)
+
 def diff_submissions(first, second, use_html=False):
     """Generate an file of the two students submissions in HTML or text
 
@@ -193,9 +220,12 @@ def student_callback(lab, student_index, use_locks=True):
             if use_locks:
                 data.lock.unlock_lab(student, lab)
             return
+
         options = ["Open Folder", "Run", "View", "Done"]
         if use_locks:
             options.insert(1, "Pair Programming")
+        if os.getenv("PICK") == "YES":
+            options.insert(0, "Pick Submission")
 
         # Add option to diff parts if this lab requires it
         if submission.flag & data.model.SubmissionFlag.DIFF_PARTS:
@@ -215,6 +245,8 @@ def student_callback(lab, student_index, use_locks=True):
                 submission.open_folder()
             elif option == "Diff Parts":
                 submission.diff_parts()
+            elif option == "Pick Submission":
+                pick_submission(lab, student, submission)
             else:
                 break
 

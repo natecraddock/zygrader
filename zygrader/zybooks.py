@@ -243,9 +243,6 @@ class Zybooks:
             if response_part["code"] is not Zybooks.NO_SUBMISSION:
                 has_submitted = True
 
-                response["score"] += response_part["score"]
-                response["max_score"] += response_part["max_score"]
-
             response["parts"].append(response_part)
         
         # If student has not submitted, just return a non-success message

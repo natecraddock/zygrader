@@ -81,24 +81,43 @@ class SubmissionFlag(enum.Flag):
 
 class Submission:
 
+    def update_part(self, part, part_index):
+        self.response["parts"][part_index] = part
+
+        self.construct_submission()
+
+    def construct_submission(self):
+        # Read the response data
+        # Only grade if student has submitted
+        if self.response["code"] is Zybooks.NO_SUBMISSION:
+            self.flag = SubmissionFlag.NO_SUBMISSION
+            return
+
+        # Calculate score
+        self.response["score"] = 0
+        self.response["max_score"] = 0
+        for part in self.response["parts"]:
+            if part["code"] is not Zybooks.NO_SUBMISSION:
+                self.response["score"] += part["score"]
+                self.response["max_score"] += part["max_score"]
+
+        self.files_directory = self.read_files(self.response)
+
+        self.create_submission_string(self.response)
+        self.latest_submission = self.get_latest_submission(self.response)
+
+        if "diff_parts" in self.lab.options:
+            self.flag |= SubmissionFlag.DIFF_PARTS
+
     def __init__(self, student, lab, response):
         self.student = student
         self.lab = lab
         self.flag = SubmissionFlag.OK
 
-        # Read the response data
-        # Only grade if student has submitted
-        if response["code"] is Zybooks.NO_SUBMISSION:
-            self.flag = SubmissionFlag.NO_SUBMISSION
-            return
+        # Save the response to be potentially updated later
+        self.response = response
 
-        self.files_directory = self.read_files(response)
-
-        self.create_submission_string(response)
-        self.latest_submission = self.get_latest_submission(response)
-
-        if "diff_parts" in lab.options:
-            self.flag |= SubmissionFlag.DIFF_PARTS
+        self.construct_submission()
 
     def get_latest_submission(self, response):
         latest = time.strptime(response["parts"][0]["date"], "%I:%M %p - %m-%d-%Y")
