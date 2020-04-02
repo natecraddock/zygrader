@@ -148,7 +148,7 @@ class Zybooks:
         if not submissions:
             return []
 
-        return [s["date_submitted"] for s in submissions]
+        return [self.get_time_string(s) for s in submissions]
 
     def __remove_late_submissions(self, submissions, due_time):
         for submission in submissions[:]:
