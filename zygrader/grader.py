@@ -22,8 +22,6 @@ def get_submission(lab, student, use_locks=True):
     # Lock student
     if use_locks:
         data.lock.lock_lab(student, lab)
-    # Update the window to draw the student in red
-    window.draw()
 
     submission_response = zy_api.download_assignment(student, lab)
     submission = data.model.Submission(student, lab, submission_response)

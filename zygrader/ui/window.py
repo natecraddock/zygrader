@@ -417,6 +417,7 @@ class Window:
                 list_input.addchar(self.event_value)
             elif (self.event == Window.KEY_ENTER) or (self.event == Window.KEY_RIGHT and self.left_right_menu_nav):
                 if callback and list_input.selected() != UI_GO_BACK:
+                    list_input.dirty = True
                     callback(list_input.selected())
 
                     # TODO: Make this a preference
