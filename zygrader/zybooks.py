@@ -178,6 +178,7 @@ class Zybooks:
         submissions = self.get_all_submissions(part_id, user_id)
 
         if not submissions:
+            response["code"] = Zybooks.NO_SUBMISSION
             return response
 
         if submission_index is not None:
