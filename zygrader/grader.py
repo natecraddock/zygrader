@@ -54,9 +54,15 @@ def pick_submission(lab: data.model.Lab, student: data.model.Student, submission
         window.create_popup("No Submissions", ["The student did not submit this part"])
         return
 
+    # Reverse to display most recent submission first
+    all_submissions.reverse()
+
     submission_index = window.create_list_popup("Select Submission", all_submissions)
     if submission_index is UI_GO_BACK:
         return
+
+    # Modify submission index to un-reverse the index
+    submission_index = abs(submission_index - (len(all_submissions) - 1))
 
     # Fetch that submission
     part_response = zy_api.download_assignment_part(lab, student.id, part, submission_index)
