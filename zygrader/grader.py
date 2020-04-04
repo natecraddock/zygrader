@@ -227,11 +227,9 @@ def student_callback(lab, student_index, use_locks=True):
                 data.lock.unlock_lab(student, lab)
             return
 
-        options = ["Open Folder", "Run", "View", "Done"]
+        options = ["Pick Submission", "Open Folder", "Run", "View", "Done"]
         if use_locks:
-            options.insert(1, "Pair Programming")
-        if os.getenv("PICK") == "YES":
-            options.insert(0, "Pick Submission")
+            options.insert(2, "Pair Programming")
 
         # Add option to diff parts if this lab requires it
         if submission.flag & data.model.SubmissionFlag.DIFF_PARTS:
