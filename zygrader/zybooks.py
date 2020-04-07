@@ -247,7 +247,7 @@ class Zybooks:
             response["parts"].append(response_part)
         
         # If student has not submitted, just return a non-success message
-        if not has_submitted:
+        if not has_submitted and not Zybooks.CHECK_LATE_SUBMISSION in assignment.options:
             return {"code": Zybooks.NO_SUBMISSION}
 
         return response
