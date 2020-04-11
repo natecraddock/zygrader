@@ -105,7 +105,7 @@ def set_due_date(lab):
     if "due" in lab.options:
         old_date = lab.options["due"]
 
-    due_date = window.create_text_input("Enter due date [MM.DD.YY:HH.MM.SS]", text=old_date)
+    due_date = window.create_text_input("Enter due date [MM.DD.YYYY:HH.MM.SS]", text=old_date)
     if due_date == Window.CANCEL:
         return
 
@@ -137,43 +137,44 @@ def rename_lab(lab):
         lab.name = name
         data.write_labs(labs)
 
-def edit_lab(lab):
+edit_options = {"highest_score": "Grade Highest Scoring Submission",
+                "diff_parts": "Diff Submission Parts",
+                "due": None,
+                }
+
+def edit_lab_options_draw(lab):
+    list = []
+    for pref, name in edit_options.items():
+        if not name:
+            continue
+
+        if pref in lab.options:
+            list.append(f"[X] {name}")
+        else:
+            list.append(f"[ ] {name}")
+
+    # Handle due date separately
+    if "due" in lab.options:
+        list.append(f"    Due Date: {lab.options['due']}")
+    else:
+        list.append(f"    Due Date: None")
+
+    return list
+
+def edit_lab_options_callback(lab, selected_index):
+    option = list(edit_options.keys())[selected_index]
+
+    if option in {"highest_score", "diff_parts"}:
+        toggle_lab_option(lab, option)
+    elif option == "due":
+        set_due_date(lab)
+
+def edit_lab_options(lab):
     window = Window.get_window()
 
-    while True:
-        highest_score = " "
-        date = " "
-        diff_parts = " "
-        due_date = ""
-        if "highest_score" in lab.options:
-            highest_score = "X"
-        if "diff_parts" in lab.options:
-            diff_parts = "X"
-        if "due" in lab.options:
-            date = "X"
-            due_date = lab.options["due"]
-        message = [f"Editing {lab.name}",
-                   f"[{highest_score}] Grade Highest Scoring Submission",
-                   f"[{diff_parts}] Diff Submission Parts",
-                   f"[{date}] Due Date: {due_date}",
-                   "",
-                   "Due dates are formatted MM.DD.YY:HH.MM.SS. For example",
-                   "November 15, 2019 at midnight is 11.15.2019:23.59.59"]
-
-        options = ["Set Due Date", "Toggle Highest Score", "Toggle Part Diffing", "Rename", "Done"]
-
-        option = window.create_options_popup("Edit Lab", message, options, align=components.Popup.ALIGN_LEFT)
-
-        if option == "Done":
-            break
-        elif option == "Set Due Date":
-            set_due_date(lab)
-        elif option == "Toggle Highest Score":
-            toggle_lab_option(lab, "highest_score")
-        elif option == "Toggle Part Diffing":
-            toggle_lab_option(lab, "diff_parts")
-        elif option == "Rename":
-            rename_lab(lab)
+    draw = lambda : edit_lab_options_draw(lab)
+    callback = lambda index : edit_lab_options_callback(lab, index)
+    window.create_list_popup("Editing Lab Options", callback=callback, list_fill=draw)
 
 def move_lab(lab, step):
     labs = data.get_labs()
@@ -186,7 +187,7 @@ def move_lab(lab, step):
 def edit_labs_callback(lab):
     window = Window.get_window()
 
-    options = ["Remove", "Move Up", "Move Down", "Edit", "Done"]
+    options = ["Remove", "Move Up", "Move Down", "Edit Options", "Done"]
     option = window.create_options_popup("Edit Lab", ["Select an option"], options)
 
     if option == "Remove":
@@ -204,8 +205,8 @@ def edit_labs_callback(lab):
     elif option == "Move Down":
         move_lab(lab, -1)
 
-    elif option == "Edit":
-        edit_lab(lab)
+    elif option == "Edit Options":
+        edit_lab_options(lab)
 
 def edit_labs():
     window = Window.get_window()
