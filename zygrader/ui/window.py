@@ -23,7 +23,7 @@ class Window:
     KEY_ESC = 7
     KEY_NONE = -1
 
-    CANCEL = 0
+    CANCEL = -1
 
     instance = None
 
