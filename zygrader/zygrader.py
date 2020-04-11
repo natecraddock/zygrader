@@ -27,7 +27,23 @@ def prep_lab_score_calc():
     except ValueError:
         window.create_popup("Error", ["Invalid input"])
 
-main_menu_options = ["Grade", "Config", "Prep Lab Score Calculator", "Run For Fun", "Changelog"]
+def view_students_callback(student_index):
+    window = Window.get_window()
+    students = data.get_students()
+
+    student = students[student_index]
+
+    msg = [f"Name: {student.full_name}", f"Email: {student.email}", f"Section: {student.section}", f"ID: {student.id}"]
+    window.create_popup("Student Info", msg, components.Popup.ALIGN_LEFT)
+
+
+def view_students():
+    window = Window.get_window()
+    students = data.get_students()
+
+    window.create_filtered_list(students, "Student Name", callback=view_students_callback)
+
+main_menu_options = ["Grade", "Config", "Prep Lab Score Calculator", "Run For Fun", "View Students", "Changelog"]
 
 def mainloop_callback(option_index):
     option = main_menu_options[option_index]
@@ -47,6 +63,8 @@ def mainloop_callback(option_index):
     elif option == "Changelog":
         lines = config.versioning.load_changelog()
         Window.get_window().create_list_popup("Changelog", lines)
+    elif option == "View Students":
+        view_students()
 
 def mainloop(admin_mode):
     window = Window.get_window()
