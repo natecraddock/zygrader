@@ -1,5 +1,15 @@
 # Try to keep lines shorter than 70 characters
 
+3.1
+* Fix various crashes.
+* Clear and refresh the filter after grading a student.
+* Sort file paths for opening in editor over SSH.
+* Add submission picker.
+* Add menu option to view list of students.
+  This is useful to find their email when the zoom queue
+  does not open the chat on their end.
+* Use popup list for editing lab options.
+
 3.0
 * Added a new popup list component. This is used for the
   User preferences and other areas of zygrader.
