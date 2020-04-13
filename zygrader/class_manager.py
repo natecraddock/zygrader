@@ -1,3 +1,4 @@
+import datetime
 import os
 import json
 
@@ -103,7 +104,7 @@ def set_due_date(lab):
 
     old_date = ""
     if "due" in lab.options:
-        old_date = lab.options["due"]
+        old_date = lab.options["due"].strftime("%m.%d.%Y:%H.%M.%S")
 
     due_date = window.create_text_input("Enter due date [MM.DD.YYYY:HH.MM.SS]", text=old_date)
     if due_date == Window.CANCEL:
@@ -113,7 +114,7 @@ def set_due_date(lab):
     if due_date == "" and "due" in lab.options:
         del lab.options["due"]
     else:
-        lab.options["due"] = due_date
+        lab.options["due"] = datetime.datetime.strptime(due_date, "%m.%d.%Y:%H.%M.%S").astimezone(tz=None)
 
     data.write_labs(labs)
 
@@ -155,7 +156,8 @@ def edit_lab_options_draw(lab):
 
     # Handle due date separately
     if "due" in lab.options:
-        list.append(f"    Due Date: {lab.options['due']}")
+        due_date = lab.options['due'].strftime("%m.%d.%Y:%H.%M.%S")
+        list.append(f"    Due Date: {due_date}")
     else:
         list.append(f"    Due Date: None")
 

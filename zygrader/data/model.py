@@ -39,7 +39,7 @@ class Lab:
         return name.find(text) is not -1
 
     def to_json(self):
-        lab = {"name": self.name, "parts": self.parts, "options": self.options}
+        lab = {"name": self.name, "parts": self.parts, "options": self.options.copy()}
         if "due" in lab["options"] and type(lab["options"]["due"]) is not str:
             lab["options"]["due"] = lab["options"]["due"].strftime("%m.%d.%Y:%H.%M.%S")
 
