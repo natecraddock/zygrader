@@ -134,7 +134,7 @@ class Submission:
         return time.strftime("%I:%M %p - %m-%d-%Y", latest)
 
     def create_submission_string(self, response):
-        msg = [f"{self.student.full_name}'s submission downloaded", ""]
+        msg = [f"{self.student.full_name} - {self.lab.name}", ""]
 
         for part in response["parts"]:
             if part["code"] == Zybooks.NO_SUBMISSION:
