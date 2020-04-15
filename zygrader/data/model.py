@@ -195,7 +195,7 @@ class Submission:
 
             if user_editor == "Vim":
                 # Use "-p" to open in tabs
-                subprocess.run([editor_path, "-p"] + files)
+                subprocess.run([editor_path, "--cmd", "set tabpagemax=100", "-p"] + files)
             elif user_editor == "Emacs":
                 # Force terminal with "-nw"
                 subprocess.run([editor_path, "-nw"] + files)
