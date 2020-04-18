@@ -169,6 +169,7 @@ def toggle_preference(pref):
     write_config(config)
 
 preferences = {"left_right_arrow_nav": "Left/Right Arrow Navigation",
+                "clear_filter": "Auto Clear List Filters",
                 "vim_mode": "Vim Mode",
                 "dark_mode": "Dark Mode",
                 "christmas_mode": "Christmas Theme",

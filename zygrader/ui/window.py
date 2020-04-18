@@ -37,6 +37,7 @@ class Window:
         self.christmas_mode = config.user.is_preference_set("christmas_mode")
         self.vim_mode = config.user.is_preference_set("vim_mode")
         self.left_right_menu_nav = config.user.is_preference_set("left_right_arrow_nav")
+        self.clear_filter = config.user.is_preference_set("clear_filter")
 
     def __init__(self, callback, window_name):
         Window.instance = self
@@ -420,9 +421,9 @@ class Window:
                     list_input.dirty = True
                     callback(list_input.selected())
 
-                    # TODO: Make this a preference
-                    list_input.clear_filter()
-                    list_input.dirty = True
+                    list_input.clear_filter(reset_scroll=self.clear_filter)
+                    list_input.flag_dirty()
+
                 else:
                     break
             
