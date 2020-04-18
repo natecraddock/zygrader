@@ -1,5 +1,13 @@
 # Try to keep lines shorter than 70 characters
 
+3.14
+* Version π
+* Add preference to auto clear the list after grading
+  This is enabled by default.
+* Show lab name in downloaded submission popup.
+* Allow more than 10 open tabs in Vim.
+* Allow diffing lab 2 over SSH.
+
 3.1
 * Fix various crashes.
 * Clear and refresh the filter after grading a student.

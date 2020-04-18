@@ -4,7 +4,7 @@ import json
 from .. import data
 
 # Only change these if you know what you are doing!
-VERSION = 3.1
+VERSION = 3.14
 
 # TODO: save this in configuration
 CLASS_CODE = ""
