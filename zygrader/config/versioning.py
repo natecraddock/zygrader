@@ -168,7 +168,7 @@ def do_versioning(window: Window):
 
     if compare_versions(2.91, user_version):
         # Configure users to use the browser diffing by default
-        # config["browser_diff"] = ""
+        config["browser_diff"] = ""
         user.write_config(config)
 
     if compare_versions(3.0, user_version):
@@ -183,6 +183,8 @@ def do_versioning(window: Window):
 
     if compare_versions(3.14, user_version):
         msg = get_version_message(3.14)
+        config["clear_filter"] = ""
+        user.write_config(config)
 
         window.create_popup("Version π (3.14)", msg, components.Popup.ALIGN_LEFT)
 
