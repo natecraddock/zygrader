@@ -13,6 +13,7 @@ import zipfile
 from .. import config
 from .. import logger
 from .. import utils
+from .. import ui
 from ..zybooks import Zybooks
 
 class Lab:
@@ -79,7 +80,7 @@ class SubmissionFlag(enum.Flag):
 
 
 class Submission:
-    def get_part_path(self, part):
+    def get_part_identifier(self, part):
         """Some parts are not named, use ID in that case"""
         if part["name"]:
             return part["name"]
@@ -178,10 +179,10 @@ class Submission:
                 continue
 
             # TODO: Can the name be removed from the file itself?
-            files = utils.extract_zip(zip_file, part["name"])
+            files = utils.extract_zip(zip_file)
 
             # Write file to subdirectory in temporary directory
-            part_directory = os.path.join(tmp_dir, self.get_part_path(part))
+            part_directory = os.path.join(tmp_dir, self.get_part_identifier(part))
             os.mkdir(part_directory)
             for file_name in files.keys():
                 with open(os.path.join(part_directory, file_name), "w") as source_file:
@@ -256,19 +257,27 @@ class Submission:
             print("\n#############################################################")
             print("Paused student code\n")
 
-            # curses.initscr()
-
         return True
 
     def compile_code(self):
         # Use a separate tmp dir to avoid opening the binary in a text editor
         tmp_dir = tempfile.mkdtemp()
         executable_name = os.path.join(tmp_dir, "run")
-        source_files = [f for f in utils.get_source_file_paths(self.files_directory) if f.endswith(".cpp")]
-        compile_command = ["g++", "-o", executable_name] + source_files
 
-        compile_exit = subprocess.run(compile_command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        root_dir = self.files_directory
+        if len(self.lab.parts) > 1:
+            part = utils.pick_from_list(self.lab.parts)
+            if part == ui.UI_GO_BACK:
+                return False
 
+            root_dir = os.path.join(self.files_directory, self.get_part_identifier(self.lab.parts[part]))
+
+        files = utils.get_source_file_paths(root_dir)
+
+        source_files = [f for f in files if f.endswith(".cpp")]
+        compile_command = ["g++", "-o", executable_name, f"-I{root_dir}"] + source_files
+
+        compile_exit = subprocess.run(compile_command)
         if compile_exit.returncode != 0:
             return False
 
@@ -308,8 +317,8 @@ class Submission:
 
         use_browser = config.user.is_preference_set("browser_diff")
 
-        path_a = os.path.join(self.files_directory, self.get_part_path(self.lab.parts[0]))
-        path_b = os.path.join(self.files_directory, self.get_part_path(self.lab.parts[1]))
+        path_a = os.path.join(self.files_directory, self.get_part_identifier(self.lab.parts[0]))
+        path_b = os.path.join(self.files_directory, self.get_part_identifier(self.lab.parts[1]))
         part_a = [os.path.join(path_a, f) for f in os.listdir(path_a)]
         part_b = [os.path.join(path_b, f) for f in os.listdir(path_b)]
 

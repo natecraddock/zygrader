@@ -11,6 +11,9 @@ import subprocess
 from subprocess import PIPE, STDOUT, DEVNULL
 import tempfile
 
+from .ui.window import Window
+from .ui import UI_GO_BACK
+
 
 def diff_files(first, second, title_a, title_b, use_html):
     """Given two lists of equal length containing file paths, return a diff of each pair of files"""
@@ -86,3 +89,9 @@ def get_source_file_paths(directory):
         for file in files:
             paths.append(os.path.join(root, file))
     return paths
+
+def pick_from_list(_list):
+    window = Window.get_window()
+
+    picked = window.create_list_popup("Pick one", _list)
+    return picked
