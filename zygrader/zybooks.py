@@ -213,7 +213,7 @@ class Zybooks:
         return response
 
     def download_assignment_part(self, assignment, user_id, part, submission_index=None):
-        response_part = {"code": Zybooks.NO_ERROR, "name": part["name"]}
+        response_part = {"code": Zybooks.NO_ERROR, "name": part["name"], "id": str(part["id"])}
         submission = self.download_submission(part["id"], user_id, assignment.options, submission_index)
 
         if submission["code"] is not Zybooks.NO_SUBMISSION:
@@ -277,12 +277,3 @@ class Zybooks:
         with open(cached_name, 'wb') as _file:
             _file.write(zip_response.content)
         return zipfile.ZipFile(cached_name)
-
-    def extract_zip(self, input_zip, file_prefix=None):
-        """Given a ZipFile object, return a dictionary of the files of the form
-            {"filename": "contents...", ...}
-        """
-        if file_prefix:
-            return {f"{file_prefix}_{name}": input_zip.read(name).decode('UTF-8') for name in input_zip.namelist()}
-        else:
-            return {f"{name}": input_zip.read(name).decode('UTF-8') for name in input_zip.namelist()}

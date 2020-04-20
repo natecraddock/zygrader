@@ -1,8 +1,6 @@
 import curses
 import datetime
-import difflib
 import enum
-import glob
 import io
 import os
 import requests
@@ -81,6 +79,11 @@ class SubmissionFlag(enum.Flag):
 
 
 class Submission:
+    def get_part_path(self, part):
+        """Some parts are not named, use ID in that case"""
+        if part["name"]:
+            return part["name"]
+        return part["id"]
 
     def update_part(self, part, part_index):
         self.response["parts"][part_index] = part
@@ -157,6 +160,7 @@ class Submission:
         self.msg = msg
 
     def read_files(self, response):
+        zy_api = Zybooks()
         tmp_dir = tempfile.mkdtemp()
 
         # Look through each part
@@ -164,7 +168,6 @@ class Submission:
             if part["code"] == Zybooks.NO_SUBMISSION:
                 continue
 
-            zy_api = Zybooks()
             zip_file = zy_api.get_submission_zip(part["zip_url"])
 
             # Sometimes the zip file URL reported by zyBooks is invalid. Not sure if this
@@ -174,11 +177,14 @@ class Submission:
                 self.flag |= SubmissionFlag.BAD_ZIP_URL
                 continue
 
-            files = zy_api.extract_zip(zip_file, part["name"])
+            # TODO: Can the name be removed from the file itself?
+            files = utils.extract_zip(zip_file, part["name"])
 
-            # Write file to temporary directory
+            # Write file to subdirectory in temporary directory
+            part_directory = os.path.join(tmp_dir, self.get_part_path(part))
+            os.mkdir(part_directory)
             for file_name in files.keys():
-                with open(os.path.join(tmp_dir, file_name), "w") as source_file:
+                with open(os.path.join(part_directory, file_name), "w") as source_file:
                     source_file.write(files[file_name])
 
         return tmp_dir
@@ -187,11 +193,12 @@ class Submission:
         user_editor = config.user.get_config()["editor"]
         editor_path = config.user.EDITORS[user_editor]
 
+        files = utils.get_source_file_paths(self.files_directory)
+
         # Terminal-based editors
         if user_editor in {"Vim", "Emacs", "Nano", "Less"}:
             curses.endwin()
 
-            files = glob.glob(f"{self.files_directory}/*")
             files.sort()
 
             if user_editor == "Vim":
@@ -207,7 +214,8 @@ class Submission:
             curses.initscr()
         # Graphical editors
         else:
-            subprocess.Popen(f"{editor_path} {self.files_directory}/*", shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            paths = " ".join(files)
+            subprocess.Popen(f"{editor_path} {paths}", shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
     def open_folder(self):
         subprocess.Popen(f"xdg-open {self.files_directory}", shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
@@ -256,7 +264,7 @@ class Submission:
         # Use a separate tmp dir to avoid opening the binary in a text editor
         tmp_dir = tempfile.mkdtemp()
         executable_name = os.path.join(tmp_dir, "run")
-        source_files = [os.path.join(self.files_directory, f) for f in os.listdir(self.files_directory) if f.endswith(".cpp")]
+        source_files = [f for f in utils.get_source_file_paths(self.files_directory) if f.endswith(".cpp")]
         compile_command = ["g++", "-o", executable_name] + source_files
 
         compile_exit = subprocess.run(compile_command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
@@ -300,14 +308,10 @@ class Submission:
 
         use_browser = config.user.is_preference_set("browser_diff")
 
-        part_prefixes = [part["name"] for part in self.lab.parts]
-        part_files = os.listdir(self.files_directory)
+        path_a = os.path.join(self.files_directory, self.get_part_path(self.lab.parts[0]))
+        path_b = os.path.join(self.files_directory, self.get_part_path(self.lab.parts[1]))
+        part_a = [os.path.join(path_a, f) for f in os.listdir(path_a)]
+        part_b = [os.path.join(path_b, f) for f in os.listdir(path_b)]
 
-        parts = []
-        for pre in part_prefixes:
-            for part in part_files:
-                if part.startswith(pre):
-                    parts.append(os.path.join(self.files_directory, part))
-
-        diff = utils.make_diff_string([parts[0]], [parts[1]], part_prefixes[0], part_prefixes[1], use_browser)
+        diff = utils.make_diff_string(part_a, part_b, path_a, path_b, use_browser)
         utils.view_string(diff, "parts.diff", use_browser)

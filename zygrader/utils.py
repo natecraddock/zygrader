@@ -70,3 +70,19 @@ def view_string(string, file_name, use_html=False):
         curses.endwin()
         subprocess.run(["less", "-r", f"{file_path}"])
         curses.initscr()
+
+def extract_zip(input_zip, file_prefix=None):
+    """Given a ZipFile object, return a dictionary of the files of the form
+        {"filename": "contents...", ...}
+    """
+    if file_prefix:
+        return {f"{file_prefix}_{name}": input_zip.read(name).decode('UTF-8') for name in input_zip.namelist()}
+    else:
+        return {f"{name}": input_zip.read(name).decode('UTF-8') for name in input_zip.namelist()}
+
+def get_source_file_paths(directory):
+    paths = []
+    for root, dirs, files in os.walk(directory):
+        for file in files:
+            paths.append(os.path.join(root, file))
+    return paths

@@ -73,11 +73,11 @@ def view_diff(first, second):
     """View a diff of the two submissions"""
     use_browser = config.user.is_preference_set("browser_diff")
 
-    paths_a = []
-    paths_b = []
-    for file_name in os.listdir(first.files_directory):
-        paths_a.append(os.path.join(first.files_directory, file_name))
-        paths_b.append(os.path.join(second.files_directory, file_name))
+    paths_a = utils.get_source_file_paths(first.files_directory)
+    paths_b = utils.get_source_file_paths(second.files_directory)
+
+    paths_a.sort()
+    paths_b.sort()
 
     diff = utils.make_diff_string(paths_a, paths_b, first.student.full_name, second.student.full_name, use_browser)
     utils.view_string(diff, "submissions.diff", use_browser)
