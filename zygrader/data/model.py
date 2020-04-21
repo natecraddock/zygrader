@@ -259,6 +259,13 @@ class Submission:
 
         return True
 
+    def pick_part(self):
+        window = ui.window.Window.get_window()
+        part_names = [self.get_part_identifier(x) for x in self.lab.parts]
+
+        picked = window.create_list_popup("Choose a part", part_names)
+        return picked
+
     def compile_code(self):
         # Use a separate tmp dir to avoid opening the binary in a text editor
         tmp_dir = tempfile.mkdtemp()
@@ -266,7 +273,7 @@ class Submission:
 
         root_dir = self.files_directory
         if len(self.lab.parts) > 1:
-            part = utils.pick_from_list(self.lab.parts)
+            part = self.pick_part()
             if part == ui.UI_GO_BACK:
                 return False
 

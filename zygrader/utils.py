@@ -89,9 +89,3 @@ def get_source_file_paths(directory):
         for file in files:
             paths.append(os.path.join(root, file))
     return paths
-
-def pick_from_list(_list):
-    window = Window.get_window()
-
-    picked = window.create_list_popup("Pick one", _list)
-    return picked
