@@ -259,11 +259,11 @@ class Submission:
 
         return True
 
-    def pick_part(self):
+    def pick_part(self, title="Choose a part"):
         window = ui.window.Window.get_window()
         part_names = [self.get_part_identifier(x) for x in self.lab.parts]
 
-        picked = window.create_list_popup("Choose a part", part_names)
+        picked = window.create_list_popup(title, part_names)
         return picked
 
     def compile_code(self):
@@ -318,16 +318,29 @@ class Submission:
         return self.wait_on_child(process)
 
     def diff_parts(self):
-        # This runs under the assumption that we only want to compare parts A and B
-        if len(self.lab.parts) != 2:
-            return
-
         use_browser = config.user.is_preference_set("browser_diff")
 
-        path_a = os.path.join(self.files_directory, self.get_part_identifier(self.lab.parts[0]))
-        path_b = os.path.join(self.files_directory, self.get_part_identifier(self.lab.parts[1]))
-        part_a = [os.path.join(path_a, f) for f in os.listdir(path_a)]
-        part_b = [os.path.join(path_b, f) for f in os.listdir(path_b)]
+        if len(self.lab.parts) < 2:
+            return
+        elif len(self.lab.parts) > 2:
+            index = self.pick_part("Pick the first part")
+            if index is ui.UI_GO_BACK:
+                return
+            part_a = self.lab.parts[index]
 
-        diff = utils.make_diff_string(part_a, part_b, path_a, path_b, use_browser)
+            index = self.pick_part("Pick the second part")
+            if index is ui.UI_GO_BACK:
+                return
+            part_b = self.lab.parts[index]
+        else:
+            # Assume for 2 part labs to diff those two parts
+            part_a = self.lab.parts[0]
+            part_b = self.lab.parts[1]
+
+        path_a = os.path.join(self.files_directory, self.get_part_identifier(part_a))
+        path_b = os.path.join(self.files_directory, self.get_part_identifier(part_b))
+        part_a_paths = [os.path.join(path_a, f) for f in os.listdir(path_a)]
+        part_b_paths = [os.path.join(path_b, f) for f in os.listdir(path_b)]
+
+        diff = utils.make_diff_string(part_a_paths, part_b_paths, path_a, path_b, use_browser)
         utils.view_string(diff, "parts.diff", use_browser)
