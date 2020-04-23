@@ -11,6 +11,7 @@ from .zybooks import Zybooks
 from . import data
 from . import config
 from . import class_manager
+from . import utils
 
 def check_student_submissions(zy_api, student_id, lab, search_string):
     """Search for a substring in all of a student's submissions for a given lab"""
@@ -33,7 +34,7 @@ def check_student_submissions(zy_api, student_id, lab, search_string):
             response["error"] = f"Error fetching submission {zy_api.get_time_string(submission)}"
             continue
 
-        f = zy_api.extract_zip(zip_file)
+        f = utils.extract_zip(zip_file)
 
         # Check each file for the matched string
         for source_file in f.keys():
