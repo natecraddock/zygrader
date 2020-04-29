@@ -421,7 +421,8 @@ class Window:
                     list_input.dirty = True
                     callback(list_input.selected())
 
-                    list_input.clear_filter(reset_scroll=self.clear_filter)
+                    if self.clear_filter:
+                        list_input.clear_filter()
                     list_input.flag_dirty()
 
                 else:

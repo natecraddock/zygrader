@@ -315,13 +315,11 @@ class FilteredList(Component):
     def selected(self):
         return self.data[self.selected_index].index - 1
 
-    def clear_filter(self, reset_scroll=False):
+    def clear_filter(self):
         self.filter_text = ""
-
-        if reset_scroll:
-            self.selected_index = 0
-            self.set_scroll()
-            self.selected_index = 1
+        self.selected_index = 0
+        self.set_scroll()
+        self.selected_index = 1
 
     def flag_dirty(self):
         self.dirty = True
