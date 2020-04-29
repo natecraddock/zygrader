@@ -1,5 +1,16 @@
 # Try to keep lines shorter than 70 characters
 
+3.2
+* Refactoring of submission storage. Use subfolders for
+  each part. This change allows:
+  * Popup to pick which part to run. All labs can now be run
+    if needed.
+  * Popup to pick which parts to diff (if # parts > 2).
+* Fix auto list filter clear preference not working.
+* For those who use the Vim keybindings, each window
+  change will now toggle from insert to normal mode.
+* Fix options popup wrapping.
+
 3.14
 * Version π
 * Add preference to auto clear the list after grading
