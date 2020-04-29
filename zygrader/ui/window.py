@@ -268,11 +268,24 @@ class Window:
                 self.event = Window.KEY_INPUT
                 self.event_value = input_code[0]
 
+    def component_init(self, component):
+        # Disable insertion mode on component change
+        self.insert_mode = False
+
+        self.components.append(component)
+        self.draw()
+
+    def component_deinit(self):
+        # Disable insertion mode on component change
+        self.insert_mode = False
+
+        self.components.pop()
+        self.draw()
+
     def create_popup(self, title, message, align=components.Popup.ALIGN_CENTER):
         """Create a popup with title and message that returns after enter"""
         pop = components.Popup(self.rows, self.cols, title, message, align)
-        self.components.append(pop)
-        self.draw()
+        self.component_init(pop)
         
         while True:
             self.get_input()
@@ -280,15 +293,13 @@ class Window:
             if self.event == Window.KEY_ENTER:
                 break
 
-        self.components.pop()
-        self.draw()
+        self.component_deinit()
     
     def create_bool_popup(self, title, message, align=components.Popup.ALIGN_CENTER):
         """Create a popup with title and message that returns true/false"""
         options = ["YES", "NO"]
         popup = components.OptionsPopup(self.rows, self.cols, title, message, options, align)
-        self.components.append(popup)
-        self.draw()
+        self.component_init(popup)
         
         while True:
             self.get_input()
@@ -302,16 +313,14 @@ class Window:
 
             self.draw()
 
-        self.components.pop()
-        self.draw()
+        self.component_deinit()
 
         return popup.selected() == options[0]
 
     def create_options_popup(self, title, message, options, align=components.Popup.ALIGN_CENTER):
         """Create a popup with multiple options that can be selected with the keyboard"""
         popup = components.OptionsPopup(self.rows, self.cols, title, message, options, align)
-        self.components.append(popup)
-        self.draw()
+        self.component_init(popup)
 
         while True:
             self.get_input()
@@ -325,8 +334,7 @@ class Window:
 
             self.draw()
 
-        self.components.pop()
-        self.draw()
+        self.component_deinit()
 
         return popup.selected()
 
@@ -338,8 +346,7 @@ class Window:
         a list to be drawn.
         """
         popup = components.ListPopup(self.rows, self.cols, title, input_data, list_fill)
-        self.components.append(popup)
-        self.draw()
+        self.component_init(popup)
 
         while True:
             self.get_input()
@@ -360,16 +367,14 @@ class Window:
 
             self.draw()
 
-        self.components.pop()
-        self.draw()
+        self.component_deinit()
 
         return popup.selected()
     
     def create_text_input(self, prompt, text="", mask=components.TextInput.TEXT_NORMAL):
         """Get text input from the user"""
         text = components.TextInput(1, 0, self.rows, self.cols, prompt, text, mask)
-        self.components.append(text)
-        self.draw()
+        self.component_init(text)
 
         while True:
             self.get_input()
@@ -389,8 +394,7 @@ class Window:
 
             self.draw()
 
-        self.components.pop()
-        self.draw()
+        self.component_deinit()
 
         text.close()
         
@@ -400,8 +404,7 @@ class Window:
 
     def create_filtered_list(self, input_data, prompt, callback=None, filter_function=None, draw_function=None):
         list_input = components.FilteredList(1, 0, self.rows - 1, self.cols, input_data, prompt, filter_function, draw_function)
-        self.components.append(list_input)
-        self.draw()
+        self.component_init(list_input)
 
         while True:
             self.get_input()
@@ -431,8 +434,7 @@ class Window:
             list_input.draw()
 
         list_input.clear()
-        self.components.pop()
-        self.draw()
+        self.component_deinit()
 
         if self.event == Window.KEY_LEFT and self.left_right_menu_nav:
             return UI_GO_BACK
@@ -441,11 +443,9 @@ class Window:
 
     def new_logger(self):
         logger = components.Logger(1, 0, self.rows - 1, self.cols)
-        self.components.append(logger)
-        self.draw()
+        self.component_init(logger)
 
         return logger
 
     def remove_logger(self, logger):
-        self.components.remove(logger)
-        self.draw()
+        self.component_deinit()
