@@ -118,7 +118,7 @@ class OptionsPopup(Popup):
         self.options = options
 
         self.index = len(options) - 1
-        self.options_length = sum([len(o) for o in options]) + len(options)
+        self.options_length = sum([len(o) for o in options]) + len(options) + 2
 
     def draw(self):
         super().draw_text()
