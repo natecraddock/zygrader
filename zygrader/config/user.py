@@ -26,7 +26,8 @@ DEFAULT_CONFIG = {
     "version": g_data.VERSION,
     "email": "", "password":"",
     "clear_filter":"",
-    "left_right_arrow_nav":"left_right_arrow_nav"
+    "left_right_arrow_nav":"left_right_arrow_nav",
+    "editor": "Pluma"
 }
 
 def install(config_dir):
@@ -168,6 +169,10 @@ def editor_callback(editor_index):
     config_file["editor"] = list(EDITORS.keys())[editor_index]
     write_config(config_file)
 
+def set_editor():
+    window = Window.get_window()
+    window.create_list_popup("Set Editor", callback=editor_callback, list_fill=draw_text_editors)
+
 def toggle_preference(pref):
     config = get_config()
 
@@ -183,23 +188,32 @@ preferences = {"left_right_arrow_nav": "Left/Right Arrow Navigation",
                 "vim_mode": "Vim Mode",
                 "dark_mode": "Dark Mode",
                 "christmas_mode": "Christmas Theme",
-                "browser_diff": "Open Diffs in Browser"
+                "browser_diff": "Open Diffs in Browser",
+                "editor": "Set Editor"
                 }
 
 def draw_preferences():
     list = []
     for pref, name in preferences.items():
-        if is_preference_set(pref):
-            list.append(f"[X] {name}")
+        if pref in {"editor"}:
+            list.append(f"    {name}")
         else:
-            list.append(f"[ ] {name}")
+            if is_preference_set(pref):
+                list.append(f"[X] {name}")
+            else:
+                list.append(f"[ ] {name}")
 
     return list
 
 def preferences_callback(selected_index):
     window = Window.get_window()
 
-    toggle_preference(list(preferences.keys())[selected_index])
+    pref = list(preferences.keys())[selected_index]
+    if pref == "editor":
+        set_editor()
+    else:
+        toggle_preference(pref)
+
     window.update_preferences()
 
 def change_credentials(window, zy_api, config_file):
@@ -231,7 +245,7 @@ def config_menu():
         else:
             password_option = "Save Password"
 
-        options = ["Change Credentials", password_option, "Set Editor", "Preferences"]
+        options = ["Change Credentials", password_option, "Preferences"]
 
         option_index = window.create_filtered_list(options, "Option")
         if option_index is UI_GO_BACK:
@@ -259,9 +273,6 @@ def config_menu():
             write_config(config_file)
 
             window.create_popup("Removed Password", ["Password successfully removed"])
-
-        elif option == "Set Editor":
-            window.create_list_popup("Set Editor", callback=editor_callback, list_fill=draw_text_editors)
 
         elif option == "Preferences":
             window.create_list_popup("User Preferences", callback=preferences_callback, list_fill=draw_preferences)
