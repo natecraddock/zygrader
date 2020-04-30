@@ -215,6 +215,7 @@ def config_menu():
     zy_api = zybooks.Zybooks()
     config_file = get_config()
 
+    window.set_header(f"Config")
     option = ""
 
     while True:
@@ -225,7 +226,6 @@ def config_menu():
 
         options = ["Change Credentials", password_option, "Set Editor", "Preferences"]
 
-        window.set_header(f"Config")
         option_index = window.create_filtered_list(options, "Option")
         if option_index is UI_GO_BACK:
             break

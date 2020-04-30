@@ -68,11 +68,15 @@ class Window:
         self.header = curses.newwin(1, self.cols, 0, 0)
         self.header.bkgd(" ", curses.color_pair(1))
 
+        # Stacks for Components and header titles
+        self.components = []
+        self.header_titles = []
+
         # Used for animated themes
         self.header_offset = 0
         self.__header_text = ""
         self.__email_text = ""
-        self.set_header()
+        self.draw_header()
 
         # Create window for input
         self.input_win = curses.newwin(0, 0, 1, 1)
@@ -83,9 +87,6 @@ class Window:
         self.input_win.getch()
         curses.flushinp()
         self.input_win.nodelay(False)
-
-        # Stack for Components
-        self.components = []
 
         # Execute callback with a reference to the window object
         callback(self)
@@ -127,16 +128,22 @@ class Window:
     def set_email(self, email):
         self.__email_text = email
 
-    def set_header(self, text="", align=UI_CENTERED):
+    def set_header(self, text):
+        """Load a string to be used for the next component"""
+        self.__header_text = text
+
+    def draw_header(self, text="", align=UI_CENTERED):
         """Set the header text"""        
         self.header.erase()
         resize_window(self.header, 1, self.cols)
 
-        if text:
-            self.__header_text = text
+        if self.header_titles:
+            title = self.header_titles[-1]
+        else:
+            title = ""
 
-        if text:
-            display_text = f"{self.name} | {self.__header_text}"
+        if title:
+            display_text = f"{self.name} | {title}"
         else:
             display_text = self.name
 
@@ -173,7 +180,7 @@ class Window:
         self.stdscr.erase()
         self.stdscr.refresh()
         
-        self.set_header(self.__header_text)
+        self.draw_header()
         
         # Find last blocking component
         block_index = 0
@@ -193,7 +200,7 @@ class Window:
             curses.init_pair(1, curses.COLOR_WHITE, curses.COLOR_BLACK)
         else:
             curses.init_pair(1, curses.COLOR_BLACK, curses.COLOR_WHITE)
-        self.set_header()
+        self.draw_header()
 
     def get_input(self):
         """Get input and handle resize events"""
@@ -280,6 +287,12 @@ class Window:
         self.insert_mode = False
 
         self.components.append(component)
+        if self.__header_text:
+            self.header_titles.append(self.__header_text)
+            self.__header_text = ""
+        else:
+            self.header_titles.append("")
+
         self.draw()
 
     def component_deinit(self):
@@ -287,6 +300,7 @@ class Window:
         self.insert_mode = False
 
         self.components.pop()
+        self.header_titles.pop()
         self.draw()
 
     def create_popup(self, title, message, align=components.Popup.ALIGN_CENTER):
