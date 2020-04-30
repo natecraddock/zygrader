@@ -261,5 +261,6 @@ def class_manager_callback(option_index):
 
 def start():
     window = Window.get_window()
+    window.set_header("Class Manager")
 
     window.create_filtered_list(class_manager_options, "Option", callback=class_manager_callback)

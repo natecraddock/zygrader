@@ -70,11 +70,12 @@ class Window:
 
         # Stacks for Components and header titles
         self.components = []
-        self.header_titles = []
+        self.header_titles = [""]
 
         # Used for animated themes
         self.header_offset = 0
-        self.__header_text = ""
+        self.__header_title = ""
+        self.__header_title_load = ""
         self.__email_text = ""
         self.draw_header()
 
@@ -130,20 +131,18 @@ class Window:
 
     def set_header(self, text):
         """Load a string to be used for the next component"""
-        self.__header_text = text
+        self.__header_title_load = text
 
-    def draw_header(self, text="", align=UI_CENTERED):
+    def draw_header(self, text=""):
         """Set the header text"""        
         self.header.erase()
         resize_window(self.header, 1, self.cols)
 
-        if self.header_titles:
-            title = self.header_titles[-1]
-        else:
-            title = ""
+        if self.header_titles[-1]:
+            self.__header_title = self.header_titles[-1]
 
-        if title:
-            display_text = f"{self.name} | {title}"
+        if self.__header_title:
+            display_text = f"{self.name} | {self.__header_title}"
         else:
             display_text = self.name
 
@@ -153,13 +152,8 @@ class Window:
         if self.insert_mode:
             display_text += " | INSERT"
 
-        if align is UI_LEFT:
-            x = 0
-        elif align is UI_CENTERED:
-            x = self.cols // 2 - len(display_text) // 2
-        elif align is UI_RIGHT:
-            x = self.cols - len(display_text) - 1
-        
+        # Centered header
+        x = self.cols // 2 - len(display_text) // 2
         add_str(self.header, 0, x, display_text)
 
         # Christmas theme
@@ -287,11 +281,11 @@ class Window:
         self.insert_mode = False
 
         self.components.append(component)
-        if self.__header_text:
-            self.header_titles.append(self.__header_text)
-            self.__header_text = ""
+        if self.__header_title_load:
+            self.header_titles.append(self.__header_title_load)
+            self.__header_title_load = ""
         else:
-            self.header_titles.append("")
+            self.header_titles.append(self.header_titles[-1])
 
         self.draw()
 

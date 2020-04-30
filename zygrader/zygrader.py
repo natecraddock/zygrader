@@ -16,6 +16,7 @@ from .ui import components
 
 def prep_lab_score_calc():
     window = Window.get_window()
+    window.set_header("Prep Lab Calculator")
 
     try:
         score = float(window.create_text_input("What was the student's original score"))
@@ -40,6 +41,7 @@ def view_students_callback(student_index):
 def view_students():
     window = Window.get_window()
     students = data.get_students()
+    window.set_header("View Students")
 
     window.create_filtered_list(students, "Student Name", callback=view_students_callback)
 

@@ -88,6 +88,8 @@ def submission_search(lab, search_string, output_path):
 
 def submission_search_init(window, labs):
     """Get lab part and string from the user for searching"""
+    window.set_header("Submissions Search")
+
     # Choose lab
     assignment_index = window.create_filtered_list(labs, "Assignment", filter_function=data.Lab.find)
     if assignment_index is UI_GO_BACK:
@@ -148,5 +150,6 @@ def admin_menu_callback(menu_index):
 
 def admin_menu():
     window = Window.get_window()
+    window.set_header("Admin")
 
     window.create_filtered_list(admin_menu_options, "Option", admin_menu_callback)

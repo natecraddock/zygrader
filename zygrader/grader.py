@@ -109,6 +109,7 @@ def grade_pair_programming(first_submission):
     lab = first_submission.lab
 
     # Get student
+    window.set_header("Pair Programming")
     line_lock = lambda student : data.lock.is_lab_locked(student, lab) if type(student) is not str else False
     student_index = window.create_filtered_list(students, "Student", filter_function=data.Student.find, draw_function=line_lock)
     if student_index is UI_GO_BACK:
@@ -139,6 +140,7 @@ def grade_pair_programming(first_submission):
                f"{second_submission.student.full_name} {second_submission.latest_submission}",
                "", "Pick a student's submission to view or view the diff"]
 
+        window.set_header("Pair Programming Submission")
         while True:
             option = window.create_options_popup("Pair Programming", msg, options)
 
@@ -161,6 +163,7 @@ def grade_pair_programming(first_submission):
 
 def student_callback(lab, student_index, use_locks=True):
     window = Window.get_window()
+    window.set_header("Student Submission")
 
     student = data.get_students()[student_index]
 
@@ -240,6 +243,10 @@ def grade(use_locks=True):
     window = Window.get_window()
     labs = data.get_labs()
 
+    if use_locks:
+        window.set_header("Grader")
+    else:
+        window.set_header("Run for Fun")
     if not labs:
         window.create_popup("Error", ["No labs have been created yet"])
         return
