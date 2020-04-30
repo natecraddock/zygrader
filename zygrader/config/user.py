@@ -90,7 +90,7 @@ def create_account(window: Window, zy_api):
 
         if authenticate(window, zy_api, email, password):
             break
-    
+
     return email, password
 
 def login(window: Window):
@@ -187,20 +187,35 @@ def preferences_callback(selected_index):
     toggle_preference(list(preferences.keys())[selected_index])
     window.update_preferences()
 
+def change_credentials(window, zy_api, config_file):
+    email, password = create_account(window, zy_api)
+    save_password = window.create_bool_popup("Save Password", ["Would you like to save your password?"])
+
+    config_file["email"] = email
+
+    if save_password:
+        encode_password(config_file, password)
+    else:
+        pass
+
+    write_config(config_file)
+    return config_file
+
 def config_menu():
     window = Window.get_window()
     zy_api = zybooks.Zybooks()
     config_file = get_config()
 
-    if "password" in config_file:
-        password_option = "Remove Saved Password"
-    else:
-        password_option = "Save Password"
-    
-    options = ["Change Credentials", password_option, "Set Editor", "Preferences"]
     option = ""
 
     while True:
+        if "password" in config_file and config_file["password"]:
+            password_option = "Remove Saved Password"
+        else:
+            password_option = "Save Password"
+
+        options = ["Change Credentials", password_option, "Set Editor", "Preferences"]
+
         window.set_header(f"Config | {config_file['email']}")
         option_index = window.create_filtered_list(options, "Option")
         if option_index is UI_GO_BACK:
@@ -208,17 +223,7 @@ def config_menu():
 
         option = options[option_index]
         if option == "Change Credentials":
-            email, password = create_account(window, zy_api)
-            save_password = window.create_bool_popup("Save Password", ["Would you like to save your password?"])
-
-            config_file["email"] = email
-
-            if save_password:
-                encode_password(config_file, password)
-            else:
-                pass
-
-            write_config(config_file)
+            config_file = change_credentials(window, zy_api, config_file)
 
         elif option == "Save Password":
             # First, get password and verify it is correct
@@ -230,7 +235,7 @@ def config_menu():
                     encode_password(config_file, password)
                     write_config(config_file)
                     break
-            
+
             window.create_popup("Saved Password", ["Password successfully saved"])
 
         elif option == "Remove Saved Password":
