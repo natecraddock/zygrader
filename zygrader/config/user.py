@@ -22,6 +22,13 @@ EDITORS = {
     "Less": "/usr/bin/less"
 }
 
+DEFAULT_CONFIG = {
+    "version": g_data.VERSION,
+    "email": "", "password":"",
+    "clear_filter":"",
+    "left_right_arrow_nav":"left_right_arrow_nav"
+}
+
 def install(config_dir):
     # Create config directory
     if not os.path.exists(config_dir):
@@ -29,7 +36,7 @@ def install(config_dir):
 
     # Create config file
     if not os.path.exists(os.path.join(config_dir, "config")):
-        config = {"version": g_data.VERSION, "email": "", "password":""}
+        config = DEFAULT_CONFIG
         with open(os.path.join(config_dir, "config"), "w") as config_file:
             json.dump(config, config_file)
 
