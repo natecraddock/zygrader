@@ -68,12 +68,11 @@ def mainloop_callback(option_index):
 
 def mainloop(admin_mode):
     window = Window.get_window()
-    config_file = config.user.get_config()
 
     if admin_mode:
         main_menu_options.append("Admin")
 
-    window.set_header(f"Menu | {config_file['email']}")
+    window.set_header(f"Menu")
     window.create_filtered_list(main_menu_options, "Option", mainloop_callback)
 
 def main(window: Window):

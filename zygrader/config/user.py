@@ -68,6 +68,12 @@ def authenticate(window: Window, zy_api, email, password):
         window.create_popup("Error", ["Invalid Credentials"])
         return False
 
+def get_email():
+    config = get_config()
+    if "email" in config:
+        return config["email"]
+    return ""
+
 def get_password(window: Window):
     window.set_header("Sign In")
 
@@ -101,6 +107,7 @@ def login(window: Window):
     if "email" in config and "password" in config and config["password"]:
         password = decode_password(config)
         authenticate(window, zy_api, config["email"], password)
+        window.set_email(config["email"])
         return config
 
     # User does not have account created
@@ -115,6 +122,7 @@ def login(window: Window):
             encode_password(config, password)
 
         write_config(config)
+        window.set_email(email)
 
     # User has not saved password, reprompt
     elif "password" in config and not config["password"]:
@@ -192,6 +200,7 @@ def change_credentials(window, zy_api, config_file):
     save_password = window.create_bool_popup("Save Password", ["Would you like to save your password?"])
 
     config_file["email"] = email
+    window.set_email(email)
 
     if save_password:
         encode_password(config_file, password)
@@ -216,7 +225,7 @@ def config_menu():
 
         options = ["Change Credentials", password_option, "Set Editor", "Preferences"]
 
-        window.set_header(f"Config | {config_file['email']}")
+        window.set_header(f"Config")
         option_index = window.create_filtered_list(options, "Option")
         if option_index is UI_GO_BACK:
             break

@@ -71,6 +71,7 @@ class Window:
         # Used for animated themes
         self.header_offset = 0
         self.__header_text = ""
+        self.__email_text = ""
         self.set_header()
 
         # Create window for input
@@ -123,6 +124,9 @@ class Window:
             return curses.color_pair(5), curses.color_pair(6)
         return curses.color_pair(3), curses.color_pair(4)
 
+    def set_email(self, email):
+        self.__email_text = email
+
     def set_header(self, text="", align=UI_CENTERED):
         """Set the header text"""        
         self.header.erase()
@@ -135,6 +139,9 @@ class Window:
             display_text = f"{self.name} | {self.__header_text}"
         else:
             display_text = self.name
+
+        if self.__email_text:
+            display_text += f" | {self.__email_text}"
 
         if self.insert_mode:
             display_text += " | INSERT"
