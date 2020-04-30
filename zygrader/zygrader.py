@@ -43,7 +43,7 @@ def view_students():
 
     window.create_filtered_list(students, "Student Name", callback=view_students_callback)
 
-main_menu_options = ["Grade", "Config", "Prep Lab Score Calculator", "Run For Fun", "View Students", "Changelog"]
+main_menu_options = ["Grade", "Prep Lab Score Calculator", "Run For Fun", "View Students", "Config", "Changelog"]
 
 def mainloop_callback(option_index):
     option = main_menu_options[option_index]
@@ -82,20 +82,23 @@ def main(window: Window):
         admin = True
     else:
         admin = False
-    
-    # Start application and load data
-    config.g_data.start()
-
-    # Log in user
-    config.user.initial_config(window)
 
     # Apply versioning
     config.versioning.do_versioning(window)
+
+    # Log in user
+    config.user.login(window)
 
     logger.log("zygrader started")
 
     mainloop(admin)
 
 def start():
+    # Start application and setup data folders
+    config.g_data.start()
+
+    # Setup user configuration
+    config.user.initial_config(window)
+
     # Create a zygrader window, callback to main function
     Window(main, "zygrader")

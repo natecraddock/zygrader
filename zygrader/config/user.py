@@ -33,6 +33,12 @@ def install(config_dir):
         with open(os.path.join(config_dir, "config"), "w") as config_file:
             json.dump(config, config_file)
 
+def initial_config(window: Window):
+    config_dir = os.path.join(os.path.expanduser("~"), ".zygrader/")
+
+    # Ensure user config exists
+    install(config_dir)
+
 def write_config(config):
     config_dir = os.path.join(os.path.expanduser("~"), ".zygrader/")
     config_path = os.path.join(config_dir, "config")
@@ -87,18 +93,9 @@ def create_account(window: Window, zy_api):
     
     return email, password
 
-def initial_config(window: Window):
+def login(window: Window):
     zy_api = zybooks.Zybooks()
-
-    config_dir = os.path.join(os.path.expanduser("~"), ".zygrader/")
-    config_path = os.path.join(config_dir, "config")
-
-    # Ensure user config exists
-    install(config_dir)
-
-    # Check if user has email/password information
-    with open(config_path, "r") as config_file:
-        config = json.load(config_file)
+    config = get_config()
 
     # If user email and password exists, authenticate and return
     if "email" in config and "password" in config and config["password"]:
@@ -128,8 +125,6 @@ def initial_config(window: Window):
 
             if authenticate(window, zy_api, email, password):
                 break
-
-    return config
 
 def is_preference_set(pref):
     """Return True if a preference is set, False otherwise"""
