@@ -3,6 +3,7 @@ from datetime import datetime, timezone
 import os
 import requests
 import zipfile
+import json
 
 from . import config
 
@@ -57,6 +58,19 @@ class Zybooks:
             return False
 
         return r.json()
+
+    def get_table_of_contents(self):
+        """Download the table of contents (toc) for the current zybook"""
+        payload = {"auth_token": Zybooks.token}
+        toc_url = f'https://zyserver2.zybooks.com/v1/zybook/{config.g_data.CLASS_CODE}/ordering?include=["content_ordering"]'
+
+        r = Zybooks.session.get(toc_url, json=payload)
+
+        if not r.json()["success"]:
+            return False
+        
+        return r.json()["ordering"]["content_ordering"]["chapters"]
+
 
     def get_zybook_section(self, chapter, section) -> SectionResponse:
         """Given a chapter and section ID, get section information like the zybooks internal ID

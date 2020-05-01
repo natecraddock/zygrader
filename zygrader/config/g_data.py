@@ -23,6 +23,7 @@ LOCKS_DIRECTORY = ".locks"
 
 STUDENTS_FILE = "students.json"
 LABS_FILE = "labs.json"
+CANVAS_MASTER_FILE = "canvas_master.csv"
 
 # This is a global to represent if student code is being executed
 RUNNING_CODE = False
@@ -65,6 +66,9 @@ def get_student_data():
 
 def get_labs_data():
     return os.path.join(get_data_directory(), LABS_FILE)
+
+def get_canvas_master():
+    return os.path.join(get_data_directory(), CANVAS_MASTER_FILE)
 
 def setup_zygrader_data_directory():
     """If no data directory exists, create it"""
