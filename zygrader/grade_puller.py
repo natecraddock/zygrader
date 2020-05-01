@@ -7,21 +7,28 @@ from .zybooks import Zybooks
 
 class GradePuller:
     NUM_CANVAS_ID_COLUMNS = 5
+
     def __init__(self):
         self.window = Window.get_window()
+        self.zy_api = Zybooks()
 
     def pull(self):
-        if not self.read_canvas_csv():
-            return
-        if not self.select_canvas_assignment():
-            return
+        if not self.try_pull():
+            self.window.create_popup("Grade Puller", ["Grade Puller stopped"])
+
+    def try_pull(self):
+        #if not self.read_canvas_csv():
+            #return False
+        #if not self.select_canvas_assignment():
+            #return False
         if not self.fetch_zybooks_toc():
-            return
-        self.window.create_popup("Test", [f"The assignment is {self.canvas_assignment}"])
-        self.window.create_list_popup("The students", input_data=self.canvas_students)
-        self.window.create_popup("The points", [str(self.canvas_points_out_of)])
-        self.select_class_sections()
-        self.window.create_list_popup("The class sections", input_data=[el for el in self.selected_class_sections])
+            return False
+        #if not self.select_class_sections():
+            #return False
+        if not self.select_zybook_sections():
+            return False
+        self.window.create_list_popup("The zysections", input_data=[str(nums) for nums in self.selected_zybook_sections])
+        return True
 
     def read_canvas_csv(self):
         path = g_data.get_canvas_master()
@@ -54,13 +61,61 @@ class GradePuller:
         selected_sections = set()
         draw_sections = lambda: [f"[{'X' if el in selected_sections else ' '}] {el}" for el in range(1,num_sections+1)]
         section_callback = lambda selected_index: selected_sections.remove(selected_index+1) if selected_index+1 in selected_sections else selected_sections.add(selected_index+1)
-        self.window.create_list_popup("Select Class Sections", callback=section_callback, list_fill=draw_sections)
+        self.window.create_list_popup("Select Class Sections (use Back to finish)", callback=section_callback, list_fill=draw_sections)
+        if not selected_sections:
+            return False
         self.selected_class_sections = selected_sections
+        return True
 
     def fetch_zybooks_toc(self):
-        zy_api = Zybooks()
-        toc = zy_api.get_table_of_contents()
-        self.window.create_list_popup("The TOC", [toc])
+        toc = self.zy_api.get_table_of_contents()
+        if not toc:
+            return False
+        self.zybooks_toc = toc
+        self.zybooks_sections = {(chapter['number'], section['number']): section for chapter in toc for section in chapter['sections']}
+        return True
+
+    def draw_zybook_sections(self, chapters_expanded, selected_sections):
+        res = []
+        items = []
+        for chapter in self.zybooks_toc:
+            res.append(f"{chapter['number']} - {chapter['title']}")
+            items.append(chapter['number'])
+            if chapters_expanded[chapter['number']]:
+                for section in chapter['sections']:
+                    section_string = f"{chapter['number']}.{section['number']} - {section['title']}"
+                    is_selected = selected_sections[(chapter['number'], section['number'])]
+                    if not section['hidden'] and not section['optional']:
+                        res.append(f"  [{'X' if is_selected else ' '}] {section_string}")
+                    else:
+                        res.append(f"  -{'X' if is_selected else '-'}- {section_string} (hidden/optional)")
+                    items.append((chapter['number'], section['number']))
+        self.drawn_zybook_items = items
+        return res
+
+    def select_zybook_sections_callback(self, chapters_expanded, selected_sections, selected_index):
+        item = self.drawn_zybook_items[selected_index]
+        if isinstance(item, tuple): #is a section
+            section = self.zybooks_sections[item]
+            if not section['hidden'] and not section['optional']:
+                selected_sections[item] = not selected_sections[item]
+        else: #is a chapter
+            chapters_expanded[item] = not chapters_expanded[item]
+
+    def select_zybook_sections(self):
+        chapters_expanded = {chapter['number']: False for chapter in self.zybooks_toc}
+        selected_sections = {(chapter['number'], section['number']): False for chapter in self.zybooks_toc for section in chapter['sections']}
+        draw_sections = lambda: self.draw_zybook_sections(chapters_expanded, selected_sections)
+        draw_sections()
+        section_callback = lambda selected_index: self.select_zybook_sections_callback(chapters_expanded, selected_sections, selected_index)
+        self.window.create_list_popup("Select zyBook Sections (use Back to finish)", callback=section_callback, list_fill=draw_sections)
+        if not selected_sections:
+            return False
+        self.selected_zybook_sections = []
+        for section_numbers, selected in selected_sections.items():
+            if selected:
+                self.selected_zybook_sections.append(self.zybooks_sections[section_numbers])
+        return True
 
 def start():
     puller = GradePuller()
