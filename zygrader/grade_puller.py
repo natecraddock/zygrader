@@ -1,4 +1,5 @@
 import csv
+import datetime
 
 from .ui.window import Window
 from .ui import components, UI_GO_BACK
@@ -17,15 +18,19 @@ class GradePuller:
             self.window.create_popup("Grade Puller", ["Grade Puller stopped"])
 
     def try_pull(self):
-        #if not self.read_canvas_csv():
-            #return False
-        #if not self.select_canvas_assignment():
-            #return False
+        if not self.read_canvas_csv():
+            return False
+        """
+        if not self.select_canvas_assignment():
+            return False
         if not self.fetch_zybooks_toc():
             return False
-        #if not self.select_class_sections():
-            #return False
         if not self.select_zybook_sections():
+            return False
+        """
+        if not self.select_class_sections():
+            return False
+        if not self.select_due_times():
             return False
         self.window.create_list_popup("The zysections", input_data=[str(nums) for nums in self.selected_zybook_sections])
         return True
@@ -64,7 +69,7 @@ class GradePuller:
         self.window.create_list_popup("Select Class Sections (use Back to finish)", callback=section_callback, list_fill=draw_sections)
         if not selected_sections:
             return False
-        self.selected_class_sections = selected_sections
+        self.selected_class_sections = [el for el in selected_sections]
         return True
 
     def fetch_zybooks_toc(self):
@@ -109,13 +114,37 @@ class GradePuller:
         draw_sections()
         section_callback = lambda selected_index: self.select_zybook_sections_callback(chapters_expanded, selected_sections, selected_index)
         self.window.create_list_popup("Select zyBook Sections (use Back to finish)", callback=section_callback, list_fill=draw_sections)
-        if not selected_sections:
-            return False
         self.selected_zybook_sections = []
         for section_numbers, selected in selected_sections.items():
             if selected:
                 self.selected_zybook_sections.append(self.zybooks_sections[section_numbers])
+        if not self.select_zybook_sections:
+            return False
         return True
+
+    def select_due_times_callback(self, selected_index):
+        section = self.selected_class_sections[selected_index]
+        old_time_str = self.due_times[section].strftime("%m.%d.%Y:%H.%M.%S")
+        new_time_str = self.window.create_text_input("Enter due date [MM.DD.YYYY:HH.MM.SS]", text=old_time_str)
+        if new_time_str == Window.CANCEL:
+            return
+        
+        new_time = datetime.datetime.strptime(new_time_str, "%m.%d.%Y:%H.%M.%S").astimezone(tz=None)
+        self.due_times[section] = new_time
+
+        if selected_index == 0: #For convenience, allow the day to carried across all sections so that only the time has to be changed for the rest
+            do_set_all_sections = self.window.create_bool_popup("Set Due Time", ["Set all sections to this due time?"])
+            if do_set_all_sections:
+                for section in self.due_times:
+                    self.due_times[section] = new_time
+
+    def select_due_times(self):
+        now = datetime.datetime.now()
+        self.due_times = {section: now for section in self.selected_class_sections}
+        draw = lambda: [f"Section {section}: {time.strftime('%m.%d.%Y:%H.%M.%S')}" for section, time in self.due_times.items()]
+        callback = lambda index: self.select_due_times_callback(index)
+        self.window.create_list_popup("Set Due Times (use Back to finish)", callback=callback, list_fill=draw)
+
 
 def start():
     puller = GradePuller()
