@@ -8,6 +8,7 @@ from .zybooks import Zybooks
 
 class GradePuller:
     NUM_CANVAS_ID_COLUMNS = 5
+    NUM_ZYBOOKS_ID_COLUMNS = 5
 
     def __init__(self):
         self.window = Window.get_window()
@@ -20,31 +21,38 @@ class GradePuller:
     def try_pull(self):
         if not self.read_canvas_csv():
             return False
-        """
         if not self.select_canvas_assignment():
             return False
         if not self.fetch_zybooks_toc():
             return False
         if not self.select_zybook_sections():
             return False
-        """
         if not self.select_class_sections():
             return False
         if not self.select_due_times():
             return False
-        self.window.create_list_popup("The zysections", input_data=[str(nums) for nums in self.selected_zybook_sections])
+        if not self.fetch_completion_reports():
+            return False
+        self.tidy_canvas_students()
+        self.create_canvas_to_zybook_mapping()
+        self.report_unmatched_students()
+        self.calculate_grades()
+        self.write_upload_file()
+
         return True
 
     def read_canvas_csv(self):
         path = g_data.get_canvas_master()
         try:
-            self.canvas_students = []
+            self.canvas_students = dict()
             with open(path, 'r', newline='') as canvas_master_file:
                 canvas_reader = csv.DictReader(canvas_master_file)
                 self.canvas_header = canvas_reader.fieldnames
                 self.canvas_points_out_of = canvas_reader.__next__()
                 for row in canvas_reader:
-                    self.canvas_students.append(row)
+                    id_str = row['SIS User ID']
+                    row['id_number'] = int(id_str) if id_str else -1
+                    self.canvas_students[row['id_number']] = row
         except FileNotFoundError:
             self.window.create_popup("Error in Reading Master CSV", [f"Could not find {path}", "Please download the gradebook from Canvas and put it in the place noted above"])
             return False
@@ -58,11 +66,11 @@ class GradePuller:
         index = self.window.create_filtered_list(real_assignments, "Assignment")
         if index is UI_GO_BACK:
             return False
-        self.canvas_assignment = real_assignments[index]
+        self.selected_canvas_assignment = real_assignments[index]
         return True
 
     def select_class_sections(self):
-        num_sections = len(self.canvas_students[-1]['Section'].split('and')) #The last student is always "Test Student", and is in every section
+        num_sections = len(self.canvas_students[-1]['Section'].split('and')) #Test Student has id -1, and is in every section
         selected_sections = set()
         draw_sections = lambda: [f"[{'X' if el in selected_sections else ' '}] {el}" for el in range(1,num_sections+1)]
         section_callback = lambda selected_index: selected_sections.remove(selected_index+1) if selected_index+1 in selected_sections else selected_sections.add(selected_index+1)
@@ -118,7 +126,7 @@ class GradePuller:
         for section_numbers, selected in selected_sections.items():
             if selected:
                 self.selected_zybook_sections.append(self.zybooks_sections[section_numbers])
-        if not self.select_zybook_sections:
+        if not self.selected_zybook_sections:
             return False
         return True
 
@@ -132,7 +140,7 @@ class GradePuller:
         new_time = datetime.datetime.strptime(new_time_str, "%m.%d.%Y:%H.%M.%S").astimezone(tz=None)
         self.due_times[section] = new_time
 
-        if selected_index == 0: #For convenience, allow the day to carried across all sections so that only the time has to be changed for the rest
+        if selected_index == 0 and len(self.selected_class_sections) > 1: #For convenience, allow the day to carried across all sections so that only the time has to be changed for the rest
             do_set_all_sections = self.window.create_bool_popup("Set Due Time", ["Set all sections to this due time?"])
             if do_set_all_sections:
                 for section in self.due_times:
@@ -144,6 +152,124 @@ class GradePuller:
         draw = lambda: [f"Section {section}: {time.strftime('%m.%d.%Y:%H.%M.%S')}" for section, time in self.due_times.items()]
         callback = lambda index: self.select_due_times_callback(index)
         self.window.create_list_popup("Set Due Times (use Back to finish)", callback=callback, list_fill=draw)
+        if all(el is now for el in self.due_times.values()):
+            return False
+        return True
+
+    def fetch_completion_reports(self):
+        self.zybooks_students = dict()
+        for class_section in self.selected_class_sections:
+            csv_string = self.zy_api.get_completion_report(self.due_times[class_section], self.selected_zybook_sections)
+            if not csv_string:
+                return False
+
+            csv_rows = csv_string.split("\r\n")
+            
+            csv_reader = csv.DictReader(csv_rows)
+            self.zybooks_header = csv_reader.fieldnames
+
+            total_field_name = ""
+            for field_name in self.zybooks_header:
+                if "Total" in field_name:
+                    total_field_name = field_name
+                    break
+
+            for row in csv_reader:
+                if int(row['Class section']) == class_section:
+                    row['id_number'] = int(''.join([c for c in row['Student ID'] if c.isdigit()]))
+                    row['grade'] = float(row[total_field_name])
+                    self.zybooks_students[row['id_number']] = row
+        return True            
+    
+    def tidy_canvas_students(self):
+        filtered = dict()
+        for student_id, student in self.canvas_students.items():
+            section_str = student['Section']
+            section_num = int(section_str.split('-')[1].split(':')[0])
+            if section_num in self.selected_class_sections and student_id != -1:
+                grade_str = student[self.selected_canvas_assignment]
+                student['grade'] = float(grade_str) if grade_str and grade_str != "N/A" else None
+                filtered[student_id] = student
+        self.canvas_students = filtered
+
+    def create_canvas_to_zybook_mapping(self):
+        """Creates the mapped students dictionary and populates unmatched students lists
+        
+        All zybook students begin unmatched and are removed when paired with a canvas student.
+        The canvas unmatched list populates as canvas students don't find pairs
+        """
+        self.mapped_students = dict()
+        self.unmatched_canvas_students = dict()
+        self.unmatched_zybook_students = self.zybooks_students.copy()
+
+        for student_id, canvas_student in self.canvas_students.items():
+            zystudent = None
+            if student_id in self.zybooks_students:
+                zystudent = self.zybooks_students[student_id]
+            self.mapped_students[student_id] = (canvas_student, zystudent)
+            if zystudent is None:
+                self.unmatched_canvas_students[student_id] = canvas_student
+            else:
+                del self.unmatched_zybook_students[student_id]
+
+    def report_unmatched_canvas_students(self):
+        path = self.window.create_filename_input(purpose="the unmatched Canvas students")
+        if path is None:
+            return False
+        
+        with open(path, 'w', newline='') as out_file:
+            fieldnames = self.canvas_header[:GradePuller.NUM_CANVAS_ID_COLUMNS]
+            writer = csv.DictWriter(out_file, fieldnames=fieldnames, extrasaction='ignore')
+            writer.writeheader()
+            writer.writerows(self.unmatched_canvas_students.values())
+
+    def report_unmatched_zybook_students(self):
+        path = self.window.create_filename_input(purpose="the unmatched zyBook students")
+        if path is None:
+            return False
+        
+        with open(path, 'w', newline='') as out_file:
+            fieldnames = self.zybooks_header[:GradePuller.NUM_ZYBOOKS_ID_COLUMNS]
+            writer = csv.DictWriter(out_file, fieldnames=fieldnames, extrasaction='ignore')
+            writer.writeheader()
+            writer.writerows(self.unmatched_zybook_students.values())
+
+    def report_unmatched_students(self):
+        if self.window.create_bool_popup("Unmatched Reports", ["Write a file of unmatched Canvas students?"]):
+            self.report_unmatched_canvas_students()
+        if self.window.create_bool_popup("Unmatched Reports", ["Write a file of unmatched zyBooks students?"]):
+            self.report_unmatched_zybook_students()
+
+    def calc_grade_for(self, student_id):
+        student_tuple = self.mapped_students[student_id]
+        canvas_student = student_tuple[0]
+        zybook_student = student_tuple[1]
+        if zybook_student is not None and canvas_student['grade'] is not None:
+            return max(canvas_student['grade'], zybook_student['grade'])
+        elif zybook_student is not None and canvas_student['grade'] is None:
+            return zybook_student['grade']
+        elif zybook_student is None and canvas_student['grade'] is not None:
+            return canvas_student['grade']
+        else:
+            return 0.0
+
+
+    def calculate_grades(self):
+        for student_id in self.canvas_students.keys():
+            grade = self.calc_grade_for(student_id)
+            self.canvas_students[student_id][self.selected_canvas_assignment] = str(grade)
+
+    def write_upload_file(self):
+        path = self.window.create_filename_input(purpose="the upload file")
+        if path is None:
+            return False
+        
+        with open(path, 'w', newline='') as out_file:
+            fieldnames = self.canvas_header[:GradePuller.NUM_CANVAS_ID_COLUMNS] + [self.selected_canvas_assignment]
+            writer = csv.DictWriter(out_file, fieldnames=fieldnames, extrasaction='ignore')
+            writer.writeheader()
+            writer.writerow(self.canvas_points_out_of)
+            writer.writerows(self.canvas_students.values())
 
 
 def start():

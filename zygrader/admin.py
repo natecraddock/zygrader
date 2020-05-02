@@ -110,17 +110,9 @@ def submission_search_init(window, labs):
         return
 
     # Get a valid output path
-    while True:
-        output_path = window.create_text_input("Enter the output path including filename [~ is supported]")
-        if output_path == Window.CANCEL:
-            return
-
-        output_path = os.path.expanduser(output_path)
-        if os.path.exists(os.path.dirname(output_path)):
-            break
-
-        msg = [f"Path {os.path.dirname(output_path)} does not exist!"]
-        window.create_popup("Invalid Path", msg)
+    output_path = window.create_filename_input(purpose="the output")
+    if output_path is None:
+        return
 
     # Run the submission search
     submission_search(part, search_string, output_path)
