@@ -87,7 +87,7 @@ def pair_programming_submission_callback(submission):
 
     options = ["Open Folder", "Run", "View", "Done"]
     while True:
-        option = window.create_options_popup("Downloaded", submission.msg, options, components.Popup.ALIGN_LEFT)
+        option = window.create_options_popup("Pair Programming Submission", submission.msg, options, components.Popup.ALIGN_LEFT)
 
         if option == "View":
             submission.show_files()
@@ -199,7 +199,7 @@ def student_callback(lab, student_index, use_locks=True):
             options.insert(1, "Diff Parts")
 
         while True:
-            option = window.create_options_popup("Downloaded", submission.msg, options, components.Popup.ALIGN_LEFT)
+            option = window.create_options_popup("Submission", submission.msg, options, components.Popup.ALIGN_LEFT)
 
             if option == "Pair Programming":
                 grade_pair_programming(submission)
