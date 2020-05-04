@@ -19,11 +19,14 @@ def prep_lab_score_calc():
     window.set_header("Prep Lab Calculator")
 
     try:
-        score = float(window.create_text_input("What was the student's original score"))
-        if score == Window.CANCEL:
+        old_score = float(window.create_text_input("What was the student's original score"))
+        if old_score == Window.CANCEL:
+            return
+        current_completion = float(window.create_text_input("What is the student's current completion % in zyBooks"))
+        if current_completion == Window.CANCEL:
             return
 
-        new_score = score + ((100 - score) * 0.6)
+        new_score = old_score + ((current_completion - old_score) * 0.6)
         window.create_popup("New Score", [f"The student's new score is: {new_score}"])
     except ValueError:
         window.create_popup("Error", ["Invalid input"])

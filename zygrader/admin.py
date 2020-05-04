@@ -11,6 +11,7 @@ from .zybooks import Zybooks
 from . import data
 from . import config
 from . import class_manager
+from . import grade_puller
 from . import utils
 
 def check_student_submissions(zy_api, student_id, lab, search_string):
@@ -111,22 +112,14 @@ def submission_search_init(window, labs):
         return
 
     # Get a valid output path
-    while True:
-        output_path = window.create_text_input("Enter the output path including filename [~ is supported]")
-        if output_path == Window.CANCEL:
-            return
-
-        output_path = os.path.expanduser(output_path)
-        if os.path.exists(os.path.dirname(output_path)):
-            break
-
-        msg = [f"Path {os.path.dirname(output_path)} does not exist!"]
-        window.create_popup("Invalid Path", msg)
+    output_path = window.create_filename_input(purpose="the output")
+    if output_path is None:
+        return
 
     # Run the submission search
     submission_search(part, search_string, output_path)
 
-admin_menu_options = ["Submissions Search", "Remove Locks", "Class Management"]
+admin_menu_options = ["Submissions Search", "Grade Puller", "Remove Locks", "Class Management"]
 
 def admin_menu_callback(menu_index):
     window = Window.get_window()
@@ -137,6 +130,8 @@ def admin_menu_callback(menu_index):
         labs = data.get_labs()
 
         submission_search_init(window, labs)
+    elif option == "Grade Puller":
+        grade_puller.start()
     elif option == "Remove Locks":
         while True:
             all_locks = data.lock.get_lock_files()

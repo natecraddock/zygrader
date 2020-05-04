@@ -1,8 +1,9 @@
 """ A wrapper around the zyBooks API """
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 import os
 import requests
 import zipfile
+import json
 
 from . import config
 
@@ -57,6 +58,54 @@ class Zybooks:
             return False
 
         return r.json()
+
+    def get_table_of_contents(self):
+        """Download the table of contents (toc) for the current zybook"""
+        payload = {"auth_token": Zybooks.token}
+        toc_url = f'https://zyserver2.zybooks.com/v1/zybook/{config.g_data.CLASS_CODE}/ordering?include=["content_ordering"]'
+
+        r = Zybooks.session.get(toc_url, json=payload)
+
+        if not r.json()["success"]:
+            return False
+        
+        return r.json()["ordering"]["content_ordering"]["chapters"]
+
+    def get_completion_report(self, due_time, zybook_sections):
+        """Download a completion report for the whole class
+        
+        Previous versions of this software allowed for downloading completion by class section,
+        but the zybooks api does not provide a consistent way to do so for all textbooks,
+        so if a particular class section is desired the filtering must be done after
+
+        This function returns the report as a string to be parsed as needed by the user
+        """
+        section_ids = [section['canonical_section_id'] for section in zybook_sections]
+
+        aware_due_time = due_time.astimezone()
+        offset_minutes = int(-(aware_due_time.tzinfo.utcoffset(None) / timedelta(minutes=1)))
+
+        due_time_for_zybook = aware_due_time.astimezone(tz=timezone(timedelta()))
+        due_time_str = due_time_for_zybook.strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3] + "Z"
+
+        query_string = f"?time_zone_offset={offset_minutes}&end_date={due_time_str}&sections={str(section_ids).replace(' ', '')}"
+
+        report_url = f"https://zyserver.zybooks.com/v1/zybook/{config.g_data.CLASS_CODE}/activities/export{query_string}"
+        payload = {"auth_token": Zybooks.token}
+
+        r1 = Zybooks.session.get(report_url, json=payload)
+        if not r1.json()["success"]:
+            return False
+        
+        csv_url = r1.json()["url"]
+        csv_response = requests.get(csv_url)
+        if not csv_response.ok:
+            return False
+        
+        return csv_response.content.decode("utf-8")
+
+
+
 
     def get_zybook_section(self, chapter, section) -> SectionResponse:
         """Given a chapter and section ID, get section information like the zybooks internal ID

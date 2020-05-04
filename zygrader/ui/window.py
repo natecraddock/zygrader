@@ -1,4 +1,5 @@
 import curses
+import os
 
 from . import components
 from .utils import add_str, resize_window
@@ -385,6 +386,22 @@ class Window:
         self.component_deinit()
 
         return popup.selected()
+
+    def create_filename_input(self, purpose):
+        """Get a valid filename from the user"""
+        full_prompt = f"Enter the path and filename for {purpose} [~ is supported]"
+
+        while True:
+            path = self.create_text_input(full_prompt)
+            if path == Window.CANCEL:
+                return None
+
+            path = os.path.expanduser(path)
+            if os.path.exists(os.path.dirname(path)):
+                return path
+
+            msg = [f"Path {os.path.dirname(path)} does not exist!"]
+            self.create_popup("Invalid Path", msg)
     
     def create_text_input(self, prompt, text="", mask=components.TextInput.TEXT_NORMAL):
         """Get text input from the user"""
