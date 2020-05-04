@@ -408,6 +408,10 @@ class Window:
         text = components.TextInput(1, 0, self.rows, self.cols, prompt, text, mask)
         self.component_init(text)
 
+        if self.vim_mode:
+            self.insert_mode = True
+            self.draw_header()
+
         while True:
             self.get_input()
 

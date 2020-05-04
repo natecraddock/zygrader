@@ -1,5 +1,14 @@
 # Try to keep lines shorter than 70 characters
 
+3.3
+* Fix logging in as a new user.
+* Allow partial zyBooks completion for late prep labs.
+* Replace Config menu with Preferences popup:
+  * Removed Change Credentials option.
+  * Default for new users is to not remember password.
+* Draw more consistent titlebar headers for context.
+* Admin: Add Pull Grades option.
+
 3.2
 * Refactoring of submission storage. Use subfolders for
   each part. This change allows:
