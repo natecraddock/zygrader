@@ -12,7 +12,8 @@ from subprocess import PIPE, STDOUT, DEVNULL
 import tempfile
 
 from .ui.window import Window
-from .ui import UI_GO_BACK
+from .ui import components, UI_GO_BACK
+from . import data
 
 
 def diff_files(first, second, title_a, title_b, use_html):
@@ -89,3 +90,36 @@ def get_source_file_paths(directory):
         for file in files:
             paths.append(os.path.join(root, file))
     return paths
+
+def prep_lab_score_calc():
+    window = Window.get_window()
+    window.set_header("Prep Lab Calculator")
+
+    try:
+        old_score = float(window.create_text_input("What was the student's original score"))
+        if old_score == Window.CANCEL:
+            return
+        current_completion = float(window.create_text_input("What is the student's current completion % in zyBooks", "100"))
+        if current_completion == Window.CANCEL:
+            return
+
+        new_score = old_score + ((current_completion - old_score) * 0.6)
+        window.create_popup("New Score", [f"The student's new score is: {new_score}"])
+    except ValueError:
+        window.create_popup("Error", ["Invalid input"])
+
+def view_students_callback(student_index):
+    window = Window.get_window()
+    students = data.get_students()
+
+    student = students[student_index]
+
+    msg = [f"Name: {student.full_name}", f"Email: {student.email}", f"Section: {student.section}", f"ID: {student.id}"]
+    window.create_popup("Student Info", msg, components.Popup.ALIGN_LEFT)
+
+def view_students():
+    window = Window.get_window()
+    students = data.get_students()
+    window.set_header("View Students")
+
+    window.create_filtered_list(students, "Student Name", callback=view_students_callback)
