@@ -24,10 +24,11 @@ EDITORS = {
 
 DEFAULT_CONFIG = {
     "version": g_data.VERSION,
-    "email": "", "password":"",
-    "clear_filter":"",
+    "email": "",
+    "password": "",
+    "clear_filter": "",
     "left_right_arrow_nav":"left_right_arrow_nav",
-    "editor": "Pluma"
+    "editor": "Pluma",
 }
 
 def install(config_dir):
@@ -60,6 +61,16 @@ def get_config():
 
     with open(config_path, "r") as config_file:
         return json.load(config_file)
+
+def is_preference_set(pref):
+    """Return True if a preference is set, False otherwise"""
+    return pref in get_config()
+
+def get_preference(pref):
+    config = get_config()
+    if pref in config:
+        return config[pref]
+    return ""
 
 def decode_password(config):
     return base64.b64decode(config["password"])
@@ -127,6 +138,7 @@ def login(window: Window):
         config["email"] = email
 
         if save_password:
+            config["save_password"] = ""
             encode_password(config, password)
 
         write_config(config)
@@ -140,17 +152,10 @@ def login(window: Window):
             password = get_password(window)
 
             if authenticate(window, zy_api, email, password):
+                if is_preference_set("save_password"):
+                    encode_password(config, password)
+                    write_config(config)
                 break
-
-def is_preference_set(pref):
-    """Return True if a preference is set, False otherwise"""
-    return pref in get_config()
-
-def get_preference(pref):
-    config = get_config()
-    if pref in config:
-        return config[pref]
-    return ""
 
 def draw_text_editors():
     list = []
@@ -164,14 +169,16 @@ def draw_text_editors():
 
     return list
 
-def editor_callback(editor_index):
+def set_editor(editor_index, pref_name):
     config_file = get_config()
-    config_file["editor"] = list(EDITORS.keys())[editor_index]
+    config_file[pref_name] = list(EDITORS.keys())[editor_index]
+
     write_config(config_file)
 
-def set_editor():
+def set_editor_menu(name):
     window = Window.get_window()
-    window.create_list_popup("Set Editor", callback=editor_callback, list_fill=draw_text_editors)
+    edit_fn = lambda index: set_editor(index, name)
+    window.create_list_popup("Set Editor", callback=edit_fn, list_fill=draw_text_editors)
 
 def toggle_preference(pref):
     config = get_config()
@@ -183,96 +190,59 @@ def toggle_preference(pref):
 
     write_config(config)
 
-preferences = {"left_right_arrow_nav": "Left/Right Arrow Navigation",
-                "clear_filter": "Auto Clear List Filters",
-                "vim_mode": "Vim Mode",
-                "dark_mode": "Dark Mode",
-                "christmas_mode": "Christmas Theme",
-                "browser_diff": "Open Diffs in Browser",
-                "editor": "Set Editor"
-                }
+def password_toggle(name):
+    toggle_preference(name)
+    config = get_config()
+
+    if name not in config:
+        config["password"] = ""
+        write_config(config)
+
+    else:
+        window = Window.get_window()
+        window.create_popup("Remember Password", ["Next time you start zygrader your password will be saved."])
+
+class Preference:
+    """Holds information for a user preference item"""
+    def __init__(self, name, description, select_fn, toggle=True):
+        self.name = name
+        self.description = description
+        self.select_fn = select_fn
+        self.toggle = toggle
+
+preferences = [Preference("left_right_arrow_nav", "Left/Right Arrow Navigation", toggle_preference),
+               Preference("clear_filter", "Auto Clear List Filters", toggle_preference),
+               Preference("vim_mode", "Vim Mode", toggle_preference),
+               Preference("dark_mode", "Dark Mode", toggle_preference),
+               Preference("christmas_mode", "Christmas Theme", toggle_preference),
+               Preference("browser_diff", "Open Diffs in Browser", toggle_preference),
+               Preference("save_password", "Remember Password", password_toggle),
+               Preference("editor", "Set Editor", set_editor_menu, False)
+               ]
 
 def draw_preferences():
     list = []
-    for pref, name in preferences.items():
-        if pref in {"editor"}:
-            list.append(f"    {name}")
+    for pref in preferences:
+        if not pref.toggle:
+            list.append(f"    {pref.description}")
         else:
-            if is_preference_set(pref):
-                list.append(f"[X] {name}")
+            if is_preference_set(pref.name):
+                list.append(f"[X] {pref.description}")
             else:
-                list.append(f"[ ] {name}")
+                list.append(f"[ ] {pref.description}")
 
     return list
 
 def preferences_callback(selected_index):
     window = Window.get_window()
 
-    pref = list(preferences.keys())[selected_index]
-    if pref == "editor":
-        set_editor()
-    else:
-        toggle_preference(pref)
+    pref = preferences[selected_index]
+    pref.select_fn(pref.name)
 
     window.update_preferences()
 
-def change_credentials(window, zy_api, config_file):
-    email, password = create_account(window, zy_api)
-    save_password = window.create_bool_popup("Save Password", ["Would you like to save your password?"])
-
-    config_file["email"] = email
-    window.set_email(email)
-
-    if save_password:
-        encode_password(config_file, password)
-    else:
-        pass
-
-    write_config(config_file)
-    return config_file
-
-def config_menu():
+def preferences_menu():
     window = Window.get_window()
-    zy_api = zybooks.Zybooks()
-    config_file = get_config()
+    window.set_header(f"Preferences")
 
-    window.set_header(f"Config")
-    option = ""
-
-    while True:
-        if "password" in config_file and config_file["password"]:
-            password_option = "Remove Saved Password"
-        else:
-            password_option = "Save Password"
-
-        options = ["Change Credentials", password_option, "Preferences"]
-
-        option_index = window.create_filtered_list(options, "Option")
-        if option_index is UI_GO_BACK:
-            break
-
-        option = options[option_index]
-        if option == "Change Credentials":
-            config_file = change_credentials(window, zy_api, config_file)
-
-        elif option == "Save Password":
-            # First, get password and verify it is correct
-            email = config_file["email"]
-            while True:
-                password = get_password(window)
-
-                if authenticate(window, zy_api, email, password):
-                    encode_password(config_file, password)
-                    write_config(config_file)
-                    break
-
-            window.create_popup("Saved Password", ["Password successfully saved"])
-
-        elif option == "Remove Saved Password":
-            config_file["password"] = ""
-            write_config(config_file)
-
-            window.create_popup("Removed Password", ["Password successfully removed"])
-
-        elif option == "Preferences":
-            window.create_list_popup("User Preferences", callback=preferences_callback, list_fill=draw_preferences)
+    window.create_list_popup("User Preferences", callback=preferences_callback, list_fill=draw_preferences)

@@ -45,7 +45,7 @@ def view_students():
 
     window.create_filtered_list(students, "Student Name", callback=view_students_callback)
 
-main_menu_options = ["Grade", "Prep Lab Score Calculator", "Run For Fun", "View Students", "Config", "Changelog"]
+main_menu_options = ["Grade", "Prep Lab Score Calculator", "Run For Fun", "View Students", "Preferences", "Changelog"]
 
 def mainloop_callback(option_index):
     option = main_menu_options[option_index]
@@ -54,8 +54,8 @@ def mainloop_callback(option_index):
         grader.grade()
     elif option == "Run For Fun":
         grader.grade(use_locks=False)
-    elif option == "Config":
-        config.user.config_menu()
+    elif option == "Preferences":
+        config.user.preferences_menu()
     elif option == "Prep Lab Score Calculator":
         logger.log("prep lab score calculator tool accessed")
         prep_lab_score_calc()
