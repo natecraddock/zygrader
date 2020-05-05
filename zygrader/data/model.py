@@ -29,6 +29,10 @@ class Lab:
     def __str__(self):
         return f"{self.name}"
 
+    def get_unique_name(self):
+        name = "".join(self.name.split())
+        return f"{name}_{self.parts[0]['id']}"
+
     @classmethod
     def find(cls, line, text):
         assignment = line.data
@@ -57,6 +61,10 @@ class Student:
 
     def __str__(self):
         return f"{self.full_name} - {self.email} - Section {self.section}"
+
+    def get_unique_name(self):
+        name = "".join(self.full_name.split())
+        return f"{name}_{self.id}"
 
     @classmethod
     def find(cls, line, text):
