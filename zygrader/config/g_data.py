@@ -20,6 +20,7 @@ LOGS_DIRECTORY = "logs"
 DATA_DIRECTORY = ".data"
 CACHE_DIRECTORY = ".cache"
 LOCKS_DIRECTORY = ".locks"
+FLAGS_DIRECTORY = ".flags"
 
 STUDENTS_FILE = "students.json"
 LABS_FILE = "labs.json"
@@ -60,6 +61,9 @@ def get_cache_directory():
 
 def get_locks_directory():
     return get_config_directory(LOCKS_DIRECTORY)
+
+def get_flags_directory():
+    return get_config_directory(FLAGS_DIRECTORY)
 
 def get_student_data():
     return os.path.join(get_data_directory(), STUDENTS_FILE)

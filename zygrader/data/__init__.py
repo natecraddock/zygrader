@@ -6,6 +6,7 @@ from .model import Lab
 from .model import Submission
 
 from . import lock
+from . import flags
 from .. import config
 
 g_students = []
