@@ -236,6 +236,7 @@ def student_callback(lab, student_index, use_locks=True):
                 pick_submission(lab, student, submission)
             elif option == "Flag":
                 flag_submission(lab, student)
+                break
             else:
                 break
 
