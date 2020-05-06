@@ -226,9 +226,6 @@ class Submission:
             paths = " ".join(files)
             subprocess.Popen(f"{editor_path} {paths}", shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
-    def open_folder(self):
-        subprocess.Popen(f"xdg-open {self.files_directory}", shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-
     def do_resume_code(self, process):
         if process:
             config.g_data.RUNNING_CODE = True
