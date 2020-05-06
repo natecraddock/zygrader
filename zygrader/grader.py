@@ -213,8 +213,8 @@ def student_callback(lab, student_index, use_locks=True):
             options.insert(2, "Pair Programming")
 
         # Add option to diff parts if this lab requires it
-        if submission.flag & data.model.SubmissionFlag.DIFF_PARTS:
-            options.insert(1, "Diff Parts")
+        if use_locks and submission.flag & data.model.SubmissionFlag.DIFF_PARTS:
+            options.insert(options.index("Pair Programming") + 1, "Diff Parts")
 
         while True:
             option = window.create_options_popup("Submission", submission.msg, options, components.Popup.ALIGN_LEFT)
