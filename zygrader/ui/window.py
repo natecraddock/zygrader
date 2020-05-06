@@ -112,6 +112,8 @@ class Window:
         curses.init_pair(5, curses.COLOR_GREEN, curses.COLOR_BLACK)
         curses.init_pair(6, curses.COLOR_RED, curses.COLOR_BLACK)
 
+        curses.init_pair(7, curses.COLOR_CYAN, curses.COLOR_BLACK)
+
     def __resize_terminal(self):
         """Function to run after resize events in the terminal"""
         self.__get_window_dimensions()

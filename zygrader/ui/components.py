@@ -157,7 +157,7 @@ class FilteredList(Component):
             self.index = index
             self.data = data
             self.text = str(data)
-            self.marked = False
+            self.color = curses.color_pair(0)
 
     def filter_string(self, line, filter):
         return line.text.lower().find(filter.lower()) is not -1
@@ -168,10 +168,8 @@ class FilteredList(Component):
 
         for line in input_data[1:]:
             if filter_text == "" or filter_function(line, filter_text):
-                if self.draw_function and self.draw_function(line.data):
-                    line.marked = True
-                else:
-                    line.marked = False
+                if self.draw_function:
+                    line.color = self.draw_function(line.data)
 
                 data.append(line)
 
@@ -184,17 +182,12 @@ class FilteredList(Component):
         draw_lines = lines[self.scroll:self.scroll+self.rows - 1]
 
         for line in draw_lines:
-            if line.marked:
-                color = curses.color_pair(2)
-            else:
-                color = curses.color_pair(0)
-
             if (line_number + self.scroll) == self.selected_index:
                 display_text = f"> {line.text}"
-                add_str(self.window, line_number, 0, display_text, curses.A_BOLD | color)
+                add_str(self.window, line_number, 0, display_text, curses.A_BOLD | line.color)
             else:
                 display_text = f"  {line.text}"
-                add_str(self.window, line_number, 0, display_text, curses.A_DIM | color)
+                add_str(self.window, line_number, 0, display_text, curses.A_DIM | line.color)
 
             line_number += 1
 
