@@ -161,6 +161,15 @@ def grade_pair_programming(first_submission):
     except Exception:
         data.lock.unlock_lab(student, lab)
 
+def flag_submission(lab, student):
+    window = Window.get_window()
+
+    note = window.create_text_input("Flag Note")
+    if note == UI_GO_BACK:
+        return
+
+    data.flags.flag_submission(student, lab, note)
+
 def student_callback(lab, student_index, use_locks=True):
     window = Window.get_window()
     window.set_header("Student Submission")
@@ -177,6 +186,17 @@ def student_callback(lab, student_index, use_locks=True):
             window.create_popup("Student Locked", msg)
             return
 
+    if use_locks and data.flags.is_submission_flagged(student, lab):
+        msg = ["This submission has been flagged", "",
+               f"Note: {data.flags.get_flag_message(student, lab)}", "",
+               "Would you like to unflag it?"]
+        remove = window.create_bool_popup("Submission Flagged", msg)
+
+        if remove:
+            data.flags.unflag_submission(student, lab)
+        else:
+            return
+
     try:
         # Get the student's submission
         submission = get_submission(lab, student, use_locks)
@@ -190,7 +210,7 @@ def student_callback(lab, student_index, use_locks=True):
                 data.lock.unlock_lab(student, lab)
             return
 
-        options = ["Pick Submission", "Open Folder", "Run", "View", "Done"]
+        options = ["Flag", "Pick Submission", "Open Folder", "Run", "View", "Done"]
         if use_locks:
             options.insert(2, "Pair Programming")
 
@@ -214,6 +234,8 @@ def student_callback(lab, student_index, use_locks=True):
                 submission.diff_parts()
             elif option == "Pick Submission":
                 pick_submission(lab, student, submission)
+            elif option == "Flag":
+                flag_submission(lab, student)
             else:
                 break
 

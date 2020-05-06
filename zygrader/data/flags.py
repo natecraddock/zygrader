@@ -25,15 +25,10 @@ def get_flag_file_path(student: Student, lab: Lab):
     flag_path = f"{lab_name}.{student_name}.flag"
     return os.path.join(config.g_data.get_flags_directory(), flag_path)
 
-def is_lab_flagged(student: Student, lab: Lab):
+def is_submission_flagged(student: Student, lab: Lab):
     """Checks if a given submission is flagged"""
     flag_path = get_flag_file_path(student, lab)
-
-    for flag in get_flag_files():
-        if flag_path == flag:
-            return True
-
-    return False
+    return os.path.exists(flag_path)
 
 def get_flag_message(student: Student, lab: Lab):
     """Return the string stored in a flag"""
