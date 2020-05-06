@@ -410,7 +410,7 @@ class Window:
 
         if self.vim_mode:
             self.insert_mode = True
-            self.draw_header()
+            self.draw()
 
         while True:
             self.get_input()
