@@ -68,7 +68,7 @@ def start():
     config.g_data.start()
 
     # Setup user configuration
-    config.user.initial_config(window)
+    config.user.initial_config()
 
     # Create a zygrader window, callback to main function
     Window(main, "zygrader")

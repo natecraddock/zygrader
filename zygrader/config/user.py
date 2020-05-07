@@ -42,7 +42,7 @@ def install(config_dir):
         with open(os.path.join(config_dir, "config"), "w") as config_file:
             json.dump(config, config_file)
 
-def initial_config(window: Window):
+def initial_config():
     config_dir = os.path.join(os.path.expanduser("~"), ".zygrader/")
 
     # Ensure user config exists
