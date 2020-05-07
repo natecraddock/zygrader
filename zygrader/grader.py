@@ -16,6 +16,13 @@ from .ui import components, UI_GO_BACK
 from .ui.window import Window
 from .zybooks import Zybooks
 
+def color_student_lines(lab, student):
+    if data.lock.is_lab_locked(student, lab) and type(student) is not str:
+        return curses.color_pair(2)
+    elif data.flags.is_submission_flagged(student, lab) and type(student) is not str:
+        return curses.color_pair(7)
+    return curses.color_pair(0)
+
 def get_submission(lab, student, use_locks=True):
     window = Window.get_window()
     zy_api = Zybooks()
@@ -108,8 +115,8 @@ def grade_pair_programming(first_submission):
 
     # Get student
     window.set_header("Pair Programming")
-    line_lock = lambda student : data.lock.is_lab_locked(student, lab) if type(student) is not str else False
-    student_index = window.create_filtered_list(students, "Student", filter_function=data.Student.find, draw_function=line_lock)
+    draw = lambda student: color_student_lines(lab, student)
+    student_index = window.create_filtered_list(students, "Student", filter_function=data.Student.find, draw_function=draw)
     if student_index is UI_GO_BACK:
         return
 
@@ -244,13 +251,6 @@ def student_callback(lab, student_index, use_locks=True):
     except (KeyboardInterrupt, curses.error):
         if use_locks:
             data.lock.unlock_lab(student, lab)
-
-def color_student_lines(lab, student):
-    if data.lock.is_lab_locked(student, lab) and type(student) is not str:
-        return curses.color_pair(2)
-    elif data.flags.is_submission_flagged(student, lab) and type(student) is not str:
-        return curses.color_pair(7)
-    return curses.color_pair(0)
 
 def lab_callback(lab_index, use_locks=True):
     window = Window.get_window()
