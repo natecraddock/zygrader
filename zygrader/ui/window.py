@@ -1,5 +1,7 @@
 import curses
 import os
+import threading
+import time
 
 from . import components
 from .utils import add_str, resize_window
@@ -40,19 +42,40 @@ class Window:
         self.left_right_menu_nav = config.user.is_preference_set("left_right_arrow_nav")
         self.clear_filter = config.user.is_preference_set("clear_filter")
 
+    def input_thread_fn(self):
+        while not self.kill_threads:
+            self.get_input()
+            self.dirty.release()
+            logger.log("GOT SOME INPUT", self.event)
+
+        # Cleanup when finished accepting input
+        self.stdscr.clear()
+        self.stdscr.refresh()
+        curses.endwin()
+
     def __init__(self, callback, window_name):
         Window.instance = self
 
         """Initialize screen and run callback function"""
-
         self.name = window_name
         self.insert_mode = False
         self.event = Window.KEY_NONE
+
+        # A semaphore to control the draw thread
+        self.dirty = threading.Semaphore(0)
+
+        # Create a thread to handle input separately
+        # The main thread handles drawing
+        self.kill_threads = False
+        self.input_thread = threading.Thread(target=self.input_thread_fn)
 
         # Set user preference variables
         self.update_preferences()
 
         curses.wrapper(self.__init_curses, callback)
+
+        # Window is closing, join thread
+        self.input_thread.join()
 
     def __init_curses(self, stdscr, callback):
         """Configure basic curses settings"""
@@ -78,7 +101,6 @@ class Window:
         self.__header_title = ""
         self.__header_title_load = ""
         self.__email_text = ""
-        self.draw_header()
 
         # Create window for input
         self.input_win = curses.newwin(0, 0, 1, 1)
@@ -90,12 +112,15 @@ class Window:
         curses.flushinp()
         self.input_win.nodelay(False)
 
+        # Input is now ready to start
+        self.input_thread.start()
+
         # Execute callback with a reference to the window object
         callback(self)
 
-        # Cleanup when finished
-        self.stdscr.clear()
-        self.stdscr.refresh()
+        # Allow the draw thread time to exit
+        self.kill_threads = True
+        self.draw()
     
     def __get_window_dimensions(self):
         self.rows, self.cols = self.stdscr.getmaxyx()
@@ -248,7 +273,7 @@ class Window:
 
         self.header_offset += 1
         # Draw after receiving input
-        self.draw()
+        # self.draw()
 
     def get_input_vim(self, input_code):
         if input_code == "KEY_BACKSPACE" and self.insert_mode:
@@ -306,7 +331,7 @@ class Window:
         self.component_init(pop)
         
         while True:
-            self.get_input()
+            self.dirty.acquire()
 
             if self.event == Window.KEY_ENTER:
                 break
@@ -320,7 +345,7 @@ class Window:
         self.component_init(popup)
         
         while True:
-            self.get_input()
+            self.dirty.acquire()
 
             if self.event in {Window.KEY_LEFT, Window.KEY_UP}:
                 popup.previous()
@@ -341,7 +366,7 @@ class Window:
         self.component_init(popup)
 
         while True:
-            self.get_input()
+            self.dirty.acquire()
 
             if self.event in {Window.KEY_LEFT, Window.KEY_UP}:
                 popup.previous()
@@ -367,7 +392,7 @@ class Window:
         self.component_init(popup)
 
         while True:
-            self.get_input()
+            self.dirty.acquire()
 
             if self.event == Window.KEY_DOWN:
                 popup.down()
@@ -415,7 +440,7 @@ class Window:
             self.draw()
 
         while True:
-            self.get_input()
+            self.dirty.acquire()
 
             if self.event == Window.KEY_ENTER:
                 break
@@ -445,7 +470,7 @@ class Window:
         self.component_init(list_input)
 
         while True:
-            self.get_input()
+            self.dirty.acquire()
 
             if self.event == Window.KEY_DOWN:
                 list_input.down()
