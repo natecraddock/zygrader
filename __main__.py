@@ -25,6 +25,7 @@ def sigint_handler(signum, frame):
             config.g_data.running_process.send_signal(signal.SIGINT)
             config.g_data.running_process = None
     else:
+        # Terminating the program
         lock_cleanup()
         sys.exit(0)
 

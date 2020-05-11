@@ -33,6 +33,7 @@ class Window:
     def get_window() -> "Window":
         if Window.instance:
             return Window.instance
+        return None
 
     def update_preferences(self):
         self.dark_mode = config.user.is_preference_set("dark_mode")
@@ -67,12 +68,16 @@ class Window:
         # Create a thread to handle input separately
         # The main thread handles drawing
         self.kill_threads = False
-        self.input_thread = threading.Thread(target=self.input_thread_fn)
+        self.input_thread = threading.Thread(target=self.input_thread_fn, name="Input", daemon=True)
 
         # Set user preference variables
         self.update_preferences()
 
         curses.wrapper(self.__init_curses, callback)
+
+        # Allow the draw thread time to exit
+        self.kill_threads = True
+        self.draw()
 
         # Window is closing, join thread
         self.input_thread.join()
@@ -117,10 +122,6 @@ class Window:
 
         # Execute callback with a reference to the window object
         callback(self)
-
-        # Allow the draw thread time to exit
-        self.kill_threads = True
-        self.draw()
     
     def __get_window_dimensions(self):
         self.rows, self.cols = self.stdscr.getmaxyx()
