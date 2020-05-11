@@ -122,4 +122,4 @@ def view_students():
     students = data.get_students()
     window.set_header("View Students")
 
-    window.create_filtered_list(students, "Student Name", callback=view_students_callback)
+    window.create_filtered_list("Student Name", input_data=students, callback=view_students_callback)

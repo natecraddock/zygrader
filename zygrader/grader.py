@@ -116,7 +116,7 @@ def grade_pair_programming(first_submission):
     # Get student
     window.set_header("Pair Programming")
     draw = lambda student: color_student_lines(lab, student)
-    student_index = window.create_filtered_list(students, "Student", filter_function=data.Student.find, draw_function=draw)
+    student_index = window.create_filtered_list("Student", input_data=students, filter_function=data.Student.find, draw_function=draw)
     if student_index is UI_GO_BACK:
         return
 
@@ -261,8 +261,9 @@ def lab_callback(lab_index, use_locks=True):
 
     # Get student
     draw = lambda student: color_student_lines(lab, student)
-    window.create_filtered_list(students, "Student", \
-        lambda student_index : student_callback(lab, student_index, use_locks), data.Student.find, draw_function=draw)
+    window.create_filtered_list("Student", input_data=students, \
+        callback=lambda student_index : student_callback(lab, student_index, use_locks), \
+        filter_function=data.Student.find, draw_function=draw)
 
 def grade(use_locks=True):
     window = Window.get_window()
@@ -277,4 +278,4 @@ def grade(use_locks=True):
         return
 
     # Pick a lab
-    window.create_filtered_list(labs, "Assignment", lambda lab_index : lab_callback(lab_index, use_locks), data.Lab.find)
+    window.create_filtered_list("Assignment", input_data=labs, callback=lambda lab_index : lab_callback(lab_index, use_locks), filter_function=data.Lab.find)

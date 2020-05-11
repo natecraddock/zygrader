@@ -63,7 +63,7 @@ class GradePuller:
 
     def select_canvas_assignment(self):
         real_assignments = self.canvas_header[GradePuller.NUM_CANVAS_ID_COLUMNS:]
-        index = self.window.create_filtered_list(real_assignments, "Assignment")
+        index = self.window.create_filtered_list("Assignment", input_data=real_assignments)
         if index is UI_GO_BACK:
             return False
         self.selected_canvas_assignment = real_assignments[index]

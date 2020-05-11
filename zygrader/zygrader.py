@@ -44,7 +44,7 @@ def mainloop(admin_mode):
         main_menu_options.append("Admin")
 
     window.set_header(f"Menu")
-    window.create_filtered_list(main_menu_options, "Option", mainloop_callback)
+    window.create_filtered_list("Option", input_data=main_menu_options, callback=mainloop_callback)
 
 def main(window: Window):
     # Read args to set admin mode

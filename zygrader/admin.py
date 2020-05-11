@@ -92,7 +92,7 @@ def submission_search_init(window, labs):
     window.set_header("Submissions Search")
 
     # Choose lab
-    assignment_index = window.create_filtered_list(labs, "Assignment", filter_function=data.Lab.find)
+    assignment_index = window.create_filtered_list("Assignment", input_data=labs, filter_function=data.Lab.find)
     if assignment_index is UI_GO_BACK:
         return
 
@@ -135,7 +135,7 @@ def admin_menu_callback(menu_index):
     elif option == "Remove Locks":
         while True:
             all_locks = data.lock.get_lock_files()
-            lock_index = window.create_filtered_list(all_locks, "Choose a lock file")
+            lock_index = window.create_filtered_list("Choose a lock file", input_data=all_locks)
             if lock_index != UI_GO_BACK:
                 data.lock.remove_lock_file(all_locks[lock_index])
             else:
@@ -147,4 +147,4 @@ def admin_menu():
     window = Window.get_window()
     window.set_header("Admin")
 
-    window.create_filtered_list(admin_menu_options, "Option", admin_menu_callback)
+    window.create_filtered_list("Option", input_data=admin_menu_options, callback=admin_menu_callback)

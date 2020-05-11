@@ -466,7 +466,12 @@ class Window:
             return Window.CANCEL
         return text.text
 
-    def create_filtered_list(self, input_data, prompt, callback=None, filter_function=None, draw_function=None):
+    def create_filtered_list(self, prompt, input_data=None, callback=None, list_fill=None, filter_function=None, draw_function=None):
+        """
+        If input_data (list) is supplied, the list will be drawn from the string representations
+        of that data. If list_fill (function) is supplied, then list_fill will be called to generate
+        a list to be drawn.
+        """
         list_input = components.FilteredList(1, 0, self.rows - 1, self.cols, input_data, prompt, filter_function, draw_function)
         self.component_init(list_input)
 

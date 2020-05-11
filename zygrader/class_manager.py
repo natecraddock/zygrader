@@ -215,7 +215,7 @@ def edit_labs():
     labs = data.get_labs()
 
     while True:
-        lab_index = window.create_filtered_list(labs, "Lab")
+        lab_index = window.create_filtered_list("Lab", input_data=labs)
         if lab_index is UI_GO_BACK:
             break
 
@@ -237,7 +237,7 @@ def change_class():
     window = Window.get_window()
     class_codes = config.g_data.get_class_codes()
 
-    code_index = window.create_filtered_list(class_codes, "Class")
+    code_index = window.create_filtered_list("Class", input_data=class_codes)
     if code_index != UI_GO_BACK:
         config.g_data.set_current_class_code(class_codes[code_index])
 
@@ -263,4 +263,4 @@ def start():
     window = Window.get_window()
     window.set_header("Class Manager")
 
-    window.create_filtered_list(class_manager_options, "Option", callback=class_manager_callback)
+    window.create_filtered_list("Option", input_data=class_manager_options, callback=class_manager_callback)
