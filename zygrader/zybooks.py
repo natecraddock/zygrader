@@ -197,11 +197,7 @@ class Zybooks:
         if not submissions:
             return []
 
-        submissions_list = []
-        for s in submissions:
-            submissions_list.append(f"{self.get_time_string(s)} {self._get_score(s):3}/{self._get_max_score(s)}")
-
-        return submissions_list
+        return [f"{self.get_time_string(s)}  Score: {self._get_score(s):3}/{self._get_max_score(s)}" for s in submissions]
 
     def __remove_late_submissions(self, submissions, due_time):
         for submission in submissions[:]:
