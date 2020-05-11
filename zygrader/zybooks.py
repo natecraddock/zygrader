@@ -35,13 +35,13 @@ class Zybooks:
         """Authenticate a user to zyBooks"""
         auth_url = "https://zyserver.zybooks.com/v1/signin"
         payload = {"email": username, "password": password}
-        
+
         r = Zybooks.session.post(auth_url, json=payload)
 
         # Authentification failed
         if not r.json()["success"]:
             return False
-        
+
         # Store auth token
         Zybooks.token = r.json()["session"]["auth_token"]
         return True
@@ -68,12 +68,12 @@ class Zybooks:
 
         if not r.json()["success"]:
             return False
-        
+
         return r.json()["ordering"]["content_ordering"]["chapters"]
 
     def get_completion_report(self, due_time, zybook_sections):
         """Download a completion report for the whole class
-        
+
         Previous versions of this software allowed for downloading completion by class section,
         but the zybooks api does not provide a consistent way to do so for all textbooks,
         so if a particular class section is desired the filtering must be done after
@@ -96,12 +96,12 @@ class Zybooks:
         r1 = Zybooks.session.get(report_url, json=payload)
         if not r1.json()["success"]:
             return False
-        
+
         csv_url = r1.json()["url"]
         csv_response = requests.get(csv_url)
         if not csv_response.ok:
             return False
-        
+
         return csv_response.content.decode("utf-8")
 
 
@@ -167,7 +167,7 @@ class Zybooks:
             score += result["score"]
 
         return score
-    
+
     def _get_max_score(self, submission):
         if submission["error"]:
             return 0
@@ -177,7 +177,7 @@ class Zybooks:
         tests = submission["results"]["config"]["test_bench"]
         for test in tests:
             score += test["max_score"]
-        
+
         return score
 
     def get_all_submissions(self, part_id, user_id):
@@ -286,7 +286,7 @@ class Zybooks:
         """
         user_id = str(student.id)
         response = {"code": Zybooks.NO_ERROR, "name": assignment.name, "score": 0, "max_score": 0, "parts": []}
-        
+
         has_submitted = False
         for part in assignment.parts:
             response_part = self.download_assignment_part(assignment, user_id, part)
@@ -294,7 +294,7 @@ class Zybooks:
                 has_submitted = True
 
             response["parts"].append(response_part)
-        
+
         # If student has not submitted, just return a non-success message
         if not has_submitted and not Zybooks.CHECK_LATE_SUBMISSION in assignment.options:
             return {"code": Zybooks.NO_SUBMISSION}
