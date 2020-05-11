@@ -1,7 +1,6 @@
 import curses
 import os
 import threading
-import time
 
 from . import components
 from .utils import add_str, resize_window
@@ -60,6 +59,7 @@ class Window:
         self.name = window_name
         self.insert_mode = False
         self.event = Window.KEY_NONE
+        self.event_value = None
 
         # A semaphore to control the draw thread
         self.dirty = threading.Semaphore(0)
