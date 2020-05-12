@@ -285,27 +285,29 @@ class Window:
             self.input_win.nodelay(True)
             if self.insert_mode:
                 self.insert_mode = False
+                self.draw_header()
+                self.event = Window.KEY_NONE
             else:
                 self.event = Window.KEY_ESC
             self.input_win.nodelay(False)
-        else:
-            if not self.insert_mode and input_code[0] == "i":
-                self.insert_mode = True
+        elif not self.insert_mode and input_code[0] == "i":
+            self.insert_mode = True
+            self.draw_header()
+            self.event = Window.KEY_NONE
+        elif not self.insert_mode:
+            if input_code[0] == "h":
+                self.event = Window.KEY_LEFT
+            elif input_code[0] == "j":
+                self.event = Window.KEY_DOWN
+            elif input_code[0] == "k":
+                self.event = Window.KEY_UP
+            elif input_code[0] == "l":
+                self.event = Window.KEY_RIGHT
+            else:
                 self.event = Window.KEY_NONE
-            elif not self.insert_mode:
-                if input_code[0] == "h":
-                    self.event = Window.KEY_LEFT
-                elif input_code[0] == "j":
-                    self.event = Window.KEY_DOWN
-                elif input_code[0] == "k":
-                    self.event = Window.KEY_UP
-                elif input_code[0] == "l":
-                    self.event = Window.KEY_RIGHT
-                else:
-                    self.event = Window.KEY_NONE
-            elif self.insert_mode:
-                self.event = Window.KEY_INPUT
-                self.event_value = input_code[0]
+        elif self.insert_mode:
+            self.event = Window.KEY_INPUT
+            self.event_value = input_code[0]
 
     def component_init(self, component):
         # Disable insertion mode on component change
