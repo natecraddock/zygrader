@@ -168,9 +168,6 @@ class FilteredList(Component):
 
         for line in input_data[1:]:
             if filter_text == "" or filter_function(line, filter_text):
-                if self.draw_function:
-                    line.color = self.draw_function(line.data)
-
                 data.append(line)
 
         self.dirty = False
@@ -194,11 +191,14 @@ class FilteredList(Component):
     def create_lines(self, options):
         lines = [FilteredList.ListLine(0, "Back")]
 
-        for i, option in enumerate(options):
-            lines.append(FilteredList.ListLine(i + 1, option))
+        if self.list_fill:
+            lines += self.list_fill()
+        else:
+            for i, option in enumerate(options):
+                lines.append(FilteredList.ListLine(i + 1, option))
         return lines
 
-    def __init__(self, y, x, rows, cols, options, prompt, filter_function, draw_function):
+    def __init__(self, y, x, rows, cols, options, list_fill, prompt, filter_function):
         self.blocking = True
 
         # Flag to determine if the list needs to be updated.
@@ -212,14 +212,13 @@ class FilteredList(Component):
         self.rows = rows
         self.cols = cols
 
+        self.list_fill = list_fill
         self.options = self.create_lines(options)
 
         if filter_function:
             self.filter_function = filter_function
         else:
             self.filter_function = self.filter_string
-
-        self.draw_function = draw_function
 
         self.scroll = 0
         self.selected_index = 1

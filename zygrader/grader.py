@@ -23,6 +23,24 @@ def color_student_lines(lab, student):
         return curses.color_pair(7)
     return curses.color_pair(0)
 
+def fill_student_list(lab, students):
+    """Given a list of students, fill the list sorting locked and flagged students to the top; also color the lines"""
+    lines = []
+    num_locked = 0
+    for i, student in enumerate(students):
+        line = components.FilteredList.ListLine(i + 1, student)
+        line.color = color_student_lines(lab, student)
+
+        if line.color == curses.color_pair(2):
+            lines.insert(0, line)
+            num_locked += 1
+        elif line.color == curses.color_pair(7):
+            lines.insert(num_locked, line)
+        else:
+            lines.append(line)
+
+    return lines
+
 def get_submission(lab, student, use_locks=True):
     window = Window.get_window()
     zy_api = Zybooks()
@@ -116,7 +134,7 @@ def grade_pair_programming(first_submission):
     # Get student
     window.set_header("Pair Programming")
     draw = lambda student: color_student_lines(lab, student)
-    student_index = window.create_filtered_list("Student", input_data=students, filter_function=data.Student.find, draw_function=draw)
+    student_index = window.create_filtered_list("Student", list_fill=lambda : fill_student_list(lab, students), filter_function=data.Student.find)
     if student_index is UI_GO_BACK:
         return
 
@@ -261,9 +279,9 @@ def lab_callback(lab_index, use_locks=True):
 
     # Get student
     draw = lambda student: color_student_lines(lab, student)
-    window.create_filtered_list("Student", input_data=students, \
+    window.create_filtered_list("Student", list_fill=lambda : fill_student_list(lab, students), \
         callback=lambda student_index : student_callback(lab, student_index, use_locks), \
-        filter_function=data.Student.find, draw_function=draw)
+        filter_function=data.Student.find)
 
 def grade(use_locks=True):
     window = Window.get_window()
