@@ -6,6 +6,8 @@ from . import components
 from .utils import add_str, resize_window
 from .. import logger
 from .. import config
+from .. import data
+from .. import config
 
 from . import UI_GO_BACK
 
@@ -25,6 +27,8 @@ class Window:
     KEY_ESC = 7
     KEY_NONE = -1
 
+    EVENT_REFRESH_LIST = "flags_and_locks"
+
     CANCEL = -1
 
     instance = None
@@ -43,15 +47,14 @@ class Window:
         self.clear_filter = config.user.is_preference_set("clear_filter")
 
     def input_thread_fn(self):
-        while not self.kill_threads:
+        while True:
             self.get_input()
             self.dirty.release()
-            logger.log("GOT SOME INPUT", self.event)
 
-        # Cleanup when finished accepting input
-        self.stdscr.clear()
-        self.stdscr.refresh()
-        curses.endwin()
+    def file_system_event(self, identifier):
+        if identifier == Window.EVENT_REFRESH_LIST:
+            self.event = Window.EVENT_REFRESH_LIST
+            self.dirty.release()
 
     def __init__(self, callback, window_name):
         Window.instance = self
@@ -67,20 +70,21 @@ class Window:
 
         # Create a thread to handle input separately
         # The main thread handles drawing
-        self.kill_threads = False
         self.input_thread = threading.Thread(target=self.input_thread_fn, name="Input", daemon=True)
+
+        # Register paths to trigger file system events
+        paths = [config.g_data.get_locks_directory(), config.g_data.get_flags_directory()]
+        data.fs_watch.fs_watch_register(paths, Window.EVENT_REFRESH_LIST, self.file_system_event)
 
         # Set user preference variables
         self.update_preferences()
 
         curses.wrapper(self.__init_curses, callback)
 
-        # Allow the draw thread time to exit
-        self.kill_threads = True
-        self.draw()
-
-        # Window is closing, join thread
-        self.input_thread.join()
+        # Cleanup when finished accepting input
+        self.stdscr.clear()
+        self.stdscr.refresh()
+        curses.endwin()
 
     def __init_curses(self, stdscr, callback):
         """Configure basic curses settings"""
@@ -230,7 +234,7 @@ class Window:
         input_code = "KEY_RESIZE"
 
         while input_code == "KEY_RESIZE":
-            self.event = Window.KEY_NONE
+            #self.event = Window.KEY_NONE
 
             # getkey is blocking
             try:
@@ -273,8 +277,6 @@ class Window:
                 break
 
         self.header_offset += 1
-        # Draw after receiving input
-        # self.draw()
 
     def get_input_vim(self, input_code):
         if input_code == "KEY_BACKSPACE" and self.insert_mode:
@@ -488,6 +490,10 @@ class Window:
                 list_input.delchar()
             elif self.event == Window.KEY_INPUT:
                 list_input.addchar(self.event_value)
+            elif self.event == Window.EVENT_REFRESH_LIST:
+                if list_fill:
+                    list_input.create_lines(None)
+                    list_input.dirty = True
             elif (self.event == Window.KEY_ENTER) or (self.event == Window.KEY_RIGHT and self.left_right_menu_nav):
                 if callback and list_input.selected() != UI_GO_BACK:
                     list_input.dirty = True

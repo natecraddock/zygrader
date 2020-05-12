@@ -196,7 +196,7 @@ class FilteredList(Component):
         else:
             for i, option in enumerate(options):
                 lines.append(FilteredList.ListLine(i + 1, option))
-        return lines
+        self.options = lines
 
     def __init__(self, y, x, rows, cols, options, list_fill, prompt, filter_function):
         self.blocking = True
@@ -213,7 +213,7 @@ class FilteredList(Component):
         self.cols = cols
 
         self.list_fill = list_fill
-        self.options = self.create_lines(options)
+        self.create_lines(options)
 
         if filter_function:
             self.filter_function = filter_function
