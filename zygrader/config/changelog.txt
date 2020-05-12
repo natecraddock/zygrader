@@ -1,5 +1,15 @@
 # Try to keep lines shorter than 70 characters
 
+3.4
+* UI: Toggle insert mode on text inputs in vim mode.
+* Utils: Show score in submission picker
+* Flagging: Leave notes on submissions.
+* Multithreading:
+  * User input thread: Makes input smoother. Less flickering!
+  * File watch thread: Notify (internal) when folder contents change.
+* Grader: Refresh student list when locks and flags are created.
+* Grader: Sort locked and flagged students to the top of the list.
+
 3.3
 * Fix logging in as a new user.
 * Allow partial zyBooks completion for late prep labs.
