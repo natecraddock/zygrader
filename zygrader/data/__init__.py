@@ -5,8 +5,9 @@ from .model import Student
 from .model import Lab
 from .model import Submission
 
-from . import lock
 from . import flags
+from . import fs_watch
+from . import lock
 from .. import config
 
 g_students = []

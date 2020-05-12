@@ -54,6 +54,9 @@ def main(window: Window):
     # Log in user
     config.user.login(window)
 
+    # Start file watch thread
+    data.fs_watch.start_fs_watch()
+
     logger.log("zygrader started")
 
     mainloop(admin_mode)
