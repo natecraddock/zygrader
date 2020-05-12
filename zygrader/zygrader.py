@@ -1,4 +1,3 @@
-import os
 import sys
 
 from . import data
@@ -8,11 +7,7 @@ from . import admin
 from . import logger
 from . import utils
 
-from .zybooks import Zybooks
-
-from .ui import window
 from .ui.window import Window
-from .ui import components
 
 main_menu_options = ["Grade", "Prep Lab Score Calculator", "Run For Fun", "View Students", "Preferences", "Changelog"]
 
@@ -49,9 +44,9 @@ def mainloop(admin_mode):
 def main(window: Window):
     # Read args to set admin mode
     if "-a" in sys.argv:
-        admin = True
+        admin_mode = True
     else:
-        admin = False
+        admin_mode = False
 
     # Apply versioning
     config.versioning.do_versioning(window)
@@ -61,7 +56,7 @@ def main(window: Window):
 
     logger.log("zygrader started")
 
-    mainloop(admin)
+    mainloop(admin_mode)
 
 def start():
     # Start application and setup data folders
