@@ -51,10 +51,11 @@ class Window:
             self.get_input()
             self.dirty.release()
 
-    def file_system_event(self, identifier):
+    def file_system_event(self, identifier, component):
         if identifier == Window.EVENT_REFRESH_LIST:
-            self.event = Window.EVENT_REFRESH_LIST
-            self.dirty.release()
+            component.create_lines(None)
+            component.draw()
+            self.draw()
 
     def __init__(self, callback, window_name):
         Window.instance = self
@@ -71,10 +72,6 @@ class Window:
         # Create a thread to handle input separately
         # The main thread handles drawing
         self.input_thread = threading.Thread(target=self.input_thread_fn, name="Input", daemon=True)
-
-        # Register paths to trigger file system events
-        paths = [config.g_data.get_locks_directory(), config.g_data.get_flags_directory()]
-        data.fs_watch.fs_watch_register(paths, Window.EVENT_REFRESH_LIST, self.file_system_event)
 
         # Set user preference variables
         self.update_preferences()
@@ -470,7 +467,7 @@ class Window:
             return Window.CANCEL
         return text.text
 
-    def create_filtered_list(self, prompt, input_data=None, callback=None, list_fill=None, filter_function=None):
+    def create_filtered_list(self, prompt, input_data=None, callback=None, list_fill=None, filter_function=None, watch=None):
         """
         If input_data (list) is supplied, the list will be drawn from the string representations
         of that data. If list_fill (function) is supplied, then list_fill will be called to generate
@@ -478,6 +475,10 @@ class Window:
         """
         list_input = components.FilteredList(1, 0, self.rows - 1, self.cols, input_data, list_fill, prompt, filter_function)
         self.component_init(list_input)
+
+        if watch:
+            # Register paths to trigger file system events
+            data.fs_watch.fs_watch_register(watch, Window.EVENT_REFRESH_LIST, lambda identifier: self.file_system_event(identifier, list_input))
 
         while True:
             self.dirty.acquire()
@@ -492,10 +493,6 @@ class Window:
                 list_input.delchar()
             elif self.event == Window.KEY_INPUT:
                 list_input.addchar(self.event_value)
-            elif self.event == Window.EVENT_REFRESH_LIST:
-                if list_fill:
-                    list_input.create_lines(None)
-                    list_input.dirty = True
             elif (self.event == Window.KEY_ENTER) or (self.event == Window.KEY_RIGHT and self.left_right_menu_nav):
                 if callback and list_input.selected() != UI_GO_BACK:
                     list_input.dirty = True
@@ -509,6 +506,9 @@ class Window:
                     break
             
             list_input.draw()
+
+        if watch:
+            data.fs_watch.fs_watch_unregister(Window.EVENT_REFRESH_LIST)
 
         list_input.clear()
         self.component_deinit()

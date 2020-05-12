@@ -197,6 +197,7 @@ class FilteredList(Component):
             for i, option in enumerate(options):
                 lines.append(FilteredList.ListLine(i + 1, option))
         self.options = lines
+        self.dirty = True
 
     def __init__(self, y, x, rows, cols, options, list_fill, prompt, filter_function):
         self.blocking = True

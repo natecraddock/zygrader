@@ -46,3 +46,10 @@ def start_fs_watch():
 def fs_watch_register(paths: list, identifier: str, callback: callable):
     """Register paths with a callback function"""
     watch_interest.append(WatchData(paths, identifier, callback))
+
+def fs_watch_unregister(identifier: str):
+    """Unregister a path from the file system watch"""
+    for watch in watch_interest:
+        if watch.identifier == identifier:
+            watch_interest.remove(watch)
+            break
