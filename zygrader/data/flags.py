@@ -10,7 +10,6 @@ from .model import Student
 from .model import Lab
 
 from .. import config
-from ..ui.window import Window
 
 def get_flag_files():
     """Return a list of all flag files"""

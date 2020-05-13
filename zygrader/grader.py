@@ -1,15 +1,8 @@
 import curses
-import difflib
 import getpass
-import io
-import os
-import subprocess
-from subprocess import PIPE
-import tempfile
 
 from . import config
 from . import data
-from . import logger
 from . import utils
 
 from .ui import components, UI_GO_BACK

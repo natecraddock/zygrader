@@ -1,13 +1,10 @@
 import os
 import json
-import time
 import base64
-from .. import logger
 
 from .. import zybooks
-from ..ui import UI_GO_BACK
 from ..ui.window import Window
-from ..ui.components import TextInput, FilteredList, Popup
+from ..ui.components import TextInput
 
 from . import g_data
 

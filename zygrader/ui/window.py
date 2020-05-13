@@ -4,10 +4,8 @@ import threading
 
 from . import components
 from .utils import add_str, resize_window
-from .. import logger
 from .. import config
 from .. import data
-from .. import config
 
 from . import UI_GO_BACK
 

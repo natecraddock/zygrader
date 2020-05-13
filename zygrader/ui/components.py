@@ -1,8 +1,6 @@
 import curses
 
 from .utils import add_str, resize_window
-from . import UI_GO_BACK
-from .. import logger
 
 class Component:
     def __init__(self):

@@ -3,7 +3,6 @@ from datetime import datetime, timezone, timedelta
 import os
 import requests
 import zipfile
-import json
 
 from . import config
 

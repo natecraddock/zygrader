@@ -1,15 +1,10 @@
-import os
 import time
-import json
 import requests
-import zipfile
-import io
 
 from .ui.window import Window
 from .ui import UI_GO_BACK
 from .zybooks import Zybooks
 from . import data
-from . import config
 from . import class_manager
 from . import grade_puller
 from . import utils

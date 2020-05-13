@@ -8,11 +8,11 @@ import curses
 import difflib
 import os
 import subprocess
-from subprocess import PIPE, STDOUT, DEVNULL
+from subprocess import PIPE, DEVNULL
 import tempfile
 
 from .ui.window import Window
-from .ui import components, UI_GO_BACK
+from .ui import components
 from . import data
 
 

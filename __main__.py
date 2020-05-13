@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-import curses
 import getpass
 import signal
 import sys
@@ -9,7 +8,6 @@ from zygrader import zygrader
 from zygrader import config
 from zygrader.data import lock
 from zygrader import logger
-from zygrader import ui
 
 def lock_cleanup():
     lock.unlock_all_labs_by_grader(getpass.getuser())

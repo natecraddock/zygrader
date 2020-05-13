@@ -2,7 +2,7 @@ import csv
 import datetime
 
 from .ui.window import Window
-from .ui import components, UI_GO_BACK
+from .ui import UI_GO_BACK
 from .config import g_data
 from .zybooks import Zybooks
 

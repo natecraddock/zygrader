@@ -1,17 +1,13 @@
 import curses
 import datetime
 import enum
-import io
 import os
-import requests
 import signal
 import subprocess
 import tempfile
 import time
-import zipfile
 
 from .. import config
-from .. import logger
 from .. import utils
 from .. import ui
 from ..zybooks import Zybooks

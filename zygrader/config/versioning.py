@@ -1,5 +1,4 @@
 import os
-from shutil import copyfile
 
 from ..ui.window import Window
 from ..ui import components
