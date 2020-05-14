@@ -15,6 +15,19 @@ from .ui.window import Window
 from .ui import components
 from . import data
 
+def suspend_curses(callback_fn):
+    """A decorator for any subprocess that must suspend access to curses (zygrader)"""
+    def wrapper(*args, **kwargs):
+        window = Window.get_window()
+        # Pause user input thread
+        window.take_input.clear()
+        curses.endwin()
+
+        callback_fn(*args, **kwargs)
+
+        curses.initscr()
+        window.take_input.set()
+    return wrapper
 
 def diff_files(first, second, title_a, title_b, use_html):
     """Given two lists of equal length containing file paths, return a diff of each pair of files"""
@@ -59,6 +72,7 @@ def make_diff_string(first, second, title_a, title_b, use_html=False):
 
     return diff_str
 
+@suspend_curses
 def view_string(string, file_name, use_html=False):
     """Given a string, open in `less` or the grader's default browser"""
 
@@ -71,9 +85,7 @@ def view_string(string, file_name, use_html=False):
     if use_html:
         subprocess.Popen(f"xdg-open {file_path}", shell=True, stdout=DEVNULL, stderr=DEVNULL)
     else:
-        curses.endwin()
         subprocess.run(["less", "-r", f"{file_path}"])
-        curses.initscr()
 
 def extract_zip(input_zip, file_prefix=None):
     """Given a ZipFile object, return a dictionary of the files of the form

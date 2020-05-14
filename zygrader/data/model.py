@@ -194,6 +194,7 @@ class Submission:
 
         return tmp_dir
 
+    @utils.suspend_curses
     def show_files(self):
         user_editor = config.user.get_config()["editor"]
         editor_path = config.user.EDITORS[user_editor]
@@ -202,8 +203,6 @@ class Submission:
 
         # Terminal-based editors
         if user_editor in {"Vim", "Emacs", "Nano", "Less"}:
-            curses.endwin()
-
             files.sort()
 
             if user_editor == "Vim":
@@ -216,7 +215,6 @@ class Submission:
             else:
                 subprocess.run([editor_path] + files)
 
-            curses.initscr()
         # Graphical editors
         else:
             paths = " ".join(files)
@@ -225,13 +223,13 @@ class Submission:
     def do_resume_code(self, process):
         if process:
             config.g_data.RUNNING_CODE = True
-            curses.endwin()
             process.send_signal(signal.SIGCONT)
             print("Resumed student code")
             print("#############################################################")
             return True
         return False
 
+    @utils.suspend_curses
     def compile_and_run_code(self):
         if self.do_resume_code(config.g_data.running_process):
             stopped = self.wait_on_child(config.g_data.running_process)
@@ -243,8 +241,6 @@ class Submission:
 
             # Suspend curses
             config.g_data.RUNNING_CODE = True
-            curses.endwin()
-
             stopped = self.run_code(executable)
 
         if not stopped:

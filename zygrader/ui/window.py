@@ -1,5 +1,6 @@
 import curses
 import os
+import queue
 import threading
 
 from . import components
@@ -13,6 +14,10 @@ UI_LEFT = 0
 UI_RIGHT = 1
 UI_CENTERED = 2
 
+class Event:
+    def __init__(self, event_type, value):
+        self.type = event_type
+        self.value = value
 
 class Window:
     KEY_BACKSPACE = 0
@@ -23,8 +28,8 @@ class Window:
     KEY_RIGHT = 5
     KEY_INPUT = 6
     KEY_ESC = 7
-    KEY_NONE = -1
 
+    EVENT_NONE = -1
     EVENT_REFRESH_LIST = "flags_and_locks"
 
     CANCEL = -1
@@ -44,10 +49,100 @@ class Window:
         self.left_right_menu_nav = config.user.is_preference_set("left_right_arrow_nav")
         self.clear_filter = config.user.is_preference_set("clear_filter")
 
+    def get_input(self):
+        """Get input and handle resize events"""
+        event = Window.EVENT_NONE
+        event_value = Window.EVENT_NONE
+
+        # Nodelay causes exception when no input is given
+        input_code = self.input_win.getch()
+        if input_code == -1:
+            event = Window.EVENT_NONE
+            return event, event_value
+
+        # Cases for each type of input
+        if input_code == curses.KEY_RESIZE:
+            self.__resize_terminal()
+        elif input_code in {curses.KEY_ENTER, ord('\n'), ord('\r')}:
+            event = Window.KEY_ENTER
+        elif input_code == curses.KEY_UP:
+            event = Window.KEY_UP
+        elif input_code == curses.KEY_DOWN:
+            event = Window.KEY_DOWN
+        elif input_code == curses.KEY_LEFT:
+            event = Window.KEY_LEFT
+        elif input_code == curses.KEY_RIGHT:
+            event = Window.KEY_RIGHT
+        elif self.vim_mode:
+            event, event_value = self.get_input_vim(input_code)
+        elif input_code == "\x1b":
+            event = Window.KEY_ESC
+        elif input_code == curses.KEY_BACKSPACE:
+            event = Window.KEY_BACKSPACE
+        elif input_code:
+            event = Window.KEY_INPUT
+            event_value = chr(input_code)
+
+        self.header_offset += 1
+        return event, event_value
+
+    def get_input_vim(self, input_code):
+        event = Window.EVENT_NONE
+        event_value = Window.EVENT_NONE
+
+        if input_code == curses.KEY_BACKSPACE and self.insert_mode:
+            event = Window.KEY_BACKSPACE
+        elif input_code == 27:
+            if self.insert_mode:
+                self.insert_mode = False
+                self.draw_header()
+                event = Window.EVENT_NONE
+            else:
+                event = Window.KEY_ESC
+        elif not self.insert_mode and chr(input_code) == "i":
+            self.insert_mode = True
+            self.draw_header()
+            event = Window.EVENT_NONE
+        elif not self.insert_mode:
+            if chr(input_code) == "h":
+                event = Window.KEY_LEFT
+            elif chr(input_code) == "j":
+                event = Window.KEY_DOWN
+            elif chr(input_code) == "k":
+                event = Window.KEY_UP
+            elif chr(input_code) == "l":
+                event = Window.KEY_RIGHT
+            else:
+                event = Window.EVENT_NONE
+        elif self.insert_mode:
+            event = Window.KEY_INPUT
+            event_value = chr(input_code)
+
+        return event, event_value
+
     def input_thread_fn(self):
         while True:
-            self.get_input()
-            self.dirty.release()
+            flush = False
+            if not self.take_input.is_set():
+                flush = True
+            self.take_input.wait()
+            if flush:
+                curses.flushinp()
+            event, event_value = self.get_input()
+            if not self.take_input.is_set():
+                continue
+            if event != Window.EVENT_NONE:
+                self.event_queue.put_nowait(Event(event, event_value))
+                # self.dirty.release()
+
+            # Kill thread at end
+            if self.stop_input:
+                break
+
+    def consume_input(self) -> Event:
+        """Consume one token of input from the user"""
+        # self.dirty.acquire()
+        return self.event_queue.get()
 
     def file_system_event(self, identifier, component):
         if identifier == Window.EVENT_REFRESH_LIST:
@@ -61,8 +156,10 @@ class Window:
         """Initialize screen and run callback function"""
         self.name = window_name
         self.insert_mode = False
-        self.event = Window.KEY_NONE
-        self.event_value = None
+        self.event = Window.EVENT_NONE
+        self.event_value = Window.EVENT_NONE
+
+        self.event_queue = queue.Queue()
 
         # A semaphore to control the draw thread
         self.dirty = threading.Semaphore(0)
@@ -70,6 +167,11 @@ class Window:
         # Create a thread to handle input separately
         # The main thread handles drawing
         self.input_thread = threading.Thread(target=self.input_thread_fn, name="Input", daemon=True)
+        self.stop_input = False
+
+        # Add an event to toggle input thread
+        self.take_input = threading.Event()
+        self.take_input.set()
 
         # Set user preference variables
         self.update_preferences()
@@ -77,6 +179,7 @@ class Window:
         curses.wrapper(self.__init_curses, callback)
 
         # Cleanup when finished accepting input
+        self.stop_input = True
         self.stdscr.clear()
         self.stdscr.refresh()
         curses.endwin()
@@ -114,7 +217,6 @@ class Window:
         self.input_win.nodelay(True)
         self.input_win.getch()
         curses.flushinp()
-        self.input_win.nodelay(False)
 
         # Input is now ready to start
         self.input_thread.start()
@@ -215,7 +317,8 @@ class Window:
             component.draw()
         
         if flush:
-            curses.flushinp()
+            pass
+            # curses.flushinp()
 
     def update_window(self):
         if self.dark_mode:
@@ -223,86 +326,6 @@ class Window:
         else:
             curses.init_pair(1, curses.COLOR_BLACK, curses.COLOR_WHITE)
         self.draw_header()
-
-    def get_input(self):
-        """Get input and handle resize events"""
-        input_code = "KEY_RESIZE"
-
-        while input_code == "KEY_RESIZE":
-            #self.event = Window.KEY_NONE
-
-            # getkey is blocking
-            try:
-                input_code = self.input_win.getkey()
-            except curses.error:
-                pass
-
-            # Cases for each type of input
-            if input_code == "KEY_RESIZE":
-                self.__resize_terminal()
-            elif input_code in {"KEY_ENTER", "\n", "\r"}:
-                self.event = Window.KEY_ENTER
-                break
-            elif input_code == "KEY_UP":
-                self.event = Window.KEY_UP
-                break
-            elif input_code == "KEY_DOWN":
-                self.event = Window.KEY_DOWN
-                break
-            elif input_code == "KEY_LEFT":
-                self.event = Window.KEY_LEFT
-                break
-            elif input_code == "KEY_RIGHT":
-                self.event = Window.KEY_RIGHT
-                break
-            elif self.vim_mode:
-                self.get_input_vim(input_code)
-                break
-            elif input_code == "\x1b":
-                self.input_win.nodelay(True)
-                self.event = Window.KEY_ESC
-                self.input_win.nodelay(False)
-                break
-            elif input_code == "KEY_BACKSPACE":
-                self.event = Window.KEY_BACKSPACE
-                break
-            else:
-                self.event = Window.KEY_INPUT
-                self.event_value = input_code[0]
-                break
-
-        self.header_offset += 1
-
-    def get_input_vim(self, input_code):
-        if input_code == "KEY_BACKSPACE" and self.insert_mode:
-            self.event = Window.KEY_BACKSPACE
-        elif input_code == "\x1b":
-            self.input_win.nodelay(True)
-            if self.insert_mode:
-                self.insert_mode = False
-                self.draw_header()
-                self.event = Window.KEY_NONE
-            else:
-                self.event = Window.KEY_ESC
-            self.input_win.nodelay(False)
-        elif not self.insert_mode and input_code[0] == "i":
-            self.insert_mode = True
-            self.draw_header()
-            self.event = Window.KEY_NONE
-        elif not self.insert_mode:
-            if input_code[0] == "h":
-                self.event = Window.KEY_LEFT
-            elif input_code[0] == "j":
-                self.event = Window.KEY_DOWN
-            elif input_code[0] == "k":
-                self.event = Window.KEY_UP
-            elif input_code[0] == "l":
-                self.event = Window.KEY_RIGHT
-            else:
-                self.event = Window.KEY_NONE
-        elif self.insert_mode:
-            self.event = Window.KEY_INPUT
-            self.event_value = input_code[0]
 
     def component_init(self, component):
         # Disable insertion mode on component change
@@ -331,9 +354,9 @@ class Window:
         self.component_init(pop)
         
         while True:
-            self.dirty.acquire()
+            event = self.consume_input()
 
-            if self.event == Window.KEY_ENTER:
+            if event.type == Window.KEY_ENTER:
                 break
 
         self.component_deinit()
@@ -345,13 +368,13 @@ class Window:
         self.component_init(popup)
         
         while True:
-            self.dirty.acquire()
+            event = self.consume_input()
 
-            if self.event in {Window.KEY_LEFT, Window.KEY_UP}:
+            if event.type in {Window.KEY_LEFT, Window.KEY_UP}:
                 popup.previous()
-            elif self.event in {Window.KEY_RIGHT, Window.KEY_DOWN}:
+            elif event.type in {Window.KEY_RIGHT, Window.KEY_DOWN}:
                 popup.next()
-            elif self.event == Window.KEY_ENTER:
+            elif event.type == Window.KEY_ENTER:
                 break
 
             self.draw()
@@ -366,13 +389,13 @@ class Window:
         self.component_init(popup)
 
         while True:
-            self.dirty.acquire()
+            event = self.consume_input()
 
-            if self.event in {Window.KEY_LEFT, Window.KEY_UP}:
+            if event.type in {Window.KEY_LEFT, Window.KEY_UP}:
                 popup.previous()
-            elif self.event in {Window.KEY_RIGHT, Window.KEY_DOWN}:
+            elif event.type in {Window.KEY_RIGHT, Window.KEY_DOWN}:
                 popup.next()
-            elif self.event == Window.KEY_ENTER:
+            elif event.type == Window.KEY_ENTER:
                 break
 
             self.draw()
@@ -392,15 +415,15 @@ class Window:
         self.component_init(popup)
 
         while True:
-            self.dirty.acquire()
+            event = self.consume_input()
 
-            if self.event == Window.KEY_DOWN:
+            if event.type == Window.KEY_DOWN:
                 popup.down()
-            elif self.event == Window.KEY_UP:
+            elif event.type == Window.KEY_UP:
                 popup.up()
-            elif self.event == Window.KEY_LEFT and self.left_right_menu_nav:
+            elif event.type == Window.KEY_LEFT and self.left_right_menu_nav:
                 break
-            elif (self.event == Window.KEY_ENTER) or (self.event == Window.KEY_RIGHT and self.left_right_menu_nav):
+            elif (event.type == Window.KEY_ENTER) or (event.type == Window.KEY_RIGHT and self.left_right_menu_nav):
                 if popup.selected() is UI_GO_BACK:
                     break
                 elif callback:
@@ -440,25 +463,24 @@ class Window:
             self.draw()
 
         while True:
-            self.dirty.acquire()
+            event = self.consume_input()
 
-            if self.event == Window.KEY_ENTER:
+            if event.type == Window.KEY_ENTER:
                 break
-            elif self.event == Window.KEY_BACKSPACE:
+            elif event.type == Window.KEY_BACKSPACE:
                 text.delchar()
-            elif self.event == Window.KEY_INPUT:
-                text.addchar(self.event_value)
-            elif self.event == Window.KEY_LEFT:
+            elif event.type == Window.KEY_INPUT:
+                text.addchar(event.value)
+            elif event.type == Window.KEY_LEFT:
                 text.left()
-            elif self.event == Window.KEY_RIGHT:
+            elif event.type == Window.KEY_RIGHT:
                 text.right()
-            elif self.event == Window.KEY_ESC:
+            elif event.type == Window.KEY_ESC:
                 break
 
             self.draw()
 
         self.component_deinit()
-
         text.close()
         
         if self.event == Window.KEY_ESC:
@@ -479,19 +501,19 @@ class Window:
             data.fs_watch.fs_watch_register(watch, Window.EVENT_REFRESH_LIST, lambda identifier: self.file_system_event(identifier, list_input))
 
         while True:
-            self.dirty.acquire()
+            event = self.consume_input()
 
-            if self.event == Window.KEY_DOWN:
+            if event.type == Window.KEY_DOWN:
                 list_input.down()
-            elif self.event == Window.KEY_UP:
+            elif event.type == Window.KEY_UP:
                 list_input.up()
-            elif self.event == Window.KEY_LEFT and self.left_right_menu_nav:
+            elif event.type == Window.KEY_LEFT and self.left_right_menu_nav:
                 break
-            elif self.event == Window.KEY_BACKSPACE:
+            elif event.type == Window.KEY_BACKSPACE:
                 list_input.delchar()
-            elif self.event == Window.KEY_INPUT:
-                list_input.addchar(self.event_value)
-            elif (self.event == Window.KEY_ENTER) or (self.event == Window.KEY_RIGHT and self.left_right_menu_nav):
+            elif event.type == Window.KEY_INPUT:
+                list_input.addchar(event.value)
+            elif (event.type == Window.KEY_ENTER) or (event.type == Window.KEY_RIGHT and self.left_right_menu_nav):
                 if callback and list_input.selected() != UI_GO_BACK:
                     list_input.dirty = True
                     callback(list_input.selected())
