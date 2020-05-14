@@ -49,13 +49,13 @@ class Window:
         self.left_right_menu_nav = config.user.is_preference_set("left_right_arrow_nav")
         self.clear_filter = config.user.is_preference_set("clear_filter")
 
-    def get_input(self):
+    def get_input(self, input_win):
         """Get input and handle resize events"""
         event = Window.EVENT_NONE
         event_value = Window.EVENT_NONE
 
         # Nodelay causes exception when no input is given
-        input_code = self.input_win.getch()
+        input_code = input_win.getch()
         if input_code == -1:
             event = Window.EVENT_NONE
             return event, event_value
@@ -63,6 +63,7 @@ class Window:
         # Cases for each type of input
         if input_code == curses.KEY_RESIZE:
             self.__resize_terminal()
+            curses.flushinp()
         elif input_code in {curses.KEY_ENTER, ord('\n'), ord('\r')}:
             event = Window.KEY_ENTER
         elif input_code == curses.KEY_UP:
@@ -121,6 +122,11 @@ class Window:
         return event, event_value
 
     def input_thread_fn(self):
+        # Create window for input
+        input_win = curses.newwin(0, 0, 1, 1)
+        input_win.keypad(True)
+        input_win.nodelay(True)
+
         while True:
             flush = False
             if not self.take_input.is_set():
@@ -128,12 +134,11 @@ class Window:
             self.take_input.wait()
             if flush:
                 curses.flushinp()
-            event, event_value = self.get_input()
+            event, event_value = self.get_input(input_win)
             if not self.take_input.is_set():
                 continue
             if event != Window.EVENT_NONE:
                 self.event_queue.put_nowait(Event(event, event_value))
-                # self.dirty.release()
 
             # Kill thread at end
             if self.stop_input:
@@ -141,7 +146,6 @@ class Window:
 
     def consume_input(self) -> Event:
         """Consume one token of input from the user"""
-        # self.dirty.acquire()
         return self.event_queue.get()
 
     def file_system_event(self, identifier, component):
@@ -160,9 +164,6 @@ class Window:
         self.event_value = Window.EVENT_NONE
 
         self.event_queue = queue.Queue()
-
-        # A semaphore to control the draw thread
-        self.dirty = threading.Semaphore(0)
 
         # Create a thread to handle input separately
         # The main thread handles drawing
@@ -209,15 +210,6 @@ class Window:
         self.__header_title_load = ""
         self.__email_text = ""
 
-        # Create window for input
-        self.input_win = curses.newwin(0, 0, 1, 1)
-        self.input_win.keypad(True)
-
-        # Hack to fix getkey
-        self.input_win.nodelay(True)
-        self.input_win.getch()
-        curses.flushinp()
-
         # Input is now ready to start
         self.input_thread.start()
 
@@ -244,7 +236,7 @@ class Window:
     def __resize_terminal(self):
         """Function to run after resize events in the terminal"""
         self.__get_window_dimensions()
-        curses.resizeterm(self.rows, self.cols)
+        curses.resize_term(self.rows, self.cols)
 
         for component in self.components:
             component.resize(self.rows, self.cols)
