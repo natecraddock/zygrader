@@ -22,7 +22,7 @@ class Event:
     DOWN = 3
     LEFT = 4
     RIGHT = 5
-    INPUT = 6
+    CHAR_INPUT = 6
     ESC = 7
 
     def __init__(self, event_type, value):
@@ -80,7 +80,7 @@ class Window:
         elif input_code == curses.KEY_BACKSPACE:
             event = Event.BACKSPACE
         elif input_code:
-            event = Event.INPUT
+            event = Event.CHAR_INPUT
             event_value = chr(input_code)
 
         self.header_offset += 1
@@ -115,7 +115,7 @@ class Window:
             else:
                 event = Event.NONE
         elif self.insert_mode:
-            event = Event.INPUT
+            event = Event.CHAR_INPUT
             event_value = chr(input_code)
 
         return event, event_value
@@ -138,8 +138,8 @@ class Window:
             if self.stop_input:
                 break
 
-    def consume_input(self) -> Event:
-        """Consume one token of input from the user"""
+    def consume_event(self) -> Event:
+        """Consume one event from the event queue. Blocks when no events are found"""
         return self.event_queue.get()
 
     def file_system_event(self, identifier, component):
@@ -336,7 +336,7 @@ class Window:
         self.component_init(pop)
         
         while True:
-            event = self.consume_input()
+            event = self.consume_event()
 
             if event.type == Event.ENTER:
                 break
@@ -350,7 +350,7 @@ class Window:
         self.component_init(popup)
         
         while True:
-            event = self.consume_input()
+            event = self.consume_event()
 
             if event.type in {Event.LEFT, Event.UP}:
                 popup.previous()
@@ -371,7 +371,7 @@ class Window:
         self.component_init(popup)
 
         while True:
-            event = self.consume_input()
+            event = self.consume_event()
 
             if event.type in {Event.LEFT, Event.UP}:
                 popup.previous()
@@ -397,7 +397,7 @@ class Window:
         self.component_init(popup)
 
         while True:
-            event = self.consume_input()
+            event = self.consume_event()
 
             if event.type == Event.DOWN:
                 popup.down()
@@ -445,13 +445,13 @@ class Window:
             self.draw()
 
         while True:
-            event = self.consume_input()
+            event = self.consume_event()
 
             if event.type == Event.ENTER:
                 break
             elif event.type == Event.BACKSPACE:
                 text.delchar()
-            elif event.type == Event.INPUT:
+            elif event.type == Event.CHAR_INPUT:
                 text.addchar(event.value)
             elif event.type == Event.LEFT:
                 text.left()
@@ -483,7 +483,7 @@ class Window:
             data.fs_watch.fs_watch_register(watch, Window.EVENT_REFRESH_LIST, lambda identifier: self.file_system_event(identifier, list_input))
 
         while True:
-            event = self.consume_input()
+            event = self.consume_event()
 
             if event.type == Event.DOWN:
                 list_input.down()
@@ -493,7 +493,7 @@ class Window:
                 break
             elif event.type == Event.BACKSPACE:
                 list_input.delchar()
-            elif event.type == Event.INPUT:
+            elif event.type == Event.CHAR_INPUT:
                 list_input.addchar(event.value)
             elif (event.type == Event.ENTER) or (event.type == Event.RIGHT and self.left_right_menu_nav):
                 if callback and list_input.selected() != UI_GO_BACK:
