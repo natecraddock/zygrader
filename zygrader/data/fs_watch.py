@@ -30,11 +30,12 @@ class WatchData:
             self.callback(self.identifier)
 
 watch_interest = []
+WATCH_DELAY = 1
 
 def fs_watch():
     """Watch loop"""
     while True:
-        time.sleep(5)
+        time.sleep(WATCH_DELAY)
         for watch in watch_interest:
             watch.check_paths()
 
