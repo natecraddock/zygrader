@@ -127,12 +127,7 @@ class Window:
         input_win.nodelay(True)
 
         while True:
-            flush = False
-            if not self.take_input.is_set():
-                flush = True
             self.take_input.wait()
-            if flush:
-                curses.flushinp()
             event, event_value = self.get_input(input_win)
             if not self.take_input.is_set():
                 continue

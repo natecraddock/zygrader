@@ -26,6 +26,7 @@ def suspend_curses(callback_fn):
         callback_fn(*args, **kwargs)
 
         curses.initscr()
+        curses.flushinp()
         window.take_input.set()
     return wrapper
 

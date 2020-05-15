@@ -222,6 +222,9 @@ class Submission:
 
     def do_resume_code(self, process):
         if process:
+            window = ui.window.Window.get_window()
+            window.take_input.clear()
+            curses.endwin()
             config.g_data.RUNNING_CODE = True
             process.send_signal(signal.SIGCONT)
             print("Resumed student code")
@@ -229,8 +232,8 @@ class Submission:
             return True
         return False
 
-    @utils.suspend_curses
     def compile_and_run_code(self):
+        window = ui.window.Window.get_window()
         if self.do_resume_code(config.g_data.running_process):
             stopped = self.wait_on_child(config.g_data.running_process)
         else:
@@ -239,7 +242,6 @@ class Submission:
             if not executable:
                 return False # Could not compile code
 
-            # Suspend curses
             config.g_data.RUNNING_CODE = True
             stopped = self.run_code(executable)
 
@@ -250,10 +252,14 @@ class Submission:
             print("\n#############################################################")
             print("Press ENTER to continue")
             input()
+
         else:
             print("\n#############################################################")
             print("Paused student code\n")
 
+        curses.initscr()
+        curses.flushinp()
+        window.take_input.set()
         return True
 
     def pick_part(self, title="Choose a part"):
@@ -301,6 +307,10 @@ class Submission:
         return False
 
     def run_code(self, executable):
+        window = ui.window.Window.get_window()
+        window.take_input.clear()
+        curses.endwin()
+
         print(chr(27) + "[2J", end='') # Clear the terminal
         print("#############################################################")
         print(f"Running {self.student.full_name}'s code")
