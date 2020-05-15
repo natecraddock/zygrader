@@ -240,7 +240,7 @@ class Window:
         for component in self.components:
             component.resize(self.rows, self.cols)
 
-        self.draw(True)
+        self.draw()
 
     def get_header_colors(self):
         if self.dark_mode:
@@ -289,7 +289,7 @@ class Window:
 
         self.header.refresh()
 
-    def draw(self, flush=False):
+    def draw(self):
         """Draw each component in the stack"""
         self.update_window()
         self.stdscr.erase()
@@ -306,10 +306,6 @@ class Window:
 
         for component in self.components[block_index:]:
             component.draw()
-        
-        if flush:
-            pass
-            # curses.flushinp()
 
     def update_window(self):
         if self.dark_mode:
