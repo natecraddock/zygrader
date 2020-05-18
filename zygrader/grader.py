@@ -245,7 +245,9 @@ def student_callback(lab, student_index, use_locks=True):
             elif option == "View":
                 submission.show_files()
             elif option == "Diff Parts":
-                submission.diff_parts()
+                error = submission.diff_parts()
+                if error:
+                    window.create_popup("Error", [error])
             elif option == "Pick Submission":
                 pick_submission(lab, student, submission)
             elif option == "Flag":

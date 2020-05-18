@@ -328,7 +328,7 @@ class Submission:
         use_browser = config.user.is_preference_set("browser_diff")
 
         if len(self.lab.parts) < 2:
-            return
+            return "Not enough parts to diff"
         elif len(self.lab.parts) > 2:
             index = self.pick_part("Pick the first part")
             if index is ui.UI_GO_BACK:
@@ -346,6 +346,11 @@ class Submission:
 
         path_a = os.path.join(self.files_directory, self.get_part_identifier(part_a))
         path_b = os.path.join(self.files_directory, self.get_part_identifier(part_b))
+
+        # Only diff if both have submissions
+        if not (os.path.exists(path_a) and os.path.exists(path_b)):
+            return "No submission for at least one part"
+
         part_a_paths = [os.path.join(path_a, f) for f in os.listdir(path_a)]
         part_b_paths = [os.path.join(path_b, f) for f in os.listdir(path_b)]
 
