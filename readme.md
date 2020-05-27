@@ -47,7 +47,12 @@ Run `python3 zygrader -a` to enable admin mode, which gives access to the admin 
 
 
 # User Manual
+As zygrader is a terminal application, all controls are entered with the keyboard.
 
+The arrow keys can be used to navigate through lists of options, with enter to select.
+Some parts of the interface also accept text input.
+
+There is a vim mode which lets the hjkl keys map to the arrow keys, with i and escape to toggle between insert and normal mode.
 
 # Code Documentation
 This is an overview of the files in the `zygrader` directory.
