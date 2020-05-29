@@ -75,7 +75,7 @@ class Window:
             event = Event.RIGHT
         elif self.vim_mode:
             event, event_value = self.get_input_vim(input_code)
-        elif input_code == "\x1b":
+        elif input_code == 27: #curses does not have a pre-defined constant for ESC
             event = Event.ESC
         elif input_code == curses.KEY_BACKSPACE:
             event = Event.BACKSPACE
