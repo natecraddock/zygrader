@@ -154,8 +154,6 @@ class Window:
         """Initialize screen and run callback function"""
         self.name = window_name
         self.insert_mode = False
-        self.event = Event.NONE
-        self.event_value = Event.NONE
 
         self.event_queue = queue.Queue()
 
@@ -465,7 +463,7 @@ class Window:
         self.component_deinit()
         text.close()
         
-        if self.event == Event.ESC:
+        if event.type == Event.ESC:
             return Window.CANCEL
         return text.text
 
@@ -515,7 +513,7 @@ class Window:
         list_input.clear()
         self.component_deinit()
 
-        if self.event == Event.LEFT and self.left_right_menu_nav:
+        if event.type == Event.LEFT and self.left_right_menu_nav:
             return UI_GO_BACK
 
         return list_input.selected()
