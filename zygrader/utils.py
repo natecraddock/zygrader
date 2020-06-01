@@ -19,15 +19,20 @@ def suspend_curses(callback_fn):
     """A decorator for any subprocess that must suspend access to curses (zygrader)"""
     def wrapper(*args, **kwargs):
         window = Window.get_window()
+        # Clear remaining events in event queue
+        window.clear_event_queue()
+
         # Pause user input thread
         window.take_input.clear()
         curses.endwin()
 
         callback_fn(*args, **kwargs)
 
-        curses.initscr()
         curses.flushinp()
+        curses.initscr()
         window.take_input.set()
+        window.clear_event_queue()
+        curses.doupdate()
     return wrapper
 
 def diff_files(first, second, title_a, title_b, use_html):
@@ -86,7 +91,7 @@ def view_string(string, file_name, use_html=False):
     if use_html:
         subprocess.Popen(f"xdg-open {file_path}", shell=True, stdout=DEVNULL, stderr=DEVNULL)
     else:
-        subprocess.run(["less", "-r", f"{file_path}"])
+        subprocess.run(["less", "-r", f"{file_path}"], stderr=DEVNULL)
 
 def extract_zip(input_zip, file_prefix=None):
     """Given a ZipFile object, return a dictionary of the files of the form

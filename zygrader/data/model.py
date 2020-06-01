@@ -208,12 +208,12 @@ class Submission:
             if user_editor == "Vim":
                 # Use "-p" to open in tabs
                 cmds = ["--cmd", "set tabpagemax=100", "--cmd", "set laststatus=2", "--cmd", "set number"]
-                subprocess.run([editor_path, "-p"] + files + cmds)
+                subprocess.run([editor_path, "-p"] + files + cmds, stderr=subprocess.DEVNULL)
             elif user_editor == "Emacs":
                 # Force terminal with "-nw"
-                subprocess.run([editor_path, "-nw"] + files)
+                subprocess.run([editor_path, "-nw"] + files, stderr=subprocess.DEVNULL)
             else:
-                subprocess.run([editor_path] + files)
+                subprocess.run([editor_path] + files, stderr=subprocess.DEVNULL)
 
         # Graphical editors
         else:
@@ -260,6 +260,8 @@ class Submission:
         curses.initscr()
         curses.flushinp()
         window.take_input.set()
+        window.clear_event_queue()
+        curses.doupdate()
         return True
 
     def pick_part(self, title="Choose a part"):
@@ -287,7 +289,7 @@ class Submission:
         source_files = [f for f in files if f.endswith(".cpp")]
         compile_command = ["g++", "-o", executable_name, f"-I{root_dir}"] + source_files
 
-        compile_exit = subprocess.run(compile_command)
+        compile_exit = subprocess.run(compile_command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         if compile_exit.returncode != 0:
             return False
 
@@ -308,6 +310,7 @@ class Submission:
 
     def run_code(self, executable):
         window = ui.window.Window.get_window()
+        window.clear_event_queue()
         window.take_input.clear()
         curses.endwin()
 
@@ -318,7 +321,7 @@ class Submission:
         print("CTRL+Z to stop (pause)")
         print("#############################################################\n")
 
-        process = subprocess.Popen([executable])
+        process = subprocess.Popen([executable], stderr=subprocess.DEVNULL)
         config.g_data.running_process = process
 
         # Return indicator if child terminated or stopped

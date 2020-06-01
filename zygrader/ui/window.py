@@ -138,6 +138,11 @@ class Window:
             if self.stop_input:
                 break
 
+    def clear_event_queue(self):
+        """Clear all events from the queue"""
+        while not self.event_queue.empty():
+            self.event_queue.get_nowait()
+
     def consume_event(self) -> Event:
         """Consume one event from the event queue. Blocks when no events are found"""
         return self.event_queue.get()
@@ -207,7 +212,7 @@ class Window:
 
         # Execute callback with a reference to the window object
         callback(self)
-    
+
     def __get_window_dimensions(self):
         self.rows, self.cols = self.stdscr.getmaxyx()
 
@@ -248,7 +253,7 @@ class Window:
         self.__header_title_load = text
 
     def draw_header(self, text=""):
-        """Set the header text"""        
+        """Set the header text"""
         self.header.erase()
         resize_window(self.header, 1, self.cols)
 
@@ -287,9 +292,9 @@ class Window:
         self.update_window()
         self.stdscr.erase()
         self.stdscr.refresh()
-        
+
         self.draw_header()
-        
+
         # Find last blocking component
         block_index = 0
         for index in reversed(range(len(self.components))):
@@ -332,7 +337,7 @@ class Window:
         """Create a popup with title and message that returns after enter"""
         pop = components.Popup(self.rows, self.cols, title, message, align)
         self.component_init(pop)
-        
+
         while True:
             event = self.consume_event()
 
@@ -340,13 +345,13 @@ class Window:
                 break
 
         self.component_deinit()
-    
+
     def create_bool_popup(self, title, message, align=components.Popup.ALIGN_CENTER):
         """Create a popup with title and message that returns true/false"""
         options = ["YES", "NO"]
         popup = components.OptionsPopup(self.rows, self.cols, title, message, options, align)
         self.component_init(popup)
-        
+
         while True:
             event = self.consume_event()
 
@@ -432,7 +437,7 @@ class Window:
 
             msg = [f"Path {os.path.dirname(path)} does not exist!"]
             self.create_popup("Invalid Path", msg)
-    
+
     def create_text_input(self, prompt, text="", mask=components.TextInput.TEXT_NORMAL):
         """Get text input from the user"""
         text = components.TextInput(1, 0, self.rows, self.cols, prompt, text, mask)
@@ -462,7 +467,7 @@ class Window:
 
         self.component_deinit()
         text.close()
-        
+
         if event.type == Event.ESC:
             return Window.CANCEL
         return text.text
@@ -504,7 +509,7 @@ class Window:
 
                 else:
                     break
-            
+
             list_input.draw()
 
         if watch:
