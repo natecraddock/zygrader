@@ -34,7 +34,7 @@ def save_roster(roster):
 def setup_new_class():
     window = Window.get_window()
     zy_api = Zybooks()
-    
+
     code = window.create_text_input("Enter class code")
     if code == Window.CANCEL:
         return
@@ -185,29 +185,26 @@ def move_lab(lab, step):
 
     data.write_labs(labs)
 
+def remove_fn(window, lab):
+    msg = [f"Are you sure you want to remove {lab.name}?"]
+    remove = window.create_bool_popup("Confirm", msg)
+
+    if remove:
+        labs = data.get_labs()
+        labs.remove(lab)
+        data.write_labs(labs)
+
 def edit_labs_callback(lab):
     window = Window.get_window()
 
-    options = ["Remove", "Move Up", "Move Down", "Edit Options", "Done"]
-    option = window.create_options_popup("Edit Lab", ["Select an option"], options)
+    options = {
+        "Remove": lambda : remove_fn(window, lab),
+        "Move Up": lambda : move_lab(lab, -1),
+        "Move Down": lambda : move_lab(lab, 1),
+        "Edit Options": lambda : edit_lab_options(lab)
+    }
 
-    if option == "Remove":
-        msg = [f"Are you sure you want to remove {lab.name}?"]
-        remove = window.create_bool_popup("Confirm", msg)
-
-        if remove:
-            labs = data.get_labs()
-            labs.remove(lab)
-            data.write_labs(labs)
-
-    elif option == "Move Up":
-        move_lab(lab, -1)
-
-    elif option == "Move Down":
-        move_lab(lab, -1)
-
-    elif option == "Edit Options":
-        edit_lab_options(lab)
+    window.create_options_popup("Edit Lab", ["Select an option"], options)
 
 def edit_labs():
     window = Window.get_window()

@@ -111,9 +111,14 @@ class Popup(Component):
 
 
 class OptionsPopup(Popup):
-    def __init__(self, height, width, title, message, options, align):
+    def __init__(self, height, width, title, message, options, use_dict, align):
         super().__init__(height, width, title, message, align)
         self.options = options
+        self.use_dict = use_dict
+
+        # Always add close as an option to dicts
+        if self.use_dict:
+            self.options["Close"] = None
 
         self.index = len(options) - 1
         self.options_length = sum([len(o) for o in options]) + len(options) + 2
@@ -144,6 +149,9 @@ class OptionsPopup(Popup):
         self.index = (self.index - 1) % len(self.options)
 
     def selected(self):
+        if self.use_dict:
+            key = list(self.options)[self.index]
+            return self.options[key]
         return self.options[self.index]
 
 

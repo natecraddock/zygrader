@@ -353,7 +353,7 @@ class Window:
     def create_bool_popup(self, title, message, align=components.Popup.ALIGN_CENTER):
         """Create a popup with title and message that returns true/false"""
         options = ["YES", "NO"]
-        popup = components.OptionsPopup(self.rows, self.cols, title, message, options, align)
+        popup = components.OptionsPopup(self.rows, self.cols, title, message, options, False, align)
         self.component_init(popup)
 
         while True:
@@ -373,8 +373,12 @@ class Window:
         return popup.selected() == options[0]
 
     def create_options_popup(self, title, message, options, align=components.Popup.ALIGN_CENTER):
-        """Create a popup with multiple options that can be selected with the keyboard"""
-        popup = components.OptionsPopup(self.rows, self.cols, title, message, options, align)
+        """Create a popup with multiple options that can be selected with the keyboard.
+        options is either a dictionary of string to callback function pairs or a list of strings
+        """
+        use_dict = bool(isinstance(options, dict))
+
+        popup = components.OptionsPopup(self.rows, self.cols, title, message, options, use_dict, align)
         self.component_init(popup)
 
         while True:
@@ -385,13 +389,20 @@ class Window:
             elif event.type in {Event.RIGHT, Event.DOWN}:
                 popup.next()
             elif event.type == Event.ENTER:
-                break
+                if use_dict:
+                    callback_fn = popup.selected()
+                    if not callback_fn:
+                        break
+                    callback_fn()
+                else:
+                    break
 
             self.draw()
 
         self.component_deinit()
 
-        return popup.selected()
+        if not use_dict:
+            return popup.selected()
 
     def create_list_popup(self, title, input_data=None, callback=None, list_fill=None):
         """Create a popup with a list of options that can be scrolled and selected

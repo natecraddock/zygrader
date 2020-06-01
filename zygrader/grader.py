@@ -100,21 +100,19 @@ def view_diff(first, second):
     diff = utils.make_diff_string(paths_a, paths_b, first.student.full_name, second.student.full_name, use_browser)
     utils.view_string(diff, "submissions.diff", use_browser)
 
+def run_code_fn(window, submission):
+    if not submission.compile_and_run_code():
+        window.create_popup("Error", ["Could not compile and run code"])
+
 def pair_programming_submission_callback(submission):
     window = Window.get_window()
 
-    options = ["Run", "View", "Done"]
-    while True:
-        option = window.create_options_popup("Pair Programming Submission", submission.msg, options, components.Popup.ALIGN_LEFT)
+    options = {
+        "Run": lambda : run_code_fn(window, submission),
+        "View": submission.show_files
+    }
 
-        if option == "View":
-            submission.show_files()
-        elif option == "Run":
-            if not submission.compile_and_run_code():
-                window.create_popup("Error", ["Could not compile and run code"])
-        else:
-            break
-
+    window.create_options_popup("Pair Programming Submission", submission.msg, options, components.Popup.ALIGN_LEFT)
     config.g_data.running_process = None
 
 def grade_pair_programming(first_submission):
@@ -149,23 +147,17 @@ def grade_pair_programming(first_submission):
             data.lock.unlock_lab(student, lab)
             return
 
-        options = [first_submission.student.full_name, second_submission.student.full_name, "View Diff", "Done"]
+        options = {
+            first_submission.student.full_name: lambda : pair_programming_submission_callback(first_submission),
+            second_submission.student.full_name: lambda : pair_programming_submission_callback(second_submission),
+            "View Diff": lambda : view_diff(first_submission, second_submission)
+        }
 
         msg = [f"{first_submission.student.full_name} {first_submission.latest_submission}",
                f"{second_submission.student.full_name} {second_submission.latest_submission}",
                "", "Pick a student's submission to view or view the diff"]
 
-        while True:
-            option = window.create_options_popup("Pair Programming", msg, options)
-
-            if option == first_submission.student.full_name:
-                pair_programming_submission_callback(first_submission)
-            elif option == second_submission.student.full_name:
-                pair_programming_submission_callback(second_submission)
-            elif option == "View Diff":
-                view_diff(first_submission, second_submission)
-            else:
-                break
+        window.create_options_popup("Pair Programming", msg, options)
 
         data.lock.unlock_lab(student, lab)
     except KeyboardInterrupt:
@@ -183,6 +175,11 @@ def flag_submission(lab, student):
         return
 
     data.flags.flag_submission(student, lab, note)
+
+def diff_parts_fn(window, submission):
+    error = submission.diff_parts()
+    if error:
+        window.create_popup("Error", [error])
 
 def student_callback(lab, student_index, use_locks=True):
     window = Window.get_window()
@@ -223,35 +220,23 @@ def student_callback(lab, student_index, use_locks=True):
                 data.lock.unlock_lab(student, lab)
             return
 
-        options = ["Flag", "Pick Submission", "Run", "View", "Done"]
-        if use_locks:
-            options.insert(2, "Pair Programming")
+        options = {
+            "Flag": lambda : flag_submission(lab, student),
+            "Pick Submission": lambda : pick_submission(lab, student, submission),
+            "Pair Programming": lambda : grade_pair_programming(submission),
+            "Diff Parts": lambda : diff_parts_fn(window, submission),
+            "Run": lambda: run_code_fn(window, submission),
+            "View": submission.show_files
+        }
+
+        if not use_locks:
+            del options["Pair Programming"]
 
         # Add option to diff parts if this lab requires it
-        if use_locks and submission.flag & data.model.SubmissionFlag.DIFF_PARTS:
-            options.insert(options.index("Pair Programming") + 1, "Diff Parts")
+        if not (use_locks and submission.flag & data.model.SubmissionFlag.DIFF_PARTS):
+            del options["Diff Parts"]
 
-        while True:
-            option = window.create_options_popup("Submission", submission.msg, options, components.Popup.ALIGN_LEFT)
-
-            if option == "Pair Programming":
-                grade_pair_programming(submission)
-            elif option == "Run":
-                if not submission.compile_and_run_code():
-                    window.create_popup("Error", ["Could not compile and run code"])
-            elif option == "View":
-                submission.show_files()
-            elif option == "Diff Parts":
-                error = submission.diff_parts()
-                if error:
-                    window.create_popup("Error", [error])
-            elif option == "Pick Submission":
-                pick_submission(lab, student, submission)
-            elif option == "Flag":
-                flag_submission(lab, student)
-                break
-            else:
-                break
+        window.create_options_popup("Submission", submission.msg, options, components.Popup.ALIGN_LEFT)
 
         config.g_data.running_process = None
 
