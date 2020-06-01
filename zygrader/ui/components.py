@@ -94,7 +94,7 @@ class Popup(Component):
         x = self.cols - 1 - Popup.PADDING - len(enter_string)
         add_str(self.window, y, x, enter_string)
 
-        self.window.refresh()
+        self.window.noutrefresh()
 
     def resize(self, rows, cols):
         self.available_rows = rows
@@ -135,7 +135,7 @@ class OptionsPopup(Popup):
             previous_length += len(option) + 2
             index += 1
 
-        self.window.refresh()
+        self.window.noutrefresh()
 
     def next(self):
         self.index = (self.index + 1) % len(self.options)
@@ -260,10 +260,10 @@ class FilteredList(Component):
             self.selected_index = 0
 
         self.__fill_text(self.data)
-        self.window.refresh()
+        self.window.noutrefresh()
 
         add_str(self.text_input, 0, 0, f"{self.prompt}: {self.filter_text}")
-        self.text_input.refresh()
+        self.text_input.noutrefresh()
 
     def clear(self):
         curses.curs_set(0)
@@ -362,7 +362,7 @@ class TextInput(Component):
         add_str(self.window, 0, 0, f"{self.prompt}: {display_text}")
 
         self.window.move(0, len(self.prompt) + 2 + self.cursor_index)
-        self.window.refresh()
+        self.window.noutrefresh()
 
     def close(self):
         curses.curs_set(0)
@@ -419,7 +419,7 @@ class Logger(Component):
             add_str(self.window, liney, 0, line)
             liney += 1
 
-        self.window.refresh()
+        self.window.noutrefresh()
 
     def log(self, entry):
         self.__log.append(entry)
@@ -477,7 +477,7 @@ class ListPopup(FilteredList, Popup):
 
         self.draw_list()
 
-        self.window.refresh()
+        self.window.noutrefresh()
 
     def resize(self, rows, cols):
         Popup.resize(self, rows, cols)

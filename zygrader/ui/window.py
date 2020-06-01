@@ -285,13 +285,13 @@ class Window:
                 else:
                     self.header.chgat(0, x, green | curses.A_BOLD)
 
-        self.header.refresh()
+        self.header.noutrefresh()
 
     def draw(self):
         """Draw each component in the stack"""
         self.update_window()
         self.stdscr.erase()
-        self.stdscr.refresh()
+        self.stdscr.noutrefresh()
 
         self.draw_header()
 
@@ -304,6 +304,10 @@ class Window:
 
         for component in self.components[block_index:]:
             component.draw()
+
+        # All windows have been tagged for redraw with noutrefresh
+        # Now do a single draw pass with doupdate
+        curses.doupdate()
 
     def update_window(self):
         if self.dark_mode:
@@ -510,7 +514,7 @@ class Window:
                 else:
                     break
 
-            list_input.draw()
+            self.draw()
 
         if watch:
             data.fs_watch.fs_watch_unregister(Window.EVENT_REFRESH_LIST)
