@@ -125,7 +125,6 @@ def grade_pair_programming(first_submission):
     lab = first_submission.lab
 
     # Get student
-    window.set_header("Pair Programming")
     paths = [config.g_data.get_locks_directory(), config.g_data.get_flags_directory()]
     student_index = window.create_filtered_list("Student", list_fill=lambda : fill_student_list(lab, students), filter_function=data.Student.find, watch=paths)
     if student_index is UI_GO_BACK:
@@ -156,7 +155,6 @@ def grade_pair_programming(first_submission):
                f"{second_submission.student.full_name} {second_submission.latest_submission}",
                "", "Pick a student's submission to view or view the diff"]
 
-        window.set_header("Pair Programming Submission")
         while True:
             option = window.create_options_popup("Pair Programming", msg, options)
 
@@ -188,7 +186,6 @@ def flag_submission(lab, student):
 
 def student_callback(lab, student_index, use_locks=True):
     window = Window.get_window()
-    window.set_header("Student Submission")
 
     student = data.get_students()[student_index]
 
@@ -269,6 +266,7 @@ def lab_callback(lab_index, use_locks=True):
     window = Window.get_window()
 
     lab = data.get_labs()[lab_index]
+    window.set_header(lab.name)
 
     students = data.get_students()
 
