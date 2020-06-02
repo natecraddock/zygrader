@@ -137,7 +137,7 @@ def rename_lab(filtered_list, lab):
     if name != Window.CANCEL:
         lab.name = name
         data.write_labs(labs)
-        filtered_list.create_lines(None)
+        filtered_list.refresh()
 
 edit_options = {"highest_score": "Grade Highest Scoring Submission",
                 "diff_parts": "Diff Submission Parts",
@@ -164,7 +164,7 @@ def edit_lab_options_draw(lab):
 
     return list
 
-def edit_lab_options_callback(filtered_list, lab, selected_index):
+def edit_lab_options_callback(lab, selected_index):
     option = list(edit_options.keys())[selected_index]
 
     if option in {"highest_score", "diff_parts"}:
@@ -172,13 +172,11 @@ def edit_lab_options_callback(filtered_list, lab, selected_index):
     elif option == "due":
         set_due_date(lab)
 
-    filtered_list.create_lines(None)
-
-def edit_lab_options(filtered_list, lab):
+def edit_lab_options(lab):
     window = Window.get_window()
 
     draw = lambda : edit_lab_options_draw(lab)
-    callback = lambda index : edit_lab_options_callback(filtered_list, lab, index)
+    callback = lambda index : edit_lab_options_callback(lab, index)
     window.create_list_popup("Editing Lab Options", callback=callback, list_fill=draw)
 
 def move_lab(filtered_list, lab, step):
@@ -193,7 +191,7 @@ def move_lab(filtered_list, lab, step):
     labs[index + step] = lab
 
     data.write_labs(labs)
-    filtered_list.create_lines(None)
+    filtered_list.refresh()
     filtered_list.selected_index += step
 
 def remove_fn(filtered_list, window, lab):
@@ -205,7 +203,7 @@ def remove_fn(filtered_list, window, lab):
         labs.remove(lab)
         data.write_labs(labs)
 
-    filtered_list.create_lines(None)
+    filtered_list.refresh()
 
 def edit_labs_callback(lab, filtered_list):
     window = Window.get_window()
@@ -215,7 +213,7 @@ def edit_labs_callback(lab, filtered_list):
         "Rename": lambda: rename_lab(filtered_list, lab),
         "Move Up": lambda : move_lab(filtered_list, lab, -1),
         "Move Down": lambda : move_lab(filtered_list, lab, 1),
-        "Edit Options": lambda : edit_lab_options(filtered_list, lab)
+        "Edit Options": lambda : edit_lab_options(lab)
     }
 
     msg = [f"Editing {lab.name}", "", "Select an option"]

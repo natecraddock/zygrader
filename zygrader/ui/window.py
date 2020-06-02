@@ -149,8 +149,7 @@ class Window:
 
     def file_system_event(self, identifier, component):
         if identifier == Window.EVENT_REFRESH_LIST:
-            component.create_lines(None)
-            component.draw()
+            component.refresh()
             self.draw()
 
     def __init__(self, callback, window_name):

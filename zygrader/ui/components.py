@@ -256,6 +256,10 @@ class FilteredList(Component):
         resize_window(self.window, self.rows - 1, self.cols)
         resize_window(self.text_input, 1, self.cols)
 
+    def refresh(self):
+        if self.list_fill:
+            self.create_lines(None)
+
     def draw(self):
         self.window.erase()
         self.text_input.erase()
