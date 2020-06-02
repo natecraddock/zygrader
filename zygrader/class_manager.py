@@ -128,7 +128,7 @@ def toggle_lab_option(lab, option):
     labs = data.get_labs()
     data.write_labs(labs)
 
-def rename_lab(lab):
+def rename_lab(filtered_list, lab):
     window = Window.get_window()
 
     labs = data.get_labs()
@@ -137,6 +137,7 @@ def rename_lab(lab):
     if name != Window.CANCEL:
         lab.name = name
         data.write_labs(labs)
+        filtered_list.create_lines(None)
 
 edit_options = {"highest_score": "Grade Highest Scoring Submission",
                 "diff_parts": "Diff Submission Parts",
@@ -211,6 +212,7 @@ def edit_labs_callback(lab, filtered_list):
 
     options = {
         "Remove": lambda : remove_fn(filtered_list, window, lab),
+        "Rename": lambda: rename_lab(filtered_list, lab),
         "Move Up": lambda : move_lab(filtered_list, lab, -1),
         "Move Down": lambda : move_lab(filtered_list, lab, 1),
         "Edit Options": lambda : edit_lab_options(filtered_list, lab)
