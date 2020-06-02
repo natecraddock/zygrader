@@ -108,7 +108,7 @@ def pair_programming_submission_callback(submission):
     window = Window.get_window()
 
     options = {
-        "Run": lambda : run_code_fn(window, submission),
+        "Run": lambda: run_code_fn(window, submission),
         "View": submission.show_files
     }
 
@@ -124,7 +124,7 @@ def grade_pair_programming(first_submission):
 
     # Get student
     paths = [config.g_data.get_locks_directory(), config.g_data.get_flags_directory()]
-    student_index = window.create_filtered_list("Student", list_fill=lambda : fill_student_list(lab, students), filter_function=data.Student.find, watch=paths)
+    student_index = window.create_filtered_list("Student", list_fill=lambda: fill_student_list(lab, students), filter_function=data.Student.find, watch=paths)
     if student_index is UI_GO_BACK:
         return
 
@@ -148,9 +148,9 @@ def grade_pair_programming(first_submission):
             return
 
         options = {
-            first_submission.student.full_name: lambda : pair_programming_submission_callback(first_submission),
-            second_submission.student.full_name: lambda : pair_programming_submission_callback(second_submission),
-            "View Diff": lambda : view_diff(first_submission, second_submission)
+            first_submission.student.full_name: lambda: pair_programming_submission_callback(first_submission),
+            second_submission.student.full_name: lambda: pair_programming_submission_callback(second_submission),
+            "View Diff": lambda: view_diff(first_submission, second_submission)
         }
 
         msg = [f"{first_submission.student.full_name} {first_submission.latest_submission}",
@@ -221,10 +221,10 @@ def student_callback(lab, student_index, use_locks=True):
             return
 
         options = {
-            "Flag": lambda : flag_submission(lab, student),
-            "Pick Submission": lambda : pick_submission(lab, student, submission),
-            "Pair Programming": lambda : grade_pair_programming(submission),
-            "Diff Parts": lambda : diff_parts_fn(window, submission),
+            "Flag": lambda: flag_submission(lab, student),
+            "Pick Submission": lambda: pick_submission(lab, student, submission),
+            "Pair Programming": lambda: grade_pair_programming(submission),
+            "Diff Parts": lambda: diff_parts_fn(window, submission),
             "Run": lambda: run_code_fn(window, submission),
             "View": submission.show_files
         }
@@ -257,8 +257,8 @@ def lab_callback(lab_index, use_locks=True):
 
     # Get student
     paths = [config.g_data.get_locks_directory(), config.g_data.get_flags_directory()]
-    window.create_filtered_list("Student", list_fill=lambda : fill_student_list(lab, students), \
-        callback=lambda student_index, _filtered_list : student_callback(lab, student_index, use_locks), \
+    window.create_filtered_list("Student", list_fill=lambda: fill_student_list(lab, students), \
+        callback=lambda student_index, _filtered_list: student_callback(lab, student_index, use_locks), \
         filter_function=data.Student.find, watch=paths)
 
 def grade(use_locks=True):
@@ -274,4 +274,4 @@ def grade(use_locks=True):
         return
 
     # Pick a lab
-    window.create_filtered_list("Assignment", input_data=labs, callback=lambda lab_index, _filtered_list : lab_callback(lab_index, use_locks), filter_function=data.Lab.find)
+    window.create_filtered_list("Assignment", input_data=labs, callback=lambda lab_index, _filtered_list: lab_callback(lab_index, use_locks), filter_function=data.Lab.find)

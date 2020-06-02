@@ -150,8 +150,7 @@ class GradePuller:
         now = datetime.datetime.now()
         self.due_times = {section: now for section in self.selected_class_sections}
         draw = lambda: [f"Section {section}: {time.strftime('%m.%d.%Y:%H.%M.%S')}" for section, time in self.due_times.items()]
-        callback = lambda index: self.select_due_times_callback(index)
-        self.window.create_list_popup("Set Due Times (use Back to finish)", callback=callback, list_fill=draw)
+        self.window.create_list_popup("Set Due Times (use Back to finish)", callback=self.select_due_times_callback, list_fill=draw)
         if all(el is now for el in self.due_times.values()):
             return False
         return True

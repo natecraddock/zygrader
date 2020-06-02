@@ -175,8 +175,8 @@ def edit_lab_options_callback(lab, selected_index):
 def edit_lab_options(lab):
     window = Window.get_window()
 
-    draw = lambda : edit_lab_options_draw(lab)
-    callback = lambda index : edit_lab_options_callback(lab, index)
+    draw = lambda: edit_lab_options_draw(lab)
+    callback = lambda index: edit_lab_options_callback(lab, index)
     window.create_list_popup("Editing Lab Options", callback=callback, list_fill=draw)
 
 def move_lab(filtered_list, lab, step):
@@ -209,11 +209,11 @@ def edit_labs_callback(lab, filtered_list):
     window = Window.get_window()
 
     options = {
-        "Remove": lambda : remove_fn(filtered_list, window, lab),
+        "Remove": lambda: remove_fn(filtered_list, window, lab),
         "Rename": lambda: rename_lab(filtered_list, lab),
-        "Move Up": lambda : move_lab(filtered_list, lab, -1),
-        "Move Down": lambda : move_lab(filtered_list, lab, 1),
-        "Edit Options": lambda : edit_lab_options(lab)
+        "Move Up": lambda: move_lab(filtered_list, lab, -1),
+        "Move Down": lambda: move_lab(filtered_list, lab, 1),
+        "Edit Options": lambda: edit_lab_options(lab)
     }
 
     msg = [f"Editing {lab.name}", "", "Select an option"]
@@ -226,7 +226,7 @@ def draw_lab_list() -> list:
 def edit_labs():
     window = Window.get_window()
 
-    edit_fn = lambda index, filtered_list : edit_labs_callback(data.get_labs()[index], filtered_list)
+    edit_fn = lambda index, filtered_list: edit_labs_callback(data.get_labs()[index], filtered_list)
     window.create_filtered_list("Lab", list_fill=draw_lab_list, callback=edit_fn)
 
 def download_roster():
