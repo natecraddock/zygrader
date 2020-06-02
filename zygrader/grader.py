@@ -258,7 +258,7 @@ def lab_callback(lab_index, use_locks=True):
     # Get student
     paths = [config.g_data.get_locks_directory(), config.g_data.get_flags_directory()]
     window.create_filtered_list("Student", list_fill=lambda : fill_student_list(lab, students), \
-        callback=lambda student_index : student_callback(lab, student_index, use_locks), \
+        callback=lambda student_index, _filtered_list : student_callback(lab, student_index, use_locks), \
         filter_function=data.Student.find, watch=paths)
 
 def grade(use_locks=True):
@@ -274,4 +274,4 @@ def grade(use_locks=True):
         return
 
     # Pick a lab
-    window.create_filtered_list("Assignment", input_data=labs, callback=lambda lab_index : lab_callback(lab_index, use_locks), filter_function=data.Lab.find)
+    window.create_filtered_list("Assignment", input_data=labs, callback=lambda lab_index, _filtered_list : lab_callback(lab_index, use_locks), filter_function=data.Lab.find)

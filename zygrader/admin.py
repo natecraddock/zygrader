@@ -116,7 +116,7 @@ def submission_search_init(window, labs):
 
 admin_menu_options = ["Submissions Search", "Grade Puller", "Remove Locks", "Class Management"]
 
-def admin_menu_callback(menu_index):
+def admin_menu_callback(menu_index, _filtered_list):
     window = Window.get_window()
 
     option = admin_menu_options[menu_index]

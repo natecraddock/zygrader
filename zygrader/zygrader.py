@@ -11,7 +11,7 @@ from .ui.window import Window
 
 main_menu_options = ["Grade", "Prep Lab Score Calculator", "Run For Fun", "View Students", "Preferences", "Changelog"]
 
-def mainloop_callback(option_index):
+def mainloop_callback(option_index, _filtered_list):
     option = main_menu_options[option_index]
 
     if option == "Grade":

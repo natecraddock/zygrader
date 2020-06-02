@@ -2,6 +2,7 @@ import datetime
 import json
 
 from .ui.window import Window
+from .ui.components import FilteredList
 from .ui import UI_GO_BACK
 from .zybooks import Zybooks
 from . import data
@@ -162,7 +163,7 @@ def edit_lab_options_draw(lab):
 
     return list
 
-def edit_lab_options_callback(lab, selected_index):
+def edit_lab_options_callback(filtered_list, lab, selected_index):
     option = list(edit_options.keys())[selected_index]
 
     if option in {"highest_score", "diff_parts"}:
@@ -170,22 +171,31 @@ def edit_lab_options_callback(lab, selected_index):
     elif option == "due":
         set_due_date(lab)
 
-def edit_lab_options(lab):
+    filtered_list.create_lines(None)
+
+def edit_lab_options(filtered_list, lab):
     window = Window.get_window()
 
     draw = lambda : edit_lab_options_draw(lab)
-    callback = lambda index : edit_lab_options_callback(lab, index)
+    callback = lambda index : edit_lab_options_callback(filtered_list, lab, index)
     window.create_list_popup("Editing Lab Options", callback=callback, list_fill=draw)
 
-def move_lab(lab, step):
+def move_lab(filtered_list, lab, step):
     labs = data.get_labs()
     index = labs.index(lab)
+
+    # Prevent moving out of bounds
+    if index + step > len(labs) - 1 or index + step < 0:
+        return
+
     labs[index] = labs[index + step]
     labs[index + step] = lab
 
     data.write_labs(labs)
+    filtered_list.create_lines(None)
+    filtered_list.selected_index += step
 
-def remove_fn(window, lab):
+def remove_fn(filtered_list, window, lab):
     msg = [f"Are you sure you want to remove {lab.name}?"]
     remove = window.create_bool_popup("Confirm", msg)
 
@@ -194,28 +204,30 @@ def remove_fn(window, lab):
         labs.remove(lab)
         data.write_labs(labs)
 
-def edit_labs_callback(lab):
+    filtered_list.create_lines(None)
+
+def edit_labs_callback(lab, filtered_list):
     window = Window.get_window()
 
     options = {
-        "Remove": lambda : remove_fn(window, lab),
-        "Move Up": lambda : move_lab(lab, -1),
-        "Move Down": lambda : move_lab(lab, 1),
-        "Edit Options": lambda : edit_lab_options(lab)
+        "Remove": lambda : remove_fn(filtered_list, window, lab),
+        "Move Up": lambda : move_lab(filtered_list, lab, -1),
+        "Move Down": lambda : move_lab(filtered_list, lab, 1),
+        "Edit Options": lambda : edit_lab_options(filtered_list, lab)
     }
 
-    window.create_options_popup("Edit Lab", ["Select an option"], options)
+    msg = [f"Editing {lab.name}", "", "Select an option"]
+    window.create_options_popup("Edit Lab", msg, options)
+
+def draw_lab_list() -> list:
+    labs = data.get_labs()
+    return [FilteredList.ListLine(i, lab) for i, lab in enumerate(labs, start=1)]
 
 def edit_labs():
     window = Window.get_window()
-    labs = data.get_labs()
 
-    while True:
-        lab_index = window.create_filtered_list("Lab", input_data=labs)
-        if lab_index is UI_GO_BACK:
-            break
-
-        edit_labs_callback(labs[lab_index])
+    edit_fn = lambda index, filtered_list : edit_labs_callback(data.get_labs()[index], filtered_list)
+    window.create_filtered_list("Lab", list_fill=draw_lab_list, callback=edit_fn)
 
 def download_roster():
     window = Window.get_window()
@@ -241,7 +253,7 @@ def change_class():
 
 class_manager_options = ["Setup New Class", "Add Lab", "Edit Labs", "Download Student Roster", "Change Class"]
 
-def class_manager_callback(option_index):
+def class_manager_callback(option_index, _filtered_list):
     option = class_manager_options[option_index]
 
     if option == "Setup New Class":

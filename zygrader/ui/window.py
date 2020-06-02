@@ -516,7 +516,7 @@ class Window:
             elif (event.type == Event.ENTER) or (event.type == Event.RIGHT and self.left_right_menu_nav):
                 if callback and list_input.selected() != UI_GO_BACK:
                     list_input.dirty = True
-                    callback(list_input.selected())
+                    callback(list_input.selected(), list_input)
 
                     if self.clear_filter:
                         list_input.clear_filter()

@@ -126,7 +126,7 @@ def prep_lab_score_calc():
     except ValueError:
         window.create_popup("Error", ["Invalid input"])
 
-def view_students_callback(student_index):
+def view_students_callback(student_index, _filtered_list):
     window = Window.get_window()
     students = data.get_students()
 
