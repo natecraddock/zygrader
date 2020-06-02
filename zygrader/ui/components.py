@@ -431,7 +431,8 @@ class Logger(Component):
             add_str(self.window, liney, 0, line)
             liney += 1
 
-        self.window.noutrefresh()
+        # Loggers take control of event loop, refresh always
+        self.window.refresh()
 
     def log(self, entry):
         self.__log.append(entry)
