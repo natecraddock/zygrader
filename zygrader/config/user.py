@@ -155,16 +155,16 @@ def login(window: Window):
                 break
 
 def draw_text_editors():
-    list = []
+    options = []
     current_editor = get_preference("editor")
 
     for name in EDITORS.keys():
         if current_editor == name:
-            list.append(f"[X] {name}")
+            options.append(f"[X] {name}")
         else:
-            list.append(f"[ ] {name}")
+            options.append(f"[ ] {name}")
 
-    return list
+    return options
 
 def set_editor(editor_index, pref_name):
     config_file = get_config()
@@ -218,17 +218,17 @@ preferences = [Preference("left_right_arrow_nav", "Left/Right Arrow Navigation",
                ]
 
 def draw_preferences():
-    list = []
+    options = []
     for pref in preferences:
         if not pref.toggle:
-            list.append(f"    {pref.description}")
+            options.append(f"    {pref.description}")
         else:
             if is_preference_set(pref.name):
-                list.append(f"[X] {pref.description}")
+                options.append(f"[X] {pref.description}")
             else:
-                list.append(f"[ ] {pref.description}")
+                options.append(f"[ ] {pref.description}")
 
-    return list
+    return options
 
 def preferences_callback(selected_index):
     window = Window.get_window()
