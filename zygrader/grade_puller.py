@@ -158,6 +158,10 @@ class GradePuller:
         return True
 
     def fetch_completion_reports(self):
+        wait_msg = ["Fetching completion reports from zyBooks", f"Completed 0/{len(self.selected_class_sections)}"]
+        wait_controller = self.window.create_waiting_popup("Fetch Reports", wait_msg)
+        num_completed = 0
+
         self.zybooks_students = dict()
         for class_section in self.selected_class_sections:
             csv_string = self.zy_api.get_completion_report(self.due_times[class_section], self.selected_zybook_sections)
@@ -180,6 +184,12 @@ class GradePuller:
                     row['id_number'] = int(''.join([c for c in row['Student ID'] if c.isdigit()]))
                     row['grade'] = float(row[total_field_name])
                     self.zybooks_students[row['id_number']] = row
+
+            num_completed += 1
+            wait_msg[-1] = f"Completed {num_completed}/{len(self.selected_class_sections)}"
+            wait_controller.update()
+
+        wait_controller.close()
         return True            
     
     def tidy_canvas_students(self):
