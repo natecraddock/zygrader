@@ -392,6 +392,13 @@ class TextInput(Component):
         self.text = self.text[:self.cursor_index - 1] + self.text[self.cursor_index:]
         self.left()
 
+    def delcharforward(self):
+        if self.cursor_index == len(self.text):
+            return
+
+        # Remove character just forward of cursor location
+        self.text = self.text[:self.cursor_index] + self.text[self.cursor_index + 1:]
+
     def right(self):
         self.cursor_index = min(len(self.text), self.cursor_index + 1)
 
