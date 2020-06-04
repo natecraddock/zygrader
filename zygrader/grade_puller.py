@@ -138,7 +138,7 @@ class GradePuller:
         new_time_str = self.window.create_text_input("Enter due date [MM.DD.YYYY:HH.MM.SS]", text=old_time_str)
         if new_time_str == Window.CANCEL:
             return
-        
+
         new_time = datetime.datetime.strptime(new_time_str, "%m.%d.%Y:%H.%M.%S").astimezone(tz=None)
         self.due_times[section] = new_time
 
@@ -169,7 +169,7 @@ class GradePuller:
                 return False
 
             csv_rows = csv_string.split("\r\n")
-            
+
             csv_reader = csv.DictReader(csv_rows)
             self.zybooks_header = csv_reader.fieldnames
 
@@ -191,7 +191,7 @@ class GradePuller:
 
         wait_controller.close()
         return True            
-    
+
     def tidy_canvas_students(self):
         filtered = dict()
         for student_id, student in self.canvas_students.items():
@@ -205,7 +205,7 @@ class GradePuller:
 
     def create_canvas_to_zybook_mapping(self):
         """Creates the mapped students dictionary and populates unmatched students lists
-        
+
         All zybook students begin unmatched and are removed when paired with a canvas student.
         The canvas unmatched list populates as canvas students don't find pairs
         """
@@ -227,7 +227,7 @@ class GradePuller:
         path = self.window.create_filename_input(purpose="the unmatched Canvas students")
         if path is None:
             return False
-        
+
         with open(path, 'w', newline='') as out_file:
             fieldnames = self.canvas_header[:GradePuller.NUM_CANVAS_ID_COLUMNS]
             writer = csv.DictWriter(out_file, fieldnames=fieldnames, extrasaction='ignore')
@@ -238,7 +238,7 @@ class GradePuller:
         path = self.window.create_filename_input(purpose="the unmatched zyBook students")
         if path is None:
             return False
-        
+
         with open(path, 'w', newline='') as out_file:
             fieldnames = self.zybooks_header[:GradePuller.NUM_ZYBOOKS_ID_COLUMNS]
             writer = csv.DictWriter(out_file, fieldnames=fieldnames, extrasaction='ignore')
@@ -266,7 +266,7 @@ class GradePuller:
 
 
     def calculate_grades(self):
-        for student_id in self.canvas_students.keys():
+        for student_id in self.canvas_students:
             grade = self.calc_grade_for(student_id)
             self.canvas_students[student_id][self.selected_canvas_assignment] = str(grade)
 
@@ -274,14 +274,13 @@ class GradePuller:
         path = self.window.create_filename_input(purpose="the upload file")
         if path is None:
             return False
-        
+
         with open(path, 'w', newline='') as out_file:
             fieldnames = self.canvas_header[:GradePuller.NUM_CANVAS_ID_COLUMNS] + [self.selected_canvas_assignment]
             writer = csv.DictWriter(out_file, fieldnames=fieldnames, extrasaction='ignore')
             writer.writeheader()
             writer.writerow(self.canvas_points_out_of)
             writer.writerows(self.canvas_students.values())
-
 
 def start():
     puller = GradePuller()

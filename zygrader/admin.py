@@ -1,3 +1,5 @@
+"""Admin: Functions for more "administrator" users of zygrader to manage
+the class, scan through student submissions, and access to other menus"""
 import time
 import requests
 
@@ -30,11 +32,11 @@ def check_student_submissions(zy_api, student_id, lab, search_string):
             response["error"] = f"Error fetching submission {zy_api.get_time_string(submission)}"
             continue
 
-        f = utils.extract_zip(zip_file)
+        extracted_zip_files = utils.extract_zip(zip_file)
 
         # Check each file for the matched string
-        for source_file in f.keys():
-            if f[source_file].find(search_string) != -1:
+        for source_file in extracted_zip_files.keys():
+            if extracted_zip_files[source_file].find(search_string) != -1:
 
                 # Get the date and time of the submission and return it
                 response["time"] = zy_api.get_time_string(submission)
@@ -45,6 +47,9 @@ def check_student_submissions(zy_api, student_id, lab, search_string):
     return response
 
 def submission_search(lab, search_string, output_path):
+    """Search through student submissions for a given string
+
+    This is used mainly to look for suspicious code (cheaters)"""
     window = Window.get_window()
     students = data.get_students()
     zy_api = Zybooks()
@@ -59,7 +64,8 @@ def submission_search(lab, search_string, output_path):
                 counter = f"[{student_num}/{len(students)}]"
                 logger.log(f"{counter:12} Checking {student.full_name}")
 
-                match_result = check_student_submissions(zy_api, str(student.id), lab, search_string)
+                match_result = check_student_submissions(zy_api, str(student.id),
+                                                         lab, search_string)
 
                 if match_result["code"] == Zybooks.DOWNLOAD_TIMEOUT:
                     logger.log("Download timed out... trying again after a few seconds")
@@ -87,7 +93,8 @@ def submission_search_init(window, labs):
     window.set_header("Submissions Search")
 
     # Choose lab
-    assignment_index = window.create_filtered_list("Assignment", input_data=labs, filter_function=data.Lab.find)
+    assignment_index = window.create_filtered_list("Assignment", input_data=labs,
+                                                   filter_function=data.Lab.find)
     if assignment_index is UI_GO_BACK:
         return
 
@@ -95,7 +102,8 @@ def submission_search_init(window, labs):
 
     # Select the lab part if needed
     if len(assignment.parts) > 1:
-        part_index = window.create_list_popup("Select Part", input_data=[name["name"] for name in assignment.parts])
+        part_index = window.create_list_popup("Select Part", input_data=[
+            name["name"] for name in assignment.parts])
         if part_index is UI_GO_BACK:
             return
         part = assignment.parts[part_index]
@@ -114,12 +122,13 @@ def submission_search_init(window, labs):
     # Run the submission search
     submission_search(part, search_string, output_path)
 
-admin_menu_options = ["Submissions Search", "Grade Puller", "Remove Locks", "Class Management"]
+ADMIN_MENU_OPTIONS = ["Submissions Search", "Grade Puller", "Remove Locks", "Class Management"]
 
 def admin_menu_callback(menu_index, _filtered_list):
+    """Run the chosen option on the admin menu"""
     window = Window.get_window()
 
-    option = admin_menu_options[menu_index]
+    option = ADMIN_MENU_OPTIONS[menu_index]
 
     if option == "Submissions Search":
         labs = data.get_labs()
@@ -139,7 +148,9 @@ def admin_menu_callback(menu_index, _filtered_list):
         class_manager.start()
 
 def admin_menu():
+    """Create the admin menu"""
     window = Window.get_window()
     window.set_header("Admin")
 
-    window.create_filtered_list("Option", input_data=admin_menu_options, callback=admin_menu_callback)
+    window.create_filtered_list("Option", input_data=ADMIN_MENU_OPTIONS,
+                                callback=admin_menu_callback)

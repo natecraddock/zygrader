@@ -1,3 +1,4 @@
+"""Grader: Menus and popups for grading and pair programming"""
 import curses
 import getpass
 
@@ -10,14 +11,16 @@ from .ui.window import Window
 from .zybooks import Zybooks
 
 def color_student_lines(lab, student):
-    if data.lock.is_lab_locked(student, lab) and type(student) is not str:
+    """Color the student names in the grader based on locked, flagged, or normal status"""
+    if data.lock.is_lab_locked(student, lab) and not isinstance(student, str):
         return curses.color_pair(2)
-    elif data.flags.is_submission_flagged(student, lab) and type(student) is not str:
+    if data.flags.is_submission_flagged(student, lab) and not isinstance(student, str):
         return curses.color_pair(7)
     return curses.color_pair(0)
 
 def fill_student_list(lab, students):
-    """Given a list of students, fill the list sorting locked and flagged students to the top; also color the lines"""
+    """Given a list of students, fill the list sorting locked and
+    flagged students to the top; also color the lines"""
     lines = []
     num_locked = 0
     for i, student in enumerate(students):
@@ -34,7 +37,13 @@ def fill_student_list(lab, students):
 
     return lines
 
+def update_student_list(window: Window, student_list: components.FilteredList):
+    """Update the student list when the locks or flags change"""
+    student_list.refresh()
+    window.push_refresh_event()
+
 def get_submission(lab, student, use_locks=True):
+    """Get a submission from zyBooks given the lab and student"""
     window = Window.get_window()
     zy_api = Zybooks()
 
@@ -54,7 +63,8 @@ def get_submission(lab, student, use_locks=True):
 
     return submission
 
-def pick_submission(lab: data.model.Lab, student: data.model.Student, submission: data.model.Submission):
+def pick_submission(lab: data.model.Lab, student: data.model.Student,
+                    submission: data.model.Submission):
     """Allow the user to pick a submission to view"""
     window = Window.get_window()
     zy_api = Zybooks()
@@ -62,7 +72,8 @@ def pick_submission(lab: data.model.Lab, student: data.model.Student, submission
     # If the lab has multiple parts, prompt to pick a part
     part_index = 0
     if len(lab.parts) > 1:
-        part_index = window.create_list_popup("Select Part", input_data=[name["name"] for name in lab.parts])
+        part_index = window.create_list_popup("Select Part",
+                                              input_data=[name["name"] for name in lab.parts])
         if part_index is UI_GO_BACK:
             return
 
@@ -97,14 +108,17 @@ def view_diff(first, second):
     paths_a.sort()
     paths_b.sort()
 
-    diff = utils.make_diff_string(paths_a, paths_b, first.student.full_name, second.student.full_name, use_browser)
+    diff = utils.make_diff_string(paths_a, paths_b, first.student.full_name,
+                                  second.student.full_name, use_browser)
     utils.view_string(diff, "submissions.diff", use_browser)
 
 def run_code_fn(window, submission):
+    """Callback to compile and run a submission's code"""
     if not submission.compile_and_run_code():
         window.create_popup("Error", ["Could not compile and run code"])
 
 def pair_programming_submission_callback(submission):
+    """Show both pair programming students for viewing a diff"""
     window = Window.get_window()
 
     options = {
@@ -112,10 +126,12 @@ def pair_programming_submission_callback(submission):
         "View": submission.show_files
     }
 
-    window.create_options_popup("Pair Programming Submission", submission.msg, options, components.Popup.ALIGN_LEFT)
+    window.create_options_popup("Pair Programming Submission",
+                                submission.msg, options, components.Popup.ALIGN_LEFT)
     config.g_data.running_process = None
 
-def grade_pair_programming(first_submission):
+def grade_pair_programming(student_list, first_submission):
+    """Pick a second student to grade pair programming with"""
     # Get second student
     window = Window.get_window()
     students = data.get_students()
@@ -123,8 +139,9 @@ def grade_pair_programming(first_submission):
     lab = first_submission.lab
 
     # Get student
-    paths = [config.g_data.get_locks_directory(), config.g_data.get_flags_directory()]
-    student_index = window.create_filtered_list("Student", list_fill=lambda: fill_student_list(lab, students), filter_function=data.Student.find, watch=paths)
+    student_index = window.create_filtered_list("Student",
+                                                list_fill=lambda: fill_student_list(lab, students),
+                                                filter_function=data.Student.find)
     if student_index is UI_GO_BACK:
         return
 
@@ -139,6 +156,8 @@ def grade_pair_programming(first_submission):
 
     try:
         second_submission = get_submission(lab, student)
+        # Immediately redraw the original list
+        update_student_list(window, student_list)
 
         if second_submission.flag == data.model.SubmissionFlag.NO_SUBMISSION:
             msg = [f"{student.full_name} has not submitted"]
@@ -147,9 +166,11 @@ def grade_pair_programming(first_submission):
             data.lock.unlock_lab(student, lab)
             return
 
+        first_submission_fn = lambda: pair_programming_submission_callback(first_submission)
+        second_submission_fn = lambda: pair_programming_submission_callback(second_submission),
         options = {
-            first_submission.student.full_name: lambda: pair_programming_submission_callback(first_submission),
-            second_submission.student.full_name: lambda: pair_programming_submission_callback(second_submission),
+            first_submission.student.full_name: first_submission_fn,
+            second_submission.student.full_name: second_submission_fn,
             "View Diff": lambda: view_diff(first_submission, second_submission)
         }
 
@@ -164,10 +185,9 @@ def grade_pair_programming(first_submission):
         data.lock.unlock_lab(student, lab)
     except curses.error:
         data.lock.unlock_lab(student, lab)
-    except Exception:
-        data.lock.unlock_lab(student, lab)
 
 def flag_submission(lab, student):
+    """Flag a submission with a note"""
     window = Window.get_window()
 
     note = window.create_text_input("Flag Note")
@@ -177,13 +197,14 @@ def flag_submission(lab, student):
     data.flags.flag_submission(student, lab, note)
 
 def diff_parts_fn(window, submission):
+    """Callback for text diffing parts of a submission"""
     error = submission.diff_parts()
     if error:
         window.create_popup("Error", [error])
 
-def student_callback(lab, student_index, use_locks=True):
+def student_callback(student_list, lab, student_index, use_locks=True):
+    """Show the submission for the selected lab and student"""
     window = Window.get_window()
-
     student = data.get_students()[student_index]
 
     # Wait for student's assignment to be available
@@ -210,6 +231,7 @@ def student_callback(lab, student_index, use_locks=True):
     try:
         # Get the student's submission
         submission = get_submission(lab, student, use_locks)
+        update_student_list(window, student_list)
 
         # Unlock if student has not submitted
         if submission.flag == data.model.SubmissionFlag.NO_SUBMISSION:
@@ -223,7 +245,7 @@ def student_callback(lab, student_index, use_locks=True):
         options = {
             "Flag": lambda: flag_submission(lab, student),
             "Pick Submission": lambda: pick_submission(lab, student, submission),
-            "Pair Programming": lambda: grade_pair_programming(submission),
+            "Pair Programming": lambda: grade_pair_programming(student_list, submission),
             "Diff Parts": lambda: diff_parts_fn(window, submission),
             "Run": lambda: run_code_fn(window, submission),
             "View": submission.show_files
@@ -236,7 +258,8 @@ def student_callback(lab, student_index, use_locks=True):
         if not (use_locks and submission.flag & data.model.SubmissionFlag.DIFF_PARTS):
             del options["Diff Parts"]
 
-        window.create_options_popup("Submission", submission.msg, options, components.Popup.ALIGN_LEFT)
+        window.create_options_popup("Submission", submission.msg,
+                                    options, components.Popup.ALIGN_LEFT)
 
         config.g_data.running_process = None
 
@@ -247,7 +270,15 @@ def student_callback(lab, student_index, use_locks=True):
         if use_locks:
             data.lock.unlock_lab(student, lab)
 
+def watch_students(window: Window, student_list: components.FilteredList):
+    """Register paths when the filtered list is created"""
+    paths = [config.g_data.get_locks_directory(), config.g_data.get_flags_directory()]
+
+    update_list = lambda _: update_student_list(window, student_list)
+    data.fs_watch.fs_watch_register(paths, "student_list_watch", update_list)
+
 def lab_callback(lab_index, use_locks=True):
+    """Create the list of labs to pick a student to grade"""
     window = Window.get_window()
 
     lab = data.get_labs()[lab_index]
@@ -255,13 +286,19 @@ def lab_callback(lab_index, use_locks=True):
 
     students = data.get_students()
 
+    student_select_fn = (lambda student_index, student_list:
+                         student_callback(student_list, lab, student_index, use_locks))
+
     # Get student
-    paths = [config.g_data.get_locks_directory(), config.g_data.get_flags_directory()]
-    window.create_filtered_list("Student", list_fill=lambda: fill_student_list(lab, students), \
-        callback=lambda student_index, _filtered_list: student_callback(lab, student_index, use_locks), \
-        filter_function=data.Student.find, watch=paths)
+    window.create_filtered_list("Student", list_fill=lambda: fill_student_list(lab, students),
+                                callback=student_select_fn, filter_function=data.Student.find,
+                                create_fn=lambda student_list: watch_students(window, student_list))
+
+    # Remove the file watch handler when done choosing students
+    data.fs_watch.fs_watch_unregister("student_list_watch")
 
 def grade(use_locks=True):
+    """Create the list of labs to pick one to grade"""
     window = Window.get_window()
     labs = data.get_labs()
 
@@ -274,4 +311,6 @@ def grade(use_locks=True):
         return
 
     # Pick a lab
-    window.create_filtered_list("Assignment", input_data=labs, callback=lambda lab_index, _filtered_list: lab_callback(lab_index, use_locks), filter_function=data.Lab.find)
+    lab_select_fn = lambda lab_index, _filtered_list: lab_callback(lab_index, use_locks)
+    window.create_filtered_list("Assignment", input_data=labs, callback=lab_select_fn,
+                                filter_function=data.Lab.find)

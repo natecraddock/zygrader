@@ -1,7 +1,7 @@
 """
 utils.py
 
-General algorithms/utilties to be shared between modules
+General algorithms/utilities to be shared between modules
 """
 
 import curses
@@ -54,10 +54,13 @@ def diff_files(first, second, title_a, title_b, use_html):
             with open(path_a, 'r') as file_a:
                 with open(path_b, 'r') as file_b:
                     html = difflib.HtmlDiff(4, 80)
-                    diff = html.make_file(file_a.readlines(), file_b.readlines(), title_a, title_b, context=True)
+                    diff = html.make_file(file_a.readlines(), file_b.readlines(),
+                                          title_a, title_b, context=True)
         else:
-            p = subprocess.Popen(f"diff -w -u --color=always {path_a} {path_b}", shell=True, stdin=PIPE, stdout=PIPE, stderr=PIPE, universal_newlines=True)
-            diff = str(p.communicate()[0])
+            diff_process = subprocess.Popen(f"diff -w -u --color=always {path_a} {path_b}",
+                                            shell=True, stdin=PIPE, stdout=PIPE, stderr=PIPE,
+                                            universal_newlines=True)
+            diff = str(diff_process.communicate()[0])
 
         diffs[diff_name] = diff
 
@@ -98,18 +101,24 @@ def extract_zip(input_zip, file_prefix=None):
         {"filename": "contents...", ...}
     """
     if file_prefix:
-        return {f"{file_prefix}_{name}": input_zip.read(name).decode('UTF-8') for name in input_zip.namelist()}
+        return {f"{file_prefix}_{name}": input_zip.read(name).decode('UTF-8')
+                for name in input_zip.namelist()}
     else:
         return {f"{name}": input_zip.read(name).decode('UTF-8') for name in input_zip.namelist()}
 
 def get_source_file_paths(directory):
+    """Get the file path for each source file
+
+    Each file is in a subfolder so os.walk is needed to get the full path
+    """
     paths = []
-    for root, dirs, files in os.walk(directory):
+    for root, _, files in os.walk(directory):
         for file in files:
             paths.append(os.path.join(root, file))
     return paths
 
 def prep_lab_score_calc():
+    """A simple calculator for determining the score for a late prep lab"""
     window = Window.get_window()
     window.set_header("Prep Lab Calculator")
 
@@ -117,7 +126,8 @@ def prep_lab_score_calc():
         old_score = float(window.create_text_input("What was the student's original score"))
         if old_score == Window.CANCEL:
             return
-        current_completion = float(window.create_text_input("What is the student's current completion % in zyBooks", "100"))
+        current_completion = float(window.create_text_input("What is the student's current "
+                                                            "completion % in zyBooks", "100"))
         if current_completion == Window.CANCEL:
             return
 
@@ -127,17 +137,21 @@ def prep_lab_score_calc():
         window.create_popup("Error", ["Invalid input"])
 
 def view_students_callback(student_index, _filtered_list):
+    """Create a popup to show info for the selected student"""
     window = Window.get_window()
     students = data.get_students()
 
     student = students[student_index]
 
-    msg = [f"Name: {student.full_name}", f"Email: {student.email}", f"Section: {student.section}", f"ID: {student.id}"]
+    msg = [f"Name: {student.full_name}", f"Email: {student.email}",
+           f"Section: {student.section}", f"ID: {student.id}"]
     window.create_popup("Student Info", msg, components.Popup.ALIGN_LEFT)
 
 def view_students():
+    """Create the view students filtered list"""
     window = Window.get_window()
     students = data.get_students()
     window.set_header("View Students")
 
-    window.create_filtered_list("Student Name", input_data=students, callback=view_students_callback)
+    window.create_filtered_list("Student Name", input_data=students,
+                                callback=view_students_callback)

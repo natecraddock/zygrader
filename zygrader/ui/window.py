@@ -1,3 +1,4 @@
+"""Window: The zygrader window manager and input handling"""
 import curses
 import os
 import queue
@@ -25,6 +26,7 @@ class Event:
     CHAR_INPUT = 6
     ESC = 7
     DELETE = 8
+    REFRESH = 9
 
     def __init__(self, event_type, value):
         self.type = event_type
@@ -152,10 +154,10 @@ class Window:
         """Consume one event from the event queue. Blocks when no events are found"""
         return self.event_queue.get()
 
-    def file_system_event(self, identifier, component):
-        if identifier == Window.EVENT_REFRESH_LIST:
-            component.refresh()
-            self.draw()
+    def push_refresh_event(self):
+        """Force the ui to refresh even when it is in an input loop"""
+        event = Event(Event.REFRESH, None)
+        self.event_queue.put_nowait(event)
 
     def __init__(self, callback, window_name):
         Window.instance = self
@@ -256,7 +258,7 @@ class Window:
         """Load a string to be used for the next component"""
         self.__header_title_load = text
 
-    def draw_header(self, text=""):
+    def draw_header(self):
         """Set the header text"""
         self.header.erase()
         resize_window(self.header, 1, self.cols)
@@ -276,18 +278,18 @@ class Window:
             display_text += " | INSERT"
 
         # Centered header
-        x = self.cols // 2 - len(display_text) // 2
-        add_str(self.header, 0, x, display_text)
+        row = self.cols // 2 - len(display_text) // 2
+        add_str(self.header, 0, row, display_text)
 
         # Christmas theme
         if self.christmas_mode:
             red, green = self.get_header_colors()
 
-            for x in range(self.cols):
-                if ((x // 2) + self.header_offset) % 2 is 0:
-                    self.header.chgat(0, x, red | curses.A_BOLD)
+            for row in range(self.cols):
+                if ((row // 2) + self.header_offset) % 2 is 0:
+                    self.header.chgat(0, row, red | curses.A_BOLD)
                 else:
-                    self.header.chgat(0, x, green | curses.A_BOLD)
+                    self.header.chgat(0, row, green | curses.A_BOLD)
 
         self.header.noutrefresh()
 
@@ -407,7 +409,8 @@ class Window:
         """
         use_dict = bool(isinstance(options, dict))
 
-        popup = components.OptionsPopup(self.rows, self.cols, title, message, options, use_dict, align)
+        popup = components.OptionsPopup(self.rows, self.cols, title,
+                                        message, options, use_dict, align)
         self.component_init(popup)
 
         while True:
@@ -452,7 +455,8 @@ class Window:
                 popup.up()
             elif event.type == Event.LEFT and self.left_right_menu_nav:
                 break
-            elif (event.type == Event.ENTER) or (event.type == Event.RIGHT and self.left_right_menu_nav):
+            elif ((event.type == Event.ENTER) or
+                  (event.type == Event.RIGHT and self.left_right_menu_nav)):
                 if popup.selected() is UI_GO_BACK:
                     break
                 elif callback:
@@ -518,18 +522,21 @@ class Window:
             return Window.CANCEL
         return text.text
 
-    def create_filtered_list(self, prompt, input_data=None, callback=None, list_fill=None, filter_function=None, watch=None):
+    def create_filtered_list(self, prompt, input_data=None, callback=None,
+                             list_fill=None, filter_function=None, create_fn=None):
         """
         If input_data (list) is supplied, the list will be drawn from the string representations
         of that data. If list_fill (function) is supplied, then list_fill will be called to generate
         a list to be drawn.
+
+        create_fn: A function to run when the list is created, with the filtered list as an argument
         """
-        list_input = components.FilteredList(1, 0, self.rows - 1, self.cols, input_data, list_fill, prompt, filter_function)
+        list_input = components.FilteredList(1, 0, self.rows - 1, self.cols,
+                                             input_data, list_fill, prompt, filter_function)
         self.component_init(list_input)
 
-        if watch:
-            # Register paths to trigger file system events
-            data.fs_watch.fs_watch_register(watch, Window.EVENT_REFRESH_LIST, lambda identifier: self.file_system_event(identifier, list_input))
+        if create_fn:
+            create_fn(list_input)
 
         while True:
             event = self.consume_event()
@@ -544,22 +551,19 @@ class Window:
                 list_input.delchar()
             elif event.type == Event.CHAR_INPUT:
                 list_input.addchar(event.value)
-            elif (event.type == Event.ENTER) or (event.type == Event.RIGHT and self.left_right_menu_nav):
+            elif ((event.type == Event.ENTER) or
+                  (event.type == Event.RIGHT and self.left_right_menu_nav)):
                 if callback and list_input.selected() != UI_GO_BACK:
                     list_input.dirty = True
                     callback(list_input.selected(), list_input)
 
                     if self.clear_filter:
                         list_input.clear_filter()
-                    list_input.flag_dirty()
-
+                    list_input.refresh()
                 else:
                     break
 
             self.draw()
-
-        if watch:
-            data.fs_watch.fs_watch_unregister(Window.EVENT_REFRESH_LIST)
 
         list_input.clear()
         self.component_deinit()
@@ -575,5 +579,5 @@ class Window:
 
         return logger
 
-    def remove_logger(self, logger):
+    def remove_logger(self):
         self.component_deinit()

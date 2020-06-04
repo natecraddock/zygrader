@@ -31,7 +31,7 @@ class WatchData:
         if changed:
             self.callback(self.identifier)
 
-watch_interest = []
+WATCH_INTEREST = []
 WATCH_DELAY = 1
 
 def fs_watch():
@@ -41,7 +41,7 @@ def fs_watch():
     while True:
         window.take_input.wait()
         time.sleep(WATCH_DELAY)
-        for watch in watch_interest:
+        for watch in WATCH_INTEREST:
             watch.check_paths()
 
 def start_fs_watch():
@@ -51,11 +51,11 @@ def start_fs_watch():
 
 def fs_watch_register(paths: list, identifier: str, callback: callable):
     """Register paths with a callback function"""
-    watch_interest.append(WatchData(paths, identifier, callback))
+    WATCH_INTEREST.append(WatchData(paths, identifier, callback))
 
 def fs_watch_unregister(identifier: str):
     """Unregister a path from the file system watch"""
-    for watch in watch_interest:
+    for watch in WATCH_INTEREST:
         if watch.identifier == identifier:
-            watch_interest.remove(watch)
+            WATCH_INTEREST.remove(watch)
             break

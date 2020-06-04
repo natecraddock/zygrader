@@ -1,3 +1,4 @@
+"""Zygrader: Main menu for zygrader"""
 import sys
 
 from . import data
@@ -9,10 +10,12 @@ from . import utils
 
 from .ui.window import Window
 
-main_menu_options = ["Grade", "Prep Lab Score Calculator", "Run For Fun", "View Students", "Preferences", "Changelog"]
+MAIN_MENU_OPTIONS = ["Grade", "Prep Lab Score Calculator", "Run For Fun",
+                     "View Students", "Preferences", "Changelog"]
 
 def mainloop_callback(option_index, _filtered_list):
-    option = main_menu_options[option_index]
+    """Run the chosen option from the main menu"""
+    option = MAIN_MENU_OPTIONS[option_index]
 
     if option == "Grade":
         grader.grade()
@@ -33,15 +36,17 @@ def mainloop_callback(option_index, _filtered_list):
         utils.view_students()
 
 def mainloop(admin_mode):
+    """Create the main menu that runs until zygrader is exited"""
     window = Window.get_window()
 
     if admin_mode:
-        main_menu_options.append("Admin")
+        MAIN_MENU_OPTIONS.append("Admin")
 
     window.set_header(f"Menu")
-    window.create_filtered_list("Option", input_data=main_menu_options, callback=mainloop_callback)
+    window.create_filtered_list("Option", input_data=MAIN_MENU_OPTIONS, callback=mainloop_callback)
 
 def main(window: Window):
+    """Curses has been initialized, now setup various modules before showing the menu"""
     # Read args to set admin mode
     if "-a" in sys.argv:
         admin_mode = True
@@ -62,6 +67,7 @@ def main(window: Window):
     mainloop(admin_mode)
 
 def start():
+    """Setup the user before initializing curses"""
     # Start application and setup data folders
     config.g_data.start()
 

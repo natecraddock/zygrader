@@ -259,6 +259,7 @@ class FilteredList(Component):
     def refresh(self):
         if self.list_fill:
             self.create_lines(None)
+        self.flag_dirty()
 
     def draw(self):
         self.window.erase()
