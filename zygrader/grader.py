@@ -37,6 +37,11 @@ def fill_student_list(lab, students):
 
     return lines
 
+def update_student_list(window: Window, student_list: components.FilteredList):
+    """Update the student list when the locks or flags change"""
+    student_list.refresh()
+    window.push_refresh_event()
+
 def get_submission(lab, student, use_locks=True):
     """Get a submission from zyBooks given the lab and student"""
     window = Window.get_window()
@@ -125,7 +130,7 @@ def pair_programming_submission_callback(submission):
                                 submission.msg, options, components.Popup.ALIGN_LEFT)
     config.g_data.running_process = None
 
-def grade_pair_programming(first_submission):
+def grade_pair_programming(student_list, first_submission):
     """Pick a second student to grade pair programming with"""
     # Get second student
     window = Window.get_window()
@@ -134,10 +139,9 @@ def grade_pair_programming(first_submission):
     lab = first_submission.lab
 
     # Get student
-    paths = [config.g_data.get_locks_directory(), config.g_data.get_flags_directory()]
     student_index = window.create_filtered_list("Student",
                                                 list_fill=lambda: fill_student_list(lab, students),
-                                                filter_function=data.Student.find, watch=paths)
+                                                filter_function=data.Student.find)
     if student_index is UI_GO_BACK:
         return
 
@@ -152,6 +156,8 @@ def grade_pair_programming(first_submission):
 
     try:
         second_submission = get_submission(lab, student)
+        # Immediately redraw the original list
+        update_student_list(window, student_list)
 
         if second_submission.flag == data.model.SubmissionFlag.NO_SUBMISSION:
             msg = [f"{student.full_name} has not submitted"]
@@ -196,10 +202,9 @@ def diff_parts_fn(window, submission):
     if error:
         window.create_popup("Error", [error])
 
-def student_callback(lab, student_index, use_locks=True):
+def student_callback(student_list, lab, student_index, use_locks=True):
     """Show the submission for the selected lab and student"""
     window = Window.get_window()
-
     student = data.get_students()[student_index]
 
     # Wait for student's assignment to be available
@@ -226,6 +231,7 @@ def student_callback(lab, student_index, use_locks=True):
     try:
         # Get the student's submission
         submission = get_submission(lab, student, use_locks)
+        update_student_list(window, student_list)
 
         # Unlock if student has not submitted
         if submission.flag == data.model.SubmissionFlag.NO_SUBMISSION:
@@ -239,7 +245,7 @@ def student_callback(lab, student_index, use_locks=True):
         options = {
             "Flag": lambda: flag_submission(lab, student),
             "Pick Submission": lambda: pick_submission(lab, student, submission),
-            "Pair Programming": lambda: grade_pair_programming(submission),
+            "Pair Programming": lambda: grade_pair_programming(student_list, submission),
             "Diff Parts": lambda: diff_parts_fn(window, submission),
             "Run": lambda: run_code_fn(window, submission),
             "View": submission.show_files
@@ -264,6 +270,13 @@ def student_callback(lab, student_index, use_locks=True):
         if use_locks:
             data.lock.unlock_lab(student, lab)
 
+def watch_students(window: Window, student_list: components.FilteredList):
+    """Register paths when the filtered list is created"""
+    paths = [config.g_data.get_locks_directory(), config.g_data.get_flags_directory()]
+
+    update_list = lambda _: update_student_list(window, student_list)
+    data.fs_watch.fs_watch_register(paths, "student_list_watch", update_list)
+
 def lab_callback(lab_index, use_locks=True):
     """Create the list of labs to pick a student to grade"""
     window = Window.get_window()
@@ -273,14 +286,16 @@ def lab_callback(lab_index, use_locks=True):
 
     students = data.get_students()
 
-    # _ refers to the filtered list which is unused
-    student_select_fn = lambda student_index, _: student_callback(lab, student_index, use_locks)
-    paths = [config.g_data.get_locks_directory(), config.g_data.get_flags_directory()]
+    student_select_fn = (lambda student_index, student_list:
+                         student_callback(student_list, lab, student_index, use_locks))
 
     # Get student
     window.create_filtered_list("Student", list_fill=lambda: fill_student_list(lab, students),
-                                callback=student_select_fn,
-                                filter_function=data.Student.find, watch=paths)
+                                callback=student_select_fn, filter_function=data.Student.find,
+                                create_fn=lambda student_list: watch_students(window, student_list))
+
+    # Remove the file watch handler when done choosing students
+    data.fs_watch.fs_watch_unregister("student_list_watch")
 
 def grade(use_locks=True):
     """Create the list of labs to pick one to grade"""

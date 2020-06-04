@@ -25,6 +25,7 @@ class Event:
     RIGHT = 5
     CHAR_INPUT = 6
     ESC = 7
+    REFRESH = 8
 
     def __init__(self, event_type, value):
         self.type = event_type
@@ -148,10 +149,10 @@ class Window:
         """Consume one event from the event queue. Blocks when no events are found"""
         return self.event_queue.get()
 
-    def file_system_event(self, identifier, component):
-        if identifier == Window.EVENT_REFRESH_LIST:
-            component.refresh()
-            self.draw()
+    def push_refresh_event(self):
+        """Force the ui to refresh even when it is in an input loop"""
+        event = Event(Event.REFRESH, None)
+        self.event_queue.put_nowait(event)
 
     def __init__(self, callback, window_name):
         Window.instance = self
@@ -490,20 +491,20 @@ class Window:
         return text.text
 
     def create_filtered_list(self, prompt, input_data=None, callback=None,
-                             list_fill=None, filter_function=None, watch=None):
+                             list_fill=None, filter_function=None, create_fn=None):
         """
         If input_data (list) is supplied, the list will be drawn from the string representations
         of that data. If list_fill (function) is supplied, then list_fill will be called to generate
         a list to be drawn.
+
+        create_fn: A function to run when the list is created, with the filtered list as an argument
         """
         list_input = components.FilteredList(1, 0, self.rows - 1, self.cols,
                                              input_data, list_fill, prompt, filter_function)
         self.component_init(list_input)
 
-        if watch:
-            # Register paths to trigger file system events
-            data.fs_watch.fs_watch_register(watch, Window.EVENT_REFRESH_LIST,
-                                            lambda identifier: self.file_system_event(identifier, list_input))
+        if create_fn:
+            create_fn(list_input)
 
         while True:
             event = self.consume_event()
@@ -526,15 +527,11 @@ class Window:
 
                     if self.clear_filter:
                         list_input.clear_filter()
-                    list_input.flag_dirty()
-
+                    list_input.refresh()
                 else:
                     break
 
             self.draw()
-
-        if watch:
-            data.fs_watch.fs_watch_unregister(Window.EVENT_REFRESH_LIST)
 
         list_input.clear()
         self.component_deinit()
