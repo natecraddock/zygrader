@@ -25,7 +25,8 @@ class Event:
     RIGHT = 5
     CHAR_INPUT = 6
     ESC = 7
-    REFRESH = 8
+    DELETE = 8
+    REFRESH = 9
 
     def __init__(self, event_type, value):
         self.type = event_type
@@ -81,6 +82,8 @@ class Window:
             event = Event.ESC
         elif input_code == curses.KEY_BACKSPACE:
             event = Event.BACKSPACE
+        elif input_code == curses.KEY_DC:
+            event = Event.DELETE
         elif input_code:
             event = Event.CHAR_INPUT
             event_value = chr(input_code)
@@ -94,6 +97,8 @@ class Window:
 
         if input_code == curses.KEY_BACKSPACE and self.insert_mode:
             event = Event.BACKSPACE
+        elif input_code == curses.KEY_DC and self.insert_mode:
+            event = Event.DELETE
         elif input_code == 27:
             if self.insert_mode:
                 self.insert_mode = False
@@ -472,6 +477,8 @@ class Window:
                 break
             elif event.type == Event.BACKSPACE:
                 text.delchar()
+            elif event.type == Event.DELETE:
+                text.delcharforward()
             elif event.type == Event.CHAR_INPUT:
                 text.addchar(event.value)
             elif event.type == Event.LEFT:
