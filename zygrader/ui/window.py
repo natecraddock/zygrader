@@ -354,6 +354,31 @@ class Window:
 
         self.component_deinit()
 
+    def create_waiting_popup(self, title, message, align=components.Popup.ALIGN_CENTER):
+        """Create a popup that the user cannot exit out of.
+        Exiting the popup must be done by calling close() on the returned control object.
+        The creator of the popup should block until it calls close() to avoid input issues.
+        """
+
+        class WaitingPopupControl:
+            def __init__(self, window):
+                self.window = window
+                self.has_exited = False
+
+            def update(self):
+                self.window.draw()
+
+            def close(self):
+                if not self.has_exited:
+                    self.window.component_deinit()
+                    self.window.clear_event_queue()
+                self.has_exited = True
+
+        pop = components.OptionsPopup(self.rows, self.cols, title, message, [], False, align)
+        self.component_init(pop)
+
+        return WaitingPopupControl(self)
+
     def create_bool_popup(self, title, message, align=components.Popup.ALIGN_CENTER):
         """Create a popup with title and message that returns true/false"""
         options = ["YES", "NO"]

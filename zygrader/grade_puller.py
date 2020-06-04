@@ -81,7 +81,9 @@ class GradePuller:
         return True
 
     def fetch_zybooks_toc(self):
+        wait_controller = self.window.create_waiting_popup("TOC", ["Fetching TOC from zyBooks"])
         toc = self.zy_api.get_table_of_contents()
+        wait_controller.close()
         if not toc:
             return False
         self.zybooks_toc = toc
