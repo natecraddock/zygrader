@@ -86,12 +86,14 @@ def encode_password(config, password):
 
 def authenticate(window: Window, zy_api, email, password):
     """Authenticate to the zyBooks api with the email and password"""
-    if zy_api.authenticate(email, password):
-        window.create_popup("Success", [f"Successfully Authenticated {email}"])
-        return True
-    else:
+    wait_popup = window.create_waiting_popup("Signing in", [f"Signing into zyBooks as {email}..."])
+    success = zy_api.authenticate(email, password)
+    wait_popup.close()
+
+    if not success:
         window.create_popup("Error", ["Invalid Credentials"])
         return False
+    return True
 
 def get_email():
     """Get the user's email address from config"""

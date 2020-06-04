@@ -358,6 +358,7 @@ class Window:
 
     def create_waiting_popup(self, title, message, align=components.Popup.ALIGN_CENTER):
         """Create a popup that the user cannot exit out of.
+
         Exiting the popup must be done by calling close() on the returned control object.
         The creator of the popup should block until it calls close() to avoid input issues.
         """
