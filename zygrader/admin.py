@@ -85,7 +85,7 @@ def submission_search(lab, search_string, output_path):
 
             student_num += 1
 
-        window.remove_logger(logger)
+        window.remove_logger()
 
 
 def submission_search_init(window, labs):
