@@ -7,7 +7,7 @@ from . import data
 from . import utils
 
 from .ui import components, UI_GO_BACK
-from .ui.window import Window
+from .ui.window import Event, Window
 from .zybooks import Zybooks
 
 def color_student_lines(lab, student):
@@ -112,9 +112,11 @@ def view_diff(first, second):
                                   second.student.full_name, use_browser)
     utils.view_string(diff, "submissions.diff", use_browser)
 
-def run_code_fn(window, submission):
+def run_code_fn(window, event: Event, submission):
     """Callback to compile and run a submission's code"""
-    if not submission.compile_and_run_code():
+    use_gdb = event.modifier == Event.MOD_ALT
+
+    if not submission.compile_and_run_code(use_gdb):
         window.create_popup("Error", ["Could not compile and run code"])
 
 def pair_programming_submission_callback(submission):
@@ -122,8 +124,8 @@ def pair_programming_submission_callback(submission):
     window = Window.get_window()
 
     options = {
-        "Run": lambda: run_code_fn(window, submission),
-        "View": submission.show_files
+        "Run": lambda event: run_code_fn(window, event, submission),
+        "View": lambda _: submission.show_files()
     }
 
     window.create_options_popup("Pair Programming Submission",
@@ -166,12 +168,12 @@ def grade_pair_programming(student_list, first_submission):
             data.lock.unlock_lab(student, lab)
             return
 
-        first_submission_fn = lambda: pair_programming_submission_callback(first_submission)
-        second_submission_fn = lambda: pair_programming_submission_callback(second_submission),
+        first_submission_fn = lambda _: pair_programming_submission_callback(first_submission)
+        second_submission_fn = lambda _: pair_programming_submission_callback(second_submission),
         options = {
             first_submission.student.full_name: first_submission_fn,
             second_submission.student.full_name: second_submission_fn,
-            "View Diff": lambda: view_diff(first_submission, second_submission)
+            "View Diff": lambda _: view_diff(first_submission, second_submission)
         }
 
         msg = [f"{first_submission.student.full_name} {first_submission.latest_submission}",
@@ -243,12 +245,12 @@ def student_callback(student_list, lab, student_index, use_locks=True):
             return
 
         options = {
-            "Flag": lambda: flag_submission(lab, student),
-            "Pick Submission": lambda: pick_submission(lab, student, submission),
-            "Pair Programming": lambda: grade_pair_programming(student_list, submission),
-            "Diff Parts": lambda: diff_parts_fn(window, submission),
-            "Run": lambda: run_code_fn(window, submission),
-            "View": submission.show_files
+            "Flag": lambda _: flag_submission(lab, student),
+            "Pick Submission": lambda _: pick_submission(lab, student, submission),
+            "Pair Programming": lambda _: grade_pair_programming(student_list, submission),
+            "Diff Parts": lambda _: diff_parts_fn(window, submission),
+            "Run": lambda event: run_code_fn(window, event, submission),
+            "View": lambda _: submission.show_files()
         }
 
         if not use_locks:

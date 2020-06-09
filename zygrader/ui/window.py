@@ -16,6 +16,7 @@ UI_RIGHT = 1
 UI_CENTERED = 2
 
 class Event:
+    # Event types
     NONE = -1
     BACKSPACE = 0
     ENTER = 1
@@ -28,9 +29,13 @@ class Event:
     DELETE = 8
     REFRESH = 9
 
-    def __init__(self, event_type, value):
+    # Modifier Keys
+    MOD_ALT = 0
+
+    def __init__(self, event_type, value, modifier=None):
         self.type = event_type
         self.value = value
+        self.modifier = modifier
 
 class Window:
     EVENT_REFRESH_LIST = "flags_and_locks"
@@ -51,16 +56,25 @@ class Window:
         self.left_right_menu_nav = config.user.is_preference_set("left_right_arrow_nav")
         self.clear_filter = config.user.is_preference_set("clear_filter")
 
-    def get_input(self, input_win):
+    def get_input(self, input_win) -> Event:
         """Get input and handle resize events"""
         event = Event.NONE
         event_value = Event.NONE
+        event_mod = None
 
         # Nodelay causes exception when no input is given
         input_code = input_win.getch()
         if input_code == -1:
-            event = Event.NONE
-            return event, event_value
+            return Event(event, event_value)
+
+        # Check for ALT pressed
+        elif input_code == 27:
+            # Check for next character
+            input_code = input_win.getch()
+            if input_code == -1:
+                return Event(event, event_value)
+            # Character accepted, check next symbol
+            event_mod = Event.MOD_ALT
 
         # Cases for each type of input
         if input_code == curses.KEY_RESIZE:
@@ -89,7 +103,7 @@ class Window:
             event_value = chr(input_code)
 
         self.header_offset += 1
-        return event, event_value
+        return Event(event, event_value, event_mod)
 
     def get_input_vim(self, input_code):
         event = Event.NONE
@@ -135,11 +149,11 @@ class Window:
 
         while True:
             self.take_input.wait()
-            event, event_value = self.get_input(input_win)
+            event = self.get_input(input_win)
             if not self.take_input.is_set():
                 continue
-            if event != Event.NONE:
-                self.event_queue.put_nowait(Event(event, event_value))
+            if event.type != Event.NONE:
+                self.event_queue.put_nowait(event)
 
             # Kill thread at end
             if self.stop_input:
@@ -426,7 +440,7 @@ class Window:
                     callback_fn = popup.selected()
                     if not callback_fn:
                         break
-                    callback_fn()
+                    callback_fn(event)
                 else:
                     break
 

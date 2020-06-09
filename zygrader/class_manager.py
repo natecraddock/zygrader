@@ -227,11 +227,11 @@ def edit_labs_callback(lab, filtered_list):
     window = Window.get_window()
 
     options = {
-        "Remove": lambda: remove_fn(filtered_list, window, lab),
-        "Rename": lambda: rename_lab(filtered_list, lab),
-        "Move Up": lambda: move_lab(filtered_list, lab, -1),
-        "Move Down": lambda: move_lab(filtered_list, lab, 1),
-        "Edit Options": lambda: edit_lab_options(lab)
+        "Remove": lambda _: remove_fn(filtered_list, window, lab),
+        "Rename": lambda _: rename_lab(filtered_list, lab),
+        "Move Up": lambda _: move_lab(filtered_list, lab, -1),
+        "Move Down": lambda _: move_lab(filtered_list, lab, 1),
+        "Edit Options": lambda _: edit_lab_options(lab)
     }
 
     msg = [f"Editing {lab.name}", "", "Select an option"]

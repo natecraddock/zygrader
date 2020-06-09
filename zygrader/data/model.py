@@ -232,7 +232,7 @@ class Submission:
             return True
         return False
 
-    def compile_and_run_code(self):
+    def compile_and_run_code(self, use_gdb):
         window = ui.window.Window.get_window()
         if self.do_resume_code(config.g_data.running_process):
             stopped = self.wait_on_child(config.g_data.running_process)
@@ -243,7 +243,7 @@ class Submission:
                 return False # Could not compile code
 
             config.g_data.RUNNING_CODE = True
-            stopped = self.run_code(executable)
+            stopped = self.run_code(executable, use_gdb)
 
         if not stopped:
             config.g_data.running_process = None
@@ -287,7 +287,7 @@ class Submission:
         files = utils.get_source_file_paths(root_dir)
 
         source_files = [f for f in files if f.endswith(".cpp")]
-        compile_command = ["g++", "-o", executable_name, f"-I{root_dir}"] + source_files
+        compile_command = ["g++", "-g", "-o", executable_name, f"-I{root_dir}"] + source_files
 
         compile_exit = subprocess.run(compile_command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         if compile_exit.returncode != 0:
@@ -308,7 +308,7 @@ class Submission:
 
         return False
 
-    def run_code(self, executable):
+    def run_code(self, executable, use_gdb):
         window = ui.window.Window.get_window()
         window.clear_event_queue()
         window.take_input.clear()
@@ -319,9 +319,14 @@ class Submission:
         print(f"Running {self.student.full_name}'s code")
         print("CTRL+C to terminate")
         print("CTRL+Z to stop (pause)")
+        if not use_gdb:
+            print("ALT+ENTER when running code to use gdb")
         print("#############################################################\n")
 
-        process = subprocess.Popen([executable], stderr=subprocess.DEVNULL)
+        if use_gdb:
+            process = subprocess.Popen(["gdb", executable], stderr=subprocess.DEVNULL)
+        else:
+            process = subprocess.Popen([executable], stderr=subprocess.DEVNULL)
         config.g_data.running_process = process
 
         # Return indicator if child terminated or stopped
