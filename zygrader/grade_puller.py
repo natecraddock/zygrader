@@ -139,7 +139,11 @@ class GradePuller:
         if new_time_str == Window.CANCEL:
             return
 
-        new_time = datetime.datetime.strptime(new_time_str, "%m.%d.%Y:%H.%M.%S").astimezone(tz=None)
+        try:
+            new_time = datetime.datetime.strptime(new_time_str, "%m.%d.%Y:%H.%M.%S").astimezone(tz=None)
+        except ValueError:
+            self.window.create_popup("Bad Time", [f"{new_time_str} is not a properly formatted and valid time"])
+            return
         self.due_times[section] = new_time
 
         if selected_index == 0 and len(self.selected_class_sections) > 1: #For convenience, allow the day to carried across all sections so that only the time has to be changed for the rest
@@ -150,11 +154,12 @@ class GradePuller:
 
     def select_due_times(self):
         now = datetime.datetime.now()
-        self.due_times = {section: now for section in self.selected_class_sections}
+        yesterday = now - datetime.timedelta(days=1)
+        midnight = datetime.time(hour=23, minute=59, second=59)
+        last_night = datetime.datetime.combine(yesterday, midnight)
+        self.due_times = {section: last_night for section in self.selected_class_sections}
         draw = lambda: [f"Section {section}: {time.strftime('%m.%d.%Y:%H.%M.%S')}" for section, time in self.due_times.items()]
         self.window.create_list_popup("Set Due Times (use Back to finish)", callback=self.select_due_times_callback, list_fill=draw)
-        if all(el is now for el in self.due_times.values()):
-            return False
         return True
 
     def fetch_completion_reports(self):
