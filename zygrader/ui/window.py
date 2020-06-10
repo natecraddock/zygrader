@@ -72,6 +72,13 @@ class Window:
             # Check for next character
             input_code = input_win.getch()
             if input_code == -1:
+                # Interpret as a single ESC char
+                if self.insert_mode:
+                    self.insert_mode = False
+                    self.draw_header()
+                    event = Event.NONE
+                else:
+                    event = Event.ESC
                 return Event(event, event_value)
             # Character accepted, check next symbol
             event_mod = Event.MOD_ALT
