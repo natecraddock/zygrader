@@ -61,6 +61,12 @@ def get_submission(lab, student, use_locks=True):
                "View the most recent submission on zyBooks."]
         window.create_popup("Warning", msg)
 
+    # Return None if student has not submitted
+    if submission.flag == data.model.SubmissionFlag.NO_SUBMISSION:
+        msg = [f"{student.full_name} has not submitted"]
+        window.create_popup("No Submissions", msg)
+        return None
+
     return submission
 
 def pick_submission(lab: data.model.Lab, student: data.model.Student,
@@ -132,7 +138,35 @@ def pair_programming_submission_callback(submission):
                                 submission.msg, options, components.Popup.ALIGN_LEFT)
     config.g_data.running_process = None
 
-def grade_pair_programming(student_list, first_submission):
+def can_get_through_locks(use_locks, student, lab):
+    if not use_locks:
+        return True
+
+    window = Window.get_window()
+
+    if data.lock.is_lab_locked(student, lab):
+        netid = data.lock.get_locked_netid(student, lab)
+
+        # If being graded by the user who locked it, allow grading
+        if netid != getpass.getuser():
+            msg = [f"This student is already being graded by {netid}"]
+            window.create_popup("Student Locked", msg)
+            return False
+
+    if data.flags.is_submission_flagged(student, lab):
+        msg = ["This submission has been flagged", "",
+               f"Note: {data.flags.get_flag_message(student, lab)}", "",
+               "Would you like to unflag it?"]
+        remove = window.create_bool_popup("Submission Flagged", msg)
+
+        if remove:
+            data.flags.unflag_submission(student, lab)
+        else:
+            return False
+
+    return True
+
+def grade_pair_programming(student_list, first_submission, use_locks):
     """Pick a second student to grade pair programming with"""
     # Get second student
     window = Window.get_window()
@@ -149,24 +183,17 @@ def grade_pair_programming(student_list, first_submission):
 
     student = students[student_index]
 
-    if data.lock.is_lab_locked(student, lab):
-        netid = data.lock.get_locked_netid(student, lab)
-
-        msg = [f"This student is already being graded by {netid}"]
-        window.create_popup("Student Locked", msg)
+    if not can_get_through_locks(use_locks, student, lab):
         return
 
     try:
-        second_submission = get_submission(lab, student)
-        # Immediately redraw the original list
-        update_student_list(window, student_list)
+        second_submission = get_submission(lab, student, use_locks)
 
-        if second_submission.flag == data.model.SubmissionFlag.NO_SUBMISSION:
-            msg = [f"{student.full_name} has not submitted"]
-            window.create_popup("No Submissions", msg)
-
-            data.lock.unlock_lab(student, lab)
+        if second_submission is None:
             return
+
+        # Redraw the original list
+        update_student_list(window, student_list)
 
         first_submission_fn = lambda _: pair_programming_submission_callback(first_submission)
         second_submission_fn = lambda _: pair_programming_submission_callback(second_submission),
@@ -182,11 +209,9 @@ def grade_pair_programming(student_list, first_submission):
 
         window.create_options_popup("Pair Programming", msg, options)
 
-        data.lock.unlock_lab(student, lab)
-    except KeyboardInterrupt:
-        data.lock.unlock_lab(student, lab)
-    except curses.error:
-        data.lock.unlock_lab(student, lab)
+    finally:
+        if use_locks:
+            data.lock.unlock_lab(student, lab)
 
 def flag_submission(lab, student):
     """Flag a submission with a note"""
@@ -210,51 +235,27 @@ def student_callback(student_list, lab, student_index, use_locks=True):
     student = data.get_students()[student_index]
 
     # Wait for student's assignment to be available
-    if use_locks and data.lock.is_lab_locked(student, lab):
-        netid = data.lock.get_locked_netid(student, lab)
-
-        # If being graded by the user who locked it, allow grading
-        if netid != getpass.getuser():
-            msg = [f"This student is already being graded by {netid}"]
-            window.create_popup("Student Locked", msg)
-            return
-
-    if use_locks and data.flags.is_submission_flagged(student, lab):
-        msg = ["This submission has been flagged", "",
-               f"Note: {data.flags.get_flag_message(student, lab)}", "",
-               "Would you like to unflag it?"]
-        remove = window.create_bool_popup("Submission Flagged", msg)
-
-        if remove:
-            data.flags.unflag_submission(student, lab)
-        else:
-            return
+    if not can_get_through_locks(use_locks, student, lab):
+        return
 
     try:
         # Get the student's submission
         submission = get_submission(lab, student, use_locks)
-        update_student_list(window, student_list)
 
-        # Unlock if student has not submitted
-        if submission.flag == data.model.SubmissionFlag.NO_SUBMISSION:
-            msg = [f"{student.full_name} has not submitted"]
-            window.create_popup("No Submissions", msg)
-
-            if use_locks:
-                data.lock.unlock_lab(student, lab)
+        # Exit if student has not submitted
+        if submission is None:
             return
+
+        update_student_list(window, student_list)
 
         options = {
             "Flag": lambda _: flag_submission(lab, student),
             "Pick Submission": lambda _: pick_submission(lab, student, submission),
-            "Pair Programming": lambda _: grade_pair_programming(student_list, submission),
+            "Pair Programming": lambda _: grade_pair_programming(student_list, submission, use_locks),
             "Diff Parts": lambda _: diff_parts_fn(window, submission),
             "Run": lambda event: run_code_fn(window, event, submission),
             "View": lambda _: submission.show_files()
         }
-
-        if not use_locks:
-            del options["Pair Programming"]
 
         # Add option to diff parts if this lab requires it
         if not (use_locks and submission.flag & data.model.SubmissionFlag.DIFF_PARTS):
@@ -265,10 +266,8 @@ def student_callback(student_list, lab, student_index, use_locks=True):
 
         config.g_data.running_process = None
 
-        # After popup, unlock student
-        if use_locks:
-            data.lock.unlock_lab(student, lab)
-    except (KeyboardInterrupt, curses.error):
+    finally:
+        # Always unlock the lab when no longer grading
         if use_locks:
             data.lock.unlock_lab(student, lab)
 
