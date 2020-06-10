@@ -239,9 +239,6 @@ def student_callback(student_list, lab, student_index, use_locks=True):
         if submission.flag == data.model.SubmissionFlag.NO_SUBMISSION:
             msg = [f"{student.full_name} has not submitted"]
             window.create_popup("No Submissions", msg)
-
-            if use_locks:
-                data.lock.unlock_lab(student, lab)
             return
 
         options = {
@@ -265,10 +262,8 @@ def student_callback(student_list, lab, student_index, use_locks=True):
 
         config.g_data.running_process = None
 
-        # After popup, unlock student
-        if use_locks:
-            data.lock.unlock_lab(student, lab)
-    except (KeyboardInterrupt, curses.error):
+    finally:
+        # Always unlock the lab when no longer grading
         if use_locks:
             data.lock.unlock_lab(student, lab)
 
