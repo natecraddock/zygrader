@@ -61,6 +61,12 @@ def get_submission(lab, student, use_locks=True):
                "View the most recent submission on zyBooks."]
         window.create_popup("Warning", msg)
 
+    # Return None if student has not submitted
+    if submission.flag == data.model.SubmissionFlag.NO_SUBMISSION:
+        msg = [f"{student.full_name} has not submitted"]
+        window.create_popup("No Submissions", msg)
+        return None
+
     return submission
 
 def pick_submission(lab: data.model.Lab, student: data.model.Student,
@@ -132,6 +138,34 @@ def pair_programming_submission_callback(submission):
                                 submission.msg, options, components.Popup.ALIGN_LEFT)
     config.g_data.running_process = None
 
+def can_get_through_locks(use_locks, student, lab):
+    if not use_locks:
+        return True
+
+    window = Window.get_window()
+
+    if data.lock.is_lab_locked(student, lab):
+        netid = data.lock.get_locked_netid(student, lab)
+
+        # If being graded by the user who locked it, allow grading
+        if netid != getpass.getuser():
+            msg = [f"This student is already being graded by {netid}"]
+            window.create_popup("Student Locked", msg)
+            return False
+
+    if data.flags.is_submission_flagged(student, lab):
+        msg = ["This submission has been flagged", "",
+               f"Note: {data.flags.get_flag_message(student, lab)}", "",
+               "Would you like to unflag it?"]
+        remove = window.create_bool_popup("Submission Flagged", msg)
+
+        if remove:
+            data.flags.unflag_submission(student, lab)
+        else:
+            return False
+
+    return True
+
 def grade_pair_programming(student_list, first_submission, use_locks):
     """Pick a second student to grade pair programming with"""
     # Get second student
@@ -149,23 +183,17 @@ def grade_pair_programming(student_list, first_submission, use_locks):
 
     student = students[student_index]
 
-    if use_locks and data.lock.is_lab_locked(student, lab):
-        netid = data.lock.get_locked_netid(student, lab)
-
-        if netid != getpass.getuser():
-            msg = [f"This student is already being graded by {netid}"]
-            window.create_popup("Student Locked", msg)
-            return
+    if not can_get_through_locks(use_locks, student, lab):
+        return
 
     try:
         second_submission = get_submission(lab, student, use_locks)
-        # Immediately redraw the original list
-        update_student_list(window, student_list)
 
-        if second_submission.flag == data.model.SubmissionFlag.NO_SUBMISSION:
-            msg = [f"{student.full_name} has not submitted"]
-            window.create_popup("No Submissions", msg)
+        if second_submission is None:
             return
+
+        # Redraw the original list
+        update_student_list(window, student_list)
 
         first_submission_fn = lambda _: pair_programming_submission_callback(first_submission)
         second_submission_fn = lambda _: pair_programming_submission_callback(second_submission),
@@ -207,36 +235,18 @@ def student_callback(student_list, lab, student_index, use_locks=True):
     student = data.get_students()[student_index]
 
     # Wait for student's assignment to be available
-    if use_locks and data.lock.is_lab_locked(student, lab):
-        netid = data.lock.get_locked_netid(student, lab)
-
-        # If being graded by the user who locked it, allow grading
-        if netid != getpass.getuser():
-            msg = [f"This student is already being graded by {netid}"]
-            window.create_popup("Student Locked", msg)
-            return
-
-    if use_locks and data.flags.is_submission_flagged(student, lab):
-        msg = ["This submission has been flagged", "",
-               f"Note: {data.flags.get_flag_message(student, lab)}", "",
-               "Would you like to unflag it?"]
-        remove = window.create_bool_popup("Submission Flagged", msg)
-
-        if remove:
-            data.flags.unflag_submission(student, lab)
-        else:
-            return
+    if not can_get_through_locks(use_locks, student, lab):
+        return
 
     try:
         # Get the student's submission
         submission = get_submission(lab, student, use_locks)
-        update_student_list(window, student_list)
 
-        # Unlock if student has not submitted
-        if submission.flag == data.model.SubmissionFlag.NO_SUBMISSION:
-            msg = [f"{student.full_name} has not submitted"]
-            window.create_popup("No Submissions", msg)
+        # Exit if student has not submitted
+        if submission is None:
             return
+
+        update_student_list(window, student_list)
 
         options = {
             "Flag": lambda _: flag_submission(lab, student),
