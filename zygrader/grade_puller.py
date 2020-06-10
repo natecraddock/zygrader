@@ -190,7 +190,7 @@ class GradePuller:
             wait_controller.update()
 
         wait_controller.close()
-        return True            
+        return True
 
     def tidy_canvas_students(self):
         filtered = dict()
@@ -251,23 +251,30 @@ class GradePuller:
         if self.window.create_bool_popup("Unmatched Reports", ["Write a file of unmatched zyBooks students?"]):
             self.report_unmatched_zybook_students()
 
-    def calc_grade_for(self, student_id):
+    def calc_grade_for(self, student_id, ignore_canvas_grade):
         student_tuple = self.mapped_students[student_id]
         canvas_student = student_tuple[0]
         zybook_student = student_tuple[1]
-        if zybook_student is not None and canvas_student['grade'] is not None:
-            return max(canvas_student['grade'], zybook_student['grade'])
-        elif zybook_student is not None and canvas_student['grade'] is None:
-            return zybook_student['grade']
-        elif zybook_student is None and canvas_student['grade'] is not None:
-            return canvas_student['grade']
+        if ignore_canvas_grade:
+            if zybook_student is not None:
+                return zybook_student['grade']
+            else:
+                return 0.0
         else:
-            return 0.0
+            if zybook_student is not None and canvas_student['grade'] is not None:
+                return max(canvas_student['grade'], zybook_student['grade'])
+            elif zybook_student is not None and canvas_student['grade'] is None:
+                return zybook_student['grade']
+            elif zybook_student is None and canvas_student['grade'] is not None:
+                return canvas_student['grade']
+            else:
+                return 0.0
 
 
     def calculate_grades(self):
+        ignore_canvas_grade = self.window.create_bool_popup("Grading Policy", ["Ignore any grades already in the Canvas csv?"])
         for student_id in self.canvas_students:
-            grade = self.calc_grade_for(student_id)
+            grade = self.calc_grade_for(student_id, ignore_canvas_grade)
             self.canvas_students[student_id][self.selected_canvas_assignment] = str(grade)
 
     def write_upload_file(self):
