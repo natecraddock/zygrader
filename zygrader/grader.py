@@ -132,7 +132,7 @@ def pair_programming_submission_callback(submission):
                                 submission.msg, options, components.Popup.ALIGN_LEFT)
     config.g_data.running_process = None
 
-def grade_pair_programming(student_list, first_submission):
+def grade_pair_programming(student_list, first_submission, use_locks):
     """Pick a second student to grade pair programming with"""
     # Get second student
     window = Window.get_window()
@@ -149,23 +149,22 @@ def grade_pair_programming(student_list, first_submission):
 
     student = students[student_index]
 
-    if data.lock.is_lab_locked(student, lab):
+    if use_locks and data.lock.is_lab_locked(student, lab):
         netid = data.lock.get_locked_netid(student, lab)
 
-        msg = [f"This student is already being graded by {netid}"]
-        window.create_popup("Student Locked", msg)
-        return
+        if netid != getpass.getuser():
+            msg = [f"This student is already being graded by {netid}"]
+            window.create_popup("Student Locked", msg)
+            return
 
     try:
-        second_submission = get_submission(lab, student)
+        second_submission = get_submission(lab, student, use_locks)
         # Immediately redraw the original list
         update_student_list(window, student_list)
 
         if second_submission.flag == data.model.SubmissionFlag.NO_SUBMISSION:
             msg = [f"{student.full_name} has not submitted"]
             window.create_popup("No Submissions", msg)
-
-            data.lock.unlock_lab(student, lab)
             return
 
         first_submission_fn = lambda _: pair_programming_submission_callback(first_submission)
@@ -182,11 +181,9 @@ def grade_pair_programming(student_list, first_submission):
 
         window.create_options_popup("Pair Programming", msg, options)
 
-        data.lock.unlock_lab(student, lab)
-    except KeyboardInterrupt:
-        data.lock.unlock_lab(student, lab)
-    except curses.error:
-        data.lock.unlock_lab(student, lab)
+    finally:
+        if use_locks:
+            data.lock.unlock_lab(student, lab)
 
 def flag_submission(lab, student):
     """Flag a submission with a note"""
@@ -244,14 +241,11 @@ def student_callback(student_list, lab, student_index, use_locks=True):
         options = {
             "Flag": lambda _: flag_submission(lab, student),
             "Pick Submission": lambda _: pick_submission(lab, student, submission),
-            "Pair Programming": lambda _: grade_pair_programming(student_list, submission),
+            "Pair Programming": lambda _: grade_pair_programming(student_list, submission, use_locks),
             "Diff Parts": lambda _: diff_parts_fn(window, submission),
             "Run": lambda event: run_code_fn(window, event, submission),
             "View": lambda _: submission.show_files()
         }
-
-        if not use_locks:
-            del options["Pair Programming"]
 
         # Add option to diff parts if this lab requires it
         if not (use_locks and submission.flag & data.model.SubmissionFlag.DIFF_PARTS):
