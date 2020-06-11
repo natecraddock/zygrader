@@ -366,8 +366,8 @@ class Window:
 
     def create_popup(self, title, message, align=components.Popup.ALIGN_CENTER):
         """Create a popup with title and message that returns after enter"""
-        pop = components.Popup(self.rows, self.cols, title, message, align)
-        self.component_init(pop)
+        popup = components.Popup(self.rows, self.cols, title, message, align)
+        self.component_init(popup)
 
         while True:
             event = self.consume_event()
@@ -398,8 +398,8 @@ class Window:
                     self.window.clear_event_queue()
                 self.has_exited = True
 
-        pop = components.OptionsPopup(self.rows, self.cols, title, message, [], False, align)
-        self.component_init(pop)
+        popup = components.OptionsPopup(self.rows, self.cols, title, message, [], False, align)
+        self.component_init(popup)
 
         return WaitingPopupControl(self)
 
@@ -510,8 +510,8 @@ class Window:
 
     def create_text_input(self, prompt, text="", mask=components.TextInput.TEXT_NORMAL):
         """Get text input from the user"""
-        text = components.TextInput(1, 0, self.rows, self.cols, prompt, text, mask)
-        self.component_init(text)
+        text_input = components.TextInput(1, 0, self.rows, self.cols, prompt, text, mask)
+        self.component_init(text_input)
 
         if self.vim_mode:
             self.insert_mode = True
@@ -523,26 +523,26 @@ class Window:
             if event.type == Event.ENTER:
                 break
             elif event.type == Event.BACKSPACE:
-                text.delchar()
+                text_input.delchar()
             elif event.type == Event.DELETE:
-                text.delcharforward()
+                text_input.delcharforward()
             elif event.type == Event.CHAR_INPUT:
-                text.addchar(event.value)
+                text_input.addchar(event.value)
             elif event.type == Event.LEFT:
-                text.left()
+                text_input.left()
             elif event.type == Event.RIGHT:
-                text.right()
+                text_input.right()
             elif event.type == Event.ESC:
                 break
 
             self.draw()
 
         self.component_deinit()
-        text.close()
+        text_input.close()
 
         if event.type == Event.ESC:
             return Window.CANCEL
-        return text.text
+        return text_input.text
 
     def create_filtered_list(self, prompt, input_data=None, callback=None,
                              list_fill=None, filter_function=None, create_fn=None):
@@ -553,47 +553,47 @@ class Window:
 
         create_fn: A function to run when the list is created, with the filtered list as an argument
         """
-        list_input = components.FilteredList(1, 0, self.rows - 1, self.cols,
+        filtered_list = components.FilteredList(1, 0, self.rows - 1, self.cols,
                                              input_data, list_fill, prompt, filter_function)
-        self.component_init(list_input)
+        self.component_init(filtered_list)
 
         if create_fn:
-            create_fn(list_input)
+            create_fn(filtered_list)
 
         while True:
             event = self.consume_event()
 
             if event.type == Event.DOWN:
-                list_input.down()
+                filtered_list.down()
             elif event.type == Event.UP:
-                list_input.up()
+                filtered_list.up()
             elif event.type == Event.LEFT and self.left_right_menu_nav:
                 break
             elif event.type == Event.BACKSPACE:
-                list_input.delchar()
+                filtered_list.delchar()
             elif event.type == Event.CHAR_INPUT:
-                list_input.addchar(event.value)
+                filtered_list.addchar(event.value)
             elif ((event.type == Event.ENTER) or
                   (event.type == Event.RIGHT and self.left_right_menu_nav)):
-                if callback and list_input.selected() != UI_GO_BACK:
-                    list_input.dirty = True
-                    callback(list_input.selected(), list_input)
+                if callback and filtered_list.selected() != UI_GO_BACK:
+                    filtered_list.dirty = True
+                    callback(filtered_list.selected(), filtered_list)
 
                     if self.clear_filter:
-                        list_input.clear_filter()
-                    list_input.refresh()
+                        filtered_list.clear_filter()
+                    filtered_list.refresh()
                 else:
                     break
 
             self.draw()
 
-        list_input.clear()
+        filtered_list.clear()
         self.component_deinit()
 
         if event.type == Event.LEFT and self.left_right_menu_nav:
             return UI_GO_BACK
 
-        return list_input.selected()
+        return filtered_list.selected()
 
     def new_logger(self):
         logger = components.Logger(1, 0, self.rows - 1, self.cols)
