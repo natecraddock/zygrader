@@ -37,6 +37,14 @@ class Event:
         self.value = value
         self.modifier = modifier
 
+class WinContext:
+    """A wrapper for the current window context when components execute a callback"""
+    def __init__(self, window, event: Event, component, custom_data):
+        self.window = window
+        self.event = event
+        self.component = component
+        self.data = custom_data
+
 class Window:
     EVENT_REFRESH_LIST = "flags_and_locks"
     CANCEL = -1
@@ -447,7 +455,7 @@ class Window:
                     callback_fn = popup.selected()
                     if not callback_fn:
                         break
-                    callback_fn(event)
+                    callback_fn(WinContext(self, event, popup, None))
                 else:
                     break
 
@@ -482,7 +490,7 @@ class Window:
                 if popup.selected() is UI_GO_BACK:
                     break
                 elif callback:
-                    callback(popup.selected())
+                    callback(WinContext(self, event, popup, popup.selected()))
                 else:
                     break
 
@@ -577,7 +585,7 @@ class Window:
                   (event.type == Event.RIGHT and self.left_right_menu_nav)):
                 if callback and filtered_list.selected() != UI_GO_BACK:
                     filtered_list.dirty = True
-                    callback(filtered_list.selected(), filtered_list)
+                    callback(WinContext(self, event, filtered_list, filtered_list.selected()))
 
                     if self.clear_filter:
                         filtered_list.clear_filter()

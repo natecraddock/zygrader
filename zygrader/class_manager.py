@@ -2,7 +2,7 @@
 import datetime
 import json
 
-from .ui.window import Window
+from .ui.window import WinContext, Window
 from .ui.components import FilteredList
 from .ui import UI_GO_BACK
 from .zybooks import Zybooks
@@ -191,7 +191,7 @@ def edit_lab_options(lab):
     window = Window.get_window()
 
     draw = lambda: edit_lab_options_draw(lab)
-    callback = lambda index: edit_lab_options_callback(lab, index)
+    callback = lambda context: edit_lab_options_callback(lab, context.data)
     window.create_list_popup("Editing Lab Options", callback=callback, list_fill=draw)
 
 def move_lab(filtered_list, lab, step):
@@ -246,7 +246,7 @@ def edit_labs():
     """Creates a list of labs to edit"""
     window = Window.get_window()
 
-    edit_fn = lambda index, filtered_list: edit_labs_callback(data.get_labs()[index], filtered_list)
+    edit_fn = lambda context: edit_labs_callback(data.get_labs()[context.data], context.component)
     window.create_filtered_list("Lab", list_fill=draw_lab_list, callback=edit_fn)
 
 def download_roster():
@@ -279,8 +279,9 @@ def change_class():
 CLASS_MANAGE_OPTIONS = ["Setup New Class", "Add Lab", "Edit Labs",
                         "Download Student Roster", "Change Class"]
 
-def class_manager_callback(option_index, _filtered_list):
+def class_manager_callback(context: WinContext):
     """Run the function for each option in CLASS_MANAGE_OPTIONS"""
+    option_index = context.data
     option = CLASS_MANAGE_OPTIONS[option_index]
 
     if option == "Setup New Class":

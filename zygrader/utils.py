@@ -11,7 +11,7 @@ import subprocess
 from subprocess import PIPE, DEVNULL
 import tempfile
 
-from .ui.window import Window
+from .ui.window import WinContext, Window
 from .ui import components
 from . import data
 
@@ -136,12 +136,12 @@ def prep_lab_score_calc():
     except ValueError:
         window.create_popup("Error", ["Invalid input"])
 
-def view_students_callback(student_index, _filtered_list):
+def view_students_callback(context: WinContext):
     """Create a popup to show info for the selected student"""
     window = Window.get_window()
     students = data.get_students()
 
-    student = students[student_index]
+    student = students[context.data]
 
     msg = [f"Name: {student.full_name}", f"Email: {student.email}",
            f"Section: {student.section}", f"ID: {student.id}"]

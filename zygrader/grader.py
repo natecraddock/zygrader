@@ -7,7 +7,7 @@ from . import data
 from . import utils
 
 from .ui import components, UI_GO_BACK
-from .ui.window import Event, Window
+from .ui.window import Event, WinContext, Window
 from .zybooks import Zybooks
 
 def color_student_lines(lab, student):
@@ -118,9 +118,9 @@ def view_diff(first, second):
                                   second.student.full_name, use_browser)
     utils.view_string(diff, "submissions.diff", use_browser)
 
-def run_code_fn(window, event: Event, submission):
+def run_code_fn(window, context: WinContext, submission):
     """Callback to compile and run a submission's code"""
-    use_gdb = event.modifier == Event.MOD_ALT
+    use_gdb = context.event.modifier == Event.MOD_ALT
 
     if not submission.compile_and_run_code(use_gdb):
         window.create_popup("Error", ["Could not compile and run code"])
@@ -130,7 +130,7 @@ def pair_programming_submission_callback(submission):
     window = Window.get_window()
 
     options = {
-        "Run": lambda event: run_code_fn(window, event, submission),
+        "Run": lambda context: run_code_fn(window, context, submission),
         "View": lambda _: submission.show_files()
     }
 
@@ -229,10 +229,11 @@ def diff_parts_fn(window, submission):
     if error:
         window.create_popup("Error", [error])
 
-def student_callback(student_list, lab, student_index, use_locks=True):
+def student_callback(context: WinContext, lab, use_locks=True):
     """Show the submission for the selected lab and student"""
-    window = Window.get_window()
-    student = data.get_students()[student_index]
+    window = context.window
+    student_list = context.component
+    student = data.get_students()[context.data]
 
     # Wait for student's assignment to be available
     if not can_get_through_locks(use_locks, student, lab):
@@ -253,7 +254,7 @@ def student_callback(student_list, lab, student_index, use_locks=True):
             "Pick Submission": lambda _: pick_submission(lab, student, submission),
             "Pair Programming": lambda _: grade_pair_programming(student_list, submission, use_locks),
             "Diff Parts": lambda _: diff_parts_fn(window, submission),
-            "Run": lambda event: run_code_fn(window, event, submission),
+            "Run": lambda context: run_code_fn(window, context, submission),
             "View": lambda _: submission.show_files()
         }
 
@@ -278,17 +279,16 @@ def watch_students(window: Window, student_list: components.FilteredList):
     update_list = lambda _: update_student_list(window, student_list)
     data.fs_watch.fs_watch_register(paths, "student_list_watch", update_list)
 
-def lab_callback(lab_index, use_locks=True):
+def lab_callback(context: WinContext, use_locks=True):
     """Create the list of labs to pick a student to grade"""
-    window = Window.get_window()
+    window = context.window
 
-    lab = data.get_labs()[lab_index]
+    lab = data.get_labs()[context.data]
     window.set_header(lab.name)
 
     students = data.get_students()
 
-    student_select_fn = (lambda student_index, student_list:
-                         student_callback(student_list, lab, student_index, use_locks))
+    student_select_fn = (lambda context: student_callback(context, lab, use_locks))
 
     # Get student
     window.create_filtered_list("Student", list_fill=lambda: fill_student_list(lab, students),
@@ -312,6 +312,6 @@ def grade(use_locks=True):
         return
 
     # Pick a lab
-    lab_select_fn = lambda lab_index, _filtered_list: lab_callback(lab_index, use_locks)
+    lab_select_fn = lambda context: lab_callback(context, use_locks)
     window.create_filtered_list("Assignment", input_data=labs, callback=lab_select_fn,
                                 filter_function=data.Lab.find)

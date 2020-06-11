@@ -8,14 +8,14 @@ from . import admin
 from . import logger
 from . import utils
 
-from .ui.window import Window
+from .ui.window import WinContext, Window
 
 MAIN_MENU_OPTIONS = ["Grade", "Prep Lab Score Calculator", "Run For Fun",
                      "View Students", "Preferences", "Changelog"]
 
-def mainloop_callback(option_index, _filtered_list):
+def mainloop_callback(context: WinContext):
     """Run the chosen option from the main menu"""
-    option = MAIN_MENU_OPTIONS[option_index]
+    option = MAIN_MENU_OPTIONS[context.data]
 
     if option == "Grade":
         grader.grade()
@@ -31,7 +31,7 @@ def mainloop_callback(option_index, _filtered_list):
         admin.admin_menu()
     elif option == "Changelog":
         lines = config.versioning.load_changelog()
-        Window.get_window().create_list_popup("Changelog", lines)
+        context.window.create_list_popup("Changelog", lines)
     elif option == "View Students":
         utils.view_students()
 

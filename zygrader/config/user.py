@@ -4,7 +4,7 @@ import json
 import base64
 
 from .. import zybooks
-from ..ui.window import Window
+from ..ui.window import WinContext, Window
 from ..ui.components import TextInput
 
 from . import g_data
@@ -194,7 +194,7 @@ def set_editor(editor_index, pref_name):
 def set_editor_menu(name):
     """Open the set editor popup"""
     window = Window.get_window()
-    edit_fn = lambda index: set_editor(index, name)
+    edit_fn = lambda context: set_editor(context.data, name)
     window.create_list_popup("Set Editor", callback=edit_fn, list_fill=draw_text_editors)
 
 def toggle_preference(pref):
@@ -254,14 +254,13 @@ def draw_preferences():
 
     return options
 
-def preferences_callback(selected_index):
+def preferences_callback(context: WinContext):
     """Callback to run when a preference is selected"""
-    window = Window.get_window()
-
+    selected_index = context.data
     pref = PREFERENCES[selected_index]
     pref.select_fn(pref.name)
 
-    window.update_preferences()
+    context.window.update_preferences()
 
 def preferences_menu():
     """Create the preferences popup"""

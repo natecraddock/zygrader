@@ -1,7 +1,7 @@
 import csv
 import datetime
 
-from .ui.window import Window
+from .ui.window import WinContext, Window
 from .ui import UI_GO_BACK
 from .config import g_data
 from .zybooks import Zybooks
@@ -73,7 +73,7 @@ class GradePuller:
         num_sections = len(self.canvas_students[-1]['Section'].split('and')) #Test Student has id -1, and is in every section
         selected_sections = set()
         draw_sections = lambda: [f"[{'X' if el in selected_sections else ' '}] {el}" for el in range(1,num_sections+1)]
-        section_callback = lambda selected_index: selected_sections.remove(selected_index+1) if selected_index+1 in selected_sections else selected_sections.add(selected_index+1)
+        section_callback = lambda context: selected_sections.remove(context.data+1) if context.data+1 in selected_sections else selected_sections.add(context.data+1)
         self.window.create_list_popup("Select Class Sections (use Back to finish)", callback=section_callback, list_fill=draw_sections)
         if not selected_sections:
             return False
@@ -122,7 +122,7 @@ class GradePuller:
         selected_sections = {(chapter['number'], section['number']): False for chapter in self.zybooks_toc for section in chapter['sections']}
         draw_sections = lambda: self.draw_zybook_sections(chapters_expanded, selected_sections)
         draw_sections()
-        section_callback = lambda selected_index: self.select_zybook_sections_callback(chapters_expanded, selected_sections, selected_index)
+        section_callback = lambda context: self.select_zybook_sections_callback(chapters_expanded, selected_sections, context.data)
         self.window.create_list_popup("Select zyBook Sections (use Back to finish)", callback=section_callback, list_fill=draw_sections)
         self.selected_zybook_sections = []
         for section_numbers, selected in selected_sections.items():
@@ -132,7 +132,9 @@ class GradePuller:
             return False
         return True
 
-    def select_due_times_callback(self, selected_index):
+    def select_due_times_callback(self, context: WinContext):
+        selected_index = context.data
+
         section = self.selected_class_sections[selected_index]
         old_time_str = self.due_times[section].strftime("%m.%d.%Y:%H.%M.%S")
         new_time_str = self.window.create_text_input("Enter due date [MM.DD.YYYY:HH.MM.SS]", text=old_time_str)

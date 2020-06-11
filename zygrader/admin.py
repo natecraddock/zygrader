@@ -3,7 +3,7 @@ the class, scan through student submissions, and access to other menus"""
 import time
 import requests
 
-from .ui.window import Window
+from .ui.window import WinContext, Window
 from .ui import UI_GO_BACK
 from .zybooks import Zybooks
 from . import data
@@ -124,22 +124,23 @@ def submission_search_init(window, labs):
 
 ADMIN_MENU_OPTIONS = ["Submissions Search", "Grade Puller", "Remove Locks", "Class Management"]
 
-def admin_menu_callback(menu_index, _filtered_list):
+def admin_menu_callback(context: WinContext):
     """Run the chosen option on the admin menu"""
-    window = Window.get_window()
+    menu_index = context.data
 
     option = ADMIN_MENU_OPTIONS[menu_index]
 
     if option == "Submissions Search":
         labs = data.get_labs()
 
-        submission_search_init(window, labs)
+        submission_search_init(context.window, labs)
     elif option == "Grade Puller":
         grade_puller.start()
     elif option == "Remove Locks":
         while True:
             all_locks = data.lock.get_lock_files()
-            lock_index = window.create_filtered_list("Choose a lock file", input_data=all_locks)
+            lock_index = context.window.create_filtered_list("Choose a lock file",
+                                                             input_data=all_locks)
             if lock_index != UI_GO_BACK:
                 data.lock.remove_lock_file(all_locks[lock_index])
             else:
