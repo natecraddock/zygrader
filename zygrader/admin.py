@@ -122,7 +122,7 @@ def submission_search_init(window, labs):
     # Run the submission search
     submission_search(part, search_string, output_path)
 
-ADMIN_MENU_OPTIONS = ["Submissions Search", "Grade Puller", "Remove Locks", "Class Management"]
+ADMIN_MENU_OPTIONS = ["Submissions Search", "Grade Puller", "Find Unmatched Students", "Remove Locks", "Class Management"]
 
 def admin_menu_callback(context: WinContext):
     """Run the chosen option on the admin menu"""
@@ -135,7 +135,9 @@ def admin_menu_callback(context: WinContext):
 
         submission_search_init(context.window, labs)
     elif option == "Grade Puller":
-        grade_puller.start()
+        grade_puller.GradePuller().pull()
+    elif option == "Find Unmatched Students":
+        grade_puller.GradePuller().find_unmatched_students()
     elif option == "Remove Locks":
         while True:
             all_locks = data.lock.get_lock_files()
