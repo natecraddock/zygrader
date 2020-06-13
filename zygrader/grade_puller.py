@@ -10,36 +10,39 @@ class GradePuller:
     NUM_CANVAS_ID_COLUMNS = 5
     NUM_ZYBOOKS_ID_COLUMNS = 5
 
+    class StoppingException(Exception):
+        pass
+
     def __init__(self):
         self.window = Window.get_window()
         self.zy_api = Zybooks()
 
     def pull(self):
-        if not self.try_pull():
+        try:
+            self.read_canvas_csv()
+            self.fetch_zybooks_toc()
+
+            """
+            more_assignments = True
+            while more_assignments:
+
+                msg = ["Add another assignment to the report?"]
+                more_assignments = self.window.create_bool_popup("More Assignments", msg)
+            """
+            self.select_canvas_assignment()
+            self.select_zybook_sections()
+            self.select_class_sections()
+            self.select_due_times()
+            self.fetch_completion_reports()
+            self.tidy_canvas_students()
+            self.create_canvas_to_zybook_mapping()
+            self.report_unmatched_students()
+            self.calculate_grades()
+
+            self.write_upload_file()
+
+        except GradePuller.StoppingException:
             self.window.create_popup("Grade Puller", ["Grade Puller stopped"])
-
-    def try_pull(self):
-        if not self.read_canvas_csv():
-            return False
-        if not self.select_canvas_assignment():
-            return False
-        if not self.fetch_zybooks_toc():
-            return False
-        if not self.select_zybook_sections():
-            return False
-        if not self.select_class_sections():
-            return False
-        if not self.select_due_times():
-            return False
-        if not self.fetch_completion_reports():
-            return False
-        self.tidy_canvas_students()
-        self.create_canvas_to_zybook_mapping()
-        self.report_unmatched_students()
-        self.calculate_grades()
-        self.write_upload_file()
-
-        return True
 
     def read_canvas_csv(self):
         path = g_data.get_canvas_master()
@@ -55,19 +58,17 @@ class GradePuller:
                     self.canvas_students[row['id_number']] = row
         except FileNotFoundError:
             self.window.create_popup("Error in Reading Master CSV", [f"Could not find {path}", "Please download the gradebook from Canvas and put it in the place noted above"])
-            return False
+            raise GradePuller.StoppingException()
         except PermissionError:
             self.window.create_popup("Error in Reading Master CSV", [f"Could not open {path} for reading", "Please have the owner of the file grant read permissions"])
-            return False
-        return True
+            raise GradePuller.StoppingException()
 
     def select_canvas_assignment(self):
         real_assignments = self.canvas_header[GradePuller.NUM_CANVAS_ID_COLUMNS:]
         index = self.window.create_filtered_list("Assignment", input_data=real_assignments)
         if index is UI_GO_BACK:
-            return False
+            raise GradePuller.StoppingException()
         self.selected_canvas_assignment = real_assignments[index]
-        return True
 
     def select_class_sections(self):
         num_sections = len(self.canvas_students[-1]['Section'].split('and')) #Test Student has id -1, and is in every section
@@ -76,19 +77,17 @@ class GradePuller:
         section_callback = lambda context: selected_sections.remove(context.data+1) if context.data+1 in selected_sections else selected_sections.add(context.data+1)
         self.window.create_list_popup("Select Class Sections (use Back to finish)", callback=section_callback, list_fill=draw_sections)
         if not selected_sections:
-            return False
+            raise GradePuller.StoppingException()
         self.selected_class_sections = [el for el in selected_sections]
-        return True
 
     def fetch_zybooks_toc(self):
         wait_controller = self.window.create_waiting_popup("TOC", ["Fetching TOC from zyBooks"])
         toc = self.zy_api.get_table_of_contents()
         wait_controller.close()
         if not toc:
-            return False
+            raise GradePuller.StoppingException()
         self.zybooks_toc = toc
         self.zybooks_sections = {(chapter['number'], section['number']): section for chapter in toc for section in chapter['sections']}
-        return True
 
     def draw_zybook_sections(self, chapters_expanded, selected_sections):
         res = []
@@ -129,8 +128,7 @@ class GradePuller:
             if selected:
                 self.selected_zybook_sections.append(self.zybooks_sections[section_numbers])
         if not self.selected_zybook_sections:
-            return False
-        return True
+            raise GradePuller.StoppingException()
 
     def select_due_times_callback(self, context: WinContext):
         selected_index = context.data
@@ -162,7 +160,6 @@ class GradePuller:
         self.due_times = {section: last_night for section in self.selected_class_sections}
         draw = lambda: [f"Section {section}: {time.strftime('%m.%d.%Y:%H.%M.%S')}" for section, time in self.due_times.items()]
         self.window.create_list_popup("Set Due Times (use Back to finish)", callback=self.select_due_times_callback, list_fill=draw)
-        return True
 
     def fetch_completion_reports(self):
         wait_msg = ["Fetching completion reports from zyBooks", f"Completed 0/{len(self.selected_class_sections)}"]
@@ -173,7 +170,7 @@ class GradePuller:
         for class_section in self.selected_class_sections:
             csv_string = self.zy_api.get_completion_report(self.due_times[class_section], self.selected_zybook_sections)
             if not csv_string:
-                return False
+                raise GradePuller.StoppingException()
 
             csv_rows = csv_string.split("\r\n")
 
@@ -197,7 +194,6 @@ class GradePuller:
             wait_controller.update()
 
         wait_controller.close()
-        return True
 
     def tidy_canvas_students(self):
         filtered = dict()
@@ -287,7 +283,7 @@ class GradePuller:
     def write_upload_file(self):
         path = self.window.create_filename_input(purpose="the upload file")
         if path is None:
-            return False
+            return GradePuller.StoppingException()
 
         with open(path, 'w', newline='') as out_file:
             fieldnames = self.canvas_header[:GradePuller.NUM_CANVAS_ID_COLUMNS] + [self.selected_canvas_assignment]
