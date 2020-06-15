@@ -37,8 +37,8 @@ class Zybooks:
 
         r = Zybooks.session.post(auth_url, json=payload)
 
-        # Authentification failed
-        if not r.json()["success"]:
+        # Authentication failed
+        if not r.ok or not r.json()["success"]:
             return False
 
         # Store auth token
