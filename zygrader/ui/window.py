@@ -28,6 +28,8 @@ class Event:
     ESC = 7
     DELETE = 8
     REFRESH = 9
+    HOME = 10
+    END = 11
 
     # Modifier Keys
     MOD_ALT = 0
@@ -97,6 +99,10 @@ class Window:
             curses.flushinp()
         elif input_code in {curses.KEY_ENTER, ord('\n'), ord('\r')}:
             event = Event.ENTER
+        elif input_code == curses.KEY_HOME:
+            event = Event.HOME
+        elif input_code == curses.KEY_END:
+            event = Event.END
         elif input_code == curses.KEY_UP:
             event = Event.UP
         elif input_code == curses.KEY_DOWN:
@@ -542,6 +548,10 @@ class Window:
                 text_input.right()
             elif event.type == Event.ESC:
                 break
+            elif event.type == Event.HOME:
+                text_input.cursor_to_beginning()
+            elif event.type == Event.END:
+                text_input.cursor_to_end()
 
             self.draw()
 

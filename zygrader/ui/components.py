@@ -426,6 +426,12 @@ class TextInput(Popup):
     def left(self):
         self.cursor_index = max(0, self.cursor_index - 1)
 
+    def cursor_to_beginning(self):
+        self.cursor_index = 0
+
+    def cursor_to_end(self):
+        self.cursor_index = len(self.text)
+
 class Logger(Component):
     PADDING = 2
 
