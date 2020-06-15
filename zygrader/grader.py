@@ -196,7 +196,7 @@ def grade_pair_programming(student_list, first_submission, use_locks):
         update_student_list(window, student_list)
 
         first_submission_fn = lambda _: pair_programming_submission_callback(first_submission)
-        second_submission_fn = lambda _: pair_programming_submission_callback(second_submission),
+        second_submission_fn = lambda _: pair_programming_submission_callback(second_submission)
         options = {
             first_submission.student.full_name: first_submission_fn,
             second_submission.student.full_name: second_submission_fn,
