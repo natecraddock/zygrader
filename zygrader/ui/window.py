@@ -518,7 +518,7 @@ class Window:
 
     def create_text_input(self, prompt, text="", mask=components.TextInput.TEXT_NORMAL):
         """Get text input from the user"""
-        text_input = components.TextInput(1, 0, self.rows, self.cols, prompt, text, mask)
+        text_input = components.TextInput(self.rows, self.cols, prompt, text, mask)
         self.component_init(text_input)
 
         if self.vim_mode:

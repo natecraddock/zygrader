@@ -6,7 +6,7 @@ class Component:
     def __init__(self):
         # This determines if a component blocks layers beneath it completely
         self.blocking = True
-        
+
     def resize(self, rows, cols):
         raise NotImplementedError
 
@@ -40,7 +40,7 @@ class Popup(Component):
 
         self.window = curses.newwin(self.rows, self.cols, self.y, self.x)
         self.window.bkgd(" ", curses.color_pair(1))
-        
+
     def __calculate_size(self):
         self.rows = min(Popup.ROWS_MAX, self.available_rows - (Popup.PADDING * 2))
         self.cols = min(Popup.COLS_MAX, self.available_cols - (Popup.PADDING * 2))
@@ -80,16 +80,16 @@ class Popup(Component):
             self.__draw_message_center()
         elif self.align == Popup.ALIGN_LEFT:
             self.__draw_message_left()
-        
+
         self.draw_title()
 
-    def draw(self):        
+    def draw(self):
         self.draw_text()
 
         # Draw prompt to exit popup
         enter_string = "Press Enter"
         len(enter_string)
-        
+
         y = self.rows - 2
         x = self.cols - 1 - Popup.PADDING - len(enter_string)
         add_str(self.window, y, x, enter_string)
@@ -315,7 +315,7 @@ class FilteredList(Component):
         self.selected_index = 1
 
         self.dirty = True
-    
+
     def selected(self):
         return self.data[self.selected_index].index - 1
 
@@ -329,53 +329,73 @@ class FilteredList(Component):
         self.dirty = True
 
 
-class TextInput(Component):
+class TextInput(Popup):
     TEXT_NORMAL = 0
     TEXT_MASKED = 1
 
-    def __init__(self, y, x, height, width, prompt, text, mask=TEXT_NORMAL):
-        self.blocking = True
+    PADDING = 2
+    # 1 Row for prompt, 4 for text
+    TEXT_HEIGHT = 5
 
-        self.y = y
-        self.x = x
-        self.height = height
-        self.width = width
+    def __init__(self, height, width, prompt, text, mask=TEXT_NORMAL):
+        super().__init__(height, width, "Text Input", [prompt], Popup.ALIGN_CENTER)
+
         self.prompt = prompt
         self.masked = (mask is TextInput.TEXT_MASKED)
 
         self.text = text
+        self.text_width = self.cols - (TextInput.PADDING * 2)
 
         # Set cursor to the location of text
         self.cursor_index = len(self.text)
 
-        # Always position text input at the bottom of the screen
-        self.window = curses.newwin(1, self.width, self.height - 1, 0)
-        self.window.bkgd(" ", curses.color_pair(1))
-
+        # Create a text input
+        self.text_input = curses.newwin(TextInput.TEXT_HEIGHT, self.text_width,
+                                        self.y + self.rows - TextInput.TEXT_HEIGHT,
+                                        self.x + TextInput.PADDING)
+        self.text_input.bkgd(" ", curses.color_pair(1))
         curses.curs_set(1)
-    
-    def resize(self, height, width):
-        self.height = height
-        self.width = width
+
+    def resize(self, rows, cols):
+        super().resize(rows, cols)
+
+        self.text_width = self.cols - (TextInput.PADDING * 2)
 
         try:
-            self.window.mvwin(self.height - 1, 0)
+            self.text_input.mvwin(self.rows - TextInput.TEXT_HEIGHT, self.x + TextInput.PADDING)
         except:
             pass
-        resize_window(self.window, 1, self.width)
-    
-    def draw(self):
-        self.window.erase()
+        resize_window(self.text_input, TextInput.TEXT_HEIGHT, self.text_width)
 
+    def draw_text_chars(self, row, col, display_text):
+        for char in display_text:
+            add_str(self.text_input, row, col, char)
+            col += 1
+            if col >= self.text_width:
+                col = 0
+                row += 1
+
+    def draw(self):
+        super().draw_text()
+        self.text_input.erase()
+
+        # Draw prompt on own line
+        add_str(self.text_input, 0, 0, f"{self.prompt}:")
+
+        # Draw text and wrap on end of line
         if self.masked:
             display_text = "*" * len(self.text)
         else:
             display_text = self.text
-        
-        add_str(self.window, 0, 0, f"{self.prompt}: {display_text}")
+        self.draw_text_chars(1, 0, display_text)
 
-        self.window.move(0, len(self.prompt) + 2 + self.cursor_index)
+        # Set cursor index
+        cursor_x = self.cursor_index % self.text_width
+        cursor_y = (self.cursor_index // self.text_width) + 1
+        self.text_input.move(cursor_y, cursor_x)
+
         self.window.noutrefresh()
+        self.text_input.noutrefresh()
 
     def close(self):
         curses.curs_set(0)
