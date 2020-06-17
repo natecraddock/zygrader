@@ -65,6 +65,7 @@ class Window:
         self.vim_mode = config.user.is_preference_set("vim_mode")
         self.left_right_menu_nav = config.user.is_preference_set("left_right_arrow_nav")
         self.clear_filter = config.user.is_preference_set("clear_filter")
+        self.use_esc_back = config.user.is_preference_set("use_esc_back")
 
     def get_input(self, input_win) -> Event:
         """Get input and handle resize events"""
@@ -460,6 +461,8 @@ class Window:
                 popup.first()
             elif event.type == Event.END:
                 popup.last()
+            elif event.type == Event.ESC and self.use_esc_back:
+                break
             elif event.type == Event.ENTER:
                 if use_dict:
                     callback_fn = popup.selected()
@@ -498,6 +501,8 @@ class Window:
             elif event.type == Event.END:
                 popup.to_bottom()
             elif event.type == Event.LEFT and self.left_right_menu_nav:
+                break
+            elif event.type == Event.ESC and self.use_esc_back:
                 break
             elif ((event.type == Event.ENTER) or
                   (event.type == Event.RIGHT and self.left_right_menu_nav)):
@@ -554,7 +559,7 @@ class Window:
                 text_input.left()
             elif event.type == Event.RIGHT:
                 text_input.right()
-            elif event.type == Event.ESC:
+            elif event.type == Event.ESC: # Always allow exiting from text input with ESC
                 break
             elif event.type == Event.HOME:
                 text_input.cursor_to_beginning()
@@ -601,6 +606,8 @@ class Window:
                 break
             elif event.type == Event.BACKSPACE:
                 filtered_list.delchar()
+            elif event.type == Event.ESC and self.use_esc_back:
+                break
             elif event.type == Event.CHAR_INPUT:
                 filtered_list.addchar(event.value)
             elif ((event.type == Event.ENTER) or

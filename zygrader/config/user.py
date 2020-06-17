@@ -231,6 +231,7 @@ class Preference:
         self.toggle = toggle
 
 PREFERENCES = [Preference("left_right_arrow_nav", "Left/Right Arrow Navigation", toggle_preference),
+               Preference("use_esc_back", "Use Esc key to exit menus", toggle_preference),
                Preference("clear_filter", "Auto Clear List Filters", toggle_preference),
                Preference("vim_mode", "Vim Mode", toggle_preference),
                Preference("dark_mode", "Dark Mode", toggle_preference),
