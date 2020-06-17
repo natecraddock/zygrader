@@ -493,6 +493,10 @@ class Window:
                 popup.down()
             elif event.type == Event.UP:
                 popup.up()
+            elif event.type == Event.HOME:
+                popup.to_top()
+            elif event.type == Event.END:
+                popup.to_bottom()
             elif event.type == Event.LEFT and self.left_right_menu_nav:
                 break
             elif ((event.type == Event.ENTER) or
