@@ -298,6 +298,14 @@ class FilteredList(Component):
         self.selected_index = (self.selected_index - 1) % len(self.data)
         self.set_scroll()
 
+    def to_top(self):
+        self.selected_index = 0
+        self.set_scroll()
+
+    def to_bottom(self):
+        self.selected_index = len(self.data) - 1
+        self.set_scroll()
+
     def delchar(self):
         self.filter_text = self.filter_text[:-1]
 

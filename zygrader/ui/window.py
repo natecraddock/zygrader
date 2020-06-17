@@ -585,6 +585,10 @@ class Window:
                 filtered_list.down()
             elif event.type == Event.UP:
                 filtered_list.up()
+            elif event.type == Event.HOME:
+                filtered_list.to_top()
+            elif event.type == Event.END:
+                filtered_list.to_bottom()
             elif event.type == Event.LEFT and self.left_right_menu_nav:
                 break
             elif event.type == Event.BACKSPACE:
