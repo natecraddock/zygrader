@@ -456,6 +456,10 @@ class Window:
                 popup.previous()
             elif event.type in {Event.RIGHT, Event.DOWN}:
                 popup.next()
+            elif event.type == Event.HOME:
+                popup.first()
+            elif event.type == Event.END:
+                popup.last()
             elif event.type == Event.ENTER:
                 if use_dict:
                     callback_fn = popup.selected()

@@ -148,6 +148,12 @@ class OptionsPopup(Popup):
     def previous(self):
         self.index = (self.index - 1) % len(self.options)
 
+    def first(self):
+        self.index = 0
+
+    def last(self):
+        self.index = len(self.options) - 1
+
     def selected(self):
         if self.use_dict:
             key = list(self.options)[self.index]
