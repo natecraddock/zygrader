@@ -39,7 +39,7 @@ def setup_new_class():
     window = Window.get_window()
     zy_api = Zybooks()
 
-    code = window.create_text_input("Enter class code")
+    code = window.create_text_input("Class Code", "Enter class code")
     if code == Window.CANCEL:
         return
 
@@ -65,13 +65,13 @@ def add_lab():
     window = Window.get_window()
     zy_api = Zybooks()
 
-    lab_name = window.create_text_input("Lab Name")
+    lab_name = window.create_text_input("Lab Name", "Enter the Lab Name")
     if lab_name == Window.CANCEL:
         return
 
     # Get lab part(s)
     parts = []
-    number = window.create_text_input("Enter Chapter.section, e.g. 2.26 (ESC to cancel)")
+    number = window.create_text_input("Enter Part", "Enter Chapter.section, e.g. 2.26 (ESC to cancel)")
 
     while number != Window.CANCEL:
         part = {}
@@ -83,7 +83,7 @@ def add_lab():
             continue
 
         # Name lab part and add to list of parts
-        name = window.create_text_input("Edit part name")
+        name = window.create_text_input("Part Name", "Enter new part name")
         if name == Window.CANCEL:
             name = response.name
 
@@ -92,7 +92,7 @@ def add_lab():
         parts.append(part)
 
         # Get next part
-        number = window.create_text_input("Enter Chapter.section, e.g. 2.26 (ESC to finish)")
+        number = window.create_text_input("Enter Part", "Enter Chapter.section, e.g. 2.26 (ESC to finish)")
 
     new_lab = data.model.Lab(lab_name, parts, {})
 
@@ -116,7 +116,7 @@ def set_due_date(lab):
     if "due" in lab.options:
         old_date = lab.options["due"].strftime("%m.%d.%Y:%H.%M.%S")
 
-    due_date = window.create_text_input("Enter due date [MM.DD.YYYY:HH.MM.SS]", text=old_date)
+    due_date = window.create_text_input("Due Date", "Enter due date [MM.DD.YYYY:HH.MM.SS]", text=old_date)
     if due_date == Window.CANCEL:
         return
 
@@ -145,7 +145,7 @@ def rename_lab(filtered_list, lab):
 
     labs = data.get_labs()
 
-    name = window.create_text_input("Enter Lab's new name", text=lab.name)
+    name = window.create_text_input("Rename Lab", "Enter Lab's new name", text=lab.name)
     if name != Window.CANCEL:
         lab.name = name
         data.write_labs(labs)

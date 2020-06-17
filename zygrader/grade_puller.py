@@ -151,7 +151,7 @@ class GradePuller:
 
             section = class_sections[selected_index]
             old_time_str = due_times[section].strftime("%m.%d.%Y:%H.%M.%S")
-            new_time_str = self.window.create_text_input("Enter due date [MM.DD.YYYY:HH.MM.SS]", text=old_time_str)
+            new_time_str = self.window.create_text_input("Due Date", "Enter due date [MM.DD.YYYY:HH.MM.SS]", text=old_time_str)
             if new_time_str == Window.CANCEL:
                 return
 

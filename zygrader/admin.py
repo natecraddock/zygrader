@@ -110,7 +110,7 @@ def submission_search_init(window, labs):
     else:
         part = assignment.parts[0]
 
-    search_string = window.create_text_input("Enter a search string")
+    search_string = window.create_text_input("Search String", "Enter a search string")
     if search_string == Window.CANCEL:
         return
 

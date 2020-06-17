@@ -217,7 +217,7 @@ def flag_submission(lab, student):
     """Flag a submission with a note"""
     window = Window.get_window()
 
-    note = window.create_text_input("Flag Note")
+    note = window.create_text_input("Flag Note", "Enter a flag note")
     if note == UI_GO_BACK:
         return
 

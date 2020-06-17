@@ -123,10 +123,11 @@ def prep_lab_score_calc():
     window.set_header("Prep Lab Calculator")
 
     try:
-        old_score = float(window.create_text_input("What was the student's original score"))
+        old_score = float(window.create_text_input("Original Score", "What was the student's original score?"))
         if old_score == Window.CANCEL:
             return
-        current_completion = float(window.create_text_input("What is the student's current "
+        current_completion = float(window.create_text_input("zyBooks completion",
+                                                            "What is the student's current "
                                                             "completion % in zyBooks", "100"))
         if current_completion == Window.CANCEL:
             return

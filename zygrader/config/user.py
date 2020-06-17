@@ -106,7 +106,7 @@ def get_password(window: Window):
     """Prompt for the user's password"""
     window.set_header("Sign In")
 
-    password = window.create_text_input("Enter your zyBooks password", mask=TextInput.TEXT_MASKED)
+    password = window.create_text_input("Enter Password", "Enter your zyBooks password", mask=TextInput.TEXT_MASKED)
     if password == Window.CANCEL:
         password = ""
 
@@ -119,7 +119,7 @@ def create_account(window: Window, zy_api):
 
     while True:
         # Get user account information
-        email = window.create_text_input("Enter your zyBooks email", mask=None)
+        email = window.create_text_input("Enter Email", "Enter your zyBooks email", mask=None)
         if email == Window.CANCEL:
             email = ""
         password = get_password(window)

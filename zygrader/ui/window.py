@@ -511,7 +511,7 @@ class Window:
         full_prompt = f"Enter the path and filename for {purpose} [~ is supported]"
 
         while True:
-            path = self.create_text_input(full_prompt)
+            path = self.create_text_input("Filepath Entry", full_prompt)
             if path == Window.CANCEL:
                 return None
 
@@ -522,9 +522,9 @@ class Window:
             msg = [f"Path {os.path.dirname(path)} does not exist!"]
             self.create_popup("Invalid Path", msg)
 
-    def create_text_input(self, prompt, text="", mask=components.TextInput.TEXT_NORMAL):
+    def create_text_input(self, title, prompt, text="", mask=components.TextInput.TEXT_NORMAL):
         """Get text input from the user"""
-        text_input = components.TextInput(self.rows, self.cols, prompt, text, mask)
+        text_input = components.TextInput(self.rows, self.cols, title, prompt, text, mask)
         self.component_init(text_input)
 
         if self.vim_mode:

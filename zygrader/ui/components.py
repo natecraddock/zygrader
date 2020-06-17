@@ -345,8 +345,8 @@ class TextInput(Popup):
     # 1 Row for prompt, 4 for text
     TEXT_HEIGHT = 5
 
-    def __init__(self, height, width, prompt, text, mask=TEXT_NORMAL):
-        super().__init__(height, width, "Text Input", [prompt], Popup.ALIGN_CENTER)
+    def __init__(self, height, width, title, prompt, text, mask=TEXT_NORMAL):
+        super().__init__(height, width, title, [prompt], Popup.ALIGN_CENTER)
 
         self.prompt = prompt
         self.masked = (mask is TextInput.TEXT_MASKED)
@@ -387,8 +387,8 @@ class TextInput(Popup):
         super().draw_text()
         self.text_input.erase()
 
-        # Draw prompt on own line
-        add_str(self.text_input, 0, 0, f"{self.prompt}:")
+        # Draw input prompt
+        add_str(self.text_input, 0, 0, f"Input:")
 
         # Draw text and wrap on end of line
         if self.masked:
