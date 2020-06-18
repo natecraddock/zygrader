@@ -1,7 +1,7 @@
 # zygrader
 _Zygrader is a Python 3 ncurses tool to facilitate grading student submissions on the zyBooks online programming textbook system. It has been tested on Linux._
 
-Zygrader is a tool developed for the BYU CS142 Introduction to Computer Programming teaching assistants by Nathan Craddock. Rather than navigating the slow zyBooks website to review student code, zygrader assists the grader in downloading, running, reviewing, and comparing student code.
+Zygrader is a tool developed for the BYU CS142 Introduction to Computer Programming teaching assistants by Nathan Craddock, and others have since contributed to the project. Rather than navigating the slow zyBooks website to review student code, zygrader assists the grader in downloading, running, reviewing, and comparing student code.
 
 Contents:
 - [Installation](#installation)
@@ -52,7 +52,7 @@ As zygrader is a terminal application, all controls are entered with the keyboar
 The arrow keys can be used to navigate through lists of options, with enter to select.
 Some parts of the interface also accept text input.
 
-There is a vim mode which lets the hjkl keys map to the arrow keys, with i and escape to toggle between insert and normal mode.
+There is a vim mode which maps the `hjkl` keys to the arrow keys, with `i` and `ESC` to toggle between insert and normal mode.
 
 # Code Documentation
 This is an overview of the files in the `zygrader` directory:
