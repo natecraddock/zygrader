@@ -29,6 +29,9 @@ DEFAULT_CONFIG = {
     "editor": "Pluma",
 }
 
+CONFIG_PATH = os.path.join(os.path.expanduser("~"), ".config/zygrader")
+CONFIG_FILE = "config.json"
+
 def install(config_dir):
     """Create the user's configuration directory"""
     # Create config directory
@@ -36,30 +39,25 @@ def install(config_dir):
         os.mkdir(config_dir)
 
     # Create config file
-    if not os.path.exists(os.path.join(config_dir, "config")):
-        config = DEFAULT_CONFIG
-        with open(os.path.join(config_dir, "config"), "w") as config_file:
-            json.dump(config, config_file)
+    if not os.path.exists(os.path.join(config_dir, CONFIG_FILE)):
+        with open(os.path.join(config_dir, CONFIG_FILE), "w") as config_file:
+            json.dump(DEFAULT_CONFIG, config_file)
 
 def initial_config():
     """Wrapper around install() to set the path for the config directory"""
-    config_dir = os.path.join(os.path.expanduser("~"), ".zygrader/")
-
     # Ensure user config exists
-    install(config_dir)
+    install(CONFIG_PATH)
 
 def write_config(config):
     """Write the user's config to disk"""
-    config_dir = os.path.join(os.path.expanduser("~"), ".zygrader/")
-    config_path = os.path.join(config_dir, "config")
+    config_path = os.path.join(CONFIG_PATH, CONFIG_FILE)
 
     with open(config_path, "w") as config_file:
         json.dump(config, config_file)
 
 def get_config():
     """Get the user's config from disk"""
-    config_dir = os.path.join(os.path.expanduser("~"), ".zygrader/")
-    config_path = os.path.join(config_dir, "config")
+    config_path = os.path.join(CONFIG_PATH, CONFIG_FILE)
 
     with open(config_path, "r") as config_file:
         return json.load(config_file)
