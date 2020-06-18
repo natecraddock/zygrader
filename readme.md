@@ -14,7 +14,7 @@ Contents:
 ## Design Paradigm
 Zygrader is intended to be run from a shared folder, rather than through per-user install. This has a few benefits
 1. Everyone is running the same version always
-2. Data (cached files, lab and student data, locks, etc.) is shared. This could be done with a server-client model, but a shared codebase was determined to be the simplest result
+2. Data (cached files, lab and student data, locks, etc.) is shared. This could be done with a server-client model, but a shared codebase was determined to be the simplest approach.
 
 Because of this, there is a pseudo-installer, which really creates a symbolic link to the shared module.
 
@@ -55,27 +55,37 @@ Some parts of the interface also accept text input.
 There is a vim mode which lets the hjkl keys map to the arrow keys, with i and escape to toggle between insert and normal mode.
 
 # Code Documentation
-This is an overview of the files in the `zygrader` directory.
+This is an overview of the files in the `zygrader` directory:
 ```
-├── admin.py
-├── class_manager.py
-├── config
-│   ├── g_data.py
-│   ├── __init__.py
-│   ├── user.py
-│   └── versioning.py
-├── data
-│   ├── __init__.py
-│   ├── lock.py
-│   └── model.py
-├── grader.py
-├── __init__.py
-├── logger.py
-├── ui
-│   ├── components.py
-│   ├── __init__.py
-│   ├── utils.py
-│   └── window.py
-├── zybooks.py
-└── zygrader.py
+├── install.sh              | The pseudo-installer for users; creates a symbolic link
+├── LICENSE
+├── __main__.py             | The main file where the zygrader module runs from
+├── readme.md
+└── zygrader
+    ├── admin.py            | The base admin submenu and basic commands
+    ├── class_manager.py    | The menus to add classes and edit labs
+    ├── config
+    │   ├── changelog.txt   | Used to show version updates in the UI
+    │   ├── g_data.py       | Global configuration data
+    │   ├── __init__.py
+    │   ├── user.py         | User configuration data
+    │   └── versioning.py   | For making changes on new versions
+    ├── data
+    │   ├── flags.py        | For flagging labs
+    │   ├── fs_watch.py     | A module that creates a file watcher thread
+    │   ├── __init__.py
+    │   ├── lock.py         | For locking labs
+    │   ├── model.py        | Student, Lab, and Submission classes
+    ├── grade_puller.py     | To pull grades from canvas into csv files
+    ├── grader.py           | Grading menus and functions
+    ├── __init__.py
+    ├── logger.py           | A basic logger for debugging
+    ├── ui
+    │   ├── components.py   | Classes for various reusable UI components that are shown in the window
+    │   ├── __init__.py
+    │   ├── utils.py        | Shared windowing utility functions
+    │   └── window.py       | A threaded window manager for event and component management
+    ├── utils.py            | Shared functions (diffing, thread blocking)
+    ├── zybooks.py          | zyBooks API wrapper
+    └── zygrader.py         | Creates the main menu (called from __main__.py)
 ```
