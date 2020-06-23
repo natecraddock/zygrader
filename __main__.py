@@ -8,6 +8,7 @@ from zygrader import zygrader
 from zygrader import config
 from zygrader.data import lock
 from zygrader import logger
+from zygrader import updater
 
 def lock_cleanup():
     lock.unlock_all_labs_by_grader(getpass.getuser())
@@ -46,6 +47,14 @@ os.chdir("..")
 
 # Set a short ESC key delay (curses environment variable)
 os.environ.setdefault('ESCDELAY', '25')
+
+# Check for updates
+latest_version = updater.get_latest_version()
+if latest_version != config.g_data.VERSION:
+    updater.update_zygrader(latest_version)
+
+    # update_zygrader will update then fork a new zygrader process
+    sys.exit()
 
 zygrader.start()
 

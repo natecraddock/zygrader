@@ -3,7 +3,7 @@ import json
 
 from .. import data
 
-# Only change these if you know what you are doing!
+# Zygrader version
 VERSION = 3.5
 
 # TODO: save this in configuration
