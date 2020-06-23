@@ -3,13 +3,13 @@ the class, scan through student submissions, and access to other menus"""
 import time
 import requests
 
-from .ui.window import WinContext, Window
-from .ui import UI_GO_BACK
-from .zybooks import Zybooks
-from . import data
-from . import class_manager
-from . import grade_puller
-from . import utils
+from zygrader.ui.window import WinContext, Window
+from zygrader.ui import UI_GO_BACK
+from zygrader.zybooks import Zybooks
+from zygrader import data
+from zygrader import class_manager
+from zygrader import grade_puller
+from zygrader import utils
 
 def check_student_submissions(zy_api, student_id, lab, search_string):
     """Search for a substring in all of a student's submissions for a given lab"""

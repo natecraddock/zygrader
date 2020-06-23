@@ -1,10 +1,10 @@
 import csv
 import datetime
 
-from .ui.window import WinContext, Window
-from .ui import UI_GO_BACK
-from .config import g_data
-from .zybooks import Zybooks
+from zygrader.ui.window import WinContext, Window
+from zygrader.ui import UI_GO_BACK
+from zygrader.config.shared import SharedData
+from zygrader.zybooks import Zybooks
 
 def create_last_night():
     now = datetime.datetime.now()
@@ -47,7 +47,7 @@ class GradePuller:
             self.window.create_popup("Grade Puller", ["Grade Puller stopped"])
 
     def read_canvas_csv(self):
-        path = g_data.get_canvas_master()
+        path = SharedData.get_canvas_master()
         try:
             self.canvas_students = dict()
             with open(path, 'r', newline='') as canvas_master_file:

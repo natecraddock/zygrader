@@ -1,86 +1,9 @@
-"""User: Functions regarding users of zygrader, preferences"""
-import os
-import json
-import base64
+"""User: User preference window management"""
+from zygrader import zybooks
 
-from .. import zybooks
-from ..ui.window import WinContext, Window
-from ..ui.components import TextInput
-
-from . import g_data
-
-EDITORS = {
-    "Pluma": "/usr/bin/pluma",
-    "Gedit": "/usr/bin/gedit",
-    "VSCode": "/usr/bin/code",
-    "Atom": "/usr/bin/atom",
-    "Vim": "/usr/bin/vim",
-    "Emacs": "/usr/bin/emacs",
-    "Nano": "/bin/nano",
-    "Less": "/usr/bin/less"
-}
-
-DEFAULT_CONFIG = {
-    "version": g_data.VERSION,
-    "email": "",
-    "password": "",
-    "clear_filter": "",
-    "left_right_arrow_nav":"left_right_arrow_nav",
-    "editor": "Pluma",
-}
-
-CONFIG_PATH = os.path.join(os.path.expanduser("~"), ".config/zygrader")
-CONFIG_FILE = "config.json"
-
-def install(config_dir):
-    """Create the user's configuration directory"""
-    # Create config directory
-    if not os.path.exists(config_dir):
-        os.mkdir(config_dir)
-
-    # Create config file
-    if not os.path.exists(os.path.join(config_dir, CONFIG_FILE)):
-        with open(os.path.join(config_dir, CONFIG_FILE), "w") as config_file:
-            json.dump(DEFAULT_CONFIG, config_file)
-
-def initial_config():
-    """Wrapper around install() to set the path for the config directory"""
-    # Ensure user config exists
-    install(CONFIG_PATH)
-
-def write_config(config):
-    """Write the user's config to disk"""
-    config_path = os.path.join(CONFIG_PATH, CONFIG_FILE)
-
-    with open(config_path, "w") as config_file:
-        json.dump(config, config_file)
-
-def get_config():
-    """Get the user's config from disk"""
-    config_path = os.path.join(CONFIG_PATH, CONFIG_FILE)
-
-    with open(config_path, "r") as config_file:
-        return json.load(config_file)
-
-def is_preference_set(pref):
-    """Return True if a preference is set, False otherwise"""
-    return pref in get_config()
-
-def get_preference(pref):
-    """Get a preference from the config file"""
-    config = get_config()
-    if pref in config:
-        return config[pref]
-    return ""
-
-def decode_password(config):
-    """Decode a base64 encoded password"""
-    return base64.b64decode(config["password"])
-
-def encode_password(config, password):
-    """Encode a password in base64 for slight security"""
-    encode = base64.b64encode(password.encode("ascii"))
-    config["password"] = str(encode, "utf-8")
+from zygrader.config import preferences
+from zygrader.ui.window import Window, WinContext
+from zygrader.ui.components import TextInput
 
 def authenticate(window: Window, zy_api, email, password):
     """Authenticate to the zyBooks api with the email and password"""
@@ -95,7 +18,7 @@ def authenticate(window: Window, zy_api, email, password):
 
 def get_email():
     """Get the user's email address from config"""
-    config = get_config()
+    config = preferences.get_config()
     if "email" in config:
         return config["email"]
     return ""
@@ -131,11 +54,11 @@ def login(window: Window):
     """Authenticate to zybooks with the user's email and password
     or create an account if one does not exist"""
     zy_api = zybooks.Zybooks()
-    config = get_config()
+    config = preferences.get_config()
 
     # If user email and password exists, authenticate and return
     if "email" in config and "password" in config and config["password"]:
-        password = decode_password(config)
+        password = preferences.decode_password(config)
         authenticate(window, zy_api, config["email"], password)
         window.set_email(config["email"])
         return config
@@ -151,9 +74,9 @@ def login(window: Window):
 
         if save_password:
             config["save_password"] = ""
-            encode_password(config, password)
+            preferences.encode_password(config, password)
 
-        write_config(config)
+        preferences.write_config(config)
         window.set_email(email)
 
     # User has not saved password, re-prompt
@@ -164,17 +87,17 @@ def login(window: Window):
             password = get_password(window)
 
             if authenticate(window, zy_api, email, password):
-                if is_preference_set("save_password"):
-                    encode_password(config, password)
-                    write_config(config)
+                if preferences.is_preference_set("save_password"):
+                    preferences.encode_password(config, password)
+                    preferences.write_config(config)
                 break
 
 def draw_text_editors():
     """Draw the list of text editors"""
     options = []
-    current_editor = get_preference("editor")
+    current_editor = preferences.get_preference("editor")
 
-    for name in EDITORS:
+    for name in preferences.EDITORS:
         if current_editor == name:
             options.append(f"[X] {name}")
         else:
@@ -184,10 +107,10 @@ def draw_text_editors():
 
 def set_editor(editor_index, pref_name):
     """Set the user's default editor to the selected editor"""
-    config_file = get_config()
-    config_file[pref_name] = list(EDITORS.keys())[editor_index]
+    config_file = preferences.get_config()
+    config_file[pref_name] = list(preferences.EDITORS.keys())[editor_index]
 
-    write_config(config_file)
+    preferences.write_config(config_file)
 
 def set_editor_menu(name):
     """Open the set editor popup"""
@@ -197,23 +120,23 @@ def set_editor_menu(name):
 
 def toggle_preference(pref):
     """Toggle a boolean preference"""
-    config = get_config()
+    config = preferences.get_config()
 
     if pref in config:
         del config[pref]
     else:
         config[pref] = ""
 
-    write_config(config)
+    preferences.write_config(config)
 
 def password_toggle(name):
     """Toggle saving the user's password in their config file (encoded)"""
     toggle_preference(name)
-    config = get_config()
+    config = preferences.get_config()
 
     if name not in config:
         config["password"] = ""
-        write_config(config)
+        preferences.write_config(config)
 
     else:
         window = Window.get_window()
@@ -236,7 +159,7 @@ PREFERENCES = [Preference("left_right_arrow_nav", "Left/Right Arrow Navigation",
                Preference("christmas_mode", "Christmas Theme", toggle_preference),
                Preference("browser_diff", "Open Diffs in Browser", toggle_preference),
                Preference("save_password", "Remember Password", password_toggle),
-               Preference("editor", "Set Editor", set_editor_menu, False)
+               Preference("editor", "Set Editor", set_editor_menu, False),
                ]
 
 def draw_preferences():
@@ -246,7 +169,7 @@ def draw_preferences():
         if not pref.toggle:
             options.append(f"    {pref.description}")
         else:
-            if is_preference_set(pref.name):
+            if preferences.is_preference_set(pref.name):
                 options.append(f"[X] {pref.description}")
             else:
                 options.append(f"[ ] {pref.description}")

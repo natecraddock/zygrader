@@ -4,26 +4,26 @@ import datetime
 import getpass
 import os
 
+from zygrader.config.shared import SharedData
+from zygrader import logger
+
 from .model import Student
 from .model import Lab
 
-from .. import config
-from .. import logger
-
 def get_lock_files():
     """Return a list of all lock files"""
-    return [l for l in os.listdir(config.g_data.get_locks_directory()) if l.endswith(".lock")]
+    return [l for l in os.listdir(SharedData.get_locks_directory()) if l.endswith(".lock")]
 
 def get_lock_log_path():
     """Return path to lock log file"""
-    return os.path.join(config.g_data.get_logs_directory(), "locks_log.csv")
+    return os.path.join(SharedData.get_logs_directory(), "locks_log.csv")
 
 def log(name, lab, lock="LOCK"):
     """Logging utility for lock files
 
     This logs when each lab is locked and unlocked,
     along with when and by whom.
-    This also logs to the global log file
+    This also logs to the shared log file
     """
 
     lock_log = get_lock_log_path()
@@ -45,7 +45,7 @@ def get_lock_file_path(student: Student, lab: Lab):
     student_name = student.get_unique_name()
 
     lock_path = f"{username}.{lab_name}.{student_name}.lock"
-    return os.path.join(config.g_data.get_locks_directory(), lock_path)
+    return os.path.join(SharedData.get_locks_directory(), lock_path)
 
 def is_lab_locked(student: Student, lab: Lab):
     """Check if a submission is locked for a given student and lab"""
@@ -106,18 +106,18 @@ def unlock_all_labs_by_grader(username: str):
 
         # Only look at the lock files graded by the current grader
         if lock_parts[0] == username:
-            os.remove(os.path.join(config.g_data.get_locks_directory(), lock))
+            os.remove(os.path.join(SharedData.get_locks_directory(), lock))
 
     logger.log("All locks under the current grader were removed", logger.WARNING)
 
 def unlock_all_labs():
     """Remove all locks"""
     for lock in get_lock_files():
-        os.remove(os.path.join(config.g_data.get_locks_directory(), lock))
+        os.remove(os.path.join(SharedData.get_locks_directory(), lock))
 
 def remove_lock_file(_file):
     """Remove a specific lock file (not logged to locks_log.csv)"""
-    locks_directory = config.g_data.get_locks_directory()
+    locks_directory = SharedData.get_locks_directory()
 
     os.remove(os.path.join(locks_directory, _file))
 

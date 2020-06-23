@@ -4,7 +4,7 @@ import threading
 import time
 import typing
 
-from ..ui.window import Window
+from zygrader import ui
 
 class WatchData:
     def __init__(self, paths: list, identifier: str, callback: typing.Callable[[str], None]):
@@ -36,7 +36,7 @@ WATCH_DELAY = 1
 
 def fs_watch():
     """Watch loop"""
-    window = Window.get_window()
+    window = ui.window.Window.get_window()
 
     while True:
         window.take_input.wait()

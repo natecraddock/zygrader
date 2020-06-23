@@ -7,10 +7,11 @@ import subprocess
 import tempfile
 import time
 
-from .. import config
-from .. import utils
-from .. import ui
-from ..zybooks import Zybooks
+from zygrader.config import preferences
+from zygrader.config.shared import SharedData
+from zygrader import utils
+from zygrader import ui
+from zygrader.zybooks import Zybooks
 
 class Lab:
     def __init__(self, name, parts, options):
@@ -196,8 +197,8 @@ class Submission:
 
     @utils.suspend_curses
     def show_files(self):
-        user_editor = config.user.get_config()["editor"]
-        editor_path = config.user.EDITORS[user_editor]
+        user_editor = preferences.get_config()["editor"]
+        editor_path = preferences.EDITORS[user_editor]
 
         files = utils.get_source_file_paths(self.files_directory)
 
@@ -225,7 +226,7 @@ class Submission:
             window = ui.window.Window.get_window()
             window.take_input.clear()
             curses.endwin()
-            config.g_data.RUNNING_CODE = True
+            SharedData.RUNNING_CODE = True
             process.send_signal(signal.SIGCONT)
             print("Resumed student code")
             print("#############################################################")
@@ -234,21 +235,21 @@ class Submission:
 
     def compile_and_run_code(self, use_gdb):
         window = ui.window.Window.get_window()
-        if self.do_resume_code(config.g_data.running_process):
-            stopped = self.wait_on_child(config.g_data.running_process)
+        if self.do_resume_code(SharedData.running_process):
+            stopped = self.wait_on_child(SharedData.running_process)
         else:
             # Get path to executable
             executable = self.compile_code()
             if not executable:
                 return False # Could not compile code
 
-            config.g_data.RUNNING_CODE = True
+            SharedData.RUNNING_CODE = True
             stopped = self.run_code(executable, use_gdb)
 
         if not stopped:
-            config.g_data.running_process = None
+            SharedData.running_process = None
 
-            config.g_data.RUNNING_CODE = False
+            SharedData.RUNNING_CODE = False
             print("\n#############################################################")
             print("Press ENTER to continue")
             input()
@@ -299,11 +300,11 @@ class Submission:
     def wait_on_child(self, child):
         while child.poll() is None:
             time.sleep(0.1)
-            if not config.g_data.RUNNING_CODE:
+            if not SharedData.RUNNING_CODE:
                 break
 
         # If the running process still exists
-        if config.g_data.running_process and config.g_data.running_process.poll() is None:
+        if SharedData.running_process and SharedData.running_process.poll() is None:
             return True
 
         return False
@@ -327,13 +328,13 @@ class Submission:
             process = subprocess.Popen(["gdb", executable], stderr=subprocess.DEVNULL)
         else:
             process = subprocess.Popen([executable], stderr=subprocess.DEVNULL)
-        config.g_data.running_process = process
+        SharedData.running_process = process
 
         # Return indicator if child terminated or stopped
         return self.wait_on_child(process)
 
     def diff_parts(self):
-        use_browser = config.user.is_preference_set("browser_diff")
+        use_browser = preferences.is_preference_set("browser_diff")
 
         if len(self.lab.parts) < 2:
             return "Not enough parts to diff"

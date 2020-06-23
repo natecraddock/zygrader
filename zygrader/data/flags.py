@@ -9,11 +9,11 @@ import os
 from .model import Student
 from .model import Lab
 
-from .. import config
+from zygrader.config.shared import SharedData
 
 def get_flag_files():
     """Return a list of all flag files"""
-    return [f for f in os.listdir(config.g_data.get_flags_directory())]
+    return [f for f in os.listdir(SharedData.get_flags_directory())]
 
 def get_flag_file_path(student: Student, lab: Lab):
     """Return path for a unique flag file given a student and lab"""
@@ -22,7 +22,7 @@ def get_flag_file_path(student: Student, lab: Lab):
     student_name = student.get_unique_name()
 
     flag_path = f"{lab_name}.{student_name}.flag"
-    return os.path.join(config.g_data.get_flags_directory(), flag_path)
+    return os.path.join(SharedData.get_flags_directory(), flag_path)
 
 def is_submission_flagged(student: Student, lab: Lab):
     """Checks if a given submission is flagged"""
