@@ -210,7 +210,10 @@ class GradePuller:
 
         report = dict()
         for row in csv_reader:
-            row['id_number'] = int(''.join([c for c in row['Student ID'] if c.isdigit()]))
+            try:
+                row['id_number'] = int(''.join([c for c in row['Student ID'] if c.isdigit()]))
+            except ValueError:
+                row['id_number'] = 0
             row['grade'] = float(row[total_field_name])
             report[row['id_number']] = row
 
