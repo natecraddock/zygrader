@@ -5,7 +5,6 @@ Zygrader is a tool developed for the BYU CS142 Introduction to Computer Programm
 
 Contents:
 - [Installation](#installation)
-- [Features](#features)
 - [User Manual](#user-manual)
 - [Code Documentation](#code-documentation)
 
@@ -43,9 +42,6 @@ Run `zygrader` from a terminal after installation.
 
 Run `python3 zygrader -a` to enable admin mode, which gives access to the admin menu for class management and other less-used features.
 
-# Features
-
-
 # User Manual
 As zygrader is a terminal application, all controls are entered with the keyboard.
 
@@ -57,37 +53,37 @@ There is a vim mode which maps the `hjkl` keys to the arrow keys, with `i` and `
 # Code Documentation
 This is an overview of the files in the `zygrader` directory:
 ```
-├── install.sh              | The pseudo-installer for users; creates a symbolic link
+├── install.sh                - The pseudo-installer for users; creates a symbolic link
 ├── LICENSE
-├── __main__.py             | The main file where the zygrader module runs from
+├── __main__.py               - The main file where the zygrader module runs from
 ├── readme.md
 └── zygrader
-    ├── admin.py            | The base admin submenu and basic commands
-    ├── class_manager.py    | The menus to add classes and edit labs
+    ├── admin.py              - The base admin submenu and basic commands
+    ├── class_manager.py      - The menus to add classes and edit labs
     ├── config
-    │   ├── changelog.txt   | Used to show version updates in the UI
-    │   ├── g_data.py       | Global configuration data
+    │   ├── changelog.txt     - Used to show version updates in the UI
+    │   ├── g_data.py         - Global configuration data
     │   ├── __init__.py
-    │   ├── user.py         | User configuration data
-    │   └── versioning.py   | For making changes on new versions
+    │   ├── user.py           - User configuration data
+    │   └── versioning.py     - For making changes on new versions
     ├── data
-    │   ├── flags.py        | For flagging labs
-    │   ├── fs_watch.py     | A module that creates a file watcher thread
+    │   ├── flags.py          - For flagging labs
+    │   ├── fs_watch.py       - A module that creates a file watcher thread
     │   ├── __init__.py
-    │   ├── lock.py         | For locking labs
-    │   ├── model.py        | Student, Lab, and Submission classes
-    ├── grade_puller.py     | To pull grades from canvas into csv files
-    ├── grader.py           | Grading menus and functions
+    │   ├── lock.py           - For locking labs
+    │   ├── model.py          - Student, Lab, and Submission classes
+    ├── grade_puller.py       - To pull grades from canvas into csv files
+    ├── grader.py             - Grading menus and functions
     ├── __init__.py
-    ├── logger.py           | A basic logger for debugging
+    ├── logger.py             - A basic logger for debugging
     ├── ui
-    │   ├── components.py   | Classes for various reusable UI components that are shown in the window
+    │   ├── components.py     - Classes for various reusable UI components that are shown in the window
     │   ├── __init__.py
-    │   ├── utils.py        | Shared windowing utility functions
-    │   └── window.py       | A threaded window manager for event and component management
-    ├── utils.py            | Shared functions (diffing, thread blocking)
-    ├── zybooks.py          | zyBooks API wrapper
-    └── zygrader.py         | Creates the main menu (called from __main__.py)
+    │   ├── utils.py          - Shared windowing utility functions
+    │   └── window.py         - A threaded window manager for event and component management
+    ├── utils.py              - Shared functions (diffing, thread blocking)
+    ├── zybooks.py            - zyBooks API wrapper
+    └── zygrader.py           - Creates the main menu (called from __main__.py)
 ```
 
 An overview of the more complex modules follows.
