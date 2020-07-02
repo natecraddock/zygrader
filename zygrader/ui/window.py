@@ -4,10 +4,9 @@ import os
 import queue
 import threading
 
+from zygrader.config.preferences import is_preference_set
 from . import components
 from .utils import add_str, resize_window
-from .. import config
-from .. import data
 
 from . import UI_GO_BACK
 
@@ -60,12 +59,12 @@ class Window:
         return None
 
     def update_preferences(self):
-        self.dark_mode = config.user.is_preference_set("dark_mode")
-        self.christmas_mode = config.user.is_preference_set("christmas_mode")
-        self.vim_mode = config.user.is_preference_set("vim_mode")
-        self.left_right_menu_nav = config.user.is_preference_set("left_right_arrow_nav")
-        self.clear_filter = config.user.is_preference_set("clear_filter")
-        self.use_esc_back = config.user.is_preference_set("use_esc_back")
+        self.dark_mode = is_preference_set("dark_mode")
+        self.christmas_mode = is_preference_set("christmas_mode")
+        self.vim_mode = is_preference_set("vim_mode")
+        self.left_right_menu_nav = is_preference_set("left_right_arrow_nav")
+        self.clear_filter = is_preference_set("clear_filter")
+        self.use_esc_back = is_preference_set("use_esc_back")
 
     def get_input(self, input_win) -> Event:
         """Get input and handle resize events"""
@@ -420,7 +419,7 @@ class Window:
 
     def create_bool_popup(self, title, message, align=components.Popup.ALIGN_CENTER):
         """Create a popup with title and message that returns true/false"""
-        options = ["YES", "NO"]
+        options = ["Yes", "No"]
         popup = components.OptionsPopup(self.rows, self.cols, title, message, options, False, align)
         self.component_init(popup)
 

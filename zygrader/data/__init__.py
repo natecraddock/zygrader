@@ -5,10 +5,10 @@ from .model import Student
 from .model import Lab
 from .model import Submission
 
+from zygrader.config.shared import SharedData
 from . import flags
 from . import fs_watch
 from . import lock
-from .. import config
 
 g_students = []
 g_labs = []
@@ -18,7 +18,7 @@ def get_students() -> list:
     if g_students:
         return g_students
 
-    path = config.g_data.get_student_data()
+    path = SharedData.get_student_data()
     if not os.path.exists(path):
         return []
 
@@ -35,7 +35,7 @@ def get_labs() -> list:
     if g_labs:
         return g_labs
 
-    path = config.g_data.get_labs_data()
+    path = SharedData.get_labs_data()
     if not os.path.exists(path):
         return []
 
@@ -56,6 +56,6 @@ def write_labs(labs):
     for lab in labs:
         labs_json.append(lab.to_json())
 
-    path = config.g_data.get_labs_data()
+    path = SharedData.get_labs_data()
     with open(path, 'w') as _file:
         json.dump(labs_json, _file, indent=2)

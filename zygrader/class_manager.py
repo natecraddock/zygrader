@@ -2,12 +2,12 @@
 import datetime
 import json
 
-from .ui.window import WinContext, Window
-from .ui.components import FilteredList
-from .ui import UI_GO_BACK
-from .zybooks import Zybooks
-from . import data
-from . import config
+from zygrader.ui.window import WinContext, Window
+from zygrader.ui.components import FilteredList
+from zygrader.ui import UI_GO_BACK
+from zygrader.zybooks import Zybooks
+from zygrader import data
+from zygrader.config.shared import SharedData
 
 def save_roster(roster):
     """Save the roster of students to a json file"""
@@ -30,7 +30,7 @@ def save_roster(roster):
 
             students.append(student)
 
-    out_path = config.g_data.get_student_data()
+    out_path = SharedData.get_student_data()
     with open(out_path, 'w') as _file:
         json.dump(students, _file, indent=2)
 
@@ -51,8 +51,8 @@ def setup_new_class():
         window.create_popup("Invalid", [f"{code} is invalid"])
         return
 
-    # If code is valid, add it to the global configuration
-    config.g_data.add_class(code)
+    # If code is valid, add it to the shared configuration
+    SharedData.add_class(code)
 
     # Download the list of students
     roster = zy_api.get_roster()
@@ -268,11 +268,11 @@ def change_class():
     This applies globally to all users of zygrader.
     """
     window = Window.get_window()
-    class_codes = config.g_data.get_class_codes()
+    class_codes = SharedData.get_class_codes()
 
     code_index = window.create_filtered_list("Class", input_data=class_codes)
     if code_index != UI_GO_BACK:
-        config.g_data.set_current_class_code(class_codes[code_index])
+        SharedData.set_current_class_code(class_codes[code_index])
 
         window.create_popup("Changed Class", [f"Class changed to {class_codes[code_index]}"])
 

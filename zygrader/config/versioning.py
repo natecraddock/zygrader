@@ -1,9 +1,9 @@
 import os
 
-from ..ui.window import Window
-from ..ui import components
-from . import user
-from . import g_data
+from zygrader.ui.window import Window
+from zygrader.ui import components
+from . import preferences
+from .shared import SharedData
 
 def load_changelog():
     """Load the changelog into an array of lines"""
@@ -39,20 +39,20 @@ def compare_versions(zygrader_version, user_version):
     return user_version < zygrader_version
 
 def write_current_version(config):
-    config["version"] = g_data.VERSION
-    user.write_config(config)
+    config["version"] = SharedData.VERSION
+    preferences.write_config(config)
 
 def do_versioning(window: Window):
     """Compare the user's current version in the config and make necessary adjustments
     Also notify the user of new changes"""
 
-    config = user.get_config()
+    config = preferences.get_config()
     user_version = config["version"]
 
     # Special case to convert strings in v1.0 config files to floats for future compatibility
     if user_version == "1.0":
         config["version"] = 1.0
-        user.write_config(config)
+        preferences.write_config(config)
         user_version = 1.0
 
     if compare_versions(1.1, user_version):
@@ -68,7 +68,7 @@ def do_versioning(window: Window):
     if compare_versions(1.3, user_version):
         # Add Pluma as the default editor to the user config
         config["editor"] = "Pluma"
-        user.write_config(config)
+        preferences.write_config(config)
 
         msg = get_version_message(1.3)
 
@@ -157,7 +157,7 @@ def do_versioning(window: Window):
     if compare_versions(2.82, user_version):
         # Add left right arrow navigation on the menu to default config
         config["left_right_arrow_nav"] = ""
-        user.write_config(config)
+        preferences.write_config(config)
         window.update_preferences()
 
     if compare_versions(2.9, user_version):
@@ -168,7 +168,7 @@ def do_versioning(window: Window):
     if compare_versions(2.91, user_version):
         # Configure users to use the browser diffing by default
         config["browser_diff"] = ""
-        user.write_config(config)
+        preferences.write_config(config)
 
     if compare_versions(3.0, user_version):
         msg = get_version_message(3.0)
@@ -183,7 +183,7 @@ def do_versioning(window: Window):
     if compare_versions(3.14, user_version):
         msg = get_version_message(3.14)
         config["clear_filter"] = ""
-        user.write_config(config)
+        preferences.write_config(config)
 
         window.create_popup("Version π (3.14)", msg, components.Popup.ALIGN_LEFT)
 

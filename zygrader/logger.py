@@ -6,7 +6,7 @@ import getpass
 import datetime
 import os
 
-from . import config
+from zygrader.config.shared import SharedData
 
 # Log types
 INFO = "INFO"
@@ -14,7 +14,7 @@ WARNING = "WARNING"
 ERROR = "ERROR"
 
 def get_global_lock_path():
-    return os.path.join(config.g_data.get_logs_directory(), "log.txt")
+    return os.path.join(SharedData.get_logs_directory(), "log.txt")
 
 def log(*args, type=INFO):
     """Log all arguments in a comma separated list with a type, username, and timestamp"""

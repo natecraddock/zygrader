@@ -2,13 +2,14 @@
 import curses
 import getpass
 
-from . import config
-from . import data
-from . import utils
+from zygrader.config import preferences
+from zygrader.config.shared import SharedData
+from zygrader import data
+from zygrader import utils
 
-from .ui import components, UI_GO_BACK
-from .ui.window import Event, WinContext, Window
-from .zybooks import Zybooks
+from zygrader.ui import components, UI_GO_BACK
+from zygrader.ui.window import Event, WinContext, Window
+from zygrader.zybooks import Zybooks
 
 def color_student_lines(lab, student):
     """Color the student names in the grader based on locked, flagged, or normal status"""
@@ -106,7 +107,7 @@ def pick_submission(lab: data.model.Lab, student: data.model.Student,
 
 def view_diff(first, second):
     """View a diff of the two submissions"""
-    use_browser = config.user.is_preference_set("browser_diff")
+    use_browser = preferences.is_preference_set("browser_diff")
 
     paths_a = utils.get_source_file_paths(first.files_directory)
     paths_b = utils.get_source_file_paths(second.files_directory)
@@ -136,7 +137,7 @@ def pair_programming_submission_callback(submission):
 
     window.create_options_popup("Pair Programming Submission",
                                 submission.msg, options, components.Popup.ALIGN_LEFT)
-    config.g_data.running_process = None
+    SharedData.running_process = None
 
 def can_get_through_locks(use_locks, student, lab):
     if not use_locks:
@@ -265,7 +266,7 @@ def student_callback(context: WinContext, lab, use_locks=True):
         window.create_options_popup("Submission", submission.msg,
                                     options, components.Popup.ALIGN_LEFT)
 
-        config.g_data.running_process = None
+        SharedData.running_process = None
 
     finally:
         # Always unlock the lab when no longer grading
@@ -274,7 +275,7 @@ def student_callback(context: WinContext, lab, use_locks=True):
 
 def watch_students(window: Window, student_list: components.FilteredList):
     """Register paths when the filtered list is created"""
-    paths = [config.g_data.get_locks_directory(), config.g_data.get_flags_directory()]
+    paths = [SharedData.get_locks_directory(), SharedData.get_flags_directory()]
 
     update_list = lambda _: update_student_list(window, student_list)
     data.fs_watch.fs_watch_register(paths, "student_list_watch", update_list)

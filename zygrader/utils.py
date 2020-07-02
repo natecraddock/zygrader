@@ -11,14 +11,15 @@ import subprocess
 from subprocess import PIPE, DEVNULL
 import tempfile
 
-from .ui.window import WinContext, Window
-from .ui import components
-from . import data
+from zygrader import data
+from zygrader import ui
+from zygrader.ui import components
+
 
 def suspend_curses(callback_fn):
     """A decorator for any subprocess that must suspend access to curses (zygrader)"""
     def wrapper(*args, **kwargs):
-        window = Window.get_window()
+        window = ui.window.Window.get_window()
         # Clear remaining events in event queue
         window.clear_event_queue()
 
@@ -119,17 +120,17 @@ def get_source_file_paths(directory):
 
 def prep_lab_score_calc():
     """A simple calculator for determining the score for a late prep lab"""
-    window = Window.get_window()
+    window = ui.window.Window.get_window()
     window.set_header("Prep Lab Calculator")
 
     try:
         old_score = float(window.create_text_input("Original Score", "What was the student's original score?"))
-        if old_score == Window.CANCEL:
+        if old_score == ui.window.Window.CANCEL:
             return
         current_completion = float(window.create_text_input("zyBooks completion",
                                                             "What is the student's current "
                                                             "completion % in zyBooks", "100"))
-        if current_completion == Window.CANCEL:
+        if current_completion == ui.window.Window.CANCEL:
             return
 
         new_score = old_score + ((current_completion - old_score) * 0.6)
@@ -137,9 +138,9 @@ def prep_lab_score_calc():
     except ValueError:
         window.create_popup("Error", ["Invalid input"])
 
-def view_students_callback(context: WinContext):
+def view_students_callback(context):
     """Create a popup to show info for the selected student"""
-    window = Window.get_window()
+    window = ui.window.Window.get_window()
     students = data.get_students()
 
     student = students[context.data]
@@ -150,9 +151,13 @@ def view_students_callback(context: WinContext):
 
 def view_students():
     """Create the view students filtered list"""
-    window = Window.get_window()
+    window = ui.window.Window.get_window()
     students = data.get_students()
     window.set_header("View Students")
+
+    if not students:
+        window.create_popup("No Students", ["There are no students in the class to show."])
+        return
 
     window.create_filtered_list("Student Name", input_data=students,
                                 callback=view_students_callback)

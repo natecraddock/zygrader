@@ -4,8 +4,7 @@ import os
 import requests
 import zipfile
 
-from . import config
-
+from zygrader.config.shared import SharedData
 
 class SectionResponse:
     def __init__(self):
@@ -48,7 +47,7 @@ class Zybooks:
     def get_roster(self):
         """Download the roster of regular and temporary students. TAs can be added by adding "TA" to the roles array"""
         roles = '["Student","Temporary"]'
-        roster_url = f"https://zyserver.zybooks.com/v1/zybook/{config.g_data.CLASS_CODE}/roster?zybook_roles={roles}"
+        roster_url = f"https://zyserver.zybooks.com/v1/zybook/{SharedData.CLASS_CODE}/roster?zybook_roles={roles}"
 
         payload = {"auth_token": Zybooks.token}
         r = Zybooks.session.get(roster_url, json=payload)
@@ -61,7 +60,7 @@ class Zybooks:
     def get_table_of_contents(self):
         """Download the table of contents (toc) for the current zybook"""
         payload = {"auth_token": Zybooks.token}
-        toc_url = f'https://zyserver2.zybooks.com/v1/zybook/{config.g_data.CLASS_CODE}/ordering?include=["content_ordering"]'
+        toc_url = f'https://zyserver2.zybooks.com/v1/zybook/{SharedData.CLASS_CODE}/ordering?include=["content_ordering"]'
 
         r = Zybooks.session.get(toc_url, json=payload)
 
@@ -89,7 +88,7 @@ class Zybooks:
 
         query_string = f"?time_zone_offset={offset_minutes}&end_date={due_time_str}&sections={str(section_ids).replace(' ', '')}"
 
-        report_url = f"https://zyserver.zybooks.com/v1/zybook/{config.g_data.CLASS_CODE}/activities/export{query_string}"
+        report_url = f"https://zyserver.zybooks.com/v1/zybook/{SharedData.CLASS_CODE}/activities/export{query_string}"
         payload = {"auth_token": Zybooks.token}
 
         r1 = Zybooks.session.get(report_url, json=payload)
@@ -112,7 +111,7 @@ class Zybooks:
         This is useful for running the class manager. To download a submission, the zybooks sectionID
         must be used. It is hard to get manually, so this function returns the id and name.
         """
-        class_code = config.g_data.CLASS_CODE
+        class_code = SharedData.CLASS_CODE
         url = f"https://zyserver.zybooks.com/v1/zybook/{class_code}/chapter/{chapter}/section/{section}"
         payload = {"auth_token": Zybooks.token}
 
@@ -181,7 +180,7 @@ class Zybooks:
 
     def get_all_submissions(self, part_id, user_id):
         """Get the JSON representing all submissions of a given lab"""
-        class_code = config.g_data.CLASS_CODE
+        class_code = SharedData.CLASS_CODE
         submission_url = f"https://zyserver.zybooks.com/v1/zybook/{class_code}/programming_submission/{part_id}/user/{user_id}"
         payload = {"auth_token": Zybooks.token}
 
@@ -312,7 +311,7 @@ class Zybooks:
         Returns a ZipFile
         """
         # Check if the zip file is already cached. Only use the basename of the url
-        cached_name = os.path.join(config.g_data.get_cache_directory(), os.path.basename(url))
+        cached_name = os.path.join(SharedData.get_cache_directory(), os.path.basename(url))
         if os.path.exists(cached_name):
             return zipfile.ZipFile(cached_name)
 
