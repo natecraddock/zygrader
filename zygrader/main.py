@@ -45,14 +45,17 @@ def sigtstp_handler(signum, frame):
             SharedData.running_process.send_signal(signal.SIGTSTP)
 
 def parse_args():
-    """Parse CMD args and take action"""
+    """Parse CMD args"""
     parser = argparse.ArgumentParser(description="download and inspect zyBooks data for grading")
     parser.add_argument("--set-data-dir", help="Data path for shared zygrader files")
     parser.add_argument("--init-data-dir", help="Create the folder for shared zygrader files")
     parser.add_argument("-a", "--admin", action="store_true", help="Enable admin features")
+    parser.add_argument("-n", "--no-update", action="store_true", help="Do not check for updates")
+    parser.add_argument("-i", "--install-version", help="Specify version to install")
 
-    args = parser.parse_args()
+    return parser.parse_args()
 
+def handle_args(args):
     if args.set_data_dir:
         if not preferences.set_data_directory(args.set_data_dir):
             print(f"Successfully set the shared data dir to {args.set_data_dir}")
@@ -153,6 +156,8 @@ def start():
     # Set a short ESC key delay (curses environment variable)
     os.environ.setdefault('ESCDELAY', '25')
 
+    args = parse_args()
+
     # Check for updates
     latest_version = updater.get_latest_version()
     if latest_version != SharedData.VERSION:
@@ -162,7 +167,8 @@ def start():
     # Setup user configuration
     preferences.initial_config()
 
-    parse_args()
+    # Handle configuration based args after config has been initialized
+    handle_args(args)
 
     # Check for shared data dir
     data_dir = preferences.get_preference("data_dir")
