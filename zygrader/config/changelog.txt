@@ -1,5 +1,11 @@
 # Try to keep lines shorter than 70 characters
 
+3.6
+* Reformat zygrader source as a proper Python package.
+  Now it is no longer run from a shared symbolic link!
+* Add auto updater
+* Cleanup
+
 3.5
 * Lots of cleanup and fixes after 3.4 added Multithreading
 * Press Alt+Enter when running code to run in gdb for debugging.

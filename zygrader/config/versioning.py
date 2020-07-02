@@ -207,5 +207,10 @@ def do_versioning(window: Window):
 
         window.create_popup("Version 3.5", msg, components.Popup.ALIGN_LEFT)
 
+    if compare_versions(3.5, user_version):
+        msg = get_version_message(3.6)
+
+        window.create_popup("Version 3.6", msg, components.Popup.ALIGN_LEFT)
+
     # Write the current version to the user's config file
     write_current_version(config)
