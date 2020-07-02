@@ -1,3 +1,0 @@
-import zygrader
-
-zygrader.start()

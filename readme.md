@@ -64,11 +64,11 @@ There is a vim mode which maps the `hjkl` keys to the arrow keys, with `i` and `
 
 # Development
 
-During development, zygrader can be run from the git repository.
+During development, zygrader should be run from the git repository.
 ```
-$ cd zygrader
-$ python3 zygrader.py
+$ python3 zygrader/main.py
 ```
+
 Changes can be pushed to the git repository to share between developers. Zygrader checks GitHub for new tags when
 it starts. If a commit has been tagged with a higher version number than the current version it will be downloaded
 and installed.
@@ -101,16 +101,17 @@ $ ./push_update.sh 3.51
 # Code Documentation
 This is an overview of the files in the `zygrader` directory:
 ```
-├── install.sh                - The pseudo-installer for users; creates a symbolic link
 ├── LICENSE
-├── __main__.py               - The main file where the zygrader module runs from
+├── push_update.sh            - Script to help push release updates to users
+├── readme.md
+├── setup.py                  - Configuration for pip installation
 ├── readme.md
 └── zygrader
     ├── admin.py              - The base admin submenu and basic commands
     ├── class_manager.py      - The menus to add classes and edit labs
     ├── config
-    │   ├── changelog.txt   | Used to show version updates in the UI
-    │   ├── shared.py       | Shared configuration data
+    │   ├── changelog.txt     - Used to show version updates in the UI
+    │   ├── shared.py         - Shared configuration data
     │   ├── __init__.py
     │   ├── user.py           - User configuration data
     │   └── versioning.py     - For making changes on new versions
@@ -131,7 +132,7 @@ This is an overview of the files in the `zygrader` directory:
     │   └── window.py         - A threaded window manager for event and component management
     ├── utils.py              - Shared functions (diffing, thread blocking)
     ├── zybooks.py            - zyBooks API wrapper
-    └── zygrader.py           - Creates the main menu (called from __main__.py)
+    └── main.py               - Creates the main menu & starts zygrader, argument parsing, signals
 ```
 
 An overview of the more complex modules follows.

@@ -180,7 +180,7 @@ def start():
     data.get_labs()
 
     # Create a zygrader window, callback to main function
-    Window(main, "zygrader")
+    Window(main, f"zygrader {SharedData.VERSION}")
 
     logger.log("zygrader exited normally")
 
