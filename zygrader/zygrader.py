@@ -140,8 +140,6 @@ def main(window: Window):
 
     logger.log("zygrader started")
 
-    window.create_popup("Updated", ["zyrader is updated"])
-
     mainloop(admin_mode)
 
 def start():

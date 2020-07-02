@@ -4,7 +4,7 @@ import json
 
 class SharedData:
     # Zygrader version
-    VERSION = 3.6
+    VERSION = 3.61
 
     # Current class code (shared)
     # TODO: Could this be per-user?
