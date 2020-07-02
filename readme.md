@@ -64,6 +64,13 @@ There is a vim mode which maps the `hjkl` keys to the arrow keys, with `i` and `
 
 # Development
 
+You must first install zygrader in _develop mode_ before running from source. Run the following from the zygrader repository.
+```
+$ python3 -m pip install -e .
+```
+
+This will make symbolic links to the site packages
+
 During development, zygrader should be run from the git repository.
 ```
 $ python3 zygrader/main.py
