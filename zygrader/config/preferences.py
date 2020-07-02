@@ -72,7 +72,8 @@ def get_preference(pref):
 
 def decode_password(config):
     """Decode a base64 encoded password"""
-    return base64.b64decode(config["password"])
+    decoded = base64.b64decode(config["password"])
+    return decoded.decode("utf-8")
 
 def encode_password(config, password):
     """Encode a password in base64 for slight security"""
