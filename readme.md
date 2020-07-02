@@ -64,17 +64,41 @@ There is a vim mode which maps the `hjkl` keys to the arrow keys, with `i` and `
 
 # Development
 
-You must first install zygrader in _develop mode_ before running from source. Run the following from the zygrader repository.
+Because zygrader is installed with `pip`, running `import zygrader` will first check for the system-wide install. This causes problems
+for developing zygrader. To solve these issues, virtual environments are used.
+
+Install virtualenv
 ```
-$ python3 -m pip install -e .
+$ python3 -m pip install --user virtualenv
 ```
 
-This will make symbolic links to the site packages
+Create the virtual environment in the zygrader source directory
+```
+$ python3 -m venv env
+```
+
+Enter the virtual environment
+```
+$ source env/bin/activate
+```
+
+You must first install zygrader in _develop mode_ before running from source. Run the following from the zygrader repository.
+```
+$ pip install requests
+$ pip install -e .
+```
 
 During development, zygrader should be run from the git repository.
 ```
 $ python3 zygrader/main.py
 ```
+
+To exit the virtual environment
+```
+deactivate
+```
+
+Each time you want to test the develop version you must be in the virtual environment. This prevents conflicts between the local and installed versions of zygrader.
 
 Changes can be pushed to the git repository to share between developers. Zygrader checks GitHub for new tags when
 it starts. If a commit has been tagged with a higher version number than the current version it will be downloaded
