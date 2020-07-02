@@ -8,13 +8,39 @@ from zygrader.config.shared import SharedData
 REPO_NAME = "natecraddock/zygrader"
 API_URL = f"https://api.github.com/repos/{REPO_NAME}/tags"
 
-def get_latest_version():
-    """Check the zygrader git repo tags for a new version"""
+def get_tags_list() -> dict:
+    """Get list of tags for zygrader from GitHub"""
     r = requests.get(API_URL)
     if not r.ok:
+        return {}
+    return r.json()
+
+def install_from_url(url: str):
+    """Install the new version of zygrader from the GitHub tarball url"""
+    try:
+        subprocess.check_call([sys.executable, "-m", "pip", "install",
+                               "--user", "--upgrade", "--no-cache-dir", url])
+    except subprocess.CalledProcessError:
+        print("Failed to update zygrader. Exiting")
+        print()
+        sys.exit()
+
+def uninstall_zygrader():
+    """Uninstall zygrader before downgrading"""
+    try:
+        subprocess.check_call([sys.executable, "-m", "pip", "uninstall", "-y", "zygrader"])
+    except subprocess.CalledProcessError:
+        print("Failed to uninstall zygrader. Exiting")
+        print()
+        sys.exit()
+
+def get_latest_version():
+    """Check the zygrader git repo tags for a new version"""
+    tags = get_tags_list()
+    if not tags:
         return SharedData.VERSION
 
-    latest = float(r.json()[0]["name"])
+    latest = float(tags[0]["name"])
     if latest > SharedData.VERSION:
         return latest
 
@@ -27,21 +53,31 @@ def update_zygrader(latest_version):
     print()
 
     # Get tarball URL from github
-    r = requests.get(API_URL)
-    if not r.ok:
+    tags = get_tags_list()
+    if not tags:
         print("Failed to download latest version.")
         sys.exit()
 
-    tag = r.json()[0]
-    tarball_url = tag["tarball_url"]
-
-    # Install the new version of zygrader
-    try:
-        subprocess.check_call([sys.executable, "-m", "pip", "install",
-                               "--user", "--upgrade", "--no-cache-dir", tarball_url])
-    except subprocess.CalledProcessError:
-        print("Failed to update zygrader. Exiting")
-        print()
-        return
+    tag = tags[0]
+    install_from_url(tag["tarball_url"])
 
     print("zygrader successfully updated. Please run zygrader again.")
+    print()
+
+def install_version(version: str):
+    """Specify a version to install from pip"""
+    tags = get_tags_list()
+    if not tags:
+        print(f"Failed to download version {version}.")
+        sys.exit()
+
+    for tag in tags:
+        if tag["name"] == version:
+            uninstall_zygrader()
+            install_from_url(tag["tarball_url"])
+
+            print("zygrader {version} successfully installed. Please run zygrader again.")
+            print()
+            sys.exit()
+
+    print(f"zygrader {version} does not exist. Exiting.")

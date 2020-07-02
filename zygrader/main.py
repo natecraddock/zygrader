@@ -50,8 +50,9 @@ def parse_args():
     parser.add_argument("--set-data-dir", help="Data path for shared zygrader files")
     parser.add_argument("--init-data-dir", help="Create the folder for shared zygrader files")
     parser.add_argument("-a", "--admin", action="store_true", help="Enable admin features")
-    parser.add_argument("-n", "--no-update", action="store_true", help="Do not check for updates")
-    parser.add_argument("-i", "--install-version", help="Specify version to install")
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument("-n", "--no-update", action="store_true", help="Do not check for updates")
+    group.add_argument("-i", "--install-version", help="Specify version to install")
 
     return parser.parse_args()
 
@@ -159,9 +160,14 @@ def start():
     args = parse_args()
 
     # Check for updates
-    latest_version = updater.get_latest_version()
-    if latest_version != SharedData.VERSION:
-        updater.update_zygrader(latest_version)
+    if not args.no_update and not args.install_version:
+        latest_version = updater.get_latest_version()
+        if latest_version != SharedData.VERSION:
+            updater.update_zygrader(latest_version)
+            sys.exit()
+
+    if args.install_version:
+        updater.install_version(args.install_version)
         sys.exit()
 
     # Setup user configuration
