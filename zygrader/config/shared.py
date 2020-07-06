@@ -1,10 +1,11 @@
 """Shared Data: Data shared between all users of zygrader"""
 import os
 import json
+from distutils.version import LooseVersion
 
 class SharedData:
     # Zygrader version
-    VERSION = 3.62
+    VERSION = LooseVersion("4.0.0")
 
     # Current class code (shared)
     # TODO: Could this be per-user?

@@ -3,6 +3,8 @@ import requests
 import subprocess
 import sys
 
+from distutils.version import LooseVersion
+
 from zygrader.config.shared import SharedData
 
 REPO_NAME = "natecraddock/zygrader"
@@ -40,7 +42,7 @@ def get_latest_version():
     if not tags:
         return SharedData.VERSION
 
-    latest = float(tags[0]["name"])
+    latest = LooseVersion(tags[0]["name"])
     if latest > SharedData.VERSION:
         return latest
 

@@ -3,7 +3,7 @@ import setuptools
 
 from zygrader.config.shared import SharedData
 
-VERSION_STR = str(SharedData.VERSION)
+VERSION_STR = SharedData.VERSION.vstring
 
 setuptools.setup(
     name="zygrader",

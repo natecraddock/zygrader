@@ -17,7 +17,7 @@ EDITORS = {
 }
 
 DEFAULT_CONFIG = {
-    "version": SharedData.VERSION,
+    "version": SharedData.VERSION.vstring,
     "email": "",
     "password": "",
     "clear_filter": "",
