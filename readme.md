@@ -72,14 +72,14 @@ Install virtualenv
 $ python3 -m pip install --user virtualenv
 ```
 
-Create the virtual environment in the zygrader source directory
+Create the virtual environment
 ```
-$ python3 -m venv env
+$ python3 -m venv ~/.virtualenvs/zygrader
 ```
 
 Enter the virtual environment
 ```
-$ source env/bin/activate
+$ source ~/.virtualenvs/zygrader/bin/activate
 ```
 
 You must first install zygrader in _develop mode_ before running from source. Run the following from the zygrader repository.
