@@ -114,6 +114,25 @@ When enough features are ready, a major release can be sent to users. A major re
 If a critical bugfix release needs to be released (of the form `X.X1`, `X.X2`, ...), then the only needed change
 is to update the version number in `zygrader/config/shared.py`.
 
+## VSCode
+After creating a virtual environment, you must select that as the python interpreter in VSCode for development. Enter the
+command `Python: Select Interpreter` and choose the virtual environment. It searches the project folder and `~/.virtualenvs` for python environments so the venv may be created where desired.
+
+### Debugging
+VSCode can debug zygrader by including something similar to the following in `launch.json`
+
+```
+    "configurations": [
+        {
+            "name": "zygrader",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/zygrader/main.py",
+            "console": "integratedTerminal"
+        }
+    ]
+```
+
 #### Tagging
 After making necessary code changes, run `push_update.sh` with the new version number as the argument to tag and push the tag to the repository. After this runs successfully, any user who starts zygrader
 will see it automatically download and update to the latest version. The argument to `push_update.sh` should match the
