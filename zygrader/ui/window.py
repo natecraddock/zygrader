@@ -86,6 +86,7 @@ class Window:
                 if self.insert_mode:
                     self.insert_mode = False
                     self.draw_header()
+                    curses.doupdate()
                     event = Event.NONE
                 else:
                     event = Event.ESC
@@ -138,12 +139,14 @@ class Window:
             if self.insert_mode:
                 self.insert_mode = False
                 self.draw_header()
+                curses.doupdate()
                 event = Event.NONE
             else:
                 event = Event.ESC
         elif not self.insert_mode and chr(input_code) == "i":
             self.insert_mode = True
             self.draw_header()
+            curses.doupdate()
             event = Event.NONE
         elif not self.insert_mode:
             if chr(input_code) == "h":
@@ -355,7 +358,6 @@ class Window:
             curses.init_pair(1, curses.COLOR_WHITE, curses.COLOR_BLACK)
         else:
             curses.init_pair(1, curses.COLOR_BLACK, curses.COLOR_WHITE)
-        self.draw_header()
 
     def component_init(self, component):
         # Disable insertion mode on component change
