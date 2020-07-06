@@ -17,7 +17,7 @@ def color_student_lines(lab, student):
         return curses.color_pair(2)
     if data.flags.is_submission_flagged(student, lab) and not isinstance(student, str):
         return curses.color_pair(7)
-    return curses.color_pair(0)
+    return curses.color_pair(1)
 
 def fill_student_list(lab, students):
     """Given a list of students, fill the list sorting locked and

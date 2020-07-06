@@ -265,8 +265,8 @@ class Window:
         curses.init_pair(2, curses.COLOR_RED, curses.COLOR_BLACK)
 
         # Holiday LIGHT variant
-        curses.init_pair(3, curses.COLOR_WHITE, curses.COLOR_GREEN)
-        curses.init_pair(4, curses.COLOR_WHITE, curses.COLOR_RED)
+        curses.init_pair(3, curses.COLOR_GREEN, curses.COLOR_WHITE)
+        curses.init_pair(4, curses.COLOR_RED, curses.COLOR_WHITE)
 
         # Holiday DARK variant
         curses.init_pair(5, curses.COLOR_GREEN, curses.COLOR_BLACK)
@@ -358,6 +358,7 @@ class Window:
             curses.init_pair(1, curses.COLOR_WHITE, curses.COLOR_BLACK)
         else:
             curses.init_pair(1, curses.COLOR_BLACK, curses.COLOR_WHITE)
+        self.stdscr.bkgd(" ", curses.color_pair(1))
 
     def component_init(self, component):
         # Disable insertion mode on component change

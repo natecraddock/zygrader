@@ -83,6 +83,8 @@ class Popup(Component):
 
         self.draw_title()
 
+        self.window.border()
+
     def draw(self):
         self.draw_text()
 
@@ -169,7 +171,7 @@ class FilteredList(Component):
             self.index = index
             self.data = data
             self.text = str(data)
-            self.color = curses.color_pair(0)
+            self.color = curses.color_pair(1)
 
     def filter_string(self, line, filter):
         return line.text.lower().find(filter.lower()) is not -1
@@ -242,6 +244,7 @@ class FilteredList(Component):
 
         # List box
         self.window = curses.newwin(self.rows - 1, self.cols, y, x)
+        self.window.bkgd(" ", curses.color_pair(1))
 
         # Text input
         self.text_input = curses.newwin(1, cols, self.rows, 0)
@@ -365,7 +368,7 @@ class TextInput(Popup):
 
         # Create a text input
         self.text_input = curses.newwin(TextInput.TEXT_HEIGHT, self.text_width,
-                                        self.y + self.rows - TextInput.TEXT_HEIGHT,
+                                        self.y + self.rows - TextInput.TEXT_HEIGHT - 1,
                                         self.x + TextInput.PADDING)
         self.text_input.bkgd(" ", curses.color_pair(1))
         curses.curs_set(1)
@@ -376,7 +379,7 @@ class TextInput(Popup):
         self.text_width = self.cols - (TextInput.PADDING * 2)
 
         try:
-            self.text_input.mvwin(self.rows - TextInput.TEXT_HEIGHT, self.x + TextInput.PADDING)
+            self.text_input.mvwin(self.rows - TextInput.TEXT_HEIGHT - 1, self.x + TextInput.PADDING)
         except:
             pass
         resize_window(self.text_input, TextInput.TEXT_HEIGHT, self.text_width)
@@ -530,6 +533,7 @@ class ListPopup(FilteredList, Popup):
 
     def draw(self):
         self.window.erase()
+        self.window.border()
 
         self.draw_title()
 
