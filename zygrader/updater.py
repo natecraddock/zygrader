@@ -76,7 +76,7 @@ def install_version(version: str):
             uninstall_zygrader()
             install_from_url(tag["tarball_url"])
 
-            print("zygrader {version} successfully installed. Please run zygrader again.")
+            print(f"zygrader {version} successfully installed. Please run zygrader again.")
             print()
             sys.exit()
 
