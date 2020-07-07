@@ -272,6 +272,7 @@ class Window:
         curses.init_pair(5, curses.COLOR_GREEN, curses.COLOR_BLACK)
         curses.init_pair(6, curses.COLOR_RED, curses.COLOR_BLACK)
 
+        # Flagged lines
         curses.init_pair(7, curses.COLOR_CYAN, curses.COLOR_BLACK)
 
     def __resize_terminal(self):
@@ -356,8 +357,12 @@ class Window:
     def update_window(self):
         if self.dark_mode:
             curses.init_pair(1, curses.COLOR_WHITE, curses.COLOR_BLACK)
+            curses.init_pair(7, curses.COLOR_CYAN, curses.COLOR_BLACK)
+            curses.init_pair(2, curses.COLOR_RED, curses.COLOR_BLACK)
         else:
             curses.init_pair(1, curses.COLOR_BLACK, curses.COLOR_WHITE)
+            curses.init_pair(7, curses.COLOR_CYAN, curses.COLOR_WHITE)
+            curses.init_pair(2, curses.COLOR_RED, curses.COLOR_WHITE)
         self.stdscr.bkgd(" ", curses.color_pair(1))
 
     def component_init(self, component):
