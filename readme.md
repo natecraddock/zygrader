@@ -88,9 +88,10 @@ $ pip install requests
 $ pip install -e .
 ```
 
-During development, zygrader should be run from the git repository.
+zygrader can be run directly from the main file, or as a module during development (supports alias)
 ```
 $ python3 zygrader/main.py
+$ python3 -m zygrader
 ```
 
 To exit the virtual environment
