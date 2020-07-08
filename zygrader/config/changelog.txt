@@ -1,5 +1,11 @@
 # Try to keep lines shorter than 70 characters
 
+4.0.0
+* Use semantic versioning.
+* Make light theme consistent.
+* Draw borders on popups.
+* Show version number in header.
+
 3.6
 * Reformat zygrader source as a proper Python package.
   Now it is no longer run from a shared symbolic link!
