@@ -106,14 +106,29 @@ it starts. If a commit has been tagged with a higher version number than the cur
 and installed.
 
 ## Pushing Updates
-When enough features are ready, a major release can be sent to users. A major release includes:\
+When enough features are ready, a major release can be sent to users. A major release includes:
 * updating the changelog `zygrader/config/changelog.txt`
 * adding any needed versioning code in `zygrader/config/versioning.py`
 * showing the changelog message in the versioning code (see previous versions)
 * and update the version number in `zygrader/config/shared.py`.
 
-If a critical bugfix release needs to be released (of the form `X.X1`, `X.X2`, ...), then the only needed change
+If a critical bugfix release needs to be released (of the form `X.X.1`, `X.X.2`, ...), then the only needed change
 is to update the version number in `zygrader/config/shared.py`.
+
+#### Tagging
+After making necessary code changes, run `push_update.sh` with the new version number as the argument to tag and push the tag to the repository. After this runs successfully, any user who starts zygrader
+will see it automatically download and update to the latest version. The argument to `push_update.sh` should match the
+VERSION variable in `shared.py` exactly.
+
+**Example:** _pushing a major version 3.6.0_
+```
+$ ./push_update.sh 3.6.0
+```
+
+**Example:** _pushing a buxfix update to version 3.5.0_
+```
+$ ./push_update.sh 3.5.1
+```
 
 ## VSCode
 After creating a virtual environment, you must select that as the python interpreter in VSCode for development. Enter the
@@ -132,21 +147,6 @@ VSCode can debug zygrader by including something similar to the following in `la
             "console": "integratedTerminal"
         }
     ]
-```
-
-#### Tagging
-After making necessary code changes, run `push_update.sh` with the new version number as the argument to tag and push the tag to the repository. After this runs successfully, any user who starts zygrader
-will see it automatically download and update to the latest version. The argument to `push_update.sh` should match the
-VERSION variable in `shared.py` exactly.
-
-**Example:** _pushing a major version 3.6_
-```
-$ ./push_update.sh 3.6
-```
-
-**Example:** _pushing a buxfix update to version 3.5_
-```
-$ ./push_update.sh 3.51
 ```
 
 # Code Documentation
