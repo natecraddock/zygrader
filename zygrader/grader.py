@@ -263,7 +263,7 @@ def student_callback(context: WinContext, lab, use_locks=True):
         if not (use_locks and submission.flag & data.model.SubmissionFlag.DIFF_PARTS):
             del options["Diff Parts"]
 
-        window.create_options_popup("Submission", submission.msg,
+        window.create_options_popup("Submission", submission,
                                     options, components.Popup.ALIGN_LEFT)
 
         SharedData.running_process = None

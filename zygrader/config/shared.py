@@ -5,7 +5,7 @@ from distutils.version import LooseVersion
 
 class SharedData:
     # Zygrader version
-    VERSION = LooseVersion("4.0.0")
+    VERSION = LooseVersion("4.0.1")
 
     # Current class code (shared)
     # TODO: Could this be per-user?

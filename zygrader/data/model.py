@@ -85,6 +85,20 @@ class SubmissionFlag(enum.Flag):
 
 
 class Submission:
+    # Implement the iterator interface so the message can be updated
+    # Throughout the grader popup's lifetime.
+    def __iter__(self):
+        self.current_line = 0
+        return self
+
+    def __next__(self):
+        if self.current_line < len(self.msg):
+            line = self.msg[self.current_line]
+            self.current_line += 1
+            return line
+        else:
+            raise StopIteration
+
     def get_part_identifier(self, part):
         """Some parts are not named, use ID in that case"""
         if part["name"]:

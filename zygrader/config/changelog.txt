@@ -5,6 +5,8 @@
 * Make light theme consistent.
 * Draw borders on popups.
 * Show version number in header.
+* Add commandline args to skip updates and install specific
+  versions. Run with --help for more info.
 
 3.6
 * Reformat zygrader source as a proper Python package.

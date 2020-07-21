@@ -47,22 +47,22 @@ class Popup(Component):
         self.y = (self.available_rows - self.rows) // 2
         self.x = (self.available_cols - self.cols) // 2
 
-    def __draw_message_left(self):
-        longest_line = max([len(l) for l in self.message])
+    def __draw_message_left(self, message: list):
+        longest_line = max([len(l) for l in message])
 
         message_x = self.cols // 2 - longest_line // 2
 
-        message_y = self.rows // 2 - len(self.message) // 2
+        message_y = self.rows // 2 - len(message) // 2
         message_row = 0
-        for line in self.message:
+        for line in message:
             line = line[:self.cols - Popup.PADDING]
             add_str(self.window, message_y + message_row, message_x, line)
             message_row += 1
 
-    def __draw_message_center(self):
-        message_y = self.rows // 2 - len(self.message) // 2
+    def __draw_message_center(self, message: list):
+        message_y = self.rows // 2 - len(message) // 2
         message_row = 0
-        for line in self.message:
+        for line in message:
             line = line[:self.cols - Popup.PADDING]
             message_x = self.cols // 2 - len(line) // 2
             add_str(self.window, message_y + message_row, message_x, line)
@@ -75,11 +75,16 @@ class Popup(Component):
     def draw_text(self):
         self.window.erase()
 
+        if not isinstance(self.message, list):
+            message = list(self.message)
+        else:
+            message = self.message
+
         # Draw lines of message
         if self.align == Popup.ALIGN_CENTER:
-            self.__draw_message_center()
+            self.__draw_message_center(message)
         elif self.align == Popup.ALIGN_LEFT:
-            self.__draw_message_left()
+            self.__draw_message_left(message)
 
         self.draw_title()
 
