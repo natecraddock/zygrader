@@ -49,12 +49,7 @@ class SharedData:
             return False
 
         # Initialize current class
-        current_class_code = shared_config["class_code"]
-
-        # Support overriding the class code on a user-level
-        override = preferences.get_preference("class_code")
-        if override != "No Override":
-            current_class_code = override
+        current_class_code = cls.get_current_class_code()
 
         if current_class_code:
             cls.initialize_class_data(current_class_code)
