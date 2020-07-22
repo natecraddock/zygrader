@@ -1,9 +1,11 @@
 """User: User preference window management"""
+from zygrader.config.shared import SharedData
 from zygrader import zybooks
 
 from zygrader.config import preferences
 from zygrader.ui.window import Window, WinContext
 from zygrader.ui.components import TextInput
+from zygrader import data
 
 def authenticate(window: Window, zy_api, email, password):
     """Authenticate to the zyBooks api with the email and password"""
@@ -118,6 +120,40 @@ def set_editor_menu(name):
     edit_fn = lambda context: set_editor(context.data, name)
     window.create_list_popup("Set Editor", callback=edit_fn, list_fill=draw_text_editors)
 
+def draw_class_codes():
+    """Draw the list of class codes"""
+    class_codes = SharedData.get_class_codes()
+    class_codes.insert(0, "No Override")
+    current_code = preferences.get_preference("class_code")
+
+    options = []
+    for code in class_codes:
+        if current_code == code:
+            options.append(f"[X] {code}")
+        else:
+            options.append(f"[ ] {code}")
+    return options
+
+def set_class_code_override(code_index: int, pref_name: str):
+    """Set the current class code to the user's overridden code"""
+    config_file = preferences.get_config()
+    class_codes = SharedData.get_class_codes()
+    class_codes.insert(0, "No Override")
+
+    config_file[pref_name] = class_codes[code_index]
+    preferences.write_config(config_file)
+
+    # Update all data to use the new class code
+    SharedData.initialize_shared_data(SharedData.ZYGRADER_DATA_DIRECTORY)
+    data.load_students()
+    data.load_labs()
+
+def set_class_code_override_menu(pref_name: str):
+    """Open the set class code override popup"""
+    window = Window.get_window()
+    set_fn = lambda context: set_class_code_override(context.data, pref_name)
+    window.create_list_popup("Override Class Code", callback=set_fn, list_fill=draw_class_codes)
+
 def toggle_preference(pref):
     """Toggle a boolean preference"""
     config = preferences.get_config()
@@ -159,6 +195,7 @@ PREFERENCES = [Preference("left_right_arrow_nav", "Left/Right Arrow Navigation",
                Preference("christmas_mode", "Christmas Theme", toggle_preference),
                Preference("browser_diff", "Open Diffs in Browser", toggle_preference),
                Preference("save_password", "Remember Password", password_toggle),
+               Preference("class_code", "Override Class Code", set_class_code_override_menu, False),
                Preference("editor", "Set Editor", set_editor_menu, False),
                ]
 

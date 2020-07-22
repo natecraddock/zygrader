@@ -3,12 +3,14 @@ import os
 import json
 from distutils.version import LooseVersion
 
+from . import preferences
+
 class SharedData:
     # Zygrader version
-    VERSION = LooseVersion("4.0.1")
+    VERSION = LooseVersion("4.1.0")
 
     # Current class code (shared)
-    # TODO: Could this be per-user?
+    # Can be overridden on a user level
     CLASS_CODE = ""
 
     # The zygrader data exists in a hidden folder created by the --init-data-dir flag
@@ -48,6 +50,12 @@ class SharedData:
 
         # Initialize current class
         current_class_code = shared_config["class_code"]
+
+        # Support overriding the class code on a user-level
+        override = preferences.get_preference("class_code")
+        if override != "No Override":
+            current_class_code = override
+
         if current_class_code:
             cls.initialize_class_data(current_class_code)
 
@@ -141,7 +149,7 @@ class SharedData:
         return True
 
     @classmethod
-    def get_class_codes(cls):
+    def get_class_codes(cls) -> list:
         config = cls.get_shared_config()
         return config["class_codes"]
 
@@ -154,6 +162,9 @@ class SharedData:
 
     @classmethod
     def get_current_class_code(cls):
+        override = preferences.get_preference("class_code")
+        if override != "No Override":
+            return override
         config = cls.get_shared_config()
         return config["class_code"]
 

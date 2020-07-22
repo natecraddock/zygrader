@@ -24,6 +24,7 @@ DEFAULT_CONFIG = {
     "left_right_arrow_nav":"left_right_arrow_nav",
     "editor": "Pluma",
     "data_dir": "",
+    "class_code": "",
 }
 
 CONFIG_PATH = os.path.join(os.path.expanduser("~"), ".config/zygrader")

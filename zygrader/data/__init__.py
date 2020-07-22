@@ -13,11 +13,8 @@ from . import lock
 g_students = []
 g_labs = []
 
-# Load students from JSON file
-def get_students() -> list:
-    if g_students:
-        return g_students
-
+def load_students() -> list:
+    g_students.clear()
     path = SharedData.get_student_data()
     if not os.path.exists(path):
         return []
@@ -30,11 +27,15 @@ def get_students() -> list:
 
     return g_students
 
-# Load labs from JSON file
-def get_labs() -> list:
-    if g_labs:
-        return g_labs
+# Load students from JSON file
+def get_students() -> list:
+    if g_students:
+        return g_students
 
+    return load_students()
+
+def load_labs() -> list:
+    g_labs.clear()
     path = SharedData.get_labs_data()
     if not os.path.exists(path):
         return []
@@ -45,7 +46,13 @@ def get_labs() -> list:
     for a in labs_json:
         g_labs.append(Lab(a["name"], a["parts"], a["options"]))
 
-    return g_labs
+
+# Load labs from JSON file
+def get_labs() -> list:
+    if g_labs:
+        return g_labs
+
+    return load_labs()
 
 def write_labs(labs):
     global g_labs
