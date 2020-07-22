@@ -306,7 +306,10 @@ class Window:
             self.__header_title = self.header_titles[-1]
 
         if self.__header_title:
-            display_text = f"{self.name} | {self.__header_title}"
+            if callable(self.__header_title):
+                display_text = f"{self.name} | {self.__header_title()}"
+            else:
+                display_text = f"{self.name} | {self.__header_title}"
         else:
             display_text = self.name
 

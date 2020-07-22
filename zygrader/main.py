@@ -122,7 +122,7 @@ def mainloop(admin_mode):
     if admin_mode:
         MAIN_MENU_OPTIONS.append("Admin")
 
-    window.set_header(f"Menu")
+    window.set_header(SharedData.get_current_class_code)
     window.create_filtered_list("Option", input_data=MAIN_MENU_OPTIONS, callback=mainloop_callback)
 
 def main(window: Window):
