@@ -1,5 +1,9 @@
 # Try to keep lines shorter than 70 characters
 
+4.1.0
+* Add -s commandline argument for --set-data-dir.
+* Add a new preference to override the current class.
+
 4.0.0
 * Use semantic versioning.
 * Make light theme consistent.
