@@ -47,7 +47,7 @@ def sigtstp_handler(signum, frame):
 def parse_args():
     """Parse CMD args"""
     parser = argparse.ArgumentParser(description="download and inspect zyBooks data for grading")
-    parser.add_argument("--set-data-dir", help="Data path for shared zygrader files")
+    parser.add_argument("-s", "--set-data-dir", help="Data path for shared zygrader files")
     parser.add_argument("--init-data-dir", help="Create the folder for shared zygrader files")
     parser.add_argument("-a", "--admin", action="store_true", help="Enable admin features")
     group = parser.add_mutually_exclusive_group()
