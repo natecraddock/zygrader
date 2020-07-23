@@ -2,6 +2,7 @@
 from zygrader.config.shared import SharedData
 from zygrader import zybooks
 
+from zygrader.class_manager import download_roster
 from zygrader.config import preferences
 from zygrader.ui.window import Window, WinContext
 from zygrader.ui.components import TextInput
@@ -10,7 +11,13 @@ from zygrader import data
 def authenticate(window: Window, zy_api, email, password):
     """Authenticate to the zyBooks api with the email and password"""
     wait_popup = window.create_waiting_popup("Signing in", [f"Signing into zyBooks as {email}..."])
+
     success = zy_api.authenticate(email, password)
+
+    # Always fetch the latest roster when starting zygrader
+    if success:
+        download_roster(silent=True)
+
     wait_popup.close()
 
     if not success:

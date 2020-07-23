@@ -249,18 +249,20 @@ def edit_labs():
     edit_fn = lambda context: edit_labs_callback(data.get_labs()[context.data], context.component)
     window.create_filtered_list("Lab", list_fill=draw_lab_list, callback=edit_fn)
 
-def download_roster():
+def download_roster(silent=False):
     """Download the roster of students from zybooks and save to disk"""
     window = Window.get_window()
     zy_api = Zybooks()
 
     roster = zy_api.get_roster()
-    if not roster:
+
+    if not silent and not roster:
         window.create_popup("Failed", ["Failed to download student roster"])
         return
 
     save_roster(roster)
-    window.create_popup("Finished", ["Successfully downloaded student roster"])
+    if not silent:
+        window.create_popup("Finished", ["Successfully downloaded student roster"])
 
 def change_class():
     """Change the current class.
