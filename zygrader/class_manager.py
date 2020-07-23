@@ -209,7 +209,7 @@ def move_lab(filtered_list, lab, step):
     filtered_list.refresh()
     filtered_list.selected_index += step
 
-def remove_fn(filtered_list, window, lab):
+def remove_fn(filtered_list, window, lab) -> bool:
     """Remove a lab from the list"""
     msg = [f"Are you sure you want to remove {lab.name}?"]
     remove = window.create_bool_popup("Confirm", msg)
@@ -220,6 +220,7 @@ def remove_fn(filtered_list, window, lab):
         data.write_labs(labs)
 
     filtered_list.refresh()
+    return remove
 
 def edit_labs_callback(lab, filtered_list):
     """Create a popup for basic lab editing options"""

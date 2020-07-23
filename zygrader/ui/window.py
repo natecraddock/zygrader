@@ -478,7 +478,9 @@ class Window:
                     callback_fn = popup.selected()
                     if not callback_fn:
                         break
-                    callback_fn(WinContext(self, event, popup, None))
+                    ret = callback_fn(WinContext(self, event, popup, None))
+                    if ret:
+                        break
                 else:
                     break
 

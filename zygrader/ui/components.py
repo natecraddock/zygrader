@@ -338,6 +338,9 @@ class FilteredList(Component):
         self.dirty = True
 
     def selected(self):
+        if self.selected_index < 0 or self.selected_index > len(self.data) - 1:
+            self.selected_index = len(self.data) - 1
+
         return self.data[self.selected_index].index - 1
 
     def clear_filter(self):
