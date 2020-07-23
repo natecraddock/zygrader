@@ -80,16 +80,15 @@ def add_lab():
         response = zy_api.get_zybook_section(chapter, section)
         if not response.success:
             window.create_popup("Error", ["Invalid URL"])
-            continue
+        else:
+            # Name lab part and add to list of parts
+            name = window.create_text_input("Part Name", "Enter new part name")
+            if name == Window.CANCEL:
+                name = response.name
 
-        # Name lab part and add to list of parts
-        name = window.create_text_input("Part Name", "Enter new part name")
-        if name == Window.CANCEL:
-            name = response.name
-
-        part["name"] = name
-        part["id"] = response.id
-        parts.append(part)
+            part["name"] = name
+            part["id"] = response.id
+            parts.append(part)
 
         # Get next part
         number = window.create_text_input("Enter Part", "Enter Chapter.section, e.g. 2.26 (ESC to finish)")
