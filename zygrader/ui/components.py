@@ -74,6 +74,7 @@ class Popup(Component):
 
     def draw_text(self):
         self.window.erase()
+        self.window.border()
 
         if not isinstance(self.message, list):
             message = list(self.message)
@@ -87,8 +88,6 @@ class Popup(Component):
             self.__draw_message_left(message)
 
         self.draw_title()
-
-        self.window.border()
 
     def draw(self):
         self.draw_text()
