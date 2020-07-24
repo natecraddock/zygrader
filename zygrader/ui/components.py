@@ -168,16 +168,16 @@ class OptionsPopup(Popup):
         return self.options[self.index]
 
 class DatetimeSpinner(Popup):
-    FORMAT_STR = "%b %d, %Y at %H:%M:%S"
+    FORMAT_STR = "%b %d, %Y at %I:%M:%S%p"
     FIELDS = [
         {'name': 'month', 'x_offset': 0, 'unit': None, 'formatter': '%b'},
         {'name': 'day', 'x_offset': 4, 'unit': datetime.timedelta(days=1), 'formatter': '%d'},
         {'name': 'year', 'x_offset': 10, 'unit': None, 'formatter': '%y'},
-        {'name': 'hour', 'x_offset': 16, 'unit': datetime.timedelta(hours=1), 'formatter': '%H'},
+        {'name': 'hour', 'x_offset': 16, 'unit': datetime.timedelta(hours=1), 'formatter': '%I'},
         {'name': 'minute', 'x_offset': 19, 'unit': datetime.timedelta(minutes=1), 'formatter': '%M'},
         {'name': 'second', 'x_offset': 22, 'unit': datetime.timedelta(seconds=1), 'formatter': '%S'}
     ]
-    STR_LEN = 24
+    STR_LEN = 26
 
     def __init__(self, height, width, title, time, quickpicks):
         super().__init__(height, width, title, [], Popup.ALIGN_CENTER)
