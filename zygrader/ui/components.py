@@ -170,21 +170,25 @@ class OptionsPopup(Popup):
 class DatetimeSpinner(Popup):
     FORMAT_STR = "%b %d, %Y at %H:%M:%S"
     FIELDS = [
-        {'name': 'month', 'x_offset': 0, 'str_len': 3, 'formatter': '%b'},
-        {'name': 'day', 'x_offset': 4, 'str_len': 2, 'formatter': '%d'},
-        {'name': 'year', 'x_offset': 8, 'str_len': 4, 'formatter': '%Y'},
-        {'name': 'hour', 'x_offset': 16, 'str_len': 2, 'formatter': '%H'},
-        {'name': 'minute', 'x_offset': 19, 'str_len': 2, 'formatter': '%M'},
-        {'name': 'second', 'x_offset': 22, 'str_len': 2, 'formatter': '%S'}
+        {'name': 'month', 'x_offset': 0, 'unit': None, 'formatter': '%b'},
+        {'name': 'day', 'x_offset': 4, 'unit': datetime.timedelta(days=1), 'formatter': '%d'},
+        {'name': 'year', 'x_offset': 8, 'unit': None, 'formatter': '%Y'},
+        {'name': 'hour', 'x_offset': 16, 'unit': datetime.timedelta(hours=1), 'formatter': '%H'},
+        {'name': 'minute', 'x_offset': 19, 'unit': datetime.timedelta(minutes=1), 'formatter': '%M'},
+        {'name': 'second', 'x_offset': 22, 'unit': datetime.timedelta(seconds=1), 'formatter': '%S'}
     ]
     STR_LEN = 24
 
-    def __init__(self, height, width, title, time):
+    def __init__(self, height, width, title, time, quickpicks):
         super().__init__(height, width, title, [], Popup.ALIGN_CENTER)
         if time is None:
             time = datetime.datetime.now()
         self.time = time
         self.field_index = 3
+
+        if quickpicks:
+            quickpicks = sorted(quickpicks)
+        self.quickpicks = quickpicks
 
     def draw(self):
         self.message = [self.time.strftime(DatetimeSpinner.FORMAT_STR)]
@@ -199,6 +203,146 @@ class DatetimeSpinner(Popup):
         add_str(self.window, time_y, field_x, field_str, curses.A_STANDOUT)
 
         self.window.noutrefresh()
+
+    def next_field(self):
+        self.field_index = (self.field_index + 1) % len(DatetimeSpinner.FIELDS)
+
+    def previous_field(self):
+        self.field_index = (self.field_index - 1) % len(DatetimeSpinner.FIELDS)
+
+    def first_field(self):
+        self.field_index = 0
+
+    def last_field(self):
+        self.field_index = len(DatetimeSpinner.FIELDS) - 1
+
+    def increment_field(self):
+        field = DatetimeSpinner.FIELDS[self.field_index]
+        if field['name'] == 'minute' and self.quickpicks:
+            self._increment_quickpick()
+        else:
+            self._increment_field()
+
+    def decrement_field(self):
+        field = DatetimeSpinner.FIELDS[self.field_index]
+        if field['name'] == 'minute' and self.quickpicks:
+            self._decrement_quickpick()
+        else:
+            self._decrement_field()
+
+    def alt_increment_field(self):
+        self._increment_field()
+
+    def alt_decrement_field(self):
+        self._decrement_field()
+
+    def _increment_field(self):
+        field = DatetimeSpinner.FIELDS[self.field_index]
+        if field['unit']:
+            self.time = self.time + field['unit']
+        else:
+            if field['name'] == 'month':
+                new_month = (self.time.month % 12) + 1 #month is in 1..12, this incs 12->1
+                self.time = self.time.replace(month=new_month)
+            elif field['name'] == 'year':
+                new_year = min(max(self.time.year + 1, datetime.MINYEAR), datetime.MAXYEAR)
+                self.time = self.time.replace(year=new_year)
+
+    def _decrement_field(self):
+        field = DatetimeSpinner.FIELDS[self.field_index]
+        if field['unit']:
+            self.time = self.time - field['unit']
+        else:
+            if field['name'] == 'month':
+                new_month = self.time.month - 1
+                if new_month == 0:
+                    new_month = 12
+                self.time = self.time.replace(month=new_month)
+            elif field['name'] == 'year':
+                new_year = min(max(self.time.year - 1, datetime.MINYEAR), datetime.MAXYEAR)
+                self.time = self.time.replace(year=new_year)
+
+    def _increment_quickpick(self):
+        new_minute, new_second = self.quickpicks[0]
+        for minute, second in self.quickpicks:
+            if minute > self.time.minute:
+                new_minute, new_second = minute, second
+                break
+
+        self.time = self.time.replace(minute=new_minute, second=new_second)
+
+    def _decrement_quickpick(self):
+        new_minute, new_second = self.quickpicks[-1]
+        for minute, second in self.quickpicks[::-1]:
+            if minute < self.time.minute:
+                new_minute, new_second = minute, second
+                break
+
+        self.time = self.time.replace(minute=new_minute, second=new_second)
+
+    def set_field(self, val: str):
+        try:
+            new_val = int(val)
+            field_name = DatetimeSpinner.FIELDS[self.field_index]['name']
+
+            if field_name == 'month':
+                self.time = self.time.replace(month=new_val)
+            elif field_name == 'day':
+                self.time = self.time.replace(day=new_val)
+            elif field_name == 'year':
+                self.time = self.time.replace(year=new_val)
+            elif field_name == 'hour':
+                self.time = self.time.replace(hour=new_val)
+            elif field_name == 'minute':
+                self.time = self.time.replace(minute=new_val)
+            elif field_name == 'second':
+                self.time = self.time.replace(second=new_val)
+
+            return True
+        except ValueError:
+            return self._set_month(val)
+
+    MONTH_STR_PATH = {
+        'j': (1, False, {
+            'a': (1, True, 'nuary'),
+            'u': (6, False, {
+                'n': (6, True, 'e'),
+                'l': (7, True, 'y')
+            })
+        }),
+        'f': (2, True, 'ebruary'),
+        'm': (3, False, {
+            'a': (3, False, {
+                'r': (3, True, 'ch'),
+                'y': (5, True, '')
+            })
+        }),
+        'a': (4, False, {
+            'p': (4, True, 'ril'),
+            'u': (8, True, 'gust')
+        }),
+        's': (9, True, 'eptember'),
+        'o': (10, True, 'ctober'),
+        'n': (11, True, 'ovember'),
+        'd': (12, True, 'ecember')
+    }
+    def _set_month(self, new_month: str):
+        position = DatetimeSpinner.MONTH_STR_PATH
+        guess = None
+        for char in new_month:
+            if char not in position:
+                return
+
+            guess, surety, position = position[char]
+            if surety:
+                break
+
+        if guess:
+            self.time = self.time.replace(month=guess)
+            return True
+
+        return False
+
 
 class FilteredList(Component):
 
