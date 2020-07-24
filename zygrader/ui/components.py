@@ -172,7 +172,7 @@ class DatetimeSpinner(Popup):
     FIELDS = [
         {'name': 'month', 'x_offset': 0, 'unit': None, 'formatter': '%b'},
         {'name': 'day', 'x_offset': 4, 'unit': datetime.timedelta(days=1), 'formatter': '%d'},
-        {'name': 'year', 'x_offset': 8, 'unit': None, 'formatter': '%Y'},
+        {'name': 'year', 'x_offset': 10, 'unit': None, 'formatter': '%y'},
         {'name': 'hour', 'x_offset': 16, 'unit': datetime.timedelta(hours=1), 'formatter': '%H'},
         {'name': 'minute', 'x_offset': 19, 'unit': datetime.timedelta(minutes=1), 'formatter': '%M'},
         {'name': 'second', 'x_offset': 22, 'unit': datetime.timedelta(seconds=1), 'formatter': '%S'}
@@ -189,6 +189,11 @@ class DatetimeSpinner(Popup):
         if quickpicks:
             quickpicks = sorted(quickpicks)
         self.quickpicks = quickpicks
+
+        self.input_str = ''
+        self.input_str_last_field_index = None
+
+        self._reset_month_str_position()
 
     def draw(self):
         self.message = [self.time.strftime(DatetimeSpinner.FORMAT_STR)]
@@ -280,37 +285,75 @@ class DatetimeSpinner(Popup):
 
         self.time = self.time.replace(minute=new_minute, second=new_second)
 
-    def set_field(self, val: str):
+    def addchar(self, c):
+        if self.input_str_last_field_index != self.field_index:
+            self.input_str = ''
+        self.input_str_last_field_index = self.field_index
+
+        if c.isdigit():
+            self.input_str += c
+
+            if self._set_field_numerically():
+                self.input_str = ''
+                self.next_field()
+        else:
+            if DatetimeSpinner.FIELDS[self.field_index]['name'] == 'month':
+                if self._set_month_from_chars(c):
+                    self._reset_month_str_position()
+                    self.next_field()
+
+    def _set_field_numerically(self):
+        """Attempts to set the current field to the current input_str interpreted as a number
+        Returns true if the input_str completely fills the current field"""
         try:
-            new_val = int(val)
+            new_val = int(self.input_str)
             field_name = DatetimeSpinner.FIELDS[self.field_index]['name']
 
             if field_name == 'month':
                 self.time = self.time.replace(month=new_val)
+                #1 could be Jan or Oct-Dec, but other single digits are complete
+                return new_val > 1
             elif field_name == 'day':
                 self.time = self.time.replace(day=new_val)
+                #1-3 could have a second digit, but other single digits are complete
+                return new_val > 3
             elif field_name == 'year':
-                self.time = self.time.replace(year=new_val)
+                century = self.time.year - (self.time.year % 100)
+                new_year = century + new_val
+                self.time = self.time.replace(year=new_year)
+                #user only enters last two digits
+                return len(self.input_str) >= 2
             elif field_name == 'hour':
                 self.time = self.time.replace(hour=new_val)
+                #1 could have a second digit, but other single digits are complete
+                return new_val > 1
             elif field_name == 'minute':
                 self.time = self.time.replace(minute=new_val)
+                #1-5 could have a second digit, but other single digits are complete
+                return new_val > 5
             elif field_name == 'second':
                 self.time = self.time.replace(second=new_val)
+                #1-5 could have a second digit, but other single digits are complete
+                return new_val > 5
 
-            return True
         except ValueError:
-            return self._set_month(val)
+            return False
 
     MONTH_STR_PATH = {
         'j': (1, False, {
-            'a': (1, True, 'nuary'),
+            'a': (1, True, {
+                'n': (1, True, 'uary')
+            }),
             'u': (6, False, {
                 'n': (6, True, 'e'),
                 'l': (7, True, 'y')
             })
         }),
-        'f': (2, True, 'ebruary'),
+        'f': (2, True, {
+            'e': (2, True, {
+                'b': (2, True, 'ruary')
+            })
+        }),
         'm': (3, False, {
             'a': (3, False, {
                 'r': (3, True, 'ch'),
@@ -318,31 +361,53 @@ class DatetimeSpinner(Popup):
             })
         }),
         'a': (4, False, {
-            'p': (4, True, 'ril'),
-            'u': (8, True, 'gust')
+            'p': (4, True, {
+                'r': (4, True, 'il')
+            }),
+            'u': (8, True, {
+                'g': (8, True, 'ust')
+            })
         }),
-        's': (9, True, 'eptember'),
-        'o': (10, True, 'ctober'),
-        'n': (11, True, 'ovember'),
-        'd': (12, True, 'ecember')
+        's': (2, True, {
+            'e': (2, True, {
+                'p': (2, True, 'tember')
+            })
+        }),
+        'o': (2, True, {
+            'c': (2, True, {
+                't': (2, True, 'ober')
+            })
+        }),
+        'n': (2, True, {
+            'o': (2, True, {
+                'v': (2, True, 'ember')
+            })
+        }),
+        'd': (2, True, {
+            'e': (2, True, {
+                'c': (2, True, 'ember')
+            })
+        })
     }
-    def _set_month(self, new_month: str):
-        position = DatetimeSpinner.MONTH_STR_PATH
-        guess = None
-        for char in new_month:
-            if char not in position:
-                return
+    def _reset_month_str_position(self):
+        self.month_str_position = DatetimeSpinner.MONTH_STR_PATH
+        self.month_str_len = 0
 
-            guess, surety, position = position[char]
-            if surety:
-                break
+    def _set_month_from_chars(self, newchar, recursed=False):
+        """Attempts to set the month based on inputted chars
+        Returns true once the input chars completely fill the month field"""
+        newchar = newchar.lower()
+        if newchar in self.month_str_position:
+            guess, _, position = self.month_str_position[newchar]
+            self.month_str_len += 1
+            self.month_str_position = position
 
-        if guess:
             self.time = self.time.replace(month=guess)
-            return True
 
-        return False
-
+            return self.month_str_len >= 3
+        elif not recursed:
+            self._reset_month_str_position()
+            return self._set_month_from_chars(newchar, recursed=True)
 
 class FilteredList(Component):
 

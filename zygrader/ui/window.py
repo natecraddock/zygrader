@@ -29,6 +29,8 @@ class Event:
     REFRESH = 9
     HOME = 10
     END = 11
+    TAB = 12
+    BTAB = 13
 
     # Modifier Keys
     MOD_ALT = 0
@@ -112,6 +114,10 @@ class Window:
             event = Event.LEFT
         elif input_code == curses.KEY_RIGHT:
             event = Event.RIGHT
+        elif input_code == ord('\t'):
+            event = Event.TAB
+        elif input_code == curses.KEY_BTAB:
+            event = Event.BTAB
         elif self.vim_mode:
             event, event_value = self.get_input_vim(input_code)
         elif input_code == 27: #curses does not have a pre-defined constant for ESC
@@ -505,9 +511,9 @@ class Window:
         while True:
             event = self.consume_event()
 
-            if event.type == Event.LEFT:
+            if event.type in {Event.LEFT, Event.BTAB}:
                 popup.previous_field()
-            elif event.type == Event.RIGHT:
+            elif event.type in {Event.RIGHT, Event.TAB}:
                 popup.next_field()
             elif event.type == Event.HOME:
                 popup.first_field()
@@ -517,6 +523,8 @@ class Window:
                 popup.increment_field()
             elif event.type == Event.DOWN:
                 popup.decrement_field()
+            elif event.type == Event.CHAR_INPUT:
+                popup.addchar(event.value)
             elif event.type == Event.ESC and self.use_esc_back:
                 break
             elif event.type == Event.ENTER:
