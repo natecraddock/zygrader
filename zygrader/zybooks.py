@@ -102,9 +102,6 @@ class Zybooks:
 
         return csv_response.content.decode("utf-8")
 
-
-
-
     def get_zybook_section(self, chapter, section) -> SectionResponse:
         """Given a chapter and section ID, get section information like the zybooks internal ID
 
@@ -119,6 +116,8 @@ class Zybooks:
         response = SectionResponse()
 
         if r.ok:
+            if "section" not in r.json():
+                return response
             section = r.json()["section"]
             content = section["content_resources"][1]
 

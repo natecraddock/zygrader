@@ -80,16 +80,15 @@ def add_lab():
         response = zy_api.get_zybook_section(chapter, section)
         if not response.success:
             window.create_popup("Error", ["Invalid URL"])
-            continue
+        else:
+            # Name lab part and add to list of parts
+            name = window.create_text_input("Part Name", "Enter new part name")
+            if name == Window.CANCEL:
+                name = response.name
 
-        # Name lab part and add to list of parts
-        name = window.create_text_input("Part Name", "Enter new part name")
-        if name == Window.CANCEL:
-            name = response.name
-
-        part["name"] = name
-        part["id"] = response.id
-        parts.append(part)
+            part["name"] = name
+            part["id"] = response.id
+            parts.append(part)
 
         # Get next part
         number = window.create_text_input("Enter Part", "Enter Chapter.section, e.g. 2.26 (ESC to finish)")
@@ -210,7 +209,7 @@ def move_lab(filtered_list, lab, step):
     filtered_list.refresh()
     filtered_list.selected_index += step
 
-def remove_fn(filtered_list, window, lab):
+def remove_fn(filtered_list, window, lab) -> bool:
     """Remove a lab from the list"""
     msg = [f"Are you sure you want to remove {lab.name}?"]
     remove = window.create_bool_popup("Confirm", msg)
@@ -221,6 +220,7 @@ def remove_fn(filtered_list, window, lab):
         data.write_labs(labs)
 
     filtered_list.refresh()
+    return remove
 
 def edit_labs_callback(lab, filtered_list):
     """Create a popup for basic lab editing options"""
@@ -249,18 +249,20 @@ def edit_labs():
     edit_fn = lambda context: edit_labs_callback(data.get_labs()[context.data], context.component)
     window.create_filtered_list("Lab", list_fill=draw_lab_list, callback=edit_fn)
 
-def download_roster():
+def download_roster(silent=False):
     """Download the roster of students from zybooks and save to disk"""
     window = Window.get_window()
     zy_api = Zybooks()
 
     roster = zy_api.get_roster()
-    if not roster:
+
+    if not silent and not roster:
         window.create_popup("Failed", ["Failed to download student roster"])
         return
 
     save_roster(roster)
-    window.create_popup("Finished", ["Successfully downloaded student roster"])
+    if not silent:
+        window.create_popup("Finished", ["Successfully downloaded student roster"])
 
 def change_class():
     """Change the current class.

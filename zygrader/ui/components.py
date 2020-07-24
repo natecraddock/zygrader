@@ -75,6 +75,7 @@ class Popup(Component):
 
     def draw_text(self):
         self.window.erase()
+        self.window.border()
 
         if not isinstance(self.message, list):
             message = list(self.message)
@@ -88,8 +89,6 @@ class Popup(Component):
             self.__draw_message_left(message)
 
         self.draw_title()
-
-        self.window.border()
 
     def draw(self):
         self.draw_text()
@@ -372,6 +371,9 @@ class FilteredList(Component):
         self.dirty = True
 
     def selected(self):
+        if self.selected_index < 0 or self.selected_index > len(self.data) - 1:
+            self.selected_index = len(self.data) - 1
+
         return self.data[self.selected_index].index - 1
 
     def clear_filter(self):

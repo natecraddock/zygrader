@@ -7,7 +7,7 @@ from . import preferences
 
 class SharedData:
     # Zygrader version
-    VERSION = LooseVersion("4.1.0")
+    VERSION = LooseVersion("4.1.2")
 
     # Current class code (shared)
     # Can be overridden on a user level
@@ -158,7 +158,7 @@ class SharedData:
     @classmethod
     def get_current_class_code(cls):
         override = preferences.get_preference("class_code")
-        if override != "No Override":
+        if override and override != "No Override":
             return override
         config = cls.get_shared_config()
         return config["class_code"]
