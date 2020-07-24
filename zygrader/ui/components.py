@@ -368,24 +368,24 @@ class DatetimeSpinner(Popup):
                 'g': (8, True, 'ust')
             })
         }),
-        's': (2, True, {
-            'e': (2, True, {
-                'p': (2, True, 'tember')
+        's': (9, True, {
+            'e': (9, True, {
+                'p': (9, True, 'tember')
             })
         }),
-        'o': (2, True, {
-            'c': (2, True, {
-                't': (2, True, 'ober')
+        'o': (10, True, {
+            'c': (10, True, {
+                't': (10, True, 'ober')
             })
         }),
-        'n': (2, True, {
-            'o': (2, True, {
-                'v': (2, True, 'ember')
+        'n': (11, True, {
+            'o': (11, True, {
+                'v': (11, True, 'ember')
             })
         }),
-        'd': (2, True, {
-            'e': (2, True, {
-                'c': (2, True, 'ember')
+        'd': (12, True, {
+            'e': (12, True, {
+                'c': (12, True, 'ember')
             })
         })
     }
