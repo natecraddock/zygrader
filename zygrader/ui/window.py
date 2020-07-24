@@ -489,6 +489,28 @@ class Window:
         if not use_dict:
             return popup.selected()
 
+    def create_datetime_spinner(self, title, time=None):
+        """Create a popup with a datetime spinner to select a datetime.
+        time is the initial time to present
+        """
+
+        popup = components.DatetimeSpinner(self.rows, self.cols, title, time)
+
+        self.component_init(popup)
+
+        while True:
+            event = self.consume_event()
+
+            if event.type == Event.ENTER:
+                break
+
+            self.draw()
+
+        self.component_deinit()
+
+        return popup.time
+
+
     def create_list_popup(self, title, input_data=None, callback=None, list_fill=None):
         """Create a popup with a list of options that can be scrolled and selected
 

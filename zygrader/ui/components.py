@@ -1,4 +1,5 @@
 import curses
+import datetime
 
 from .utils import add_str, resize_window
 
@@ -167,6 +168,38 @@ class OptionsPopup(Popup):
             return self.options[key]
         return self.options[self.index]
 
+class DatetimeSpinner(Popup):
+    FORMAT_STR = "%b %d, %Y at %H:%M:%S"
+    FIELDS = [
+        {'name': 'month', 'x_offset': 0, 'str_len': 3, 'formatter': '%b'},
+        {'name': 'day', 'x_offset': 4, 'str_len': 2, 'formatter': '%d'},
+        {'name': 'year', 'x_offset': 8, 'str_len': 4, 'formatter': '%Y'},
+        {'name': 'hour', 'x_offset': 16, 'str_len': 2, 'formatter': '%H'},
+        {'name': 'minute', 'x_offset': 19, 'str_len': 2, 'formatter': '%M'},
+        {'name': 'second', 'x_offset': 22, 'str_len': 2, 'formatter': '%S'}
+    ]
+    STR_LEN = 24
+
+    def __init__(self, height, width, title, time):
+        super().__init__(height, width, title, [], Popup.ALIGN_CENTER)
+        if time is None:
+            time = datetime.datetime.now()
+        self.time = time
+        self.field_index = 3
+
+    def draw(self):
+        self.message = [self.time.strftime(DatetimeSpinner.FORMAT_STR)]
+        super().draw_text()
+
+        time_y = self.rows // 2
+        time_x = self.cols // 2 - DatetimeSpinner.STR_LEN // 2
+
+        field = DatetimeSpinner.FIELDS[self.field_index]
+        field_x = time_x + field['x_offset']
+        field_str = self.time.strftime(field['formatter'])
+        add_str(self.window, time_y, field_x, field_str, curses.A_STANDOUT)
+
+        self.window.noutrefresh()
 
 class FilteredList(Component):
 
