@@ -529,17 +529,14 @@ class Window:
             elif event.type == Event.ESC and self.use_esc_back:
                 retval = UI_GO_BACK
                 break
-            elif event.type == Event.ENTER:
-                if popup.current_field_name() in {'confirm', 'no_date'}:
-                    if popup.current_field_name() == 'no_date':
-                        retval = components.DatetimeSpinner.NO_DATE
-                    break
+            elif event.type == Event.ENTER and popup.is_confirmed():
+                break
 
             self.draw()
 
         self.component_deinit()
 
-        return retval if retval else popup.time
+        return retval if retval else popup.get_time()
 
 
     def create_list_popup(self, title, input_data=None, callback=None, list_fill=None):

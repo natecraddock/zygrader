@@ -228,8 +228,13 @@ class DatetimeSpinner(Popup):
 
         self.window.noutrefresh()
 
-    def current_field_name(self) -> str:
-        return self.fields[self.field_index]['name']
+    def is_confirmed(self) -> str:
+        return self.fields[self.field_index]['name'] in {'confirm', 'no_date'}
+
+    def get_time(self):
+        if self.fields[self.field_index]['name'] == 'no_date':
+            return DatetimeSpinner.NO_DATE
+        return self.time
 
     def next_field(self):
         self.field_index = (self.field_index + 1) % len(self.fields)
