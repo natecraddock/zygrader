@@ -1,5 +1,12 @@
 # Try to keep lines shorter than 70 characters
 
+4.2.0
+* Add support for Tab and Shift+Tab navigation on popups.
+* Add DatetimeSpinner component for selecting dates.
+  Used in the Lab Editor and Grade Puller.
+* Add support for wrapping really longs lines in popups.
+* Fixed lingering cursor on popups.
+
 4.1.0
 * Add -s commandline argument for --set-data-dir.
 * Add a new preference to override the current class.
