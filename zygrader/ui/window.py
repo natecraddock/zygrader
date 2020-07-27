@@ -501,6 +501,7 @@ class Window:
         popup = components.ListPopup(self.rows, self.cols, title, input_data, list_fill)
         self.component_init(popup)
 
+        retval = None
         while True:
             event = self.consume_event()
 
@@ -515,6 +516,7 @@ class Window:
             elif event.type == Event.LEFT and self.left_right_menu_nav:
                 break
             elif event.type == Event.ESC and self.use_esc_back:
+                retval = UI_GO_BACK
                 break
             elif ((event.type == Event.ENTER) or
                   (event.type == Event.RIGHT and self.left_right_menu_nav)):
@@ -529,7 +531,7 @@ class Window:
 
         self.component_deinit()
 
-        return popup.selected()
+        return retval if retval else popup.selected()
 
     def create_filename_input(self, purpose):
         """Get a valid filename from the user"""
