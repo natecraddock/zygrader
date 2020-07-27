@@ -443,9 +443,9 @@ class Window:
         while True:
             event = self.consume_event()
 
-            if event.type in {Event.LEFT, Event.UP}:
+            if event.type in {Event.LEFT, Event.UP, Event.BTAB}:
                 popup.previous()
-            elif event.type in {Event.RIGHT, Event.DOWN}:
+            elif event.type in {Event.RIGHT, Event.DOWN, Event.TAB}:
                 popup.next()
             elif event.type == Event.ENTER:
                 break
@@ -469,9 +469,9 @@ class Window:
         while True:
             event = self.consume_event()
 
-            if event.type in {Event.LEFT, Event.UP}:
+            if event.type in {Event.LEFT, Event.UP, Event.BTAB}:
                 popup.previous()
-            elif event.type in {Event.RIGHT, Event.DOWN}:
+            elif event.type in {Event.RIGHT, Event.DOWN, Event.TAB}:
                 popup.next()
             elif event.type == Event.HOME:
                 popup.first()
