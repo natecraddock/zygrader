@@ -1,4 +1,5 @@
 import curses
+import datetime
 
 from .utils import add_str, resize_window
 
@@ -40,6 +41,8 @@ class Popup(Component):
 
         self.window = curses.newwin(self.rows, self.cols, self.y, self.x)
         self.window.bkgd(" ", curses.color_pair(1))
+
+        curses.curs_set(0)
 
     def __calculate_size(self):
         self.rows = min(Popup.ROWS_MAX, self.available_rows - (Popup.PADDING * 2))
@@ -166,6 +169,272 @@ class OptionsPopup(Popup):
             return self.options[key]
         return self.options[self.index]
 
+class DatetimeSpinner(Popup):
+    FORMAT_STR = "%b %d, %Y at %I:%M:%S%p"
+    NO_DATE = "datetime_no_date"
+
+    def __init__(self, height, width, title, time, quickpicks, optional):
+        super().__init__(height, width, title, [], Popup.ALIGN_CENTER)
+
+        self.fields = [
+                       {'name': 'month', 'x_offset': 0, 'unit': None, 'formatter': '%b'},
+                       {'name': 'day', 'x_offset': 4, 'unit': datetime.timedelta(days=1), 'formatter': '%d'},
+                       {'name': 'year', 'x_offset': 10, 'unit': None, 'formatter': '%y'},
+                       {'name': 'hour', 'x_offset': 16, 'unit': datetime.timedelta(hours=1), 'formatter': '%I'},
+                       {'name': 'minute', 'x_offset': 19, 'unit': datetime.timedelta(minutes=1), 'formatter': '%M'},
+                       {'name': 'second', 'x_offset': 22, 'unit': datetime.timedelta(seconds=1), 'formatter': '%S'},
+                       {'name': 'confirm', 'x_offset': 29, 'unit': None, 'formatter': None, 'display_name': "Confirm"}
+        ]
+
+        if time is None:
+            time = datetime.datetime.now()
+        self.time = time
+        self.field_index = 3
+
+        if quickpicks:
+            quickpicks = sorted(quickpicks)
+        self.quickpicks = quickpicks
+
+        # If the date is optional (show 'No Date')
+        self.optional = optional
+        if self.optional:
+            self.fields.append({'name': 'no_date', 'x_offset': 39, 'unit': None, 'formatter': None, 'display_name': "No Date"})
+
+        self.input_str = ''
+        self.input_str_last_field_index = None
+
+        self._reset_month_str_position()
+
+        curses.curs_set(0)
+
+    def draw(self):
+        date_str = f"{self.time.strftime(DatetimeSpinner.FORMAT_STR)} | Confirm{' | No Date' if self.optional else ''}"
+        self.message = [date_str]
+        super().draw_text()
+
+        time_y = self.rows // 2
+        time_x = self.cols // 2 - len(date_str) // 2
+
+        field = self.fields[self.field_index]
+        field_x = time_x + field['x_offset']
+
+        # Special Cases for confirm/no date
+        if 'display_name' in field:
+            field_str = field['display_name']
+        else:
+            field_str = self.time.strftime(field['formatter'])
+
+        add_str(self.window, time_y, field_x, field_str, curses.A_STANDOUT)
+
+        self.window.noutrefresh()
+
+    def is_confirmed(self) -> str:
+        return self.fields[self.field_index]['name'] in {'confirm', 'no_date'}
+
+    def get_time(self):
+        if self.fields[self.field_index]['name'] == 'no_date':
+            return DatetimeSpinner.NO_DATE
+        return self.time
+
+    def next_field(self):
+        self.field_index = (self.field_index + 1) % len(self.fields)
+
+    def previous_field(self):
+        self.field_index = (self.field_index - 1) % len(self.fields)
+
+    def first_field(self):
+        self.field_index = 0
+
+    def last_field(self):
+        self.field_index = len(self.fields) - 1
+
+    def increment_field(self):
+        field = self.fields[self.field_index]
+        if field['name'] == 'minute' and self.quickpicks:
+            self._increment_quickpick()
+        else:
+            self._increment_field()
+
+    def decrement_field(self):
+        field = self.fields[self.field_index]
+        if field['name'] == 'minute' and self.quickpicks:
+            self._decrement_quickpick()
+        else:
+            self._decrement_field()
+
+    def alt_increment_field(self):
+        self._increment_field()
+
+    def alt_decrement_field(self):
+        self._decrement_field()
+
+    def _increment_field(self):
+        field = self.fields[self.field_index]
+        if field['unit']:
+            self.time = self.time + field['unit']
+        else:
+            if field['name'] == 'month':
+                new_month = (self.time.month % 12) + 1 #month is in 1..12, this incs 12->1
+                self.time = self.time.replace(month=new_month)
+            elif field['name'] == 'year':
+                new_year = min(max(self.time.year + 1, datetime.MINYEAR), datetime.MAXYEAR)
+                self.time = self.time.replace(year=new_year)
+
+    def _decrement_field(self):
+        field = self.fields[self.field_index]
+        if field['unit']:
+            self.time = self.time - field['unit']
+        else:
+            if field['name'] == 'month':
+                new_month = self.time.month - 1
+                if new_month == 0:
+                    new_month = 12
+                self.time = self.time.replace(month=new_month)
+            elif field['name'] == 'year':
+                new_year = min(max(self.time.year - 1, datetime.MINYEAR), datetime.MAXYEAR)
+                self.time = self.time.replace(year=new_year)
+
+    def _increment_quickpick(self):
+        new_minute, new_second = self.quickpicks[0]
+        for minute, second in self.quickpicks:
+            if minute > self.time.minute:
+                new_minute, new_second = minute, second
+                break
+
+        self.time = self.time.replace(minute=new_minute, second=new_second)
+
+    def _decrement_quickpick(self):
+        new_minute, new_second = self.quickpicks[-1]
+        for minute, second in self.quickpicks[::-1]:
+            if minute < self.time.minute:
+                new_minute, new_second = minute, second
+                break
+
+        self.time = self.time.replace(minute=new_minute, second=new_second)
+
+    def addchar(self, c):
+        if self.input_str_last_field_index != self.field_index:
+            self.input_str = ''
+        self.input_str_last_field_index = self.field_index
+
+        if c.isdigit():
+            self.input_str += c
+
+            if self._set_field_numerically():
+                self.input_str = ''
+                self.next_field()
+        else:
+            if self.fields[self.field_index]['name'] == 'month':
+                if self._set_month_from_chars(c):
+                    self._reset_month_str_position()
+                    self.next_field()
+
+    def _set_field_numerically(self):
+        """Attempts to set the current field to the current input_str interpreted as a number
+        Returns true if the input_str completely fills the current field"""
+        try:
+            new_val = int(self.input_str)
+            field_name = self.fields[self.field_index]['name']
+
+            if field_name == 'month':
+                self.time = self.time.replace(month=new_val)
+                #1 could be Jan or Oct-Dec, but other single digits are complete
+                return new_val > 1
+            elif field_name == 'day':
+                self.time = self.time.replace(day=new_val)
+                #1-3 could have a second digit, but other single digits are complete
+                return new_val > 3
+            elif field_name == 'year':
+                century = self.time.year - (self.time.year % 100)
+                new_year = century + new_val
+                self.time = self.time.replace(year=new_year)
+                #user only enters last two digits
+                return len(self.input_str) >= 2
+            elif field_name == 'hour':
+                self.time = self.time.replace(hour=new_val)
+                #1 could have a second digit, but other single digits are complete
+                return new_val > 1
+            elif field_name == 'minute':
+                self.time = self.time.replace(minute=new_val)
+                #1-5 could have a second digit, but other single digits are complete
+                return new_val > 5
+            elif field_name == 'second':
+                self.time = self.time.replace(second=new_val)
+                #1-5 could have a second digit, but other single digits are complete
+                return new_val > 5
+
+        except ValueError:
+            return False
+
+    MONTH_STR_PATH = {
+        'j': (1, False, {
+            'a': (1, True, {
+                'n': (1, True, 'uary')
+            }),
+            'u': (6, False, {
+                'n': (6, True, 'e'),
+                'l': (7, True, 'y')
+            })
+        }),
+        'f': (2, True, {
+            'e': (2, True, {
+                'b': (2, True, 'ruary')
+            })
+        }),
+        'm': (3, False, {
+            'a': (3, False, {
+                'r': (3, True, 'ch'),
+                'y': (5, True, '')
+            })
+        }),
+        'a': (4, False, {
+            'p': (4, True, {
+                'r': (4, True, 'il')
+            }),
+            'u': (8, True, {
+                'g': (8, True, 'ust')
+            })
+        }),
+        's': (9, True, {
+            'e': (9, True, {
+                'p': (9, True, 'tember')
+            })
+        }),
+        'o': (10, True, {
+            'c': (10, True, {
+                't': (10, True, 'ober')
+            })
+        }),
+        'n': (11, True, {
+            'o': (11, True, {
+                'v': (11, True, 'ember')
+            })
+        }),
+        'd': (12, True, {
+            'e': (12, True, {
+                'c': (12, True, 'ember')
+            })
+        })
+    }
+    def _reset_month_str_position(self):
+        self.month_str_position = DatetimeSpinner.MONTH_STR_PATH
+        self.month_str_len = 0
+
+    def _set_month_from_chars(self, newchar, recursed=False):
+        """Attempts to set the month based on inputted chars
+        Returns true once the input chars completely fill the month field"""
+        newchar = newchar.lower()
+        if newchar in self.month_str_position:
+            guess, _, position = self.month_str_position[newchar]
+            self.month_str_len += 1
+            self.month_str_position = position
+
+            self.time = self.time.replace(month=guess)
+
+            return self.month_str_len >= 3
+        elif not recursed:
+            self._reset_month_str_position()
+            return self._set_month_from_chars(newchar, recursed=True)
 
 class FilteredList(Component):
 

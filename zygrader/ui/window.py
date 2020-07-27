@@ -29,6 +29,8 @@ class Event:
     REFRESH = 9
     HOME = 10
     END = 11
+    TAB = 12
+    BTAB = 13
 
     # Modifier Keys
     MOD_ALT = 0
@@ -112,6 +114,10 @@ class Window:
             event = Event.LEFT
         elif input_code == curses.KEY_RIGHT:
             event = Event.RIGHT
+        elif input_code == ord('\t'):
+            event = Event.TAB
+        elif input_code == curses.KEY_BTAB:
+            event = Event.BTAB
         elif self.vim_mode:
             event, event_value = self.get_input_vim(input_code)
         elif input_code == 27: #curses does not have a pre-defined constant for ESC
@@ -490,6 +496,48 @@ class Window:
 
         if not use_dict:
             return popup.selected()
+
+    def create_datetime_spinner(self, title, time=None, quickpicks=None, optional=False):
+        """Create a popup with a datetime spinner to select a datetime.
+        time is the initial time to present
+        quickpicks is an optional list of (minute, second) pairs.
+         If provided, spinning the minute field will spin through the quickpicks
+        """
+
+        popup = components.DatetimeSpinner(self.rows, self.cols, title, time, quickpicks, optional)
+
+        self.component_init(popup)
+
+        retval = None
+        while True:
+            event = self.consume_event()
+
+            if event.type in {Event.LEFT, Event.BTAB}:
+                popup.previous_field()
+            elif event.type in {Event.RIGHT, Event.TAB}:
+                popup.next_field()
+            elif event.type == Event.HOME:
+                popup.first_field()
+            elif event.type == Event.END:
+                popup.last_field()
+            elif event.type == Event.UP:
+                popup.increment_field()
+            elif event.type == Event.DOWN:
+                popup.decrement_field()
+            elif event.type == Event.CHAR_INPUT:
+                popup.addchar(event.value)
+            elif event.type == Event.ESC and self.use_esc_back:
+                retval = UI_GO_BACK
+                break
+            elif event.type == Event.ENTER and popup.is_confirmed():
+                break
+
+            self.draw()
+
+        self.component_deinit()
+
+        return retval if retval else popup.get_time()
+
 
     def create_list_popup(self, title, input_data=None, callback=None, list_fill=None):
         """Create a popup with a list of options that can be scrolled and selected

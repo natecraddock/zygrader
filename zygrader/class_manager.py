@@ -3,7 +3,7 @@ import datetime
 import json
 
 from zygrader.ui.window import WinContext, Window
-from zygrader.ui.components import FilteredList
+from zygrader.ui.components import FilteredList, DatetimeSpinner
 from zygrader.ui import UI_GO_BACK
 from zygrader.zybooks import Zybooks
 from zygrader import data
@@ -111,20 +111,21 @@ def set_due_date(lab):
 
     labs = data.get_labs()
 
-    old_date = ""
+    old_date = None
     if "due" in lab.options:
-        old_date = lab.options["due"].strftime("%m.%d.%Y:%H.%M.%S")
+        old_date = lab.options["due"]
 
-    due_date = window.create_text_input("Due Date", "Enter due date [MM.DD.YYYY:HH.MM.SS]", text=old_date)
-    if due_date == Window.CANCEL:
+    due_date = window.create_datetime_spinner("Due Date", time=old_date if old_date else None, optional=True)
+    if due_date == UI_GO_BACK:
         return
 
     # Clearing the due date
-    if due_date == "" and "due" in lab.options:
-        del lab.options["due"]
+    if due_date == DatetimeSpinner.NO_DATE:
+        if  "due" in lab.options:
+            del lab.options["due"]
     else:
-        lab.options["due"] = datetime.datetime.strptime(due_date, "%m.%d.%Y:%H.%M.%S") \
-                                                       .astimezone(tz=None)
+        # Remove time zone information
+        lab.options["due"] = due_date.astimezone(tz=None)
 
     data.write_labs(labs)
 

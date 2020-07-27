@@ -144,22 +144,14 @@ class GradePuller:
     def select_due_times(self, class_sections):
         last_night = create_last_night()
         due_times = {section: last_night for section in class_sections}
-        draw = lambda: [f"Section {section}: {time.strftime('%m.%d.%Y:%H.%M.%S')}" for section, time in due_times.items()]
+        draw = lambda: [f"Section {section}: {time.strftime('%b %d, %Y at %I:%M:%S%p')}" for section, time in due_times.items()]
 
         def select_due_times_callback(context: WinContext):
             selected_index = context.data
 
             section = class_sections[selected_index]
-            old_time_str = due_times[section].strftime("%m.%d.%Y:%H.%M.%S")
-            new_time_str = self.window.create_text_input("Due Date", "Enter due date [MM.DD.YYYY:HH.MM.SS]", text=old_time_str)
-            if new_time_str == Window.CANCEL:
-                return
 
-            try:
-                new_time = datetime.datetime.strptime(new_time_str, "%m.%d.%Y:%H.%M.%S").astimezone(tz=None)
-            except ValueError:
-                self.window.create_popup("Bad Time", [f"{new_time_str} is not a properly formatted and valid time"])
-                return
+            new_time = self.window.create_datetime_spinner("Due Date", due_times[section], [(50, 0), (59, 59), (0,0)])
             due_times[section] = new_time
 
             if selected_index == 0 and len(class_sections) > 1: #For convenience, allow the day to carried across all sections so that only the time has to be changed for the rest
