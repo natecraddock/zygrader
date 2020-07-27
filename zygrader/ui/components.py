@@ -58,6 +58,9 @@ class Popup(Component):
 
     def __calculate_wrapping(self, line: str) -> list:
         wrapped_lines = []
+        if line == "":
+            return [line]
+
         while line:
             if len(line) > (self.cols - 1):
                 wrap_index = self.__find_wrap_index(line, self.cols)
