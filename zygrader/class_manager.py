@@ -115,7 +115,7 @@ def set_due_date(lab):
     if "due" in lab.options:
         old_date = lab.options["due"]
 
-    due_date = window.create_datetime_spinner("Due Date", time=old_date if old_date else None)
+    due_date = window.create_datetime_spinner("Due Date", time=old_date if old_date else None, optional=True)
     if due_date == UI_GO_BACK:
         return
 

@@ -176,12 +176,11 @@ class DatetimeSpinner(Popup):
         {'name': 'hour', 'x_offset': 16, 'unit': datetime.timedelta(hours=1), 'formatter': '%I'},
         {'name': 'minute', 'x_offset': 19, 'unit': datetime.timedelta(minutes=1), 'formatter': '%M'},
         {'name': 'second', 'x_offset': 22, 'unit': datetime.timedelta(seconds=1), 'formatter': '%S'},
-        {'name': 'confirm', 'x_offset': 29, 'unit': None, 'formatter': None, 'display_name': "Confirm"},
-        {'name': 'no_date', 'x_offset': 39, 'unit': None, 'formatter': None, 'display_name': "No Date"}
+        {'name': 'confirm', 'x_offset': 29, 'unit': None, 'formatter': None, 'display_name': "Confirm"}
     ]
     NO_DATE = "datetime_no_date"
 
-    def __init__(self, height, width, title, time, quickpicks):
+    def __init__(self, height, width, title, time, quickpicks, optional):
         super().__init__(height, width, title, [], Popup.ALIGN_CENTER)
         if time is None:
             time = datetime.datetime.now()
@@ -192,13 +191,18 @@ class DatetimeSpinner(Popup):
             quickpicks = sorted(quickpicks)
         self.quickpicks = quickpicks
 
+        # If the date is optional (show 'No Date')
+        self.optional = optional
+        if self.optional:
+            DatetimeSpinner.FIELDS.append({'name': 'no_date', 'x_offset': 39, 'unit': None, 'formatter': None, 'display_name': "No Date"})
+
         self.input_str = ''
         self.input_str_last_field_index = None
 
         self._reset_month_str_position()
 
     def draw(self):
-        date_str = f"{self.time.strftime(DatetimeSpinner.FORMAT_STR)} | Confirm | No Date"
+        date_str = f"{self.time.strftime(DatetimeSpinner.FORMAT_STR)} | Confirm{' | No Date' if self.optional else ''}"
         self.message = [date_str]
         super().draw_text()
 
