@@ -508,6 +508,7 @@ class Window:
 
         self.component_init(popup)
 
+        retval = None
         while True:
             event = self.consume_event()
 
@@ -526,15 +527,19 @@ class Window:
             elif event.type == Event.CHAR_INPUT:
                 popup.addchar(event.value)
             elif event.type == Event.ESC and self.use_esc_back:
+                retval = UI_GO_BACK
                 break
             elif event.type == Event.ENTER:
-                break
+                if popup.current_field_name() in {'confirm', 'no_date'}:
+                    if popup.current_field_name() == 'no_date':
+                        retval = components.DatetimeSpinner.NO_DATE
+                    break
 
             self.draw()
 
         self.component_deinit()
 
-        return popup.time
+        return retval if retval else popup.time
 
 
     def create_list_popup(self, title, input_data=None, callback=None, list_fill=None):

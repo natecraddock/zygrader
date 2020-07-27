@@ -175,9 +175,11 @@ class DatetimeSpinner(Popup):
         {'name': 'year', 'x_offset': 10, 'unit': None, 'formatter': '%y'},
         {'name': 'hour', 'x_offset': 16, 'unit': datetime.timedelta(hours=1), 'formatter': '%I'},
         {'name': 'minute', 'x_offset': 19, 'unit': datetime.timedelta(minutes=1), 'formatter': '%M'},
-        {'name': 'second', 'x_offset': 22, 'unit': datetime.timedelta(seconds=1), 'formatter': '%S'}
+        {'name': 'second', 'x_offset': 22, 'unit': datetime.timedelta(seconds=1), 'formatter': '%S'},
+        {'name': 'confirm', 'x_offset': 29, 'unit': None, 'formatter': None, 'display_name': "Confirm"},
+        {'name': 'no_date', 'x_offset': 39, 'unit': None, 'formatter': None, 'display_name': "No Date"}
     ]
-    STR_LEN = 26
+    NO_DATE = "datetime_no_date"
 
     def __init__(self, height, width, title, time, quickpicks):
         super().__init__(height, width, title, [], Popup.ALIGN_CENTER)
@@ -196,18 +198,28 @@ class DatetimeSpinner(Popup):
         self._reset_month_str_position()
 
     def draw(self):
-        self.message = [self.time.strftime(DatetimeSpinner.FORMAT_STR)]
+        date_str = f"{self.time.strftime(DatetimeSpinner.FORMAT_STR)} | Confirm | No Date"
+        self.message = [date_str]
         super().draw_text()
 
         time_y = self.rows // 2
-        time_x = self.cols // 2 - DatetimeSpinner.STR_LEN // 2
+        time_x = self.cols // 2 - len(date_str) // 2
 
         field = DatetimeSpinner.FIELDS[self.field_index]
         field_x = time_x + field['x_offset']
-        field_str = self.time.strftime(field['formatter'])
+
+        # Special Cases for confirm/no date
+        if 'display_name' in field:
+            field_str = field['display_name']
+        else:
+            field_str = self.time.strftime(field['formatter'])
+
         add_str(self.window, time_y, field_x, field_str, curses.A_STANDOUT)
 
         self.window.noutrefresh()
+
+    def current_field_name(self) -> str:
+        return DatetimeSpinner.FIELDS[self.field_index]['name']
 
     def next_field(self):
         self.field_index = (self.field_index + 1) % len(DatetimeSpinner.FIELDS)
