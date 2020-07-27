@@ -169,19 +169,21 @@ class OptionsPopup(Popup):
 
 class DatetimeSpinner(Popup):
     FORMAT_STR = "%b %d, %Y at %I:%M:%S%p"
-    FIELDS = [
-        {'name': 'month', 'x_offset': 0, 'unit': None, 'formatter': '%b'},
-        {'name': 'day', 'x_offset': 4, 'unit': datetime.timedelta(days=1), 'formatter': '%d'},
-        {'name': 'year', 'x_offset': 10, 'unit': None, 'formatter': '%y'},
-        {'name': 'hour', 'x_offset': 16, 'unit': datetime.timedelta(hours=1), 'formatter': '%I'},
-        {'name': 'minute', 'x_offset': 19, 'unit': datetime.timedelta(minutes=1), 'formatter': '%M'},
-        {'name': 'second', 'x_offset': 22, 'unit': datetime.timedelta(seconds=1), 'formatter': '%S'},
-        {'name': 'confirm', 'x_offset': 29, 'unit': None, 'formatter': None, 'display_name': "Confirm"}
-    ]
     NO_DATE = "datetime_no_date"
 
     def __init__(self, height, width, title, time, quickpicks, optional):
         super().__init__(height, width, title, [], Popup.ALIGN_CENTER)
+
+        self.fields = [
+                       {'name': 'month', 'x_offset': 0, 'unit': None, 'formatter': '%b'},
+                       {'name': 'day', 'x_offset': 4, 'unit': datetime.timedelta(days=1), 'formatter': '%d'},
+                       {'name': 'year', 'x_offset': 10, 'unit': None, 'formatter': '%y'},
+                       {'name': 'hour', 'x_offset': 16, 'unit': datetime.timedelta(hours=1), 'formatter': '%I'},
+                       {'name': 'minute', 'x_offset': 19, 'unit': datetime.timedelta(minutes=1), 'formatter': '%M'},
+                       {'name': 'second', 'x_offset': 22, 'unit': datetime.timedelta(seconds=1), 'formatter': '%S'},
+                       {'name': 'confirm', 'x_offset': 29, 'unit': None, 'formatter': None, 'display_name': "Confirm"}
+        ]
+
         if time is None:
             time = datetime.datetime.now()
         self.time = time
@@ -194,12 +196,14 @@ class DatetimeSpinner(Popup):
         # If the date is optional (show 'No Date')
         self.optional = optional
         if self.optional:
-            DatetimeSpinner.FIELDS.append({'name': 'no_date', 'x_offset': 39, 'unit': None, 'formatter': None, 'display_name': "No Date"})
+            self.fields.append({'name': 'no_date', 'x_offset': 39, 'unit': None, 'formatter': None, 'display_name': "No Date"})
 
         self.input_str = ''
         self.input_str_last_field_index = None
 
         self._reset_month_str_position()
+
+        curses.curs_set(0)
 
     def draw(self):
         date_str = f"{self.time.strftime(DatetimeSpinner.FORMAT_STR)} | Confirm{' | No Date' if self.optional else ''}"
@@ -209,7 +213,7 @@ class DatetimeSpinner(Popup):
         time_y = self.rows // 2
         time_x = self.cols // 2 - len(date_str) // 2
 
-        field = DatetimeSpinner.FIELDS[self.field_index]
+        field = self.fields[self.field_index]
         field_x = time_x + field['x_offset']
 
         # Special Cases for confirm/no date
@@ -223,29 +227,29 @@ class DatetimeSpinner(Popup):
         self.window.noutrefresh()
 
     def current_field_name(self) -> str:
-        return DatetimeSpinner.FIELDS[self.field_index]['name']
+        return self.fields[self.field_index]['name']
 
     def next_field(self):
-        self.field_index = (self.field_index + 1) % len(DatetimeSpinner.FIELDS)
+        self.field_index = (self.field_index + 1) % len(self.fields)
 
     def previous_field(self):
-        self.field_index = (self.field_index - 1) % len(DatetimeSpinner.FIELDS)
+        self.field_index = (self.field_index - 1) % len(self.fields)
 
     def first_field(self):
         self.field_index = 0
 
     def last_field(self):
-        self.field_index = len(DatetimeSpinner.FIELDS) - 1
+        self.field_index = len(self.fields) - 1
 
     def increment_field(self):
-        field = DatetimeSpinner.FIELDS[self.field_index]
+        field = self.fields[self.field_index]
         if field['name'] == 'minute' and self.quickpicks:
             self._increment_quickpick()
         else:
             self._increment_field()
 
     def decrement_field(self):
-        field = DatetimeSpinner.FIELDS[self.field_index]
+        field = self.fields[self.field_index]
         if field['name'] == 'minute' and self.quickpicks:
             self._decrement_quickpick()
         else:
@@ -258,7 +262,7 @@ class DatetimeSpinner(Popup):
         self._decrement_field()
 
     def _increment_field(self):
-        field = DatetimeSpinner.FIELDS[self.field_index]
+        field = self.fields[self.field_index]
         if field['unit']:
             self.time = self.time + field['unit']
         else:
@@ -270,7 +274,7 @@ class DatetimeSpinner(Popup):
                 self.time = self.time.replace(year=new_year)
 
     def _decrement_field(self):
-        field = DatetimeSpinner.FIELDS[self.field_index]
+        field = self.fields[self.field_index]
         if field['unit']:
             self.time = self.time - field['unit']
         else:
@@ -313,7 +317,7 @@ class DatetimeSpinner(Popup):
                 self.input_str = ''
                 self.next_field()
         else:
-            if DatetimeSpinner.FIELDS[self.field_index]['name'] == 'month':
+            if self.fields[self.field_index]['name'] == 'month':
                 if self._set_month_from_chars(c):
                     self._reset_month_str_position()
                     self.next_field()
@@ -323,7 +327,7 @@ class DatetimeSpinner(Popup):
         Returns true if the input_str completely fills the current field"""
         try:
             new_val = int(self.input_str)
-            field_name = DatetimeSpinner.FIELDS[self.field_index]['name']
+            field_name = self.fields[self.field_index]['name']
 
             if field_name == 'month':
                 self.time = self.time.replace(month=new_val)
