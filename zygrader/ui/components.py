@@ -42,6 +42,8 @@ class Popup(Component):
         self.window = curses.newwin(self.rows, self.cols, self.y, self.x)
         self.window.bkgd(" ", curses.color_pair(1))
 
+        curses.curs_set(0)
+
     def __calculate_size(self):
         self.rows = min(Popup.ROWS_MAX, self.available_rows - (Popup.PADDING * 2))
         self.cols = min(Popup.COLS_MAX, self.available_cols - (Popup.PADDING * 2))
