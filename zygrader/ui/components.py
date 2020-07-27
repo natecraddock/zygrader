@@ -50,6 +50,27 @@ class Popup(Component):
         self.y = (self.available_rows - self.rows) // 2
         self.x = (self.available_cols - self.cols) // 2
 
+    def __find_wrap_index(self, line: str, cutoff: int) -> int:
+        WRAP_CHARS = {" ", "/"}
+        while cutoff >= (self.cols - 1) or line[cutoff] not in WRAP_CHARS:
+            cutoff -= 1
+        return cutoff
+
+    def __calculate_wrapping(self, line: str) -> list:
+        wrapped_lines = []
+        while line:
+            if len(line) > (self.cols - 1):
+                wrap_index = self.__find_wrap_index(line, self.cols)
+                wrapped_lines.append(line[:wrap_index])
+
+                # If it's too long, wrap again
+                line = line[wrap_index:]
+            else:
+                wrapped_lines.append(line)
+                break
+        return wrapped_lines
+
+
     def __draw_message_left(self, message: list):
         longest_line = max([len(l) for l in message])
 
@@ -58,18 +79,20 @@ class Popup(Component):
         message_y = self.rows // 2 - len(message) // 2
         message_row = 0
         for line in message:
-            line = line[:self.cols - Popup.PADDING]
-            add_str(self.window, message_y + message_row, message_x, line)
-            message_row += 1
+            wrapped_lines = self.__calculate_wrapping(line)
+            for wrapped in wrapped_lines:
+                add_str(self.window, message_y + message_row, message_x, wrapped)
+                message_row += 1
 
     def __draw_message_center(self, message: list):
         message_y = self.rows // 2 - len(message) // 2
         message_row = 0
         for line in message:
-            line = line[:self.cols - Popup.PADDING]
-            message_x = self.cols // 2 - len(line) // 2
-            add_str(self.window, message_y + message_row, message_x, line)
-            message_row += 1
+            wrapped_lines = self.__calculate_wrapping(line)
+            for wrapped in wrapped_lines:
+                message_x = self.cols // 2 - len(wrapped) // 2
+                add_str(self.window, message_y + message_row, message_x, wrapped)
+                message_row += 1
 
     def draw_title(self):
         title_x = self.cols // 2 - len(self.title) // 2
