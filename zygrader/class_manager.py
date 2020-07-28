@@ -4,11 +4,11 @@ import json
 
 from zygrader.ui.window import WinContext, Window
 from zygrader.ui.components import FilteredList, DatetimeSpinner
+from zygrader.ui.templates import ZybookSectionSelector
 from zygrader.ui import UI_GO_BACK
 from zygrader.zybooks import Zybooks
 from zygrader import data
 from zygrader.config.shared import SharedData
-from zygrader.utils import ZybookSectionSelector
 
 def save_roster(roster):
     """Save the roster of students to a json file"""

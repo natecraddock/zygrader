@@ -2,10 +2,11 @@ import csv
 import datetime
 
 from zygrader.ui.window import WinContext, Window
+from zygrader.ui.templates import ZybookSectionSelector
 from zygrader.ui import UI_GO_BACK
 from zygrader.config.shared import SharedData
 from zygrader.zybooks import Zybooks
-from zygrader.utils import ZybookSectionSelector, fetch_zybooks_toc
+from zygrader.utils import fetch_zybooks_toc
 
 def create_last_night():
     now = datetime.datetime.now()
