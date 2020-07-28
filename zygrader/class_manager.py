@@ -8,6 +8,7 @@ from zygrader.ui import UI_GO_BACK
 from zygrader.zybooks import Zybooks
 from zygrader import data
 from zygrader.config.shared import SharedData
+from zygrader.utils import ZybookSectionSelector
 
 def save_roster(roster):
     """Save the roster of students to a json file"""
@@ -71,29 +72,22 @@ def add_lab():
 
     # Get lab part(s)
     parts = []
-    number = window.create_text_input("Enter Part", "Enter Chapter.section, e.g. 2.26 (ESC to cancel)")
 
-    while number != Window.CANCEL:
+    section_selector = ZybookSectionSelector()
+    section_numbers = section_selector.select_zybook_sections(return_just_numbers=True)
+
+    for chapter, section in section_numbers:
         part = {}
-        chapter, section = number.split(".")
-
         response = zy_api.get_zybook_section(chapter, section)
         if not response.success:
             window.create_popup("Error", ["Invalid URL"])
-        else:
-            # Name lab part and add to list of parts
-            name = window.create_text_input("Part Name", "Enter new part name")
-            if name == Window.CANCEL:
-                name = response.name
-
-            part["name"] = name
-            part["id"] = response.id
-            parts.append(part)
-
-        # Get next part
-        number = window.create_text_input("Enter Part", "Enter Chapter.section, e.g. 2.26 (ESC to finish)")
+        part["name"] = response.name
+        part["id"] = response.id
+        parts.append(part)
 
     new_lab = data.model.Lab(lab_name, parts, {})
+
+    edit_lab_options(new_lab)
 
     all_labs = data.get_labs()
     all_labs.append(new_lab)
