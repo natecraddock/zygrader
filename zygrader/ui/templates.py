@@ -1,4 +1,6 @@
-"""UI Templates: For reusable ui components"""
+"""UI Templates: For reusable ui pieces built from components."""
+
+import os
 
 from .window import Window
 from zygrader.zybooks import Zybooks
@@ -56,3 +58,20 @@ class ZybookSectionSelector:
                 else:
                     res.append(self.zybooks_sections[section_numbers])
         return res
+
+def filename_input(self, purpose):
+    """Get a valid filename from the user"""
+    window = Window.get_window()
+    full_prompt = f"Enter the path and filename for {purpose} [~ is supported]"
+
+    while True:
+        path = window.create_text_input("Filepath Entry", full_prompt)
+        if path == Window.CANCEL:
+            return None
+
+        path = os.path.expanduser(path)
+        if os.path.exists(os.path.dirname(path)):
+            return path
+
+        msg = [f"Path {os.path.dirname(path)} does not exist!"]
+        window.create_popup("Invalid Path", msg)

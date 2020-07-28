@@ -5,6 +5,7 @@ import requests
 
 from zygrader.ui.window import WinContext, Window
 from zygrader.ui import UI_GO_BACK
+from zygrader.ui.templates import filename_input
 from zygrader.zybooks import Zybooks
 from zygrader import data
 from zygrader import class_manager
@@ -115,7 +116,7 @@ def submission_search_init(window, labs):
         return
 
     # Get a valid output path
-    output_path = window.create_filename_input(purpose="the output")
+    output_path = filename_input(purpose="the output")
     if output_path is None:
         return
 

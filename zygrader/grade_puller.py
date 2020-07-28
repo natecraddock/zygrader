@@ -2,7 +2,7 @@ import csv
 import datetime
 
 from zygrader.ui.window import WinContext, Window
-from zygrader.ui.templates import ZybookSectionSelector
+from zygrader.ui.templates import ZybookSectionSelector, filename_input
 from zygrader.ui import UI_GO_BACK
 from zygrader.config.shared import SharedData
 from zygrader.zybooks import Zybooks
@@ -187,7 +187,7 @@ class GradePuller:
         wait_controller.close()
 
     def write_upload_file(self, selected_canvas_assignment):
-        path = self.window.create_filename_input(purpose="the upload file")
+        path = filename_input(purpose="the upload file")
         if path is None:
             raise GradePuller.StoppingException()
 
@@ -232,7 +232,7 @@ class GradePuller:
             self.window.create_popup("No Data", [f"There are no {name}"])
             return
 
-        path = self.window.create_filename_input(purpose=f"the {name}")
+        path = filename_input(purpose=f"the {name}")
         if path is None:
             raise GradePuller.StoppingException()
 
