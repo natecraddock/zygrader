@@ -11,8 +11,9 @@ class ZybookSectionSelector:
     def draw_zybook_sections(self, chapters_expanded, selected_sections):
         res = []
         items = []
+        pad_width = len(str(len(self.zybooks_toc)))
         for chapter in self.zybooks_toc:
-            res.append(f"{chapter['number']} - {chapter['title']}")
+            res.append(f"{str(chapter['number']).zfill(pad_width)} - {chapter['title']}")
             items.append(chapter['number'])
             if chapters_expanded[chapter['number']]:
                 for section in chapter['sections']:
