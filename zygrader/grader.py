@@ -1,6 +1,7 @@
 """Grader: Menus and popups for grading and pair programming"""
 import curses
 import getpass
+from zygrader.data import model
 
 from zygrader.config import preferences
 from zygrader.config.shared import SharedData
@@ -62,11 +63,10 @@ def get_submission(lab, student, use_locks=True):
                "View the most recent submission on zyBooks."]
         window.create_popup("Warning", msg)
 
-    # Return None if student has not submitted
+    # A student may have submissions beyond the due date, and an exception
+    # In case that happens, always allow a normal grade, but show a message
     if submission.flag == data.model.SubmissionFlag.NO_SUBMISSION:
-        msg = [f"{student.full_name} has not submitted"]
-        window.create_popup("No Submissions", msg)
-        return None
+        pass
 
     return submission
 
@@ -105,8 +105,14 @@ def pick_submission(lab: data.model.Lab, student: data.model.Student,
     part_response = zy_api.download_assignment_part(lab, student.id, part, submission_index)
     submission.update_part(part_response, part_index)
 
-def view_diff(first, second):
+def view_diff(first: model.Submission, second: model.Submission):
     """View a diff of the two submissions"""
+    if (first.flag & model.SubmissionFlag.NO_SUBMISSION or
+        second.flag & model.SubmissionFlag.NO_SUBMISSION):
+        window = Window.get_window()
+        window.create_popup("No Submission", ["Cannot diff submissions because at least one student has not submitted."])
+        return
+
     use_browser = preferences.is_preference_set("browser_diff")
 
     paths_a = utils.get_source_file_paths(first.files_directory)
@@ -126,17 +132,18 @@ def run_code_fn(window, context: WinContext, submission):
     if not submission.compile_and_run_code(use_gdb):
         window.create_popup("Error", ["Could not compile and run code"])
 
-def pair_programming_submission_callback(submission):
+def pair_programming_submission_callback(lab, submission):
     """Show both pair programming students for viewing a diff"""
     window = Window.get_window()
 
     options = {
+        "Pick Submission": lambda _: pick_submission(lab, submission.student, submission),
         "Run": lambda context: run_code_fn(window, context, submission),
         "View": lambda _: submission.show_files()
     }
 
     window.create_options_popup("Pair Programming Submission",
-                                submission.msg, options, components.Popup.ALIGN_LEFT)
+                                submission, options, components.Popup.ALIGN_LEFT)
     SharedData.running_process = None
 
 def can_get_through_locks(use_locks, student, lab):
@@ -167,6 +174,12 @@ def can_get_through_locks(use_locks, student, lab):
 
     return True
 
+def pair_programming_message(first, second) -> list:
+    """To support dynamic updates on the pair programming popup"""
+    return [f"{first.student.full_name} {first.latest_submission}",
+            f"{second.student.full_name} {second.latest_submission}",
+            "", "Pick a student's submission to view or view the diff"]
+
 def grade_pair_programming(student_list, first_submission, use_locks):
     """Pick a second student to grade pair programming with"""
     # Get second student
@@ -196,18 +209,15 @@ def grade_pair_programming(student_list, first_submission, use_locks):
         # Redraw the original list
         update_student_list(window, student_list)
 
-        first_submission_fn = lambda _: pair_programming_submission_callback(first_submission)
-        second_submission_fn = lambda _: pair_programming_submission_callback(second_submission)
+        first_submission_fn = lambda _: pair_programming_submission_callback(lab, first_submission)
+        second_submission_fn = lambda _: pair_programming_submission_callback(lab, second_submission)
         options = {
             first_submission.student.full_name: first_submission_fn,
             second_submission.student.full_name: second_submission_fn,
             "View Diff": lambda _: view_diff(first_submission, second_submission)
         }
 
-        msg = [f"{first_submission.student.full_name} {first_submission.latest_submission}",
-               f"{second_submission.student.full_name} {second_submission.latest_submission}",
-               "", "Pick a student's submission to view or view the diff"]
-
+        msg = lambda: pair_programming_message(first_submission, second_submission)
         window.create_options_popup("Pair Programming", msg, options)
 
     finally:

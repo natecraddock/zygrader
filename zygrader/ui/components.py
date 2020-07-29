@@ -1,5 +1,6 @@
 import curses
 import datetime
+from collections import Iterable
 
 from .utils import add_str, resize_window
 
@@ -113,10 +114,10 @@ class Popup(Component):
         self.window.erase()
         self.window.border()
 
-        if not isinstance(self.message, list):
+        if isinstance(self.message, Iterable):
             message = list(self.message)
         else:
-            message = self.message
+            message = self.message()
 
         # Draw lines of message
         if self.align == Popup.ALIGN_CENTER:

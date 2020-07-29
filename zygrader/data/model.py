@@ -6,6 +6,7 @@ import signal
 import subprocess
 import tempfile
 import time
+from collections import Iterable
 
 from zygrader.config import preferences
 from zygrader.config.shared import SharedData
@@ -84,7 +85,7 @@ class SubmissionFlag(enum.Flag):
     DIFF_PARTS = enum.auto()
 
 
-class Submission:
+class Submission(Iterable):
     # Implement the iterator interface so the message can be updated
     # Throughout the grader popup's lifetime.
     def __iter__(self):
@@ -111,11 +112,10 @@ class Submission:
         self.construct_submission()
 
     def construct_submission(self):
-        # Read the response data
-        # Only grade if student has submitted
-        if self.response["code"] is Zybooks.NO_SUBMISSION:
-            self.flag = SubmissionFlag.NO_SUBMISSION
-            return
+        # An assignment could have NO_SUBMISSION meaning it was late.
+        # But students may have exceptions so this code is reached after picking
+        # a submission after the due date. Remove the flag.
+        self.flag &= ~SubmissionFlag.NO_SUBMISSION
 
         # Calculate score
         self.response["score"] = 0
@@ -137,13 +137,24 @@ class Submission:
         self.student = student
         self.lab = lab
         self.flag = SubmissionFlag.OK
+        self.latest_submission = "No Submission"
+        self.files_directory = ""
 
         # Save the response to be potentially updated later
         self.response = response
 
+        # Only grade if student has submitted
+        if self.response["code"] is Zybooks.NO_SUBMISSION:
+            self.flag = SubmissionFlag.NO_SUBMISSION
+            self.msg = [f"{self.student.full_name} - {self.lab.name}",
+                        "",
+                        "No submission before the due date.",
+                        "If the student has an exception, pick a submission to grade."]
+            return
+
         self.construct_submission()
 
-    def get_latest_submission(self, response):
+    def get_latest_submission(self, response) -> str:
         latest = None
         for part in response["parts"]:
             if part["code"] is Zybooks.NO_SUBMISSION:
@@ -211,6 +222,9 @@ class Submission:
 
     @utils.suspend_curses
     def show_files(self):
+        if self.flag & SubmissionFlag.NO_SUBMISSION:
+            # Can't show popup here because curses is disabled...
+            return
         user_editor = preferences.get_config()["editor"]
         editor_path = preferences.EDITORS[user_editor]
 
