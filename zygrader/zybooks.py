@@ -294,7 +294,7 @@ class Zybooks:
 
         # If student has not submitted, just return a non-success message
         if not has_submitted:
-            return {"code": Zybooks.NO_SUBMISSION}
+            response["code"] = Zybooks.NO_SUBMISSION
 
         return response
 

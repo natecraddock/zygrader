@@ -111,15 +111,10 @@ class Submission:
         self.construct_submission()
 
     def construct_submission(self):
-        # Read the response data
-        # Only grade if student has submitted
-        if self.response["code"] is Zybooks.NO_SUBMISSION:
-            self.flag = SubmissionFlag.NO_SUBMISSION
-            self.msg = [f"{self.student.full_name} - {self.lab.name}",
-                        "",
-                        "No submission before the due date.",
-                        "If the student has an exception, pick a submission to grade."]
-            return
+        # An assignment could have NO_SUBMISSION meaning it was late.
+        # But students may have exceptions so this code is reached after picking
+        # a submission after the due date. Remove the flag.
+        self.flag &= ~SubmissionFlag.NO_SUBMISSION
 
         # Calculate score
         self.response["score"] = 0
@@ -142,9 +137,19 @@ class Submission:
         self.lab = lab
         self.flag = SubmissionFlag.OK
         self.latest_submission = "No Submission"
+        self.files_directory = ""
 
         # Save the response to be potentially updated later
         self.response = response
+
+        # Only grade if student has submitted
+        if self.response["code"] is Zybooks.NO_SUBMISSION:
+            self.flag = SubmissionFlag.NO_SUBMISSION
+            self.msg = [f"{self.student.full_name} - {self.lab.name}",
+                        "",
+                        "No submission before the due date.",
+                        "If the student has an exception, pick a submission to grade."]
+            return
 
         self.construct_submission()
 
