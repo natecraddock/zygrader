@@ -115,6 +115,10 @@ class Submission:
         # Only grade if student has submitted
         if self.response["code"] is Zybooks.NO_SUBMISSION:
             self.flag = SubmissionFlag.NO_SUBMISSION
+            self.msg = [f"{self.student.full_name} - {self.lab.name}",
+                        "",
+                        "No submission before the due date.",
+                        "If the student has an exception, pick a submission to grade."]
             return
 
         # Calculate score
@@ -137,13 +141,14 @@ class Submission:
         self.student = student
         self.lab = lab
         self.flag = SubmissionFlag.OK
+        self.latest_submission = "No Submission"
 
         # Save the response to be potentially updated later
         self.response = response
 
         self.construct_submission()
 
-    def get_latest_submission(self, response):
+    def get_latest_submission(self, response) -> str:
         latest = None
         for part in response["parts"]:
             if part["code"] is Zybooks.NO_SUBMISSION:

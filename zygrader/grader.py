@@ -1,6 +1,7 @@
 """Grader: Menus and popups for grading and pair programming"""
 import curses
 import getpass
+from zygrader.data import model
 
 from zygrader.config import preferences
 from zygrader.config.shared import SharedData
@@ -62,11 +63,10 @@ def get_submission(lab, student, use_locks=True):
                "View the most recent submission on zyBooks."]
         window.create_popup("Warning", msg)
 
-    # Return None if student has not submitted
+    # A student may have submissions beyond the due date, and an exception
+    # In case that happens, always allow a normal grade, but show a message
     if submission.flag == data.model.SubmissionFlag.NO_SUBMISSION:
-        msg = [f"{student.full_name} has not submitted"]
-        window.create_popup("No Submissions", msg)
-        return None
+        pass
 
     return submission
 
@@ -105,8 +105,14 @@ def pick_submission(lab: data.model.Lab, student: data.model.Student,
     part_response = zy_api.download_assignment_part(lab, student.id, part, submission_index)
     submission.update_part(part_response, part_index)
 
-def view_diff(first, second):
+def view_diff(first: model.Submission, second: model.Submission):
     """View a diff of the two submissions"""
+    if (first.flag & model.SubmissionFlag.NO_SUBMISSION or
+        second.flag & model.SubmissionFlag.NO_SUBMISSION):
+        window = Window.get_window()
+        window.create_popup("No Submission", ["Cannot diff submissions because at least one student has not submitted."])
+        return
+
     use_browser = preferences.is_preference_set("browser_diff")
 
     paths_a = utils.get_source_file_paths(first.files_directory)
