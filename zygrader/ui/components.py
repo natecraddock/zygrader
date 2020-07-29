@@ -50,20 +50,28 @@ class Popup(Component):
         self.y = (self.available_rows - self.rows) // 2
         self.x = (self.available_cols - self.cols) // 2
 
-    def __find_wrap_index(self, line: str, cutoff: int) -> int:
+    def __find_wrap_index(self, line: str, max_line_len: int) -> int:
         WRAP_CHARS = {" ", "/"}
-        while cutoff >= (self.cols - 1) or line[cutoff] not in WRAP_CHARS:
+
+        max_line_len = self.cols - 2 * Popup.PADDING
+        max_cutoff = min(len(line), max_line_len)
+
+        cutoff = max_cutoff
+        while cutoff > 0 and line[cutoff] not in WRAP_CHARS:
             cutoff -= 1
-        return cutoff
+
+        return max_cutoff if cutoff == 0 else cutoff
 
     def __calculate_wrapping(self, line: str) -> list:
         wrapped_lines = []
         if line == "":
             return [line]
 
+        max_line_len = self.cols - 2 * Popup.PADDING
+
         while line:
-            if len(line) > (self.cols - 1):
-                wrap_index = self.__find_wrap_index(line, self.cols)
+            if len(line) > max_line_len:
+                wrap_index = self.__find_wrap_index(line, max_line_len)
                 wrapped_lines.append(line[:wrap_index])
 
                 # If it's too long, wrap again
