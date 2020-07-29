@@ -59,7 +59,7 @@ class ZybookSectionSelector:
                     res.append(self.zybooks_sections[section_numbers])
         return res
 
-def filename_input(self, purpose):
+def filename_input(purpose):
     """Get a valid filename from the user"""
     window = Window.get_window()
     full_prompt = f"Enter the path and filename for {purpose} [~ is supported]"
