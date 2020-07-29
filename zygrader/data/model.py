@@ -222,6 +222,9 @@ class Submission(Iterable):
 
     @utils.suspend_curses
     def show_files(self):
+        if self.flag & SubmissionFlag.NO_SUBMISSION:
+            # Can't show popup here because curses is disabled...
+            return
         user_editor = preferences.get_config()["editor"]
         editor_path = preferences.EDITORS[user_editor]
 
