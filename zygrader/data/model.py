@@ -6,6 +6,7 @@ import signal
 import subprocess
 import tempfile
 import time
+from collections import Iterable
 
 from zygrader.config import preferences
 from zygrader.config.shared import SharedData
@@ -84,7 +85,7 @@ class SubmissionFlag(enum.Flag):
     DIFF_PARTS = enum.auto()
 
 
-class Submission:
+class Submission(Iterable):
     # Implement the iterator interface so the message can be updated
     # Throughout the grader popup's lifetime.
     def __iter__(self):
