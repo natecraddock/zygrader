@@ -77,6 +77,27 @@ class Student:
         return first_name.find(text) is not -1 or last_name.find(text) is not -1 or \
                full_name.find(text) is not -1 or email.find(text) is not -1
 
+class ClassSection:
+    DUE_TIME_FORMAT = "%H.%M.%S"
+
+    def __init__(self, section_number, default_due_time):
+        self.section_number = section_number
+        self.default_due_time = default_due_time
+
+    @classmethod
+    def from_json(cls, section_json):
+        section_number = section_json["section_number"]
+        default_due_time_str = section_json["default_due_time"]
+        default_due_time = datetime.datetime.strptime(
+            default_due_time_str, ClassSection.DUE_TIME_FORMAT
+            ).astimezone(tz=None)
+        return ClassSection(section_number, default_due_time)
+
+    def to_json(self):
+        time_str = self.default_due_time.strftime(ClassSection.DUE_TIME_FORMAT)
+        return {"section_number": self.section_number,
+                "default_due_time": time_str}
+
 
 class SubmissionFlag(enum.Flag):
     NO_SUBMISSION = enum.auto()

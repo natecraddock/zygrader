@@ -27,6 +27,7 @@ class SharedData:
     STUDENTS_FILE = "students.json"
     LABS_FILE = "labs.json"
     CANVAS_MASTER_FILE = "canvas_master.csv"
+    CLASS_SECTIONS_FILE = "class_sections.json"
 
     # This is a global to represent if student code is being executed
     RUNNING_CODE = False
@@ -116,6 +117,10 @@ class SharedData:
     @classmethod
     def get_canvas_master(cls):
         return os.path.join(cls.get_data_directory(), cls.CANVAS_MASTER_FILE)
+
+    @classmethod
+    def get_class_sections_data(cls):
+        return os.path.join(cls.get_data_directory(), cls.CLASS_SECTIONS_FILE)
 
     @classmethod
     def create_shared_data_directory(cls, data_path):

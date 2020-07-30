@@ -1,9 +1,7 @@
 import json
 import os
 
-from .model import Student
-from .model import Lab
-from .model import Submission
+from .model import Student, Lab, Submission, ClassSection
 
 from zygrader.config.shared import SharedData
 from . import flags
@@ -12,6 +10,7 @@ from . import lock
 
 g_students = []
 g_labs = []
+g_class_sections = []
 
 def load_students() -> list:
     g_students.clear()
@@ -68,3 +67,38 @@ def write_labs(labs):
     path = SharedData.get_labs_data()
     with open(path, 'w') as _file:
         json.dump(labs_json, _file, indent=2)
+
+
+# Load class sections from JSON file
+def load_class_sections() -> list:
+    g_class_sections.clear()
+    path = SharedData.get_class_sections_data()
+    if not os.path.exists(path):
+        return []
+
+    with open(path, 'r') as class_sections_file:
+        class_sections_json = json.load(class_sections_file)
+
+    for class_section in class_sections_json:
+        g_class_sections.append(ClassSection.from_json(class_section))
+
+    return g_class_sections
+
+def get_class_sections() -> list:
+    if g_class_sections:
+        return g_class_sections
+
+    return load_class_sections()
+
+def write_class_sections(class_sections):
+    global g_class_sections
+    g_class_sections = class_sections
+
+    class_sections_json = []
+
+    for class_section in class_sections:
+        class_sections_json.append(class_section.to_json())
+
+    path = SharedData.get_class_sections_data()
+    with open(path, 'w') as _file:
+        json.dump(class_sections_json, _file, indent=2)

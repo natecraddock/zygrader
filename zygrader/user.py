@@ -154,6 +154,7 @@ def set_class_code_override(code_index: int, pref_name: str):
     SharedData.initialize_shared_data(SharedData.ZYGRADER_DATA_DIRECTORY)
     data.load_students()
     data.load_labs()
+    data.load_class_sections()
 
 def set_class_code_override_menu(pref_name: str):
     """Open the set class code override popup"""
