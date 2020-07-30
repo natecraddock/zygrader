@@ -21,7 +21,7 @@ def load_students() -> list:
 
     with open(path, 'r') as students_file:
         students_json = json.load(students_file)
-    
+
     for student in students_json:
         g_students.append(Student(student["first_name"], student["last_name"], student["email"], student["section"], student["id"]))
 
@@ -42,9 +42,11 @@ def load_labs() -> list:
 
     with open(path, 'r') as labs_file:
         labs_json = json.load(labs_file)
-    
+
     for a in labs_json:
         g_labs.append(Lab(a["name"], a["parts"], a["options"]))
+
+    return g_labs
 
 
 # Load labs from JSON file
