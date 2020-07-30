@@ -61,6 +61,8 @@ def setup_new_class():
     save_roster(roster)
     window.create_popup("Finished", ["Successfully downloaded student roster"])
 
+    class_section_manager()
+
 def add_lab():
     """Add a lab to the current class"""
     window = Window.get_window()
@@ -244,6 +246,11 @@ def edit_labs():
     edit_fn = lambda context: edit_labs_callback(data.get_labs()[context.data], context.component)
     window.create_filtered_list("Lab", list_fill=draw_lab_list, callback=edit_fn)
 
+def edit_class_sections():
+    """Create list of class sections to edit"""
+    window = Window.get_window()
+    class_sections = data.get_class_sections()
+
 def download_roster(silent=False):
     """Download the roster of students from zybooks and save to disk"""
     window = Window.get_window()
@@ -273,7 +280,43 @@ def change_class():
 
         window.create_popup("Changed Class", [f"Class changed to {class_codes[code_index]}"])
 
-CLASS_MANAGE_OPTIONS = ["Setup New Class", "Add Lab", "Edit Labs",
+
+LAB_MANAGE_OPTIONS = ["Add Lab", "Edit Current Labs"]
+
+def lab_manager_callback(context: WinContext):
+    option_index = context.data
+    option = LAB_MANAGE_OPTIONS[option_index]
+
+    if option == "Add Lab":
+        add_lab()
+    elif option == "Edit Current Labs":
+        edit_labs()
+
+def lab_manager():
+    window = Window.get_window()
+    window.create_filtered_list("Option",
+                                input_data=LAB_MANAGE_OPTIONS,
+                                callback=lab_manager_callback)
+
+CLASS_SECTION_MANAGE_OPTIONS = ["Add Section", "Edit Current Sections"]
+
+def class_section_manager_callback(context: WinContext):
+    option_index = context.data
+    option = CLASS_SECTION_MANAGE_OPTIONS[option_index]
+
+    if option == "Add Section":
+        context.window.create_popup("Add Section", ["Here is where you would add a section"])
+    elif option == "Edit Current Sections":
+        context.window.create_popup("Edit Sections", ["Here is where you would edit sections"])
+
+def class_section_manager():
+    window = Window.get_window()
+    window.create_filtered_list("Option",
+                                input_data=CLASS_SECTION_MANAGE_OPTIONS,
+                                callback=class_section_manager_callback)
+
+CLASS_MANAGE_OPTIONS = ["Setup New Class", "Lab Manager",
+                        "Class Section Manager",
                         "Download Student Roster", "Change Class"]
 
 def class_manager_callback(context: WinContext):
@@ -283,10 +326,10 @@ def class_manager_callback(context: WinContext):
 
     if option == "Setup New Class":
         setup_new_class()
-    elif option == "Add Lab":
-        add_lab()
-    elif option == "Edit Labs":
-        edit_labs()
+    elif option == "Lab Manager":
+        lab_manager()
+    elif option == "Class Section Manager":
+        class_section_manager()
     elif option == "Change Class":
         change_class()
     elif option == "Download Student Roster":
