@@ -143,21 +143,37 @@ class GradePuller:
 
             section = class_sections[selected_index]
 
-            new_time = self.window.create_datetime_spinner(
+            new_datetime = self.window.create_datetime_spinner(
                 "Due Date",
                 due_times[section],
                 [(50, 0), (59, 59), (0,0)])
-            due_times[section] = new_time
+            due_times[section] = new_datetime
 
             #For convenience, allow the day or datetime to be carried across
             # all sections so that selecting due times is easier
-            if selected_index == 0 and len(class_sections) > 1:
-                do_carry_datetime = self.window.create_bool_popup(
-                    "Set Due Time",
-                    ["Set all sections to this due date and time?"])
-                if do_carry_datetime:
-                    for section in due_times:
-                        due_times[section] = new_time
+            # but only if the first section was just edited
+            if selected_index != 0 or len(class_sections) <= 1:
+                return
+
+            do_carry_datetime = self.window.create_bool_popup(
+                "Set Due Time",
+                ["Set all sections to this due date and time?"])
+            if do_carry_datetime:
+                for section in due_times:
+                    due_times[section] = new_datetime
+                return
+
+            do_carry_date = self.window.create_bool_popup(
+                "Set Due Time",
+                ["Set all sections to this due date (but retain time)?"])
+            if do_carry_date:
+                for section in due_times:
+                    old_datetime = due_times[section]
+                    due_times[section] = datetime.datetime.combine(
+                        date=new_datetime,
+                        time=old_datetime.time()
+                    )
+
 
         self.window.create_list_popup("Set Due Times (use Back to finish)",
                                       callback=select_due_times_callback,
