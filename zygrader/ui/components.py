@@ -748,6 +748,9 @@ class TextInput(Popup):
         # Set cursor to the location of text
         self.cursor_index = len(self.text)
 
+        # Set selection marks
+        self.reset_marks()
+
         # Create a text input
         self.text_input = curses.newwin(TextInput.TEXT_HEIGHT, self.text_width,
                                         self.y + self.rows - TextInput.TEXT_HEIGHT - 1,
@@ -767,19 +770,37 @@ class TextInput(Popup):
         resize_window(self.text_input, TextInput.TEXT_HEIGHT, self.text_width)
 
     def draw_text_chars(self, row, col, display_text):
+        attrs = 0
+
+        start_select = len(display_text)
+        end_select = start_select
+        if self.marks:
+            start_select = min(self.marks)
+            end_select = max(self.marks)
+
+        index = 0
         for char in display_text:
-            add_str(self.text_input, row, col, char)
+            if index == start_select:
+                attrs = curses.A_STANDOUT
+
+            add_str(self.text_input, row, col, char, attrs)
             col += 1
             if col >= self.text_width:
                 col = 0
                 row += 1
 
+            if index == end_select:
+                attrs = 0
+            index += 1
+
     def draw(self):
         super().draw_text()
         self.text_input.erase()
 
+        curses.curs_set(0 if self.marks else 1)
+
         # Draw input prompt
-        add_str(self.text_input, 0, 0, f"Input:")
+        add_str(self.text_input, 0, 0, f"Input: marks: {self.marks}")
 
         # Draw text and wrap on end of line
         if self.masked:
@@ -800,11 +821,33 @@ class TextInput(Popup):
         curses.curs_set(0)
 
     def addchar(self, c):
-        # Insert character at cursor location and move cursor
-        self.text = self.text[:self.cursor_index] + c + self.text[self.cursor_index:]
+        before_index = self.cursor_index
+        after_index = self.cursor_index
+
+        # If text selected, use marks
+        if self.marks:
+            before_index = min(self.marks)
+            after_index = max(self.marks) + 1
+            self.reset_marks()
+
+        # Insert character at cursor location
+        #  and set cursor one past insert
+        self.text = self.text[:before_index] + c + self.text[after_index:]
+        self.cursor_index = before_index
         self.right()
 
+    def delselection(self):
+        left = self.text[:min(self.marks)]
+        right = self.text[max(self.marks) + 1:]
+        self.text = left + right
+        self.cursor_index = min(self.marks)
+        self.reset_marks()
+
     def delchar(self):
+        if self.marks:
+            self.delselection()
+            return
+
         if self.cursor_index == 0:
             return
 
@@ -813,23 +856,47 @@ class TextInput(Popup):
         self.left()
 
     def delcharforward(self):
+        if self.marks:
+            self.delselection()
+            return
+
         if self.cursor_index == len(self.text):
             return
 
         # Remove character just forward of cursor location
         self.text = self.text[:self.cursor_index] + self.text[self.cursor_index + 1:]
 
+    def _cursor_mover(move_func):
+        """Wrap a cursor-moving function without moving marks"""
+        def wrapped(self, shift_pressed=False):
+            if shift_pressed:
+                if not self.marks:
+                    self.marks = [self.cursor_index] * 2
+                move_func(self)
+                self.marks[1] = self.cursor_index
+            else:
+                move_func(self)
+                self.reset_marks()
+        return wrapped
+
+    @_cursor_mover
     def right(self):
         self.cursor_index = min(len(self.text), self.cursor_index + 1)
 
+    @_cursor_mover
     def left(self):
         self.cursor_index = max(0, self.cursor_index - 1)
 
+    @_cursor_mover
     def cursor_to_beginning(self):
         self.cursor_index = 0
 
+    @_cursor_mover
     def cursor_to_end(self):
         self.cursor_index = len(self.text)
+
+    def reset_marks(self):
+        self.marks = []
 
 class Logger(Component):
     PADDING = 2

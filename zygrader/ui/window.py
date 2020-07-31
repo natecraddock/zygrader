@@ -630,12 +630,20 @@ class Window:
                 text_input.left()
             elif event.type == Event.RIGHT:
                 text_input.right()
+            elif event.type == Event.SLEFT:
+                text_input.left(shift_pressed=True)
+            elif event.type == Event.SRIGHT:
+                text_input.right(shift_pressed=True)
             elif event.type == Event.ESC: # Always allow exiting from text input with ESC
                 break
             elif event.type == Event.HOME:
                 text_input.cursor_to_beginning()
             elif event.type == Event.END:
                 text_input.cursor_to_end()
+            elif event.type == Event.SHOME:
+                text_input.cursor_to_beginning(shift_pressed=True)
+            elif event.type == Event.SEND:
+                text_input.cursor_to_end(shift_pressed=True)
 
             self.draw()
 
