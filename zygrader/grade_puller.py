@@ -219,7 +219,9 @@ class GradePuller:
         wait_controller.close()
 
     def write_upload_file(self, selected_canvas_assignment):
-        path = filename_input(purpose="the upload file")
+        default_path_str  = "~/" + "&".join(self.selected_assignments)
+        default_path_str = default_path_str.replace(" ","")
+        path = filename_input(purpose="the upload file", text=default_path_str)
         if path is None:
             raise GradePuller.StoppingException()
 

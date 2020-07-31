@@ -68,13 +68,15 @@ class ZybookSectionSelector:
                     res.append(self.zybooks_sections[section_numbers])
         return res
 
-def filename_input(purpose):
+def filename_input(purpose, text=""):
     """Get a valid filename from the user"""
     window = Window.get_window()
     full_prompt = f"Enter the path and filename for {purpose} [~ is supported]"
 
     while True:
-        path = window.create_text_input("Filepath Entry", full_prompt)
+        path = window.create_text_input("Filepath Entry",
+                                        full_prompt,
+                                        text=text)
         if path == Window.CANCEL:
             return None
 
