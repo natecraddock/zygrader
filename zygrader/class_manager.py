@@ -259,12 +259,11 @@ def get_class_section(old_section: data.model.ClassSection=None):
     )
     section_num = int(section_num_str)
 
-    default_due_datetime = window.create_datetime_spinner(
+    default_due_time = window.create_datetime_spinner(
         "Section Default Due Time",
         quickpicks=[(50, 0), (59, 59), (0, 0)],
         include_date=False
     )
-    default_due_time = default_due_datetime.time()
 
     return data.model.ClassSection(section_num, default_due_time)
 
