@@ -78,23 +78,36 @@ class Student:
                full_name.find(text) is not -1 or email.find(text) is not -1
 
 class ClassSection:
-    DUE_TIME_FORMAT = "%H.%M.%S"
+    DUE_TIME_STORAGE_FORMAT = "%H.%M.%S"
+    DUE_TIME_DISPLAY_FORMAT = "%I:%M:%S%p"
 
     def __init__(self, section_number, default_due_time):
         self.section_number = section_number
         self.default_due_time = default_due_time
+
+    def copy(self, other):
+        self.section_number = other.section_number
+        self.default_due_time = other.default_due_time
+
+    def __str__(self):
+        time_str = self.default_due_time.strftime(
+            ClassSection.DUE_TIME_DISPLAY_FORMAT
+        )
+        return f"Section {self.section_number} - Default Due Time: {time_str}"
 
     @classmethod
     def from_json(cls, section_json):
         section_number = section_json["section_number"]
         default_due_time_str = section_json["default_due_time"]
         default_due_time = datetime.datetime.strptime(
-            default_due_time_str, ClassSection.DUE_TIME_FORMAT
-            ).astimezone(tz=None)
+            default_due_time_str, ClassSection.DUE_TIME_STORAGE_FORMAT
+            ).astimezone(tz=None).time()
         return ClassSection(section_number, default_due_time)
 
     def to_json(self):
-        time_str = self.default_due_time.strftime(ClassSection.DUE_TIME_FORMAT)
+        time_str = self.default_due_time.strftime(
+            ClassSection.DUE_TIME_STORAGE_FORMAT
+        )
         return {"section_number": self.section_number,
                 "default_due_time": time_str}
 
