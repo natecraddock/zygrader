@@ -1,6 +1,7 @@
 import csv
 import datetime
 
+from zygrader import data
 from zygrader.ui.window import WinContext, Window
 from zygrader.ui.templates import ZybookSectionSelector, filename_input
 from zygrader.ui import UI_GO_BACK
@@ -81,18 +82,43 @@ class GradePuller:
         return res
 
     def select_class_sections(self):
-        num_sections = len(self.canvas_students[-1]['Section'].split('and')) #Test Student has id -1, and is in every section
-        selected_sections = set()
-        draw_sections = lambda: [f"[{'X' if el in selected_sections else ' '}] {el}" for el in range(1,num_sections+1)]
-        section_callback = lambda context: selected_sections.remove(context.data+1) if context.data+1 in selected_sections else selected_sections.add(context.data+1)
-        self.window.create_list_popup("Select Class Sections (use Back to finish)", callback=section_callback, list_fill=draw_sections)
-        if not selected_sections:
+        sections_list = [section.section_number
+                             for section in data.get_class_sections()]
+
+        selected = [False] * len(sections_list)
+        def toggle_selected(index):
+            selected[index] = not selected[index]
+
+        draw_sections = lambda: [
+            f"[{'X' if selected else ' '}] {el}"
+                for el, selected in zip(sections_list, selected)]
+        section_callback = lambda context: toggle_selected(context.data)
+
+        self.window.create_list_popup(
+            "Select Class Sections (use Back to finish)",
+            callback=section_callback, list_fill=draw_sections)
+
+        if not any(selected):
             raise GradePuller.StoppingException()
-        return [el for el in selected_sections]
+        return [el for el, selected in zip(sections_list, selected)
+                       if selected]
 
     def select_due_times(self, class_sections):
-        last_night = create_last_night()
-        due_times = {section: last_night for section in class_sections}
+        now = datetime.datetime.now()
+        yesterday = now - datetime.timedelta(days=1)
+        stored_class_sections = data.get_class_sections_in_ordered_list()
+
+        default_due_times = []
+        for section in stored_class_sections:
+            if section:
+                default_due_times.append(
+                    datetime.datetime.combine(yesterday,
+                                              section.default_due_time))
+            else:
+                default_due_times.append(None)
+
+        due_times = {section: default_due_times[section]
+                         for section in class_sections}
         draw = lambda: [f"Section {section}: {time.strftime('%b %d, %Y at %I:%M:%S%p')}" for section, time in due_times.items()]
 
         def select_due_times_callback(context: WinContext):

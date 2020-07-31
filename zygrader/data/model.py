@@ -83,6 +83,11 @@ class ClassSection:
 
     def __init__(self, section_number, default_due_time):
         self.section_number = section_number
+
+        if isinstance(default_due_time, datetime.datetime):
+            default_due_time = default_due_time.time()
+        elif not isinstance(default_due_time, datetime.time):
+            raise TypeError()
         self.default_due_time = default_due_time
 
     def copy(self, other):

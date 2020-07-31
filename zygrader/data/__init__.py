@@ -90,6 +90,17 @@ def get_class_sections() -> list:
 
     return load_class_sections()
 
+def get_class_sections_in_ordered_list() -> list:
+    unordered = get_class_sections()
+
+    largest_section = max([section.section_number for section in unordered])
+
+    ordered = [None] * (largest_section + 1)
+    for section in unordered:
+        ordered[section.section_number] = section
+
+    return ordered
+
 def write_class_sections(class_sections):
     global g_class_sections
     g_class_sections = class_sections
