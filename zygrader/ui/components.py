@@ -212,13 +212,39 @@ class DatetimeSpinner(Popup):
         super().__init__(height, width, title, [], Popup.ALIGN_CENTER)
 
         self.fields = [
-                       {'name': 'month', 'x_offset': 0, 'unit': None, 'formatter': '%b'},
-                       {'name': 'day', 'x_offset': 4, 'unit': datetime.timedelta(days=1), 'formatter': '%d'},
-                       {'name': 'year', 'x_offset': 10, 'unit': None, 'formatter': '%y'},
-                       {'name': 'hour', 'x_offset': 16, 'unit': datetime.timedelta(hours=1), 'formatter': '%I'},
-                       {'name': 'minute', 'x_offset': 19, 'unit': datetime.timedelta(minutes=1), 'formatter': '%M'},
-                       {'name': 'second', 'x_offset': 22, 'unit': datetime.timedelta(seconds=1), 'formatter': '%S'},
-                       {'name': 'confirm', 'x_offset': 29, 'unit': None, 'formatter': None, 'display_name': "Confirm"}
+                       {'name': 'month',
+                           'x_offset': 0,
+                           'unit': None,
+                           'formatter': '%b'},
+                       {'name': 'day',
+                           'x_offset': 4,
+                           'unit': datetime.timedelta(days=1),
+                           'formatter': '%d'},
+                       {'name': 'year',
+                           'x_offset': 10,
+                           'unit': None,
+                           'formatter': '%y'},
+                       {'name': 'hour',
+                           'x_offset': 16,
+                           'unit': datetime.timedelta(hours=1),
+                           'formatter': '%I'},
+                       {'name': 'minute',
+                           'x_offset': 19,
+                           'unit': datetime.timedelta(minutes=1),
+                           'formatter': '%M'},
+                       {'name': 'second',
+                           'x_offset': 22,
+                           'unit': datetime.timedelta(seconds=1),
+                           'formatter': '%S'},
+                       {'name': 'period',
+                           'x_offset': 24,
+                           'unit': datetime.timedelta(hours=12),
+                           'formatter': '%p'},
+                       {'name': 'confirm',
+                           'x_offset': 29,
+                           'unit': None,
+                           'formatter': None,
+                           'display_name': "Confirm"}
         ]
 
         if time is None:
@@ -233,7 +259,11 @@ class DatetimeSpinner(Popup):
         # If the date is optional (show 'No Date')
         self.optional = optional
         if self.optional:
-            self.fields.append({'name': 'no_date', 'x_offset': 39, 'unit': None, 'formatter': None, 'display_name': "No Date"})
+            self.fields.append({'name': 'no_date',
+                                    'x_offset': 39,
+                                    'unit': None,
+                                    'formatter': None,
+                                    'display_name': "No Date"})
 
         self.input_str = ''
         self.input_str_last_field_index = None
@@ -243,7 +273,8 @@ class DatetimeSpinner(Popup):
         curses.curs_set(0)
 
     def draw(self):
-        date_str = f"{self.time.strftime(DatetimeSpinner.FORMAT_STR)} | Confirm{' | No Date' if self.optional else ''}"
+        date_str = (f"{self.time.strftime(DatetimeSpinner.FORMAT_STR)} "
+                    f"| Confirm{' | No Date' if self.optional else ''}")
         self.message = [date_str]
         super().draw_text()
 
@@ -309,10 +340,12 @@ class DatetimeSpinner(Popup):
             self.time = self.time + field['unit']
         else:
             if field['name'] == 'month':
-                new_month = (self.time.month % 12) + 1 #month is in 1..12, this incs 12->1
+                #month is in 1..12, this incs 12->1
+                new_month = (self.time.month % 12) + 1
                 self.time = self.time.replace(month=new_month)
             elif field['name'] == 'year':
-                new_year = min(max(self.time.year + 1, datetime.MINYEAR), datetime.MAXYEAR)
+                new_year = min(max(self.time.year + 1, datetime.MINYEAR),
+                               datetime.MAXYEAR)
                 self.time = self.time.replace(year=new_year)
 
     def _decrement_field(self):
@@ -326,7 +359,8 @@ class DatetimeSpinner(Popup):
                     new_month = 12
                 self.time = self.time.replace(month=new_month)
             elif field['name'] == 'year':
-                new_year = min(max(self.time.year - 1, datetime.MINYEAR), datetime.MAXYEAR)
+                new_year = min(max(self.time.year - 1, datetime.MINYEAR),
+                               datetime.MAXYEAR)
                 self.time = self.time.replace(year=new_year)
 
     def _increment_quickpick(self):
@@ -365,7 +399,8 @@ class DatetimeSpinner(Popup):
                     self.next_field()
 
     def _set_field_numerically(self):
-        """Attempts to set the current field to the current input_str interpreted as a number
+        """Attempts to set the current field to
+        the current input_str interpreted as a number
         Returns true if the input_str completely fills the current field"""
         try:
             new_val = int(self.input_str)
@@ -373,11 +408,13 @@ class DatetimeSpinner(Popup):
 
             if field_name == 'month':
                 self.time = self.time.replace(month=new_val)
-                #1 could be Jan or Oct-Dec, but other single digits are complete
+                #1 could be Jan or Oct-Dec,
+                # but other single digits are complete
                 return new_val > 1
             elif field_name == 'day':
                 self.time = self.time.replace(day=new_val)
-                #1-3 could have a second digit, but other single digits are complete
+                #1-3 could have a second digit,
+                # but other single digits are complete
                 return new_val > 3
             elif field_name == 'year':
                 century = self.time.year - (self.time.year % 100)
@@ -387,15 +424,18 @@ class DatetimeSpinner(Popup):
                 return len(self.input_str) >= 2
             elif field_name == 'hour':
                 self.time = self.time.replace(hour=new_val)
-                #1 could have a second digit, but other single digits are complete
+                #1 could have a second digit,
+                # but other single digits are complete
                 return new_val > 1
             elif field_name == 'minute':
                 self.time = self.time.replace(minute=new_val)
-                #1-5 could have a second digit, but other single digits are complete
+                #1-5 could have a second digit,
+                # but other single digits are complete
                 return new_val > 5
             elif field_name == 'second':
                 self.time = self.time.replace(second=new_val)
-                #1-5 could have a second digit, but other single digits are complete
+                #1-5 could have a second digit,
+                # but other single digits are complete
                 return new_val > 5
 
         except ValueError:
