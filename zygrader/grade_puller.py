@@ -107,6 +107,10 @@ class GradePuller:
         now = datetime.datetime.now()
         yesterday = now - datetime.timedelta(days=1)
         stored_class_sections = data.get_class_sections_in_ordered_list()
+        last_night = create_last_night()
+
+        section_padding = max([len(str(section))
+                                   for section in class_sections])
 
         default_due_times = []
         for section in stored_class_sections:
@@ -115,11 +119,13 @@ class GradePuller:
                     datetime.datetime.combine(yesterday,
                                               section.default_due_time))
             else:
-                default_due_times.append(None)
+                default_due_times.append(last_night)
 
         due_times = {section: default_due_times[section]
                          for section in class_sections}
-        draw = lambda: [f"Section {section}: {time.strftime('%b %d, %Y at %I:%M:%S%p')}" for section, time in due_times.items()]
+        draw = lambda: [(f"Section {section:>{section_padding}}"
+                         f": {time.strftime('%b %d, %Y at %I:%M:%S%p')}")
+                             for section, time in due_times.items()]
 
         def select_due_times_callback(context: WinContext):
             selected_index = context.data

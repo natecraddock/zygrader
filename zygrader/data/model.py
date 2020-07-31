@@ -81,8 +81,12 @@ class ClassSection:
     DUE_TIME_STORAGE_FORMAT = "%H.%M.%S"
     DUE_TIME_DISPLAY_FORMAT = "%I:%M:%S%p"
 
+    max_section_num = 0
+
     def __init__(self, section_number, default_due_time):
         self.section_number = section_number
+        if section_number > ClassSection.max_section_num:
+            ClassSection.max_section_num = section_number
 
         if isinstance(default_due_time, datetime.datetime):
             default_due_time = default_due_time.time()
@@ -98,7 +102,9 @@ class ClassSection:
         time_str = self.default_due_time.strftime(
             ClassSection.DUE_TIME_DISPLAY_FORMAT
         )
-        return f"Section {self.section_number} - Default Due Time: {time_str}"
+        section_padding = len(str(ClassSection.max_section_num))
+        section_str = f"{self.section_number:>{section_padding}}"
+        return f"Section {section_str} - Default Due Time: {time_str}"
 
     @classmethod
     def from_json(cls, section_json):
