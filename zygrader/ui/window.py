@@ -31,6 +31,12 @@ class Event:
     END = 11
     TAB = 12
     BTAB = 13
+    SLEFT = 14
+    SRIGHT = 15
+    SUP = 16
+    SDOWN = 17
+    SHOME = 18
+    SEND = 19
 
     # Modifier Keys
     MOD_ALT = 0
@@ -114,6 +120,18 @@ class Window:
             event = Event.LEFT
         elif input_code == curses.KEY_RIGHT:
             event = Event.RIGHT
+        elif input_code == curses.KEY_SLEFT:
+            event = Event.SLEFT
+        elif input_code == curses.KEY_SRIGHT:
+            event = Event.SRIGHT
+        elif input_code == curses.KEY_SHOME:
+            event = Event.SHOME
+        elif input_code == curses.KEY_SEND:
+            event = Event.SEND
+        elif input_code == curses.KEY_SR:
+            event = Event.SUP
+        elif input_code == curses.KEY_SF:
+            event = Event.SDOWN
         elif input_code == ord('\t'):
             event = Event.TAB
         elif input_code == curses.KEY_BTAB:
@@ -527,6 +545,10 @@ class Window:
                 popup.increment_field()
             elif event.type == Event.DOWN:
                 popup.decrement_field()
+            elif event.type == Event.SUP:
+                popup.alt_increment_field()
+            elif event.type == Event.SDOWN:
+                popup.alt_decrement_field()
             elif event.type == Event.CHAR_INPUT:
                 popup.addchar(event.value)
             elif event.type == Event.ESC and self.use_esc_back:
