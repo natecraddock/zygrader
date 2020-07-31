@@ -290,7 +290,8 @@ def draw_class_section_list() -> list:
     """Use a callback for drawing the filtered list
     of class sections so it can be refreshed"""
     class_sections = data.get_class_sections()
-    return [FilteredList.ListLine(i, el) for i, el in enumerate(class_sections, start=1)]
+    return [FilteredList.ListLine(i, el)
+                for i, el in enumerate(class_sections, start=1)]
 
 def edit_class_sections():
     """Create list of class sections to edit"""
@@ -299,6 +300,16 @@ def edit_class_sections():
     window.create_filtered_list("Class Section",
                                 list_fill=draw_class_section_list,
                                 callback=edit_class_sections_callback)
+
+def sort_class_sections():
+    class_sections = data.get_class_sections()
+    class_sections = sorted(class_sections, key=lambda sec: sec.section_number)
+    data.write_class_sections(class_sections)
+
+    window = Window.get_window()
+
+    msg = ["The Class Sections are now sorted by section number"]
+    window.create_popup("Finished", msg)
 
 def download_roster(silent=False):
     """Download the roster of students from zybooks and save to disk"""
@@ -349,7 +360,9 @@ def lab_manager():
                                 input_data=LAB_MANAGE_OPTIONS,
                                 callback=lab_manager_callback)
 
-CLASS_SECTION_MANAGE_OPTIONS = ["Add Section", "Edit Current Sections"]
+CLASS_SECTION_MANAGE_OPTIONS = ["Add Section",
+                                "Edit Current Sections",
+                                "Sort Current Sections"]
 
 def class_section_manager_callback(context: WinContext):
     option_index = context.data
@@ -359,6 +372,8 @@ def class_section_manager_callback(context: WinContext):
         add_class_section()
     elif option == "Edit Current Sections":
         edit_class_sections()
+    elif option == "Sort Current Sections":
+        sort_class_sections()
 
 def class_section_manager():
     window = Window.get_window()
