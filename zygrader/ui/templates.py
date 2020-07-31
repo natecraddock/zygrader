@@ -13,18 +13,27 @@ class ZybookSectionSelector:
     def draw_zybook_sections(self, chapters_expanded, selected_sections):
         res = []
         items = []
-        pad_width = len(str(len(self.zybooks_toc)))
+        chapter_pad_width = len(str(len(self.zybooks_toc)))
+        section_pad_width = max([len(str(len(chapter['sections'])))
+                                    for chapter in self.zybooks_toc])
         for chapter in self.zybooks_toc:
-            res.append(f"{str(chapter['number']).zfill(pad_width)} - {chapter['title']}")
+            res.append(f"{str(chapter['number']):>{chapter_pad_width}}"
+                       f" - {chapter['title']}")
             items.append(chapter['number'])
             if chapters_expanded[chapter['number']]:
                 for section in chapter['sections']:
-                    section_string = f"{chapter['number']}.{section['number']} - {section['title']}"
-                    is_selected = selected_sections[(chapter['number'], section['number'])]
+                    section_string = (
+                        f"{chapter['number']}"
+                        f".{section['number']:<{section_pad_width}}"
+                        f" - {section['title']}")
+                    is_selected = selected_sections[(chapter['number'],
+                                                     section['number'])]
                     if not section['hidden'] and not section['optional']:
-                        res.append(f"  [{'X' if is_selected else ' '}] {section_string}")
+                        res.append(f"  [{'X' if is_selected else ' '}]"
+                                   f" {section_string}")
                     else:
-                        res.append(f"  -{'X' if is_selected else '-'}- {section_string} (hidden/optional)")
+                        res.append(f"  -{'X' if is_selected else '-'}-"
+                                   f" {section_string} (hidden/optional)")
                     items.append((chapter['number'], section['number']))
         self.drawn_zybook_items = items
         return res
