@@ -257,6 +257,10 @@ def get_class_section(old_section: data.model.ClassSection=None):
         "Enter the new section number for this section",
         text=init_text
     )
+
+    if section_num_str == Window.CANCEL:
+        return None
+
     section_num = int(section_num_str)
 
     default_due_time = window.create_datetime_spinner(
@@ -265,11 +269,16 @@ def get_class_section(old_section: data.model.ClassSection=None):
         include_date=False
     )
 
+    if default_due_time == UI_GO_BACK:
+        return None
+
     return data.model.ClassSection(section_num, default_due_time)
 
 def add_class_section():
     """Add a class section to the current class"""
     new_class_section = get_class_section()
+    if not new_class_section:
+        return
 
     class_sections = data.get_class_sections()
     class_sections.append(new_class_section)
@@ -280,6 +289,8 @@ def edit_class_sections_callback(context: WinContext):
     class_section = data.get_class_sections()[context.data]
 
     new_section = get_class_section(old_section=class_section)
+    if not new_section:
+        return
 
     class_section.copy(new_section)
 
