@@ -800,7 +800,7 @@ class TextInput(Popup):
         curses.curs_set(0 if self.marks else 1)
 
         # Draw input prompt
-        add_str(self.text_input, 0, 0, f"Input: marks: {self.marks}")
+        add_str(self.text_input, 0, 0, f"Input:")
 
         # Draw text and wrap on end of line
         if self.masked:
