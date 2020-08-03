@@ -345,6 +345,9 @@ class Window:
         self.header.erase()
         resize_window(self.header, 1, self.cols)
 
+        # Store the cursor location
+        loc = curses.getsyx()
+
         if self.header_titles[-1]:
             self.__header_title = self.header_titles[-1]
 
@@ -379,6 +382,8 @@ class Window:
                     self.header.chgat(0, row, green | curses.A_BOLD)
 
         self.header.noutrefresh()
+
+        curses.setsyx(*loc)
 
     def draw(self):
         """Draw each component in the stack"""
