@@ -236,7 +236,7 @@ class DatetimeSpinner(Popup):
                 return True
         return False
 
-    def __resolve_date(self, date, year, month, day) -> datetime.date:
+    def __resolve_date(self, date, year, month, day) -> datetime.datetime:
         """Find the closest valid date to an invalid date"""
 
         # Handle leap year
@@ -252,8 +252,8 @@ class DatetimeSpinner(Popup):
 
         return date.replace(year, month, day)
 
-    def __replace_date(self, date: datetime.date, year=None, month=None, day=None) -> datetime.date:
-        """A wrapper around datetime.date.replace that checks for out-of range dates
+    def __replace_date(self, date: datetime.date, year=None, month=None, day=None) -> datetime.datetime:
+        """A wrapper around datetime.datetime.replace that checks for out-of range dates
         like a Feb 29 on a non-leap year"""
 
         if not year:
