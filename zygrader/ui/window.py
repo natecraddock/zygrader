@@ -96,6 +96,11 @@ class Window:
                     self.draw_header()
                     curses.doupdate()
                     event = Event.NONE
+                elif self.mark_mode:
+                    self.mark_mode = False
+                    self.draw_header()
+                    curses.doupdate()
+                    event = Event.NONE
                 else:
                     event = Event.ESC
                 return Event(event, event_value)
@@ -165,22 +170,32 @@ class Window:
                 self.draw_header()
                 curses.doupdate()
                 event = Event.NONE
+            elif self.mark_mode:
+                self.mark_mode = False
+                self.draw_header()
+                curses.doupdate()
+                event = Event.NONE
             else:
                 event = Event.ESC
-        elif not self.insert_mode and chr(input_code) == "i":
+        elif not self.mark_mode and not self.insert_mode and chr(input_code) == "i":
             self.insert_mode = True
+            self.draw_header()
+            curses.doupdate()
+            event = Event.NONE
+        elif not self.insert_mode and not self.mark_mode and chr(input_code) == "v":
+            self.mark_mode = True
             self.draw_header()
             curses.doupdate()
             event = Event.NONE
         elif not self.insert_mode:
             if chr(input_code) == "h":
-                event = Event.LEFT
+                event = Event.SLEFT if self.mark_mode else Event.LEFT
             elif chr(input_code) == "j":
-                event = Event.DOWN
+                event = Event.SDOWN if self.mark_mode else Event.DOWN
             elif chr(input_code) == "k":
-                event = Event.UP
+                event = Event.SUP if self.mark_mode else Event.UP
             elif chr(input_code) == "l":
-                event = Event.RIGHT
+                event = Event.SRIGHT if self.mark_mode else Event.RIGHT
             else:
                 event = Event.NONE
         elif self.insert_mode:
@@ -227,6 +242,7 @@ class Window:
         """Initialize screen and run callback function"""
         self.name = window_name
         self.insert_mode = False
+        self.mark_mode = False
 
         self.event_queue = queue.Queue()
 
@@ -342,6 +358,8 @@ class Window:
 
         if self.insert_mode:
             display_text += " | INSERT"
+        elif self.mark_mode:
+            display_text += " | VISUAL"
 
         # Centered header
         row = self.cols // 2 - len(display_text) // 2
@@ -395,6 +413,7 @@ class Window:
     def component_init(self, component):
         # Disable insertion mode on component change
         self.insert_mode = False
+        self.mark_mode = False
 
         self.components.append(component)
         if self.__header_title_load:
@@ -408,6 +427,7 @@ class Window:
     def component_deinit(self):
         # Disable insertion mode on component change
         self.insert_mode = False
+        self.mark_mode = False
 
         self.components.pop()
         self.header_titles.pop()
