@@ -228,6 +228,48 @@ class DatetimeSpinner(Popup):
 
         curses.curs_set(0)
 
+    def __is_leap_year(self, year: int) -> bool:
+        if (year % 4) == 0:
+            if (year % 100) == 0 and (year % 400) == 0:
+                return True
+            else:
+                return True
+        return False
+
+    def __resolve_date(self, date, year, month, day) -> datetime.date:
+        """Find the closest valid date to an invalid date"""
+
+        # Handle leap year
+        if month == 2 and day > 28 and not self.__is_leap_year(year):
+            day = 28
+
+        # Handle out-of-range days in a month month:
+        if month in {2, 4, 6, 9, 11} and day == 31:
+            day = 30
+
+        if month == 2 and day > 28:
+            day = 28
+
+        return date.replace(year, month, day)
+
+    def __replace_date(self, date: datetime.date, year=None, month=None, day=None) -> datetime.date:
+        """A wrapper around datetime.date.replace that checks for out-of range dates
+        like a Feb 29 on a non-leap year"""
+
+        if not year:
+            year = date.year
+        if not month:
+            month = date.month
+        if not day:
+            day = date.day
+
+        try:
+            date = date.replace(year, month, day)
+        except ValueError:
+            date = self.__resolve_date(date, year, month, day)
+
+        return date
+
     def __init_fields(self):
         self.field_index = 3
 
@@ -360,11 +402,11 @@ class DatetimeSpinner(Popup):
             if field['name'] == 'month':
                 #month is in 1..12, this incs 12->1
                 new_month = (self.time.month % 12) + 1
-                self.time = self.time.replace(month=new_month)
+                self.time = self.__replace_date(self.time, month=new_month)
             elif field['name'] == 'year':
                 new_year = min(max(self.time.year + 1, datetime.MINYEAR),
                                datetime.MAXYEAR)
-                self.time = self.time.replace(year=new_year)
+                self.time = self.__replace_date(self.time, year=new_year)
 
     def _decrement_field(self):
         field = self.fields[self.field_index]
@@ -375,11 +417,11 @@ class DatetimeSpinner(Popup):
                 new_month = self.time.month - 1
                 if new_month == 0:
                     new_month = 12
-                self.time = self.time.replace(month=new_month)
+                self.time = self.__replace_date(self.time, month=new_month)
             elif field['name'] == 'year':
                 new_year = min(max(self.time.year - 1, datetime.MINYEAR),
                                datetime.MAXYEAR)
-                self.time = self.time.replace(year=new_year)
+                self.time = self.__replace_date(self.time, year=new_year)
 
     def _increment_quickpick(self):
         new_minute, new_second = self.quickpicks[0]
@@ -438,19 +480,19 @@ class DatetimeSpinner(Popup):
             str_len = len(self.input_str)
 
             if field_name == 'month':
-                self.time = self.time.replace(month=new_val)
+                self.time = self.__replace_date(self.time, month=new_val)
                 #1 could be Jan or Oct-Dec,
                 # but other single digits are complete
                 return new_val > 1 or str_len >= 2
             elif field_name == 'day':
-                self.time = self.time.replace(day=new_val)
+                self.time = self.__replace_date(self.time, day=new_val)
                 #1-3 could have a second digit,
                 # but other single digits are complete
                 return new_val > 3 or str_len >= 2
             elif field_name == 'year':
                 century = self.time.year - (self.time.year % 100)
                 new_year = century + new_val
-                self.time = self.time.replace(year=new_year)
+                self.time = self.__replace_date(self.time, year=new_year)
                 #user only enters last two digits
                 return len(self.input_str) >= 2
             elif field_name == 'hour':
