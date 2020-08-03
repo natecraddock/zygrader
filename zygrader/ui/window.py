@@ -58,6 +58,10 @@ class Window:
     EVENT_REFRESH_LIST = "flags_and_locks"
     CANCEL = -1
 
+    MODE_NORMAL = 0
+    MODE_INSERT = 1
+    MODE_MARK = 2
+
     instance = None
 
     @staticmethod
@@ -73,6 +77,23 @@ class Window:
         self.left_right_menu_nav = is_preference_set("left_right_arrow_nav")
         self.clear_filter = is_preference_set("clear_filter")
         self.use_esc_back = is_preference_set("use_esc_back")
+
+    def set_mode(self, mode: int):
+        """Set the vim edit mode"""
+        if mode == Window.MODE_NORMAL:
+            self.insert_mode = False
+            self.mark_mode = False
+        elif mode == Window.MODE_INSERT:
+            self.insert_mode = True
+            self.mark_mode = False
+        elif mode == Window.MODE_MARK:
+            self.insert_mode = False
+            self.mark_mode = True
+
+        self.draw_header()
+        curses.doupdate()
+
+        return Event.NONE
 
     def get_input(self, input_win) -> Event:
         """Get input and handle resize events"""
@@ -92,15 +113,9 @@ class Window:
             if input_code == -1:
                 # Interpret as a single ESC char
                 if self.insert_mode:
-                    self.insert_mode = False
-                    self.draw_header()
-                    curses.doupdate()
-                    event = Event.NONE
+                    event = self.set_mode(Window.MODE_NORMAL)
                 elif self.mark_mode:
-                    self.mark_mode = False
-                    self.draw_header()
-                    curses.doupdate()
-                    event = Event.NONE
+                    event = self.set_mode(Window.MODE_NORMAL)
                 else:
                     event = Event.ESC
                 return Event(event, event_value)
@@ -166,27 +181,15 @@ class Window:
             event = Event.DELETE
         elif input_code == 27:
             if self.insert_mode:
-                self.insert_mode = False
-                self.draw_header()
-                curses.doupdate()
-                event = Event.NONE
+                event = self.set_mode(Window.MODE_NORMAL)
             elif self.mark_mode:
-                self.mark_mode = False
-                self.draw_header()
-                curses.doupdate()
-                event = Event.NONE
+                event = self.set_mode(Window.MODE_NORMAL)
             else:
                 event = Event.ESC
         elif not self.mark_mode and not self.insert_mode and chr(input_code) == "i":
-            self.insert_mode = True
-            self.draw_header()
-            curses.doupdate()
-            event = Event.NONE
+            event = self.set_mode(Window.MODE_INSERT)
         elif not self.insert_mode and not self.mark_mode and chr(input_code) == "v":
-            self.mark_mode = True
-            self.draw_header()
-            curses.doupdate()
-            event = Event.NONE
+            event = self.set_mode(Window.MODE_MARK)
         elif not self.insert_mode:
             if chr(input_code) == "h":
                 event = Event.SLEFT if self.mark_mode else Event.LEFT
