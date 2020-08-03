@@ -1,5 +1,14 @@
 # Try to keep lines shorter than 70 characters
 
+4.4.0
+* Reformat the grader popup.
+* Wrap long lines of text on popups.
+* Show the submission picker on pair programming.
+* Add shift+arrow keys for text selection.
+  Use v in normal mode with Vim keymappings.
+* Add Zybook Section manager.
+* Fix cursor placement issues.
+
 4.2.0
 * Add support for Tab and Shift+Tab navigation on popups.
 * Add DatetimeSpinner component for selecting dates.
