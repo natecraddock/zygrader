@@ -1,3 +1,4 @@
+import calendar
 import curses
 import datetime
 from collections import Iterable
@@ -228,19 +229,11 @@ class DatetimeSpinner(Popup):
 
         curses.curs_set(0)
 
-    def __is_leap_year(self, year: int) -> bool:
-        if (year % 4) == 0:
-            if (year % 100) == 0 and (year % 400) == 0:
-                return True
-            else:
-                return True
-        return False
-
     def __resolve_date(self, date, year, month, day) -> datetime.datetime:
         """Find the closest valid date to an invalid date"""
 
         # Handle leap year
-        if month == 2 and day > 28 and not self.__is_leap_year(year):
+        if month == 2 and day > 28 and not calendar.isleap(year):
             day = 28
 
         # Handle out-of-range days in a month month:
