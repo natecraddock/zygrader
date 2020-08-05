@@ -35,6 +35,11 @@ class SharedData:
 
     SHARED_CONFIG_PATH = ""
 
+    # Global arrays
+    STUDENTS = []
+    LABS = []
+    CLASS_SECTIONS = []
+
     @classmethod
     def initialize_shared_data(cls, shared_data_path):
         if not os.path.exists(shared_data_path):

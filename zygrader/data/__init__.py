@@ -9,7 +9,7 @@ from . import fs_watch
 from . import lock
 
 def load_students() -> list:
-    g_students.clear()
+    SharedData.STUDENTS.clear()
     path = SharedData.get_student_data()
     if not os.path.exists(path):
         return []
@@ -18,19 +18,19 @@ def load_students() -> list:
         students_json = json.load(students_file)
 
     for student in students_json:
-        g_students.append(Student(student["first_name"], student["last_name"], student["email"], student["section"], student["id"]))
+        SharedData.STUDENTS.append(Student(student["first_name"], student["last_name"], student["email"], student["section"], student["id"]))
 
-    return g_students
+    return SharedData.STUDENTS
 
 # Load students from JSON file
 def get_students() -> list:
-    if g_students:
-        return g_students
+    if SharedData.STUDENTS:
+        return SharedData.STUDENTS
 
     return load_students()
 
 def load_labs() -> list:
-    g_labs.clear()
+    SharedData.LABS.clear()
     path = SharedData.get_labs_data()
     if not os.path.exists(path):
         return []
@@ -39,21 +39,20 @@ def load_labs() -> list:
         labs_json = json.load(labs_file)
 
     for a in labs_json:
-        g_labs.append(Lab(a["name"], a["parts"], a["options"]))
+        SharedData.LABS.append(Lab(a["name"], a["parts"], a["options"]))
 
-    return g_labs
+    return SharedData.LABS
 
 
 # Load labs from JSON file
 def get_labs() -> list:
-    if g_labs:
-        return g_labs
+    if SharedData.LABS:
+        return SharedData.LABS
 
     return load_labs()
 
 def write_labs(labs):
-    global g_labs
-    g_labs = labs
+    SharedData.LABS = labs
 
     labs_json = []
 
@@ -67,7 +66,7 @@ def write_labs(labs):
 
 # Load class sections from JSON file
 def load_class_sections() -> list:
-    g_class_sections.clear()
+    SharedData.CLASS_SECTIONS.clear()
     path = SharedData.get_class_sections_data()
     if not os.path.exists(path):
         return []
@@ -76,13 +75,13 @@ def load_class_sections() -> list:
         class_sections_json = json.load(class_sections_file)
 
     for class_section in class_sections_json:
-        g_class_sections.append(ClassSection.from_json(class_section))
+        SharedData.CLASS_SECTIONS.append(ClassSection.from_json(class_section))
 
-    return g_class_sections
+    return SharedData.CLASS_SECTIONS
 
 def get_class_sections() -> list:
-    if g_class_sections:
-        return g_class_sections
+    if SharedData.CLASS_SECTIONS:
+        return SharedData.CLASS_SECTIONS
 
     return load_class_sections()
 
@@ -98,8 +97,7 @@ def get_class_sections_in_ordered_list() -> list:
     return ordered
 
 def write_class_sections(class_sections):
-    global g_class_sections
-    g_class_sections = class_sections
+    SharedData.CLASS_SECTIONS = class_sections
 
     class_sections_json = []
 
