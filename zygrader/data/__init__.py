@@ -1,16 +1,12 @@
 import json
 import os
 
-from .model import Student, Lab, Submission, ClassSection
+from .model import Student, Lab, ClassSection
 
 from zygrader.config.shared import SharedData
 from . import flags
 from . import fs_watch
 from . import lock
-
-g_students = []
-g_labs = []
-g_class_sections = []
 
 def load_students() -> list:
     g_students.clear()
