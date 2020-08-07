@@ -3,7 +3,10 @@ import curses
 import datetime
 from collections import Iterable
 
-from .utils import add_str, resize_window
+from .utils import add_str, add_ch, resize_window
+from zygrader.ui import UI_GO_BACK
+
+from zygrader.logger import log
 
 class Component:
     def __init__(self):
@@ -28,7 +31,7 @@ class Popup(Component):
     ALIGN_LEFT = 0
     ALIGN_CENTER = 1
 
-    def __init__(self, height, width, title, message, align):
+    def __init__(self, height, width, title, message, align, can_click):
         # Popups only obscure the screen partially
         self.blocking = False
 
@@ -38,6 +41,7 @@ class Popup(Component):
         self.title = title
         self.message = message
         self.align = align
+        self.can_click = can_click
 
         self.__calculate_size()
 
@@ -107,9 +111,18 @@ class Popup(Component):
                 add_str(self.window, message_y + message_row, message_x, wrapped)
                 message_row += 1
 
-    def draw_title(self):
+    def draw_title_bar(self):
         title_x = self.cols // 2 - len(self.title) // 2
         add_str(self.window, 0, title_x, self.title)
+
+        if self.can_click:
+            add_ch(self.window, 0, self.cols - 3, curses.ACS_TTEE)
+            add_ch(self.window, 1, self.cols - 3, curses.ACS_VLINE)
+            add_ch(self.window, 1, self.cols - 2, 'X')
+            add_ch(self.window, 2, self.cols - 3, curses.ACS_LLCORNER)
+            add_ch(self.window, 2, self.cols - 2, curses.ACS_HLINE)
+            add_ch(self.window, 2, self.cols - 1, curses.ACS_RTEE)
+
 
     def draw_text(self):
         self.window.erase()
@@ -126,7 +139,7 @@ class Popup(Component):
         elif self.align == Popup.ALIGN_LEFT:
             self.__draw_message_left(message)
 
-        self.draw_title()
+        self.draw_title_bar()
 
     _ENTER_STRING = "Press Enter"
 
@@ -156,12 +169,16 @@ class Popup(Component):
     def _to_relative_coords(self, y, x):
         return y - self.y, x - self.x
 
-    def is_on_enter(self, y, x):
+    def clicked(self, y, x):
+        return UI_GO_BACK if self._is_on_close(y, x) else None
+
+    def _is_on_close(self, y, x):
         y, x = self._to_relative_coords(y, x)
-        y_row = self.text_bottom_y()
-        x_right = self.text_right_x()
-        x_left = x_right - len(Popup._ENTER_STRING)
-        return y == y_row and x > x_left and x < x_right
+        y_top = 0
+        y_bottom = 2
+        x_right = self.cols - 1
+        x_left = x_right - 2
+        return y >= y_top and y <= y_bottom and x > x_left and x < x_right
 
     def text_bottom_y(self):
         return self.rows - 2
@@ -171,8 +188,9 @@ class Popup(Component):
 
 
 class OptionsPopup(Popup):
-    def __init__(self, height, width, title, message, options, use_dict, align):
-        super().__init__(height, width, title, message, align)
+    def __init__(self, height, width, title, message, options,
+                 use_dict, align, can_click):
+        super().__init__(height, width, title, message, align, can_click)
         self.options = options
         self.use_dict = use_dict
 
@@ -224,8 +242,9 @@ class DatetimeSpinner(Popup):
     NO_DATE = "datetime_no_date"
 
     def __init__(self, height, width, title, time,
-                 quickpicks, optional, include_date):
-        super().__init__(height, width, title, [], Popup.ALIGN_CENTER)
+                 quickpicks, optional, include_date, can_click):
+        super().__init__(height, width, title, [],
+                         Popup.ALIGN_CENTER, can_click)
 
         if time is None:
             time = datetime.datetime.now()
@@ -786,8 +805,9 @@ class TextInput(Popup):
     # 1 Row for prompt, 4 for text
     TEXT_HEIGHT = 5
 
-    def __init__(self, height, width, title, prompt, text, mask=TEXT_NORMAL):
-        super().__init__(height, width, title, [prompt], Popup.ALIGN_CENTER)
+    def __init__(self, height, width, title, prompt, text, mask, can_click):
+        super().__init__(height, width, title,
+                         [prompt], Popup.ALIGN_CENTER, can_click)
 
         self.prompt = prompt
         self.masked = (mask is TextInput.TEXT_MASKED)
@@ -998,9 +1018,9 @@ class ListPopup(FilteredList, Popup):
     """A list in a popup view"""
     V_PADDING = Popup.PADDING * 2
 
-    def __init__(self, rows, cols, title, input_data, list_fill):
+    def __init__(self, rows, cols, title, input_data, list_fill, can_click):
         self.blocking = False
-        Popup.__init__(self, rows, cols, title, None, None)
+        Popup.__init__(self, rows, cols, title, None, None, can_click)
 
         if input_data:
             self.data = ["Back"] + input_data[:]
@@ -1034,7 +1054,7 @@ class ListPopup(FilteredList, Popup):
         self.window.erase()
         self.window.border()
 
-        self.draw_title()
+        self.draw_title_bar()
 
         if self.list_fill:
             self.data = ["Back"] + self.list_fill()

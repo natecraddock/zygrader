@@ -8,6 +8,8 @@ from zygrader.config.preferences import is_preference_set
 from . import components
 from .utils import add_str, resize_window
 
+from zygrader.logger import log
+
 from . import UI_GO_BACK
 
 UI_LEFT = 0
@@ -297,7 +299,8 @@ class Window:
         mask = (curses.BUTTON1_CLICKED |
                 curses.BUTTON1_PRESSED |
                 curses.BUTTON1_RELEASED)
-        curses.mousemask(mask)
+        avail, _ = curses.mousemask(mask)
+        self.can_click = avail & curses.BUTTON1_CLICKED
 
         self.__init_colors()
 
@@ -464,7 +467,8 @@ class Window:
 
     def create_popup(self, title, message, align=components.Popup.ALIGN_CENTER):
         """Create a popup with title and message that returns after enter"""
-        popup = components.Popup(self.rows, self.cols, title, message, align)
+        popup = components.Popup(self.rows, self.cols, title,
+                                 message, align, self.can_click)
         self.component_init(popup)
 
         while True:
@@ -472,7 +476,7 @@ class Window:
 
             if (event.type == Event.ENTER
                   or (event.type == Event.MOUSE_CLICK
-                      and popup.is_on_enter(*event.value))):
+                      and popup.clicked(*event.value) == UI_GO_BACK)):
                 break
 
         self.component_deinit()
@@ -498,7 +502,8 @@ class Window:
                     self.window.clear_event_queue()
                 self.has_exited = True
 
-        popup = components.OptionsPopup(self.rows, self.cols, title, message, [], False, align)
+        popup = components.OptionsPopup(self.rows, self.cols, title, message,
+                                        [], False, align, self.can_click)
         self.component_init(popup)
 
         return WaitingPopupControl(self)
@@ -516,9 +521,11 @@ class Window:
         use_dict = bool(isinstance(options, dict))
 
         popup = components.OptionsPopup(self.rows, self.cols, title,
-                                        message, options, use_dict, align)
+                                        message, options, use_dict,
+                                        align, self.can_click)
         self.component_init(popup)
 
+        retval = None
         while True:
             event = self.consume_event()
 
@@ -537,18 +544,22 @@ class Window:
                     callback_fn = popup.selected()
                     if not callback_fn:
                         break
-                    ret = callback_fn(WinContext(self, event, popup, None))
-                    if ret:
+                    retval = callback_fn(WinContext(self, event, popup, None))
+                    if retval:
                         break
                 else:
+                    retval = popup.selected()
+                    break
+            elif event.type == Event.MOUSE_CLICK:
+                clicked = popup.clicked(*event.value)
+                if clicked == UI_GO_BACK:
                     break
 
             self.draw()
 
         self.component_deinit()
 
-        if not use_dict:
-            return popup.selected()
+        return retval
 
     def create_datetime_spinner(self, title, time=None,
                                 quickpicks=None, optional=False,
@@ -560,7 +571,8 @@ class Window:
         """
 
         popup = components.DatetimeSpinner(self.rows, self.cols, title, time,
-                                           quickpicks, optional, include_date)
+                                           quickpicks, optional, include_date,
+                                           self.can_click)
 
         self.component_init(popup)
 
@@ -606,7 +618,8 @@ class Window:
         of that data. If list_fill (function) is supplied, then list_fill will be called to generate
         a list to be drawn.
         """
-        popup = components.ListPopup(self.rows, self.cols, title, input_data, list_fill)
+        popup = components.ListPopup(self.rows, self.cols, title,
+                                     input_data, list_fill, self.can_click)
         self.component_init(popup)
 
         retval = None
@@ -643,7 +656,8 @@ class Window:
 
     def create_text_input(self, title, prompt, text="", mask=components.TextInput.TEXT_NORMAL):
         """Get text input from the user"""
-        text_input = components.TextInput(self.rows, self.cols, title, prompt, text, mask)
+        text_input = components.TextInput(self.rows, self.cols, title, prompt,
+                                          text, mask, self.can_click)
         self.component_init(text_input)
 
         if self.vim_mode:
