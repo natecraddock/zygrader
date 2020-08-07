@@ -37,6 +37,10 @@ class Event:
     SDOWN = 17
     SHOME = 18
     SEND = 19
+    # Only button 1 is ever used, so no need to distinguish buttons
+    MOUSE_CLICK = 20
+    MOUSE_PRESS = 21
+    MOUSE_RELEASE = 22
 
     # Modifier Keys
     MOD_ALT = 0
@@ -126,6 +130,17 @@ class Window:
         if input_code == curses.KEY_RESIZE:
             self.__resize_terminal()
             curses.flushinp()
+        elif input_code == curses.KEY_MOUSE:
+            mouse = curses.getmouse()
+            bstate = mouse[4]
+            # The bstate checks are ordered to minimize strange effects
+            if bstate & curses.BUTTON1_CLICKED:
+                event = Event.MOUSE_CLICK
+            elif bstate & curses.BUTTON1_RELEASED:
+                event = Event.MOUSE_RELEASE
+            elif bstate & curses.BUTTON1_PRESSED:
+                event = Event.MOUSE_PRESS
+            event_value = (mouse[2], mouse[1]) # y, x of mouse event
         elif input_code in {curses.KEY_ENTER, ord('\n'), ord('\r')}:
             event = Event.ENTER
         elif input_code == curses.KEY_HOME:
@@ -277,6 +292,12 @@ class Window:
 
         # Hide cursor
         curses.curs_set(0)
+
+        # Enable reporting mouse event
+        mask = (curses.BUTTON1_CLICKED |
+                curses.BUTTON1_PRESSED |
+                curses.BUTTON1_RELEASED)
+        curses.mousemask(mask)
 
         self.__init_colors()
 
