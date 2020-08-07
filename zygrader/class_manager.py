@@ -75,7 +75,7 @@ def add_lab():
     # Get lab part(s)
     parts = []
 
-    section_selector = ZybookSectionSelector()
+    section_selector = ZybookSectionSelector(allow_optional_and_hidden=True)
     section_numbers = section_selector.select_zybook_sections(return_just_numbers=True)
 
     for chapter, section in section_numbers:

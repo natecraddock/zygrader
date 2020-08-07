@@ -6,9 +6,14 @@ from .window import Window
 from zygrader.zybooks import Zybooks
 
 class ZybookSectionSelector:
-    def __init__(self):
+    def __init__(self, allow_optional_and_hidden=False):
         self.window = Window.get_window()
         self.zy_api = Zybooks()
+        self.allow_optional_and_hidden = allow_optional_and_hidden
+
+    def is_allowed(self, section):
+        return (self.allow_optional_and_hidden
+                or (not(section['hidden'] or section['optional'])))
 
     def draw_zybook_sections(self, chapters_expanded, selected_sections):
         res = []
@@ -28,7 +33,7 @@ class ZybookSectionSelector:
                         f" - {section['title']}")
                     is_selected = selected_sections[(chapter['number'],
                                                      section['number'])]
-                    if not section['hidden'] and not section['optional']:
+                    if self.is_allowed(section):
                         res.append(f"  [{'X' if is_selected else ' '}]"
                                    f" {section_string}")
                     else:
@@ -42,7 +47,7 @@ class ZybookSectionSelector:
         item = self.drawn_zybook_items[selected_index]
         if isinstance(item, tuple): #is a section
             section = self.zybooks_sections[item]
-            if not section['hidden'] and not section['optional']:
+            if self.is_allowed(section):
                 selected_sections[item] = not selected_sections[item]
         else: #is a chapter
             chapters_expanded[item] = not chapters_expanded[item]
