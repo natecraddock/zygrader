@@ -4,6 +4,7 @@ import datetime
 from zygrader import data
 from zygrader.ui.window import WinContext, Window
 from zygrader.ui.templates import ZybookSectionSelector, filename_input
+from zygrader.ui.displaystring import DisplayStr
 from zygrader.ui import UI_GO_BACK
 from zygrader.config.shared import SharedData
 from zygrader.zybooks import Zybooks
@@ -155,9 +156,10 @@ class GradePuller:
             if selected_index != 0 or len(class_sections) <= 1:
                 return
 
+            msg = DisplayStr("Set all sections to this due date [u:and time]?")
             do_carry_datetime = self.window.create_bool_popup(
                 "Set Due Time",
-                ["Set all sections to this due date and time?"])
+                [msg])
             if do_carry_datetime:
                 for section in due_times:
                     due_times[section] = new_datetime
