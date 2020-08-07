@@ -503,7 +503,7 @@ class Window:
                 self.has_exited = True
 
         popup = components.OptionsPopup(self.rows, self.cols, title, message,
-                                        [], False, align, self.can_click)
+                                        [], False, align, can_click=False)
         self.component_init(popup)
 
         return WaitingPopupControl(self)
