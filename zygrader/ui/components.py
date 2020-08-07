@@ -147,8 +147,8 @@ class Popup(Component):
         self.draw_text()
 
         # Draw prompt to exit popup
-        y = self.text_bottom_y()
-        x = self.text_right_x() - len(Popup._ENTER_STRING)
+        y = self._text_bottom_y()
+        x = self._text_right_x() - len(Popup._ENTER_STRING)
         add_str(self.window, y, x, Popup._ENTER_STRING)
 
         self.window.noutrefresh()
@@ -180,10 +180,10 @@ class Popup(Component):
         x_left = x_right - 2
         return y >= y_top and y <= y_bottom and x > x_left and x < x_right
 
-    def text_bottom_y(self):
+    def _text_bottom_y(self):
         return self.rows - 2
 
-    def text_right_x(self):
+    def _text_right_x(self):
         return self.cols - 1 - Popup.PADDING
 
 
@@ -196,20 +196,25 @@ class OptionsPopup(Popup):
 
         # Always add close as an option to dicts
         if self.use_dict:
-            self.options["Close"] = None
+            self.options["Close"] = UI_GO_BACK
 
         self.index = len(options) - 1
-        self.options_length = sum([len(o) for o in options]) + len(options) + 2
+        options_strs_len = sum([len(o) for o in options])
+        space_between_len = 2 * (len(options) - 1)
+        self.options_length = options_strs_len + space_between_len
+
+    def __options_start_x(self):
+        return self._text_right_x() - self.options_length
 
     def draw(self):
         super().draw_text()
 
-        y = self.rows - 2
+        y = self._text_bottom_y()
 
         previous_length = 0
         index = 0
         for option in self.options:
-            x = self.cols - 1 - Popup.PADDING - self.options_length + previous_length
+            x = self.__options_start_x() + previous_length
             if index == self.index:
                 add_str(self.window, y, x, option, curses.A_STANDOUT)
             else:
@@ -233,10 +238,35 @@ class OptionsPopup(Popup):
         self.index = len(self.options) - 1
 
     def selected(self):
+        return self.__item_at(self.index)
+
+    def __item_at(self, idx):
         if self.use_dict:
-            key = list(self.options)[self.index]
+            key = list(self.options)[idx]
             return self.options[key]
-        return self.options[self.index]
+        return self.options[idx]
+
+    def clicked(self, y, x):
+        if self._is_on_close(y, x):
+            return UI_GO_BACK
+        y, x = self._to_relative_coords(y, x)
+        if y != self._text_bottom_y():
+            return None
+        x = x - self.__options_start_x()
+        if x < 0 or x > self.options_length:
+            return None
+
+        option_strs = list(self.options)
+
+        options_idx = 0
+        options_slide = len(option_strs[0])
+        while options_slide < x:
+            options_idx += 1
+            options_slide += len(option_strs[options_idx]) + 2
+
+        return self.__item_at(options_idx)
+
+
 
 class DatetimeSpinner(Popup):
     NO_DATE = "datetime_no_date"

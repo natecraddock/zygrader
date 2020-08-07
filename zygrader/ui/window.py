@@ -542,7 +542,8 @@ class Window:
             elif event.type == Event.ENTER:
                 if use_dict:
                     callback_fn = popup.selected()
-                    if not callback_fn:
+                    if callback_fn == UI_GO_BACK:
+                        retval = UI_GO_BACK
                         break
                     retval = callback_fn(WinContext(self, event, popup, None))
                     if retval:
@@ -553,7 +554,13 @@ class Window:
             elif event.type == Event.MOUSE_CLICK:
                 clicked = popup.clicked(*event.value)
                 if clicked == UI_GO_BACK:
+                    retval = UI_GO_BACK
                     break
+                elif clicked is not None:
+                    if use_dict:
+                        retval = clicked(WinContext(self, event, popup, None))
+                        if retval:
+                            break
 
             self.draw()
 
