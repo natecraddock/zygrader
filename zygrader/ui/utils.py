@@ -3,7 +3,7 @@ from zygrader.ui.displaystring import DisplayStr
 
 def text_adder(func):
     """Wrappers around addstr/addch to catch errors"""
-    def wrapped(window, y, x, text, attrs=0):
+    def wrapped(window, y, x, text, attrs=curses.A_NORMAL):
         try:
             if isinstance(text, DisplayStr):
                 xslide = x
@@ -18,11 +18,11 @@ def text_adder(func):
     return wrapped
 
 @text_adder
-def add_str(window, y, x, text, attrs):
+def add_str(window, y, x, text, attrs=curses.A_NORMAL):
     window.addstr(y, x, text, attrs)
 
 @text_adder
-def add_ch(window, y, x, text, attrs):
+def add_ch(window, y, x, text, attrs=curses.A_NORMAL):
     window.addch(y, x, text, attrs)
 
 def resize_window(window, rows, cols):
