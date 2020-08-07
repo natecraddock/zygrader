@@ -124,8 +124,6 @@ class DisplayStr():
 
         newsegs = [([], curses.A_NORMAL)]
 
-        print(f"Begin with process with {(start, stop, step)}")
-
         try:
             i = -1
             iterator = DisplayStr.Iterator(self)
@@ -136,7 +134,6 @@ class DisplayStr():
             while i < stop:
                 seg = self.segments[iterator.segidx]
                 c = seg[0][iterator.charinsegidx]
-                print(f"One iter with seg:{seg} and c:{c} -- newsegs:{newsegs}")
                 if seg[1] != newsegs[-1][1]:
                     newsegs.append(([c], seg[1]))
                 else:
@@ -150,8 +147,6 @@ class DisplayStr():
 
         if not newsegs[0][0]:
             del newsegs[0]
-
-        print(newsegs)
 
         newsegs = [(''.join(seg[0]), seg[1]) for seg in newsegs]
         disp = ''.join(seg[0] for seg in newsegs)
