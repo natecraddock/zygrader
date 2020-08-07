@@ -470,7 +470,9 @@ class Window:
         while True:
             event = self.consume_event()
 
-            if event.type == Event.ENTER:
+            if (event.type == Event.ENTER
+                  or (event.type == Event.MOUSE_CLICK
+                      and popup.is_on_enter(*event.value))):
                 break
 
         self.component_deinit()

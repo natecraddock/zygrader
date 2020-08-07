@@ -128,16 +128,15 @@ class Popup(Component):
 
         self.draw_title()
 
+    _ENTER_STRING = "Press Enter"
+
     def draw(self):
         self.draw_text()
 
         # Draw prompt to exit popup
-        enter_string = "Press Enter"
-        len(enter_string)
-
-        y = self.rows - 2
-        x = self.cols - 1 - Popup.PADDING - len(enter_string)
-        add_str(self.window, y, x, enter_string)
+        y = self.text_bottom_y()
+        x = self.text_right_x() - len(Popup._ENTER_STRING)
+        add_str(self.window, y, x, Popup._ENTER_STRING)
 
         self.window.noutrefresh()
 
@@ -153,6 +152,22 @@ class Popup(Component):
             pass
 
         resize_window(self.window, self.rows, self.cols)
+
+    def _to_relative_coords(self, y, x):
+        return y - self.y, x - self.x
+
+    def is_on_enter(self, y, x):
+        y, x = self._to_relative_coords(y, x)
+        y_row = self.text_bottom_y()
+        x_right = self.text_right_x()
+        x_left = x_right - len(Popup._ENTER_STRING)
+        return y == y_row and x > x_left and x < x_right
+
+    def text_bottom_y(self):
+        return self.rows - 2
+
+    def text_right_x(self):
+        return self.cols - 1 - Popup.PADDING
 
 
 class OptionsPopup(Popup):
