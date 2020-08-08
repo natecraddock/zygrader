@@ -610,6 +610,13 @@ class Window:
                 break
             elif event.type == Event.ENTER and popup.is_confirmed():
                 break
+            elif event.type == Event.MOUSE_CLICK:
+                clicked = popup.clicked(*event.value)
+                if clicked == UI_GO_BACK:
+                    retval = UI_GO_BACK
+                    break
+                elif clicked and popup.is_confirmed():
+                    break
 
             self.draw()
 

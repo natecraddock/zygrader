@@ -338,45 +338,56 @@ class DatetimeSpinner(Popup):
                            {'name': 'month',
                             'x_offset': 0,
                             'unit': None,
-                            'formatter': '%b'},
+                            'formatter': '%b',
+                            'clickable': (-1, 2)},
                            {'name': 'day',
                             'x_offset': 4,
                             'unit': datetime.timedelta(days=1),
-                            'formatter': '%d'},
+                            'formatter': '%d',
+                            'clickable': (-1, 2)},
                            {'name': 'year',
                             'x_offset': 10,
                             'unit': None,
-                            'formatter': '%y'}]
+                            'formatter': '%y',
+                            'clickable': (-3, 2)}]
+        confirm = "Confirm"
         self.fields = self.fields + [
                                      {'name': 'hour',
                                       'x_offset': 0 + date_x_fill,
                                       'unit': datetime.timedelta(hours=1),
-                                      'formatter': '%I'},
+                                      'formatter': '%I',
+                                      'clickable': (-1,1)},
                                      {'name': 'minute',
                                       'x_offset': 3 + date_x_fill,
                                       'unit': datetime.timedelta(minutes=1),
-                                      'formatter': '%M'},
+                                      'formatter': '%M',
+                                      'clickable': (-1,2)},
                                      {'name': 'second',
                                       'x_offset': 6 + date_x_fill,
                                       'unit': datetime.timedelta(seconds=1),
-                                      'formatter': '%S'},
+                                      'formatter': '%S',
+                                      'clickable': (0,1)},
                                      {'name': 'period',
                                       'x_offset': 8 + date_x_fill,
                                       'unit': datetime.timedelta(hours=12),
-                                      'formatter': '%p'},
+                                      'formatter': '%p',
+                                      'clickable': (0,2)},
                                      {'name': 'confirm',
                                       'x_offset': 13 + date_x_fill,
                                       'unit': None,
                                       'formatter': None,
-                                      'display_name': "Confirm"}]
+                                      'display_name': confirm,
+                                      'clickable': (-1,len(confirm))}]
 
         # If the date is optional (show 'No Date')
         if self.optional:
+            no_date = "No Date"
             self.fields.append({'name': 'no_date',
                                     'x_offset': 23 + date_x_fill,
                                     'unit': None,
                                     'formatter': None,
-                                    'display_name': "No Date"})
+                                    'display_name': no_date,
+                                    'clickable': (-1,len(no_date))})
 
     def __init_format_str(self):
         self.format_str = ""
@@ -389,14 +400,17 @@ class DatetimeSpinner(Popup):
         self.input_str_last_field_index = None
         self._reset_month_str_position()
 
+    def __get_date_str(self):
+        return (f"{self.time.strftime(self.format_str)} "
+                f"| Confirm{' | No Date' if self.optional else ''}")
+
     def draw(self):
-        date_str = (f"{self.time.strftime(self.format_str)} "
-                    f"| Confirm{' | No Date' if self.optional else ''}")
+        date_str = self.__get_date_str()
         self.message = [date_str]
         super().draw_text()
 
-        time_y = self.rows // 2
-        time_x = self.cols // 2 - len(date_str) // 2
+        time_y = self.__time_text_y()
+        time_x = self.__time_text_x()
 
         field = self.fields[self.field_index]
         field_x = time_x + field['x_offset']
@@ -430,6 +444,31 @@ class DatetimeSpinner(Popup):
 
     def last_field(self):
         self.field_index = len(self.fields) - 1
+
+    def clicked(self, y, x):
+        if self._is_on_close(y, x):
+            return UI_GO_BACK
+        y, x = self._to_relative_coords(y, x)
+        if y != self.__time_text_y():
+            return None
+        x = x - self.__time_text_x()
+
+        for idx, field in enumerate(self.fields):
+            start, end = field['clickable']
+            start += field['x_offset']
+            end += field['x_offset']
+            if x < start:
+                return None
+            elif x <= end:
+                self.field_index = idx
+                return field['name']
+        return None
+
+    def __time_text_y(self):
+        return self.rows // 2
+
+    def __time_text_x(self):
+        return self.cols // 2 - len(self.__get_date_str()) // 2
 
     def increment_field(self):
         field = self.fields[self.field_index]
