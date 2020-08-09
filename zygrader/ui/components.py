@@ -87,28 +87,33 @@ class Popup(Component):
                 break
         return wrapped_lines
 
-    def __draw_message(self):
+    def __message_as_list(self):
         if isinstance(self.message, Iterable):
             message = list(self.message)
         else:
             message = self.message()
-        display_lines = [self.__calculate_wrapping(line) for line in message]
-        longest_line = max((displayline
-                                for messageline in display_lines
-                                    for displayline in messageline),
+        return message
+
+    def __message_display_lines(self):
+        return [disp_line
+                    for msg_line in self.__message_as_list()
+                        for disp_line in self.__calculate_wrapping(msg_line)]
+
+    def __draw_message(self):
+        display_lines = self.__message_display_lines()
+        longest_line = max((displayline for displayline in display_lines),
                             key=len)
 
         left_align_x = self._centered_start_x(longest_line)
         message_y = self._centered_start_y(display_lines)
         message_row = 0
-        for message_line in display_lines:
-            for line in message_line:
-                add_str(self.window,
-                        message_y + message_row,
-                        left_align_x if self.align == Popup.ALIGN_LEFT
-                                     else self._centered_start_x(line),
-                        line)
-                message_row += 1
+        for line in display_lines:
+            add_str(self.window,
+                    message_y + message_row,
+                    left_align_x if self.align == Popup.ALIGN_LEFT
+                                    else self._centered_start_x(line),
+                    line)
+            message_row += 1
 
     def draw_title_bar(self):
         title_x = self._centered_start_x(self.title)
