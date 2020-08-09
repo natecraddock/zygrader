@@ -87,32 +87,31 @@ class Popup(Component):
                 break
         return wrapped_lines
 
+    def __draw_message(self):
+        if isinstance(self.message, Iterable):
+            message = list(self.message)
+        else:
+            message = self.message()
+        display_lines = [self.__calculate_wrapping(line) for line in message]
+        longest_line = max((displayline
+                                for messageline in display_lines
+                                    for displayline in messageline),
+                            key=len)
 
-    def __draw_message_left(self, message: list):
-        longest_line = max([len(l) for l in message])
-
-        message_x = self.cols // 2 - longest_line // 2
-
-        message_y = self.rows // 2 - len(message) // 2
+        left_align_x = self._centered_start_x(longest_line)
+        message_y = self._centered_start_y(display_lines)
         message_row = 0
-        for line in message:
-            wrapped_lines = self.__calculate_wrapping(line)
-            for wrapped in wrapped_lines:
-                add_str(self.window, message_y + message_row, message_x, wrapped)
-                message_row += 1
-
-    def __draw_message_center(self, message: list):
-        message_y = self.rows // 2 - len(message) // 2
-        message_row = 0
-        for line in message:
-            wrapped_lines = self.__calculate_wrapping(line)
-            for wrapped in wrapped_lines:
-                message_x = self.cols // 2 - len(wrapped) // 2
-                add_str(self.window, message_y + message_row, message_x, wrapped)
+        for message_line in display_lines:
+            for line in message_line:
+                add_str(self.window,
+                        message_y + message_row,
+                        left_align_x if self.align == Popup.ALIGN_LEFT
+                                     else self._centered_start_x(line),
+                        line)
                 message_row += 1
 
     def draw_title_bar(self):
-        title_x = self.cols // 2 - len(self.title) // 2
+        title_x = self._centered_start_x(self.title)
         add_str(self.window, 0, title_x, self.title)
 
         if self.can_click:
@@ -123,22 +122,10 @@ class Popup(Component):
             add_ch(self.window, 2, self.cols - 2, curses.ACS_HLINE)
             add_ch(self.window, 2, self.cols - 1, curses.ACS_RTEE)
 
-
     def draw_text(self):
         self.window.erase()
         self.window.border()
-
-        if isinstance(self.message, Iterable):
-            message = list(self.message)
-        else:
-            message = self.message()
-
-        # Draw lines of message
-        if self.align == Popup.ALIGN_CENTER:
-            self.__draw_message_center(message)
-        elif self.align == Popup.ALIGN_LEFT:
-            self.__draw_message_left(message)
-
+        self.__draw_message()
         self.draw_title_bar()
 
     _ENTER_STRING = "Press Enter"
@@ -186,6 +173,11 @@ class Popup(Component):
     def _text_right_x(self):
         return self.cols - 1 - Popup.PADDING
 
+    def _centered_start_x(self, line):
+        return self.cols // 2 - len(line) // 2
+
+    def _centered_start_y(self, line_list):
+        return self.rows // 2 - len(line_list) // 2
 
 class OptionsPopup(Popup):
     def __init__(self, height, width, title, message, options,
