@@ -296,11 +296,28 @@ class Window:
         curses.curs_set(0)
 
         # Enable reporting mouse event
-        mask = (curses.BUTTON1_CLICKED |
-                curses.BUTTON1_PRESSED |
-                curses.BUTTON1_RELEASED)
-        avail, _ = curses.mousemask(mask)
-        self.can_click = avail & curses.BUTTON1_CLICKED
+        # Curses keeps throwing errors if I don't enable reporting
+        #  all events (-1 is a mask of all 1 bits). This is a little
+        #  ugly, but better than the program crashing when you scroll
+        #  the mousewheel
+        #
+        # Also, curses always reports that mouse events are available,
+        #  even when they aren't, so the environment variable 'SSH_CONNECTION'
+        #  is used to see if clicks are available. In theory, the return
+        #  of mousemask should be used to see if clicks are available,
+        #  but again this does not work.
+        #
+        # The commented out version is the 'better' version that might
+        #  be able to work if tweaked or if the issue comes from elsewhere
+        #  and is fixed
+        self.can_click = 'SSH_CONNECTION' not in os.environ
+        if self.can_click:
+            curses.mousemask(-1)
+        #mask = (curses.BUTTON1_CLICKED |
+        #        curses.BUTTON1_PRESSED |
+        #        curses.BUTTON1_RELEASED)
+        #avail, _ = curses.mousemask(mask)
+        #self.can_click = avail & curses.BUTTON1_CLICKED
 
         self.__init_colors()
 
