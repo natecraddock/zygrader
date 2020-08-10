@@ -764,10 +764,13 @@ class FilteredList(Component):
         self.dirty = False
         return data
 
-    def __fill_text(self, lines):
+    def __display_lines(self):
+        return self.data[self.scroll:self.scroll+self.rows - 1]
+
+    def __fill_text(self):
         line_number = 0
 
-        draw_lines = lines[self.scroll:self.scroll+self.rows - 1]
+        draw_lines = self.__display_lines()
 
         for line in draw_lines:
             if (line_number + self.scroll) == self.selected_index:
@@ -858,7 +861,7 @@ class FilteredList(Component):
         if len(self.data) is 1:
             self.selected_index = 0
 
-        self.__fill_text(self.data)
+        self.__fill_text()
         self.window.noutrefresh()
 
         add_str(self.text_input, 0, 0, f"{self.prompt}: {self.filter_text}")
@@ -924,6 +927,20 @@ class FilteredList(Component):
 
     def flag_dirty(self):
         self.dirty = True
+
+    def clicked(self, y, x):
+        y -= self.y
+
+        display_lines = self.__display_lines()
+        if y < 0 or y >= len(display_lines):
+            return None
+        # The drawn lines have an indent of 2
+        x -= (self.x + 2)
+        if x < 0 or x >= len(display_lines[y].text):
+            return None
+        self.selected_index = y
+        self.set_scroll()
+        return self.selected()
 
 class TextInput(Popup):
     TEXT_NORMAL = 0

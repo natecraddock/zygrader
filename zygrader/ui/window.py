@@ -773,7 +773,9 @@ class Window:
             elif event.type == Event.CHAR_INPUT:
                 filtered_list.addchar(event.value)
             elif ((event.type == Event.ENTER) or
-                  (event.type == Event.RIGHT and self.left_right_menu_nav)):
+                  (event.type == Event.RIGHT and self.left_right_menu_nav) or
+                  (event.type == Event.MOUSE_CLICK and
+                      filtered_list.clicked(*event.value) is not None)):
                 if callback and filtered_list.selected() != UI_GO_BACK:
                     filtered_list.dirty = True
                     callback(WinContext(self, event, filtered_list, filtered_list.selected()))
