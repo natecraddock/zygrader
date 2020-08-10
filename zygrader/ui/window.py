@@ -681,6 +681,13 @@ class Window:
                     callback(WinContext(self, event, popup, popup.selected()))
                 else:
                     break
+            elif event.type == Event.MOUSE_CLICK:
+                clicked = popup.clicked(*event.value)
+                if clicked is UI_GO_BACK:
+                    break
+                elif clicked is not None and callback:
+                    callback(WinContext(self, event, popup, popup.selected()))
+
 
             self.draw()
 

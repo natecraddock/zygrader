@@ -1183,10 +1183,13 @@ class ListPopup(FilteredList, Popup):
         elif self.selected_index < self.scroll:
             self.scroll = self.selected_index
 
+    def __display_lines(self):
+        return self.data[self.scroll:self.scroll + self.rows - ListPopup.V_PADDING]
+
     def draw_list(self):
         line = 0
 
-        for l in self.data[self.scroll:self.scroll + self.rows - ListPopup.V_PADDING]:
+        for l in self.__display_lines():
             if (line + self.scroll) == self.selected_index:
                 display_text = f"> {str(l)}"
                 add_str(self.window, Popup.PADDING + line, Popup.PADDING, display_text, curses.A_DIM)
@@ -1213,3 +1216,21 @@ class ListPopup(FilteredList, Popup):
 
     def selected(self):
         return self.selected_index - 1
+
+    def clicked(self, y, x):
+        super_res = Popup.clicked(self, y, x)
+        if super_res:
+            return super_res
+        y, x = self._to_relative_coords(y, x)
+        y -= Popup.PADDING
+
+        display_lines = self.__display_lines()
+        if y < 0 or y >= len(display_lines):
+            return None
+        # The drawn lines have an indent of 2 beyond the padding
+        x -= (Popup.PADDING + 2)
+        if x < 0 or x >= len(display_lines[y]):
+            return None
+        self.selected_index = y
+        self.set_scroll()
+        return self.selected()
