@@ -561,6 +561,9 @@ class Window:
                         retval = clicked(WinContext(self, event, popup, None))
                         if retval:
                             break
+                    else:
+                        retval = clicked
+                        break
 
             self.draw()
 
