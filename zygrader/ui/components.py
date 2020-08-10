@@ -163,9 +163,9 @@ class Popup(Component):
         return y - self.y, x - self.x
 
     def clicked(self, y, x):
-        return UI_GO_BACK if self._is_on_close(y, x) else None
+        return UI_GO_BACK if self.__is_on_close(y, x) else None
 
-    def _is_on_close(self, y, x):
+    def __is_on_close(self, y, x):
         y, x = self._to_relative_coords(y, x)
         y_top = 0
         y_bottom = 2
@@ -300,8 +300,9 @@ class OptionsPopup(Popup):
         return self.options[idx]
 
     def clicked(self, y, x):
-        if self._is_on_close(y, x):
-            return UI_GO_BACK
+        super_res = super().clicked(y, x)
+        if super_res:
+            return super_res
         y, x = self._to_relative_coords(y, x)
         if y != self._text_bottom_y():
             return None
@@ -319,11 +320,8 @@ class OptionsPopup(Popup):
 
         return self.__item_at(options_idx)
 
-
-
 class DatetimeSpinner(Popup):
     NO_DATE = "datetime_no_date"
-
 
     __FIELDS = {
         'b': {'name': 'month',
@@ -515,8 +513,9 @@ class DatetimeSpinner(Popup):
     def clicked(self, y, x):
         """Return UI_GO_BACK for close, None for nothing clicked,
         otherwise the name of the field clicked"""
-        if self._is_on_close(y, x):
-            return UI_GO_BACK
+        super_res = super().clicked(y, x)
+        if super_res:
+            return super_res
         msg_pos = self._msg_pos_clicked(y, x)
         if not msg_pos or msg_pos[0] != 0:
             return None
@@ -532,7 +531,6 @@ class DatetimeSpinner(Popup):
                     return self.fields[format_piece]['name']
                 else:
                     return None
-
 
     def increment_field(self):
         field = self.fields[self.field_index]
@@ -628,7 +626,6 @@ class DatetimeSpinner(Popup):
                         delta = datetime.timedelta(hours=-12)
                     self.time = self.time + delta
                     self.next_field()
-
 
     def _set_field_numerically(self):
         """Attempts to set the current field to
@@ -927,7 +924,6 @@ class FilteredList(Component):
 
     def flag_dirty(self):
         self.dirty = True
-
 
 class TextInput(Popup):
     TEXT_NORMAL = 0
