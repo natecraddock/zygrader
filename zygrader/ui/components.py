@@ -171,7 +171,7 @@ class Popup(Component):
         y_bottom = 2
         x_right = self.cols - 1
         x_left = x_right - 2
-        return y >= y_top and y <= y_bottom and x > x_left and x < x_right
+        return y >= y_top and y <= y_bottom and x >= x_left and x <= x_right
 
     def _msg_pos_clicked(self, y, x):
         """Returns the position of the msg at (y, x)
