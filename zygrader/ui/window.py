@@ -570,7 +570,7 @@ class Window:
 
     def create_datetime_spinner(self, title, time=None,
                                 quickpicks=None, optional=False,
-                                include_date=True):
+                                include_date=True, time_format=None):
         """Create a popup with a datetime spinner to select a datetime.
         time is the initial time to present
         quickpicks is an optional list of (minute, second) pairs.
@@ -579,7 +579,7 @@ class Window:
 
         popup = components.DatetimeSpinner(self.rows, self.cols, title, time,
                                            quickpicks, optional, include_date,
-                                           self.can_click)
+                                           time_format, self.can_click)
 
         self.component_init(popup)
 
