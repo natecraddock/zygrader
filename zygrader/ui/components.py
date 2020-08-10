@@ -173,6 +173,61 @@ class Popup(Component):
         x_left = x_right - 2
         return y >= y_top and y <= y_bottom and x > x_left and x < x_right
 
+    def _msg_pos_clicked(self, y, x):
+        """Returns the position of the msg at (y, x)
+         as a tuple (index in self.message, char index in that line)
+         or None if the (y, x) is not in the message"""
+        y, x = self._to_relative_coords(y, x)
+
+        # First see if click is in bounds of drawn message
+        display_lines = self.__message_display_lines()
+        #  First in the y direction
+        message_y = self._centered_start_y(display_lines)
+        y -= message_y
+        if y < 0 or y >= len(display_lines):
+            return None
+        #  And then in the x direction
+        longest_line = max((displayline for displayline in display_lines),
+                            key=len)
+        leftest_x = self._centered_start_x(longest_line)
+        rightest_x = leftest_x + len(longest_line)
+        if x < leftest_x or x >= rightest_x:
+            return None
+
+        # If in bounds of the message, then find the exact position
+        message = self.__message_as_list()
+
+        # Find the line from message that y is on
+        msg_idx = -1
+        msg_display_y_bottom = -1
+        while True:
+            msg_idx += 1
+            wrapped_lines = self.__calculate_wrapping(message[msg_idx])
+            msg_display_y_top = msg_display_y_bottom + 1
+            msg_display_y_bottom += len(wrapped_lines)
+            #log(f"msg_display_y_bottom:{msg_display_y_bottom}, y:{y}")
+            if msg_display_y_bottom >= y:
+                break
+
+        # Find the wrapped display line that y is on
+        wrapped_idx = 0
+        msg_display_y = msg_display_y_top
+        orig_message_x = 0
+        while msg_display_y < y:
+            orig_message_x += len(wrapped_lines[wrapped_idx])
+            msg_display_y += 1
+            wrapped_idx += 1
+        wrapped_line = wrapped_lines[wrapped_idx]
+
+        # Find the index in message[msg_idx] that x is on
+        display_start_x = self._centered_start_x(wrapped_line)
+        x -= display_start_x
+        if x < 0 or x >= len(wrapped_line):
+            return None
+        char_index = orig_message_x + x
+
+        return (msg_idx, char_index)
+
     def _text_bottom_y(self):
         return self.rows - 2
 
@@ -407,6 +462,12 @@ class DatetimeSpinner(Popup):
         self.input_str_last_field_index = None
         self._reset_month_str_position()
 
+    def __display_str_from_format_piece(self, piece):
+        if isinstance(piece, int):
+            return self.fields[piece]['formatter'](self.time)
+        else:
+            return piece
+
     def __get_date_str(self):
         before_selected = []
         selected = None
@@ -415,16 +476,13 @@ class DatetimeSpinner(Popup):
         add_to = before_selected
 
         for format_piece in self.format_pieces:
-            if isinstance(format_piece, int):
-                formatter = self.fields[format_piece]['formatter']
-                disp_str = formatter(self.time)
-                if format_piece == self.field_index:
-                    selected = DisplayStr(f"[s:{disp_str}]")
-                    add_to = after_selected
-                else:
-                    add_to.append(disp_str)
+            disp_str = self.__display_str_from_format_piece(format_piece)
+            if (isinstance(format_piece, int)
+                    and format_piece == self.field_index):
+                selected = DisplayStr(f"[s:{disp_str}]")
+                add_to = after_selected
             else:
-                add_to.append(format_piece)
+                add_to.append(disp_str)
 
         return ''.join(before_selected) + selected + ''.join(after_selected)
 
@@ -455,29 +513,26 @@ class DatetimeSpinner(Popup):
         self.field_index = len(self.fields) - 1
 
     def clicked(self, y, x):
+        """Return UI_GO_BACK for close, None for nothing clicked,
+        otherwise the name of the field clicked"""
         if self._is_on_close(y, x):
             return UI_GO_BACK
-        y, x = self._to_relative_coords(y, x)
-        if y != self.__time_text_y():
+        msg_pos = self._msg_pos_clicked(y, x)
+        if not msg_pos or msg_pos[0] != 0:
             return None
-        x = x - self.__time_text_x()
 
-        for idx, field in enumerate(self.fields):
-            start, end = field['clickable']
-            start += field['x_offset']
-            end += field['x_offset']
-            if x < start:
-                return None
-            elif x <= end:
-                self.field_index = idx
-                return field['name']
-        return None
+        msg_x = msg_pos[1]
+        x_slide = 0
+        for format_piece in self.format_pieces:
+            disp_str = self.__display_str_from_format_piece(format_piece)
+            x_slide += len(disp_str)
+            if x_slide > msg_x:
+                if isinstance(format_piece, int):
+                    self.field_index = format_piece
+                    return self.fields[format_piece]['name']
+                else:
+                    return None
 
-    def __time_text_y(self):
-        return self.rows // 2
-
-    def __time_text_x(self):
-        return self.cols // 2 - len(self.__get_date_str()) // 2
 
     def increment_field(self):
         field = self.fields[self.field_index]
