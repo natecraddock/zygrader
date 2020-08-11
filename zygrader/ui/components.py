@@ -1110,6 +1110,15 @@ class TextInput(Popup):
         self.cursor_index = max(0, self.cursor_index - 1)
 
     @_cursor_mover
+    def up(self):
+        self.cursor_index = max(0, self.cursor_index - self.text_width)
+
+    @_cursor_mover
+    def down(self):
+        self.cursor_index = min(len(self.text),
+                                self.cursor_index + self.text_width)
+
+    @_cursor_mover
     def cursor_to_beginning(self):
         self.cursor_index = 0
 

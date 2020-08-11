@@ -721,10 +721,18 @@ class Window:
                 text_input.left()
             elif event.type == Event.RIGHT:
                 text_input.right()
+            elif event.type == Event.UP:
+                text_input.up()
+            elif event.type == Event.DOWN:
+                text_input.down()
             elif event.type == Event.SLEFT:
                 text_input.left(shift_pressed=True)
             elif event.type == Event.SRIGHT:
                 text_input.right(shift_pressed=True)
+            elif event.type == Event.SUP:
+                text_input.up(shift_pressed=True)
+            elif event.type == Event.SDOWN:
+                text_input.down(shift_pressed=True)
             elif event.type == Event.ESC: # Always allow exiting from text input with ESC
                 retval = Window.CANCEL
                 break
