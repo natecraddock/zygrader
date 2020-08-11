@@ -7,8 +7,6 @@ from .utils import add_str, add_ch, resize_window
 from zygrader.ui import UI_GO_BACK
 from .displaystring import DisplayStr
 
-from zygrader.logger import log
-
 class Component:
     def __init__(self):
         # This determines if a component blocks layers beneath it completely

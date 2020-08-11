@@ -8,8 +8,6 @@ from zygrader.config.preferences import is_preference_set
 from . import components
 from .utils import add_str, resize_window
 
-from zygrader.logger import log
-
 from . import UI_GO_BACK
 
 UI_LEFT = 0
