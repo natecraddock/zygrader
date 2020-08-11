@@ -323,6 +323,9 @@ class OptionsPopup(Popup):
 class DatetimeSpinner(Popup):
     NO_DATE = "datetime_no_date"
 
+    # All of the available fields are fixed-width and intuitively spinnable
+    # If other fields are wanted, they will likely require higher complexity
+    #  to implement safely
     __FIELDS = {
         'b': {'name': 'month',
                'unit': None,
@@ -422,6 +425,10 @@ class DatetimeSpinner(Popup):
     def __init_fields(self, time_format):
         self.fields = []
         self.field_index = 0
+        click_spinner_str = []
+
+        def centered_x(width):
+            return f"{'x' * (2 - width % 2):^{width}}"
 
         format_pieces = [[]]
 
@@ -432,9 +439,13 @@ class DatetimeSpinner(Popup):
                     if not format_pieces[-1]:
                         format_pieces[-1] = len(self.fields)
                     else:
+                        click_spinner_str.append(' ' * len(format_pieces[-1]))
                         format_pieces.append(len(self.fields))
                     format_pieces.append([])
-                    self.fields.append(DatetimeSpinner.__FIELDS[c])
+                    field = DatetimeSpinner.__FIELDS[c]
+                    self.fields.append(field)
+                    width = len(field['formatter'](self.time))
+                    click_spinner_str.append(centered_x(width))
                 else:
                     format_pieces[-1].append(c)
             elif c != '%':
@@ -442,18 +453,29 @@ class DatetimeSpinner(Popup):
             prevC = c
         if not format_pieces[-1]:
             del format_pieces[-1]
+        else:
+            click_spinner_str.append(' ' * len(format_pieces[-1]))
 
         self.format_pieces = [piece if isinstance(piece, int)
                                     else ''.join(piece)
                                         for piece in format_pieces]
 
         self.format_pieces += [" | ", len(self.fields)]
-        self.fields.append(DatetimeSpinner.__FIELDS['confirm'])
+        field = DatetimeSpinner.__FIELDS['confirm']
+        self.fields.append(field)
+        click_spinner_str.append(' ' * len(" | " + field['formatter'](None)))
 
         # If the date is optional (show 'No Date')
         if self.optional:
             self.format_pieces += [" | ", len(self.fields)]
-            self.fields.append(DatetimeSpinner.__FIELDS['no_date'])
+            field = DatetimeSpinner.__FIELDS['no_date']
+            self.fields.append(field)
+            click_spinner_str.append(' ' * len(" | " +
+                                               field['formatter'](None)))
+
+        x_str = ''.join(click_spinner_str)
+        self.up_click_spinner_str = x_str.replace('x', '▲')
+        self.down_click_spinner_str = x_str.replace('x', '▼')
 
     def __init_input_str(self):
         self.input_str = ''
@@ -486,7 +508,14 @@ class DatetimeSpinner(Popup):
 
     def draw(self):
         date_str = self.__get_date_str()
-        self.message = [date_str]
+        if self.can_click:
+            self.message = [
+                self.up_click_spinner_str,
+                date_str,
+                self.down_click_spinner_str
+            ]
+        else:
+            self.message = [date_str]
         super().draw_text()
         self.window.noutrefresh()
 
@@ -517,7 +546,7 @@ class DatetimeSpinner(Popup):
         if super_res:
             return super_res
         msg_pos = self._msg_pos_clicked(y, x)
-        if not msg_pos or msg_pos[0] != 0:
+        if not msg_pos:
             return None
 
         msg_x = msg_pos[1]
@@ -528,7 +557,14 @@ class DatetimeSpinner(Popup):
             if x_slide > msg_x:
                 if isinstance(format_piece, int):
                     self.field_index = format_piece
-                    return self.fields[format_piece]['name']
+                    if self.can_click and msg_pos[0] == 0:
+                        self.increment_field()
+                        return None
+                    elif self.can_click and msg_pos[0] == 2:
+                        self.decrement_field()
+                        return None
+                    else:
+                        return self.fields[format_piece]['name']
                 else:
                     return None
 
