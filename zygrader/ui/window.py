@@ -705,6 +705,7 @@ class Window:
             self.insert_mode = True
             self.draw()
 
+        retval = None
         while True:
             event = self.consume_event()
 
@@ -725,6 +726,7 @@ class Window:
             elif event.type == Event.SRIGHT:
                 text_input.right(shift_pressed=True)
             elif event.type == Event.ESC: # Always allow exiting from text input with ESC
+                retval = Window.CANCEL
                 break
             elif event.type == Event.HOME:
                 text_input.cursor_to_beginning()
@@ -734,15 +736,22 @@ class Window:
                 text_input.cursor_to_beginning(shift_pressed=True)
             elif event.type == Event.SEND:
                 text_input.cursor_to_end(shift_pressed=True)
+            elif event.type == Event.MOUSE_CLICK:
+                clicked = text_input.clicked(*event.value)
+                if clicked is UI_GO_BACK:
+                    retval = Window.CANCEL
+                    break
+            elif event.type == Event.MOUSE_PRESS:
+                text_input.mouse_pressed(*event.value)
+            elif event.type == Event.MOUSE_RELEASE:
+                text_input.mouse_released(*event.value)
 
             self.draw()
 
         self.component_deinit()
         text_input.close()
 
-        if event.type == Event.ESC:
-            return Window.CANCEL
-        return text_input.text
+        return retval if retval else text_input.text
 
     def create_filtered_list(self, prompt, input_data=None, callback=None,
                              list_fill=None, filter_function=None, create_fn=None):

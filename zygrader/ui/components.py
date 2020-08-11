@@ -968,10 +968,16 @@ class TextInput(Popup):
 
         # Create a text input
         self.text_input = curses.newwin(TextInput.TEXT_HEIGHT, self.text_width,
-                                        self.y + self.rows - TextInput.TEXT_HEIGHT - 1,
-                                        self.x + TextInput.PADDING)
+                                        self.__text_win_start_y(),
+                                        self.__text_win_start_x())
         self.text_input.bkgd(" ", curses.color_pair(1))
         curses.curs_set(1)
+
+    def __text_win_start_y(self):
+        return self.y + self.rows - TextInput.TEXT_HEIGHT - 1
+
+    def __text_win_start_x(self):
+        return self.x + TextInput.PADDING
 
     def resize(self, rows, cols):
         super().resize(rows, cols)
@@ -979,7 +985,8 @@ class TextInput(Popup):
         self.text_width = self.cols - (TextInput.PADDING * 2)
 
         try:
-            self.text_input.mvwin(self.rows - TextInput.TEXT_HEIGHT - 1, self.x + TextInput.PADDING)
+            self.text_input.mvwin(self.__text_win_start_y(),
+                                  self.__text_win_start_x())
         except:
             pass
         resize_window(self.text_input, TextInput.TEXT_HEIGHT, self.text_width)
@@ -1112,6 +1119,70 @@ class TextInput(Popup):
 
     def reset_marks(self):
         self.marks = []
+
+    def __to_text_coords(self, y, x):
+        # The input starts on the second line of the text window
+        return (y - (self.__text_win_start_y() + 1),
+                x - self.__text_win_start_x())
+
+    def __text_coord_max_y(self):
+        num_full_lines = len(self.text) // self.text_width
+        if len(self.text) % self.text_width == 0:
+            return num_full_lines - 1
+        else:
+            return num_full_lines
+
+    def __text_coord_last_line_max_x(self):
+        last_line_len = len(self.text) % self.text_width
+        if last_line_len == 0:
+            last_line_len = self.text_width
+        return last_line_len - 1
+
+    def __text_index_from_text_coords(self, y, x):
+        if x < 0 or x >= self.text_width:
+            return None
+        max_y = self.__text_coord_max_y()
+        if y < 0 or y > max_y:
+            return None
+        if y == max_y:
+            if x > self.__text_coord_last_line_max_x():
+                return None
+        return y * self.text_width + x
+
+    def __text_index_clicked(self, y, x):
+        y, x = self.__to_text_coords(y, x)
+        return self.__text_index_from_text_coords(y, x)
+
+    def clicked(self, y, x):
+        super_res = super().clicked(y, x)
+        if super_res:
+            return super_res
+        idx = self.__text_index_clicked(y, x)
+        self.reset_marks()
+        if idx is not None:
+            self.cursor_index = idx
+
+    def mouse_pressed(self, y, x):
+        idx = self.__text_index_clicked(y, x)
+        if idx is None:
+            self.reset_marks()
+        else:
+            self.marks = [idx, idx]
+
+    def mouse_released(self, y, x):
+        if not self.marks:
+            return
+        idx = self.__text_index_clicked(y, x)
+        if idx is None:
+            y, x = self.__to_text_coords(y, x)
+            max_y = self.__text_coord_max_y()
+            y = min(max(y, 0), max_y)
+            x = min(max(x, 0), self.text_width - 1)
+            if y == max_y:
+                x = min(x, self.__text_coord_last_line_max_x())
+            idx = self.__text_index_from_text_coords(y, x)
+        self.marks[1] = idx
+        self.cursor_index = idx
 
 class Logger(Component):
     PADDING = 2
