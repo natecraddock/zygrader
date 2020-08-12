@@ -59,7 +59,7 @@ class Popup(Component):
         max_cutoff = min(len(line), max_line_len)
 
         cutoff = max_cutoff
-        while cutoff > 0 and line[cutoff] not in WRAP_CHARS:
+        while cutoff > 0 and str(line[cutoff]) not in WRAP_CHARS:
             cutoff -= 1
 
         return max_cutoff if cutoff == 0 else cutoff
