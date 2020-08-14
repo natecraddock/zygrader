@@ -99,15 +99,18 @@ def view_string(string, file_name, use_html=False):
     else:
         subprocess.run(["less", "-r", f"{file_path}"], stderr=DEVNULL)
 
+def __format_file(_file) -> str:
+    return _file.decode('UTF-8').replace('\r\n', '\n').replace('\r', '\n')
+
 def extract_zip(input_zip, file_prefix=None):
     """Given a ZipFile object, return a dictionary of the files of the form
         {"filename": "contents...", ...}
     """
     if file_prefix:
-        return {f"{file_prefix}_{name}": input_zip.read(name).decode('UTF-8')
+        return {f"{file_prefix}_{name}": __format_file(input_zip.read(name))
                 for name in input_zip.namelist()}
     else:
-        return {f"{name}": input_zip.read(name).decode('UTF-8') for name in input_zip.namelist()}
+        return {f"{name}": __format_file(input_zip.read(name)) for name in input_zip.namelist()}
 
 def get_source_file_paths(directory):
     """Get the file path for each source file
