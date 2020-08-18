@@ -17,11 +17,12 @@ accesses a shared folder that can be stored at any location.
 ## Installation
 ```
 # Install
-$ python3 -m pip install https://github.com/natecraddock/zygrader/tarball/master
+$ wget -O - https://raw.githubusercontent.com/natecraddock/zygrader/master/install.py | python3
 
 # Run
 $ python3 -m zygrader
 
+# To run as `zygrader` rather than `python3 -m zygrader` you must add an alias.
 # Add alias to environment (works over SSH)
 $ echo "alias zygrader='python3 -m zygrader'" >> ~/.bash_profile
 
