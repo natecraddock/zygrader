@@ -41,7 +41,7 @@ zygrader --set-data-dir [path]
 
 Once it is set, it is stored in your user configuration.
 
-To create the shared data folder (always named `.zygrader_data`), run zygrader with:
+To create the shared data folder (always named `zygrader_data`), run zygrader with:
 
 ```
 zygrader --init-data-dir [path]
@@ -53,7 +53,7 @@ For example
 zygrader --init-data-dir /home/shared/programming/
 ```
 
-will create the directory `/home/shared/programming/.zygrader_data/`.
+will create the directory `/home/shared/programming/zygrader_data/`.
 
 # User Manual
 As zygrader is a terminal application, all controls are entered with the keyboard.

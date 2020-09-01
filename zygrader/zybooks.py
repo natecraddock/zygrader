@@ -305,7 +305,7 @@ class Zybooks:
         enough to zyBooks to include it in this file, rather than making a new file for just
         this feature.
 
-        The cache is stored in the .zygrader_data/SEMESTER_FOLDER/.cache/ directory
+        The cache is stored in the zygrader_data/SEMESTER_FOLDER/.cache/ directory
 
         Returns a ZipFile
         """

@@ -69,7 +69,7 @@ def handle_args(args):
             print(f"Error: the path {args.init_data_dir} does not exist.")
             sys.exit()
 
-        shared_data_dir = os.path.join(args.init_data_dir, '.zygrader_data')
+        shared_data_dir = os.path.join(args.init_data_dir, 'zygrader_data')
 
         print(f"Warning: You are about to create the following directory:")
         print(f"{shared_data_dir}")
