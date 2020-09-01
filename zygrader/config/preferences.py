@@ -25,6 +25,7 @@ DEFAULT_CONFIG = {
     "editor": "Pluma",
     "data_dir": "",
     "class_code": "",
+    "dark_mode": "",
 }
 
 CONFIG_PATH = os.path.join(os.path.expanduser("~"), ".config/zygrader")
