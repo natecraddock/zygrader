@@ -23,8 +23,16 @@ $ wget -O - https://raw.githubusercontent.com/natecraddock/zygrader/master/insta
 $ python3 -m zygrader
 
 # To run as `zygrader` rather than `python3 -m zygrader` you must add an alias.
-# Add alias to environment (works over SSH)
-$ echo "alias zygrader='python3 -m zygrader'" >> ~/.bash_profile
+# To add the alias every time you open a shell, use the following command
+$ echo "alias zygrader='python3 -m zygrader'" >> ~/.bashrc
+
+# If you want to use zygrader over ssh (or in other login shells), you need the alias to be created when your .bash_profile is read.
+# There are two ways to do this:
+  # The following command will make your .bash_profile source the .bashrc file
+  $ echo -e 'if [ -f ~/.bashrc ]; then\n\t. ~/.bashrc\nfi' >> ~/.bash_profile
+
+  # You can also put the same command as above into the .bash_profile using the following command
+  $ echo "alias zygrader='python3 -m zygrader'" >> ~/.bash_profile
 
 # Then you can run as
 $ zygrader
