@@ -23,8 +23,12 @@ $ wget -O - https://raw.githubusercontent.com/natecraddock/zygrader/master/insta
 $ python3 -m zygrader
 
 # To run as `zygrader` rather than `python3 -m zygrader` you must add an alias.
+
 # Add alias to environment (works over SSH)
 $ echo "alias zygrader='python3 -m zygrader'" >> ~/.bash_profile
+
+# Add an alias for working directly on a lab machine
+$ echo "alias zygrader='python3 -m zygrader'" >> ~/.bashrc
 
 # Then you can run as
 $ zygrader
