@@ -4,6 +4,7 @@ import getpass
 import os
 import signal
 import sys
+import time
 
 from zygrader import admin
 from zygrader import config
@@ -58,8 +59,9 @@ def parse_args():
 
 def handle_args(args):
     if args.set_data_dir:
-        if not preferences.set_data_directory(args.set_data_dir):
+        if preferences.set_data_directory(args.set_data_dir):
             print(f"Successfully set the shared data dir to {args.set_data_dir}")
+            time.sleep(1)
         else:
             print(f"Error: The path \"{args.set_data_dir}\" does not exist.")
             sys.exit()

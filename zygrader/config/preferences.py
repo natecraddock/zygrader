@@ -90,3 +90,4 @@ def set_data_directory(path):
     config = get_config()
     config["data_dir"] = path
     write_config(config)
+    return True
