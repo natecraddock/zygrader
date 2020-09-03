@@ -1,4 +1,8 @@
 """User: User preference window management"""
+import sys
+
+from typing import Type
+from zygrader.config.preferences import write_config
 from zygrader.config.shared import SharedData
 from zygrader import zybooks
 
@@ -101,6 +105,24 @@ def login(window: Window):
                     preferences.write_config(config)
                 break
 
+def logout():
+    """Log a user out by erasing their email and password from config"""
+    config = preferences.get_config()
+    if "email" in config:
+        config["email"] = ""
+    if "password" in config:
+        config["password"] = ""
+    write_config(config)
+
+    window = Window.get_window()
+    msg = ["You have been logged out. Would you like to sign in with different credentials?", "", "Answering `No` will quit zygrader."]
+    sign_in = window.create_bool_popup("Sign in?", msg)
+
+    if sign_in:
+        login(window)
+    else:
+        sys.exit()
+
 def draw_text_editors():
     """Draw the list of text editors"""
     options = []
@@ -187,13 +209,21 @@ def password_toggle(name):
         window.create_popup("Remember Password",
                             ["Next time you start zygrader your password will be saved."])
 
+# Preference types
+# Toggle for booleans
+# Menu for submenus
+# Action for 1 time actions
+PREFERENCE_TOGGLE = 1
+PREFERENCE_MENU = 2
+PREFERENCE_ACTION = 3
+
 class Preference:
     """Holds information for a user preference item"""
-    def __init__(self, name, description, select_fn, toggle=True):
+    def __init__(self, name, description, select_fn, _type=PREFERENCE_TOGGLE):
         self.name = name
         self.description = description
         self.select_fn = select_fn
-        self.toggle = toggle
+        self.type = _type
 
 PREFERENCES = [Preference("left_right_arrow_nav", "Left/Right Arrow Navigation", toggle_preference),
                Preference("use_esc_back", "Use Esc key to exit menus", toggle_preference),
@@ -203,15 +233,16 @@ PREFERENCES = [Preference("left_right_arrow_nav", "Left/Right Arrow Navigation",
                Preference("christmas_mode", "Christmas Theme", toggle_preference),
                Preference("browser_diff", "Open Diffs in Browser", toggle_preference),
                Preference("save_password", "Remember Password", password_toggle),
-               Preference("class_code", "Override Class Code", set_class_code_override_menu, False),
-               Preference("editor", "Set Editor", set_editor_menu, False),
+               Preference("class_code", "Override Class Code", set_class_code_override_menu, PREFERENCE_MENU),
+               Preference("editor", "Set Editor", set_editor_menu, PREFERENCE_MENU),
+               Preference("log_out", "Log Out", logout, PREFERENCE_ACTION),
                ]
 
 def draw_preferences():
     """Create the list of user preferences"""
     options = []
     for pref in PREFERENCES:
-        if not pref.toggle:
+        if pref.type in {PREFERENCE_MENU, PREFERENCE_ACTION}:
             options.append(f"    {pref.description}")
         else:
             if preferences.is_preference_set(pref.name):
@@ -225,9 +256,12 @@ def preferences_callback(context: WinContext):
     """Callback to run when a preference is selected"""
     selected_index = context.data
     pref = PREFERENCES[selected_index]
-    pref.select_fn(pref.name)
 
-    context.window.update_preferences()
+    if pref.type in {PREFERENCE_MENU, PREFERENCE_TOGGLE}:
+        pref.select_fn(pref.name)
+        context.window.update_preferences()
+    else:
+        pref.select_fn()
 
 def preferences_menu():
     """Create the preferences popup"""
