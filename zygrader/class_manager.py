@@ -332,8 +332,8 @@ def download_roster(silent=False):
     if not silent and not roster:
         window.create_popup("Failed", ["Failed to download student roster"])
         return
-
-    save_roster(roster)
+    if roster:
+        save_roster(roster)
     if not silent:
         window.create_popup("Finished", ["Successfully downloaded student roster"])
 
