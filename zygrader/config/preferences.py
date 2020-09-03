@@ -21,10 +21,10 @@ DEFAULT_CONFIG = {
     "email": "",
     "password": "",
     "clear_filter": "",
-    "left_right_arrow_nav":"left_right_arrow_nav",
+    "left_right_arrow_nav": "left_right_arrow_nav",
     "editor": "Pluma",
     "data_dir": "",
-    "class_code": "",
+    "class_code": "No Override",
     "dark_mode": "",
 }
 
