@@ -35,7 +35,7 @@ def install(config_dir):
     """Create the user's configuration directory"""
     # Create config directory
     if not os.path.exists(config_dir):
-        os.mkdir(config_dir)
+        os.makedirs(config_dir)
 
     # Create config file
     if not os.path.exists(os.path.join(config_dir, CONFIG_FILE)):

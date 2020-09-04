@@ -7,7 +7,7 @@ from . import preferences
 
 class SharedData:
     # Zygrader version
-    VERSION = LooseVersion("4.6.2")
+    VERSION = LooseVersion("4.6.3")
 
     # Current class code (shared)
     # Can be overridden on a user level
@@ -88,7 +88,7 @@ class SharedData:
         """Return path of config directory. Create directory if it does not exist"""
         _path = os.path.join(cls.CLASS_DIRECTORY, config_type)
         if not os.path.exists(_path):
-            os.mkdir(_path)
+            os.makedirs(_path)
         return _path
 
     @classmethod
@@ -131,7 +131,7 @@ class SharedData:
     def create_shared_data_directory(cls, data_path):
         """If no data directory exists, create it"""
         if not os.path.exists(data_path):
-            os.mkdir(data_path)
+            os.makedirs(data_path)
 
         # Ensure the config file exists in the directory
         cls.SHARED_CONFIG_PATH = os.path.join(data_path, "config")
@@ -178,7 +178,7 @@ class SharedData:
         cls.initialize_class_data(code)
 
         if not os.path.exists(cls.CLASS_DIRECTORY):
-            os.mkdir(cls.CLASS_DIRECTORY)
+            os.makedirs(cls.CLASS_DIRECTORY)
 
     @classmethod
     def set_current_class_code(cls, code):

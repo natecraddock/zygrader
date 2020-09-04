@@ -258,7 +258,7 @@ class Submission(Iterable):
 
             # Write file to subdirectory in temporary directory
             part_directory = os.path.join(tmp_dir, self.get_part_identifier(part))
-            os.mkdir(part_directory)
+            os.makedirs(part_directory)
             for file_name in files.keys():
                 with open(os.path.join(part_directory, file_name), "w") as source_file:
                     source_file.write(files[file_name])
