@@ -291,8 +291,7 @@ class Submission(Iterable):
 
         # Graphical editors
         else:
-            paths = " ".join(files)
-            subprocess.Popen(f"{editor_path} {paths}", shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            subprocess.run([editor_path] + files, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
     def do_resume_code(self, process):
         if process:
