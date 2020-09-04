@@ -1,5 +1,13 @@
 # Try to keep lines shorter than 70 characters
 
+4.6.0
+* Add a first-time installer script.
+* Default to dark theme.
+* Add a sign out feature.
+
+4.5.0
+* Merge in Display Strings branch
+
 4.4.0
 * Reformat the grader popup.
 * Wrap long lines of text on popups.
