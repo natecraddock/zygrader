@@ -190,16 +190,16 @@ class GradePuller:
 
     def add_assignment_to_report(self, canvas_assignment, zybook_sections,
                                  class_sections, due_times):
-        self.fetch_completion_reports(zybook_sections,
-                                      class_sections,
-                                      due_times)
+        zybooks_students = self.fetch_completion_reports(zybook_sections,
+                                                         class_sections,
+                                                         due_times)
 
         for student_id, student in self.canvas_students.items():
             class_section = self.parse_section_from_canvas_student(student)
             if class_section in class_sections:
                 grade = 0.0
-                if student_id in self.zybooks_students:
-                    grade = self.zybooks_students[student_id]['grade']
+                if student_id in zybooks_students:
+                    grade = zybooks_students[student_id]['grade']
                 student[canvas_assignment] = grade
             # else leave canvas grade as it was
 
@@ -260,7 +260,7 @@ class GradePuller:
                                                            wait_msg)
         num_completed = 0
 
-        self.zybooks_students = dict()
+        zybooks_students = dict()
         for class_section in class_sections:
             report, _ = self.fetch_completion_report(due_times[class_section],
                                                      zybook_sections)
@@ -269,17 +269,18 @@ class GradePuller:
             for id, row in report.items():
                 try:
                     if (int(row['Class section'])) == class_section:
-                        self.zybooks_students[id] = row
+                        zybooks_students[id] = row
                 except ValueError:
                     bad_section_count +=1
                     key = f'bad_zy_class_section_{bad_section_count}'
-                    self.zybooks_students[key] = row
+                    zybooks_students[key] = row
 
             num_completed += 1
             wait_msg[-1] = f"Completed {num_completed}/{len(class_sections)}"
             wait_controller.update()
 
         wait_controller.close()
+        return zybooks_students
 
     def write_upload_file(self):
         default_path_str  = "~/" + "&".join(self.selected_assignments) + ".csv"
