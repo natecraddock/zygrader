@@ -57,13 +57,18 @@ class GradePuller:
         path = SharedData.get_canvas_master()
         try:
             self.canvas_students = dict()
+            bad_id_count = 0
             with open(path, 'r', newline='') as canvas_master_file:
                 canvas_reader = csv.DictReader(canvas_master_file)
                 self.canvas_header = canvas_reader.fieldnames
                 self.canvas_points_out_of = canvas_reader.__next__()
                 for row in canvas_reader:
                     id_str = row['SIS User ID']
-                    row['id_number'] = int(id_str) if id_str else -1
+                    if id_str:
+                        row['id_number'] = int(id_str)
+                    else:
+                        bad_id_count += 1
+                        row['id_number'] = f"bad_canvas_id_{bad_id_count}"
                     self.canvas_students[row['id_number']] = row
         except FileNotFoundError:
             msg = [f"Could not find {path}",
@@ -223,13 +228,17 @@ class GradePuller:
                 total_field_name = field_name
                 break
 
+        bad_id_count = 0
         report = dict()
         for row in csv_reader:
+            string_id = row['Student ID']
             try:
                 row['id_number'] = int(''.join(
-                    [c for c in row['Student ID'] if c.isdigit()]))
+                    [c for c in string_id if c.isdigit()]))
             except ValueError:
-                row['id_number'] = 0
+                bad_id_count += 1
+                row['id_number'] = (string_id if string_id
+                                        else f"bad_zybooks_id_{bad_id_count}")
             row['grade'] = float(row[total_field_name])
             report[row['id_number']] = row
 
@@ -256,9 +265,15 @@ class GradePuller:
             report, _ = self.fetch_completion_report(due_times[class_section],
                                                      zybook_sections)
 
+            bad_section_count = 0
             for id, row in report.items():
-                if (int(row['Class section'])) == class_section:
-                    self.zybooks_students[id] = row
+                try:
+                    if (int(row['Class section'])) == class_section:
+                        self.zybooks_students[id] = row
+                except ValueError:
+                    bad_section_count +=1
+                    key = f'bad_zy_class_section_{bad_section_count}'
+                    self.zybooks_students[key] = row
 
             num_completed += 1
             wait_msg[-1] = f"Completed {num_completed}/{len(class_sections)}"
