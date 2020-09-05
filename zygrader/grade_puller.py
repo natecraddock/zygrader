@@ -102,7 +102,7 @@ class GradePuller:
         sections_list = [section.section_number
                              for section in data.get_class_sections()]
 
-        selected = [False] * len(sections_list)
+        selected = [True] * len(sections_list)
         def toggle_selected(index):
             selected[index] = not selected[index]
 
