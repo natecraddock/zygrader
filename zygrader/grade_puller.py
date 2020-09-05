@@ -49,7 +49,7 @@ class GradePuller:
                 more_assignments = self.window.create_bool_popup(
                     "More Assignments", msg)
 
-            self.write_upload_file(canvas_assignment)
+            self.write_upload_file()
         except GradePuller.StoppingException:
             self.window.create_popup("Grade Puller", ["Grade Puller stopped"])
 
@@ -281,7 +281,7 @@ class GradePuller:
 
         wait_controller.close()
 
-    def write_upload_file(self, selected_canvas_assignment):
+    def write_upload_file(self):
         default_path_str  = "~/" + "&".join(self.selected_assignments) + ".csv"
         default_path_str = default_path_str.replace(" ","")
         path = filename_input(purpose="the upload file", text=default_path_str)
