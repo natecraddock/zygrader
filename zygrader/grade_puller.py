@@ -254,21 +254,26 @@ class GradePuller:
 
     def fetch_completion_reports(self, zybook_sections,
                                  class_sections, due_times):
+        unique_due_times = set(time for time in due_times.values())
+        due_time_to_sections = {time: [] for time in unique_due_times}
+        for section_num, due_time in due_times.items():
+            due_time_to_sections[due_time].append(section_num)
+
         wait_msg = ["Fetching completion reports from zyBooks",
-                    f"Completed 0/{len(class_sections)}"]
+                    "(one per unique due time)",
+                    f"Completed 0/{len(unique_due_times)}"]
         wait_controller = self.window.create_waiting_popup("Fetch Reports",
                                                            wait_msg)
         num_completed = 0
 
         zybooks_students = dict()
-        for class_section in class_sections:
-            report, _ = self.fetch_completion_report(due_times[class_section],
-                                                     zybook_sections)
+        for due_time, class_section_list in due_time_to_sections.items():
+            report, _ = self.fetch_completion_report(due_time, zybook_sections)
 
             bad_section_count = 0
             for id, row in report.items():
                 try:
-                    if (int(row['Class section'])) == class_section:
+                    if (int(row['Class section'])) in class_section_list:
                         zybooks_students[id] = row
                 except ValueError:
                     bad_section_count +=1
@@ -276,7 +281,7 @@ class GradePuller:
                     zybooks_students[key] = row
 
             num_completed += 1
-            wait_msg[-1] = f"Completed {num_completed}/{len(class_sections)}"
+            wait_msg[-1] = f"Completed {num_completed}/{len(unique_due_times)}"
             wait_controller.update()
 
         wait_controller.close()
