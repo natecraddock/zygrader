@@ -191,7 +191,6 @@ class GradePuller:
     def add_assignment_to_report(self, canvas_assignment, zybook_sections,
                                  class_sections, due_times):
         zybooks_students = self.fetch_completion_reports(zybook_sections,
-                                                         class_sections,
                                                          due_times)
 
         for student_id, student in self.canvas_students.items():
@@ -252,8 +251,7 @@ class GradePuller:
 
         return self.parse_completion_report(csv_string)
 
-    def fetch_completion_reports(self, zybook_sections,
-                                 class_sections, due_times):
+    def fetch_completion_reports(self, zybook_sections, due_times):
         unique_due_times = set(time for time in due_times.values())
         due_time_to_sections = {time: [] for time in unique_due_times}
         for section_num, due_time in due_times.items():
