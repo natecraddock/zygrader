@@ -188,18 +188,73 @@ class GradePuller:
 
         return due_times
 
+    class StudentMapping:
+        def __init__(self, canvas_students, zybook_students):
+            self.canvas_students = canvas_students
+            self.zybook_students = zybook_students
+            self._create_mapping()
+
+        def _add_entry(self, canvas_id, zybook_id):
+            zybook_student = self.zybook_students[zybook_id]
+            self.mapping[canvas_id] = zybook_student
+            self.unmatched_canvas_ids.remove(canvas_id)
+            self.unmatched_zybook_ids.remove(zybook_id)
+
+        def _create_mapping(self):
+            self.mapping = dict()
+            self.unmatched_canvas_ids = set(self.canvas_students.keys())
+            self.unmatched_zybook_ids = set(self.zybook_students.keys())
+            for student_id, canvas_student in self.canvas_students.items():
+                # try matching by id#
+                if student_id in self.zybook_students:
+                    self._add_entry(student_id, student_id)
+                    continue
+
+                # try matching by netid
+                netid = canvas_student['SIS Login ID']
+                if netid in self.zybook_students:
+                    self._add_entry(student_id, netid)
+                    continue
+
+            for bad_zybook_id in self.unmatched_zybook_ids.copy():
+                # try to detect if student included issue# in id#
+                zybook_student = self.zybook_students[bad_zybook_id]
+                id_str = zybook_student['Student ID']
+                id_chrs = [c for c in id_str if c.isdigit()]
+                # the issue number is usually the last two digits
+                #  when students try to include it
+                real_id_chrs = id_chrs[:-2]
+                real_id = None
+                try:
+                    real_id = int(''.join(real_id_chrs))
+                except ValueError:
+                    continue # the student has something very wrong
+                if real_id in self.unmatched_canvas_ids:
+                    self._add_entry(real_id, bad_zybook_id)
+                    continue
+
+
     def add_assignment_to_report(self, canvas_assignment, zybook_sections,
                                  class_sections, due_times):
         zybooks_students = self.fetch_completion_reports(zybook_sections,
                                                          due_times)
+        mapping = GradePuller.StudentMapping(self.canvas_students,
+                                             zybooks_students)
 
-        for student_id, student in self.canvas_students.items():
-            class_section = self.parse_section_from_canvas_student(student)
+        for canvas_student_id, zybook_student in mapping.mapping.items():
+            canvas_student = self.canvas_students[canvas_student_id]
+            class_section = self.parse_section_from_canvas_student(
+                                                                canvas_student)
             if class_section in class_sections:
-                grade = 0.0
-                if student_id in zybooks_students:
-                    grade = zybooks_students[student_id]['grade']
-                student[canvas_assignment] = grade
+                grade = zybook_student['grade']
+                canvas_student[canvas_assignment] = grade
+            # else leave canvas grade as it was
+        for canvas_student_id in mapping.unmatched_canvas_ids:
+            canvas_student = self.canvas_students[canvas_student_id]
+            class_section = self.parse_section_from_canvas_student(
+                                                                canvas_student)
+            if class_section in class_sections:
+                canvas_student[canvas_assignment] = 0.0
             # else leave canvas grade as it was
 
         self.selected_assignments.append(canvas_assignment)
@@ -231,12 +286,16 @@ class GradePuller:
         report = dict()
         for row in csv_reader:
             string_id = row['Student ID']
-            try:
-                row['id_number'] = int(''.join(
-                    [c for c in string_id if c.isdigit()]))
-            except ValueError:
-                bad_id_count += 1
-                row['id_number'] = (string_id if string_id
+            num_alpha = len([c for c in string_id if c.isalpha()])
+            if num_alpha > 0:
+                row['id_number'] = string_id
+            else:
+                try:
+                    row['id_number'] = int(''.join(
+                        [c for c in string_id if c.isdigit()]))
+                except ValueError:
+                    bad_id_count += 1
+                    row['id_number'] = (string_id if string_id
                                         else f"bad_zybooks_id_{bad_id_count}")
             row['grade'] = float(row[total_field_name])
             report[row['id_number']] = row
@@ -314,16 +373,13 @@ class GradePuller:
                 create_last_night(), [zybook_section_1_1])
             wait_controller.close()
 
-            zybooks_student_ids = zybooks_students.keys()
-            canvas_student_ids = self.canvas_students.keys()
-
-            unmatched_canvas_ids = canvas_student_ids - zybooks_student_ids
-            unmatched_zybooks_ids = zybooks_student_ids - canvas_student_ids
+            mapping = GradePuller.StudentMapping(self.canvas_students,
+                                                 zybooks_students)
 
             unmatched_canvas_students = [self.canvas_students[id]
-                                            for id in unmatched_canvas_ids]
+                                        for id in mapping.unmatched_canvas_ids]
             unmatched_zybook_students = [zybooks_students[id]
-                                            for id in unmatched_zybooks_ids]
+                                        for id in mapping.unmatched_zybook_ids]
 
             num_id_columns = GradePuller.NUM_CANVAS_ID_COLUMNS
             canvas_report_headers = self.canvas_header[:num_id_columns]
