@@ -288,7 +288,8 @@ class GradePuller:
             string_id = row['Student ID']
             num_alpha = len([c for c in string_id if c.isalpha()])
             if num_alpha > 0:
-                row['id_number'] = string_id
+                # netids are case-insensitive
+                row['id_number'] = string_id.lower()
             else:
                 try:
                     row['id_number'] = int(''.join(
