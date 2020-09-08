@@ -286,20 +286,24 @@ class GradePuller:
         report = dict()
         for row in csv_reader:
             string_id = row['Student ID']
+            real_id = None
             num_alpha = len([c for c in string_id if c.isalpha()])
             if num_alpha > 0:
                 # netids are case-insensitive
-                row['id_number'] = string_id.lower()
+                real_id = string_id.lower()
             else:
                 try:
-                    row['id_number'] = int(''.join(
+                    real_id = int(''.join(
                         [c for c in string_id if c.isdigit()]))
                 except ValueError:
                     bad_id_count += 1
-                    row['id_number'] = (string_id if string_id
+                    real_id = (string_id if string_id
                                         else f"bad_zybooks_id_{bad_id_count}")
+            if real_id in report:
+                real_id = str(real_id) + "(02)"
+            row['id_number'] = real_id
             row['grade'] = float(row[total_field_name])
-            report[row['id_number']] = row
+            report[real_id] = row
 
         return report, header
 
