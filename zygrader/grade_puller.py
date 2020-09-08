@@ -200,6 +200,21 @@ class GradePuller:
             self.unmatched_canvas_ids.remove(canvas_id)
             self.unmatched_zybook_ids.remove(zybook_id)
 
+        def edit_distance(self, seq1, seq2):
+            table = [[0] * (len(seq1) + 1) for _ in range(len(seq2) + 1)]
+            for i in range(len(seq1) + 1):
+                table[0][i] = i
+            for j in range(len(seq2) + 1):
+                table[j][0] = j
+            for i in range(1, len(seq2) + 1):
+                for j in range(1, len(seq1) + 1):
+                    left_score = table[i][j-1] + 1
+                    up_score = table[i-1][j] + 1
+                    diag_score = table[i-1][j-1] + (0 if seq2[i-1] == seq1[j-1]
+                                                        else 1)
+                    table[i][j] = min(left_score, up_score, diag_score)
+            return table[-1][-1]
+
         def _create_mapping(self):
             self.mapping = dict()
             self.unmatched_canvas_ids = set(self.canvas_students.keys())
@@ -233,6 +248,30 @@ class GradePuller:
                     self._add_entry(real_id, bad_zybook_id)
                     continue
 
+            # now try fuzzy matching id numbers
+            EDIT_DISTANCE_CUTOFF = 4
+            consider_pairs = dict()
+            for canvas_id in self.unmatched_canvas_ids:
+                for zybook_id in self.unmatched_zybook_ids:
+                    canvas_student = self.canvas_students[canvas_id]
+                    canvas_str_id = canvas_student['SIS User ID']
+                    zybook_student = self.zybook_students[zybook_id]
+                    zybook_str_id = zybook_student['Student ID']
+                    if not [c for c in zybook_str_id if c.isalpha()]:
+                        zybook_id_digits = [c for c in zybook_str_id
+                                                if c.isdigit()]
+                        edit_distance = self.edit_distance(zybook_id_digits,
+                                                        canvas_str_id)
+                        if edit_distance < EDIT_DISTANCE_CUTOFF:
+                            if canvas_id in consider_pairs:
+                                consider_pairs[canvas_id].append(zybook_id)
+                            else:
+                                consider_pairs[canvas_id] = [zybook_id]
+            for canvas_id, zybook_id_list in consider_pairs.items():
+                # don't fuzzy match ids if they're too close
+                #  to multiple students
+                if len(zybook_id_list) == 1:
+                    self._add_entry(canvas_id, zybook_id_list[0])
 
     def add_assignment_to_report(self, canvas_assignment, zybook_sections,
                                  class_sections, due_times):
