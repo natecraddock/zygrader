@@ -428,23 +428,23 @@ class GradePuller:
             num_id_columns = GradePuller.NUM_CANVAS_ID_COLUMNS
             canvas_report_headers = self.canvas_header[:num_id_columns]
             self.report_list(unmatched_canvas_students, canvas_report_headers,
-                             "unmatched canvas students")
+                             "unmatched canvas students", "~/unmatched_canvas.csv")
 
             num_id_columns = GradePuller.NUM_ZYBOOKS_ID_COLUMNS
             zybooks_report_headers = zybooks_header[:num_id_columns]
             self.report_list(unmatched_zybook_students, zybooks_report_headers,
-                             "unmatched zybooks students")
+                             "unmatched zybooks students", "~/unmatched_zybooks.csv")
 
         except GradePuller.StoppingException:
             msg = ["Finding Bad Zybooks Student ID#s stopped"]
             self.window.create_popup("Grade Puller", msg)
 
-    def report_list(self, data, headers, name):
+    def report_list(self, data, headers, name, default_path=""):
         if not data:
             self.window.create_popup("No Data", [f"There are no {name}"])
             return
 
-        path = filename_input(purpose=f"the {name}")
+        path = filename_input(purpose=f"the {name}", text=default_path)
         if path is None:
             raise GradePuller.StoppingException()
 
