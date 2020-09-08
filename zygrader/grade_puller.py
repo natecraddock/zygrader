@@ -338,7 +338,7 @@ class GradePuller:
                     bad_id_count += 1
                     real_id = (string_id if string_id
                                         else f"bad_zybooks_id_{bad_id_count}")
-            if real_id in report:
+            while real_id in report:
                 real_id = str(real_id) + "(02)"
             row['id_number'] = real_id
             row['grade'] = float(row[total_field_name])
