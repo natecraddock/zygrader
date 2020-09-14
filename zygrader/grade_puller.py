@@ -35,7 +35,11 @@ class GradePuller:
 
             more_assignments = True
             while more_assignments:
-                canvas_assignment = self.select_canvas_assignment()
+                try:
+                    canvas_assignment = self.select_canvas_assignment()
+                except GradePuller.StoppingException:
+                    # Canceling the operation, but not the grade-pulling operation
+                    break
                 zybook_sections = self.select_zybook_sections()
                 class_sections = self.select_class_sections()
                 due_times = self.select_due_times(class_sections)
