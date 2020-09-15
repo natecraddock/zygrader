@@ -40,7 +40,7 @@ class GradePuller:
                 except GradePuller.StoppingException:
                     # Canceling the operation, but not the grade-pulling operation
                     break
-                zybook_sections = self.select_zybook_sections()
+                zybook_sections = self.select_zybook_sections(canvas_assignment)
                 class_sections = self.select_class_sections()
                 due_times = self.select_due_times(class_sections)
 
@@ -95,9 +95,9 @@ class GradePuller:
             raise GradePuller.StoppingException()
         return real_assignments[index]
 
-    def select_zybook_sections(self):
+    def select_zybook_sections(self, text):
         selector = ZybookSectionSelector()
-        res = selector.select_zybook_sections()
+        res = selector.select_zybook_sections(title_extra=text)
         if not res:
             raise GradePuller.StoppingException()
         return res

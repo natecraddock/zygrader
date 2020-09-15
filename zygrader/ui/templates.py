@@ -52,7 +52,7 @@ class ZybookSectionSelector:
         else: #is a chapter
             chapters_expanded[item] = not chapters_expanded[item]
 
-    def select_zybook_sections(self, return_just_numbers=False):
+    def select_zybook_sections(self, return_just_numbers=False, title_extra=""):
         self.zybooks_toc = self.zy_api.get_table_of_contents()
         if not self.zybooks_toc:
             return None
@@ -63,7 +63,9 @@ class ZybookSectionSelector:
         draw_sections = lambda: self.draw_zybook_sections(chapters_expanded, selected_sections)
         draw_sections()
         section_callback = lambda context: self.select_zybook_sections_callback(chapters_expanded, selected_sections, context.data)
-        self.window.create_list_popup("Select zyBook Sections (use Back to finish)", callback=section_callback, list_fill=draw_sections)
+
+        title = "Select zyBook Sections (use Back to finish)" if not title_extra else f"{title_extra} - Select Sections"
+        self.window.create_list_popup(title, callback=section_callback, list_fill=draw_sections)
         res = []
         for section_numbers, selected in selected_sections.items():
             if selected:
