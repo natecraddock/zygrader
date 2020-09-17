@@ -18,7 +18,7 @@ def get_lock_log_path():
     """Return path to lock log file"""
     return os.path.join(SharedData.get_logs_directory(), "locks_log.csv")
 
-def log(name, lab, lock="LOCK"):
+def log(name, lab, event_type, lock="LOCK"):
     """Logging utility for lock files
 
     This logs when each lab is locked and unlocked,
@@ -30,11 +30,11 @@ def log(name, lab, lock="LOCK"):
     # Get timestamp
     timestamp = datetime.datetime.now().isoformat()
 
-    line = f"{timestamp},{name},{lab},{getpass.getuser()},{lock}\n"
+    line = f"{timestamp},{event_type},{name},{lab},{getpass.getuser()},{lock}\n"
     with open(lock_log, 'a') as _log:
         _log.write(line)
 
-    logger.log(f"{name},{lab},{lock}")
+    logger.log(f"{name},{lab},{lock},{event_type}")
 
 def get_lock_file_path(student: Student, lab: Lab=None):
     """Return path for lock file"""
@@ -91,7 +91,10 @@ def lock(student: Student, lab: Lab=None):
 
     open(lock, 'w').close()
 
-    # log(student.full_name, lab.name)
+    if lab:
+        log(student.full_name, lab.name, "LAB")
+    else:
+        log(student.full_name, "N/A", "EMAIL")
 
 def unlock(student: Student, lab: Lab=None):
     """Unlock the submission for the given student and lab"""
@@ -100,8 +103,10 @@ def unlock(student: Student, lab: Lab=None):
     # Only remove the lock if it exists
     if os.path.exists(lock):
         os.remove(lock)
-
-    # log(student.full_name, lab.name, "UNLOCK")
+    if lab:
+        log(student.full_name, lab.name, "LAB", "UNLOCK")
+    else:
+        log(student.full_name, "N/A", "EMAIL", "UNLOCK")
 
 def unlock_all_labs_by_grader(username: str):
     """Remove all lock files for a given grader"""
