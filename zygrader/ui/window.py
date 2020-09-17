@@ -452,6 +452,8 @@ class Window:
             if event.type == Event.ENTER:
                 break
 
+            self.draw()
+
         self.component_deinit()
 
     def create_waiting_popup(self, title, message, align=components.Popup.ALIGN_CENTER):
