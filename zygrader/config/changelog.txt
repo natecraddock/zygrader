@@ -1,5 +1,9 @@
 # Try to keep lines shorter than 70 characters
 
+4.7.1
+* Add email manager to lock student's emails.
+* Reduce CPU usage.
+
 4.6.0
 * Add a first-time installer script.
 * Default to dark theme.
