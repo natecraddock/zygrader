@@ -14,7 +14,7 @@ from zygrader.zybooks import Zybooks
 
 def color_student_lines(lab, student):
     """Color the student names in the grader based on locked, flagged, or normal status"""
-    if data.lock.is_lab_locked(student, lab) and not isinstance(student, str):
+    if data.lock.is_locked(student, lab) and not isinstance(student, str):
         return curses.color_pair(2)
     if data.flags.is_submission_flagged(student, lab) and not isinstance(student, str):
         return curses.color_pair(7)
@@ -51,7 +51,7 @@ def get_submission(lab, student, use_locks=True):
 
     # Lock student
     if use_locks:
-        data.lock.lock_lab(student, lab)
+        data.lock.lock(student, lab)
 
     submission_response = zy_api.download_assignment(student, lab)
     submission = data.model.Submission(student, lab, submission_response)
@@ -152,7 +152,7 @@ def can_get_through_locks(use_locks, student, lab):
 
     window = Window.get_window()
 
-    if data.lock.is_lab_locked(student, lab):
+    if data.lock.is_locked(student, lab):
         netid = data.lock.get_locked_netid(student, lab)
 
         # If being graded by the user who locked it, allow grading
@@ -222,7 +222,7 @@ def grade_pair_programming(student_list, first_submission, use_locks):
 
     finally:
         if use_locks:
-            data.lock.unlock_lab(student, lab)
+            data.lock.unlock(student, lab)
 
 def flag_submission(lab, student):
     """Flag a submission with a note"""
@@ -281,7 +281,7 @@ def student_callback(context: WinContext, lab, use_locks=True):
     finally:
         # Always unlock the lab when no longer grading
         if use_locks:
-            data.lock.unlock_lab(student, lab)
+            data.lock.unlock(student, lab)
 
 def watch_students(window: Window, student_list: components.FilteredList):
     """Register paths when the filtered list is created"""

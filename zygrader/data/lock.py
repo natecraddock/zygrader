@@ -36,18 +36,23 @@ def log(name, lab, lock="LOCK"):
 
     logger.log(f"{name},{lab},{lock}")
 
-def get_lock_file_path(student: Student, lab: Lab):
+def get_lock_file_path(student: Student, lab: Lab=None):
     """Return path for lock file"""
     username = getpass.getuser()
 
-    # Get the lab and student names without spaces and with ID numbers
-    lab_name = lab.get_unique_name()
-    student_name = student.get_unique_name()
+    # We can safely store both lab+student and lab locks in the
+    # Same directory
+    if lab:
+        lab_name = lab.get_unique_name()
+        student_name = student.get_unique_name()
+        lock_path = f"{username}.{lab_name}.{student_name}.lock"
+    else:
+        student_name = student.get_unique_name()
+        lock_path = f"{username}.{student_name}.lock"
 
-    lock_path = f"{username}.{lab_name}.{student_name}.lock"
     return os.path.join(SharedData.get_locks_directory(), lock_path)
 
-def is_lab_locked(student: Student, lab: Lab):
+def is_locked(student: Student, lab: Lab=None):
     """Check if a submission is locked for a given student and lab"""
     # Try to match this against all the lock files in the directory
     lock_path = os.path.basename(get_lock_file_path(student, lab))
@@ -62,7 +67,7 @@ def is_lab_locked(student: Student, lab: Lab):
 
     return False
 
-def get_locked_netid(student: Student, lab: Lab):
+def get_locked_netid(student: Student, lab: Lab=None):
     """Return netid of locked submission"""
     # Try to match this against all the lock files in the directory
     lock_path = os.path.basename(get_lock_file_path(student, lab))
@@ -74,8 +79,8 @@ def get_locked_netid(student: Student, lab: Lab):
 
     return ""
 
-def lock_lab(student: Student, lab: Lab):
-    """Lock the submission for the given student and lab
+def lock(student: Student, lab: Lab=None):
+    """Lock the submission for the given student (and lab if given)
 
     Locking is done by creating a file with of the following format:
         username.lab.student.lock
@@ -86,9 +91,9 @@ def lock_lab(student: Student, lab: Lab):
 
     open(lock, 'w').close()
 
-    log(student.full_name, lab.name)
+    # log(student.full_name, lab.name)
 
-def unlock_lab(student: Student, lab: Lab):
+def unlock(student: Student, lab: Lab=None):
     """Unlock the submission for the given student and lab"""
     lock = get_lock_file_path(student, lab)
 
@@ -96,7 +101,7 @@ def unlock_lab(student: Student, lab: Lab):
     if os.path.exists(lock):
         os.remove(lock)
 
-    log(student.full_name, lab.name, "UNLOCK")
+    # log(student.full_name, lab.name, "UNLOCK")
 
 def unlock_all_labs_by_grader(username: str):
     """Remove all lock files for a given grader"""
