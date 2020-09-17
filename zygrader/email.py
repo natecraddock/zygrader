@@ -18,7 +18,8 @@ def lock_student_callback(context: WinContext):
         return
     try:
         data.lock.lock(student)
-        window.create_popup("Student Locked", ["You are emailing?"])
+        msg = [f"You have locked {student.full_name} for emailing."]
+        window.create_popup("Student Locked", msg)
     finally:
         data.lock.unlock(student)
 
@@ -35,7 +36,7 @@ def fill_student_list(students):
     return lines
 
 def update_student_list(window: Window, student_list: components.FilteredList):
-    """Update the list of students when the locks or flags change"""
+    """Update the list of students when the locks change"""
     student_list.refresh()
     window.push_refresh_event()
 
