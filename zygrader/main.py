@@ -93,7 +93,7 @@ def handle_args(args):
         print(f"zygrader --set-data-dir {shared_data_dir}")
         sys.exit()
 
-MAIN_MENU_OPTIONS = ["Grade", "Prep Lab Score Calculator", "Run For Fun", "Email",
+MAIN_MENU_OPTIONS = ["Grade", "Emails", "Prep Lab Score Calculator", "Run For Fun",
                      "View Students", "Preferences", "Changelog"]
 
 def mainloop_callback(context: WinContext):
@@ -106,7 +106,7 @@ def mainloop_callback(context: WinContext):
         grader.grade(use_locks=False)
     elif option == "Preferences":
         user.preferences_menu()
-    elif option == "Email":
+    elif option == "Emails":
         email.email_menu();
     elif option == "Prep Lab Score Calculator":
         logger.log("prep lab score calculator tool accessed")

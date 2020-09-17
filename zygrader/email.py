@@ -52,6 +52,8 @@ def email_menu():
     window = Window.get_window()
     students = data.get_students()
 
+    window.set_header("Email Manager")
+
     window.create_filtered_list("Student Name", list_fill=lambda: fill_student_list(students),
                                 callback=lock_student_callback, filter_function=data.Student.find,
                                 create_fn=lambda student_list: watch_students(window, student_list))
