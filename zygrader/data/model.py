@@ -295,7 +295,7 @@ class Submission(Iterable):
 
     def do_resume_code(self, process):
         if process:
-            window = ui.window.Window.get_window()
+            window = ui.get_window()
             window.take_input.clear()
             curses.endwin()
             SharedData.RUNNING_CODE = True
@@ -306,7 +306,7 @@ class Submission(Iterable):
         return False
 
     def compile_and_run_code(self, use_gdb):
-        window = ui.window.Window.get_window()
+        window = ui.get_window()
         if self.do_resume_code(SharedData.running_process):
             stopped = self.wait_on_child(SharedData.running_process)
         else:
@@ -338,7 +338,7 @@ class Submission(Iterable):
         return True
 
     def pick_part(self, title="Choose a part"):
-        window = ui.window.Window.get_window()
+        window = ui.get_window()
         part_names = [self.get_part_identifier(x) for x in self.lab.parts]
 
         picked = window.create_list_popup(title, part_names)
@@ -382,7 +382,7 @@ class Submission(Iterable):
         return False
 
     def run_code(self, executable, use_gdb):
-        window = ui.window.Window.get_window()
+        window = ui.get_window()
         window.clear_event_queue()
         window.take_input.clear()
         curses.endwin()

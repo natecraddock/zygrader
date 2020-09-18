@@ -36,7 +36,7 @@ WATCH_DELAY = 1
 
 def fs_watch():
     """Watch loop"""
-    window = ui.window.Window.get_window()
+    window = ui.get_window()
 
     while True:
         window.take_input.wait()

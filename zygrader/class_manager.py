@@ -8,6 +8,7 @@ from zygrader.ui.templates import ZybookSectionSelector
 from zygrader.ui import UI_GO_BACK
 from zygrader.zybooks import Zybooks
 from zygrader import data
+from zygrader import ui
 from zygrader.config.shared import SharedData
 
 def save_roster(roster):
@@ -37,7 +38,7 @@ def save_roster(roster):
 
 def setup_new_class():
     """Setup a new class based on a zyBooks class code"""
-    window = Window.get_window()
+    window = ui.get_window()
     zy_api = Zybooks()
 
     code = window.create_text_input("Class Code", "Enter class code")
@@ -65,7 +66,7 @@ def setup_new_class():
 
 def add_lab():
     """Add a lab to the current class"""
-    window = Window.get_window()
+    window = ui.get_window()
     zy_api = Zybooks()
 
     lab_name = window.create_text_input("Lab Name", "Enter the Lab Name")
@@ -103,7 +104,7 @@ def set_due_date(lab):
     in-grader submission picker allows to pick submissions after the cutoff date
     if needed
     """
-    window = Window.get_window()
+    window = ui.get_window()
 
     labs = data.get_labs()
 
@@ -137,7 +138,7 @@ def toggle_lab_option(lab, option):
 
 def rename_lab(filtered_list, lab):
     """Rename a lab"""
-    window = Window.get_window()
+    window = ui.get_window()
 
     labs = data.get_labs()
 
@@ -184,7 +185,7 @@ def edit_lab_options_callback(lab, selected_index):
 
 def edit_lab_options(lab):
     """Create a popup listing the options in EDIT_OPTIONS"""
-    window = Window.get_window()
+    window = ui.get_window()
 
     draw = lambda: edit_lab_options_draw(lab)
     callback = lambda context: edit_lab_options_callback(lab, context.data)
@@ -221,7 +222,7 @@ def remove_fn(filtered_list, window, lab) -> bool:
 
 def edit_labs_callback(lab, filtered_list):
     """Create a popup for basic lab editing options"""
-    window = Window.get_window()
+    window = ui.get_window()
 
     options = {
         "Remove": lambda _: remove_fn(filtered_list, window, lab),
@@ -241,13 +242,13 @@ def draw_lab_list() -> list:
 
 def edit_labs():
     """Creates a list of labs to edit"""
-    window = Window.get_window()
+    window = ui.get_window()
 
     edit_fn = lambda context: edit_labs_callback(data.get_labs()[context.data], context.component)
     window.create_filtered_list("Lab", list_fill=draw_lab_list, callback=edit_fn)
 
 def get_class_section(old_section: data.model.ClassSection=None):
-    window = Window.get_window()
+    window = ui.get_window()
 
     init_text = ""
     if old_section:
@@ -306,7 +307,7 @@ def draw_class_section_list() -> list:
 
 def edit_class_sections():
     """Create list of class sections to edit"""
-    window = Window.get_window()
+    window = ui.get_window()
 
     window.create_filtered_list("Class Section",
                                 list_fill=draw_class_section_list,
@@ -317,14 +318,14 @@ def sort_class_sections():
     class_sections = sorted(class_sections, key=lambda sec: sec.section_number)
     data.write_class_sections(class_sections)
 
-    window = Window.get_window()
+    window = ui.get_window()
 
     msg = ["The Class Sections are now sorted by section number"]
     window.create_popup("Finished", msg)
 
 def download_roster(silent=False):
     """Download the roster of students from zybooks and save to disk"""
-    window = Window.get_window()
+    window = ui.get_window()
     zy_api = Zybooks()
 
     roster = zy_api.get_roster()
@@ -342,7 +343,7 @@ def change_class():
 
     This applies globally to all users of zygrader.
     """
-    window = Window.get_window()
+    window = ui.get_window()
     class_codes = SharedData.get_class_codes()
 
     code_index = window.create_filtered_list("Class", input_data=class_codes)
@@ -364,7 +365,7 @@ def lab_manager_callback(context: WinContext):
         edit_labs()
 
 def lab_manager():
-    window = Window.get_window()
+    window = ui.get_window()
     window.set_header("Lab Manager")
 
     window.create_filtered_list("Option",
@@ -387,7 +388,7 @@ def class_section_manager_callback(context: WinContext):
         sort_class_sections()
 
 def class_section_manager():
-    window = Window.get_window()
+    window = ui.get_window()
     window.set_header("Class Section Manager")
 
     window.create_filtered_list("Option",
@@ -416,7 +417,7 @@ def class_manager_callback(context: WinContext):
 
 def start():
     """Create the main class manager menu"""
-    window = Window.get_window()
+    window = ui.get_window()
     window.set_header("Class Manager")
 
     window.create_filtered_list("Option", input_data=CLASS_MANAGE_OPTIONS,

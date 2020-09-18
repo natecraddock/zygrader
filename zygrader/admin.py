@@ -7,6 +7,7 @@ from zygrader.ui.window import WinContext, Window
 from zygrader.ui import UI_GO_BACK
 from zygrader.ui.templates import filename_input
 from zygrader.zybooks import Zybooks
+from zygrader import ui
 from zygrader import data
 from zygrader import class_manager
 from zygrader import grade_puller
@@ -51,7 +52,7 @@ def submission_search(lab, search_string, output_path):
     """Search through student submissions for a given string
 
     This is used mainly to look for suspicious code (cheaters)"""
-    window = Window.get_window()
+    window = ui.get_window()
     students = data.get_students()
     zy_api = Zybooks()
 
@@ -153,7 +154,7 @@ def admin_menu_callback(context: WinContext):
 
 def admin_menu():
     """Create the admin menu"""
-    window = Window.get_window()
+    window = ui.get_window()
     window.set_header("Admin")
 
     window.create_filtered_list("Option", input_data=ADMIN_MENU_OPTIONS,

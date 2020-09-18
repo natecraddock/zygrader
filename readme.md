@@ -218,6 +218,8 @@ The draw thread is managed by the `create_*` functions, which create the various
 #### `get_window()`
 The `Window` class is a singleton, so this may be used anywhere in the code to access the current Window.
 
+You may also use ui.get_window() for easier access.
+
 #### `input_thread_fn()`
 The callback for the input thread. An empty curses window is created for reading input. Input is read in a loop calling `get_input()`, and any captured events are placed in the queue.
 

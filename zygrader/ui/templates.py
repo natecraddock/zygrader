@@ -4,10 +4,11 @@ import os
 
 from .window import Window
 from zygrader.zybooks import Zybooks
+from zygrader import ui
 
 class ZybookSectionSelector:
     def __init__(self, allow_optional_and_hidden=False):
-        self.window = Window.get_window()
+        self.window = ui.get_window()
         self.zy_api = Zybooks()
         self.allow_optional_and_hidden = allow_optional_and_hidden
 
@@ -77,7 +78,7 @@ class ZybookSectionSelector:
 
 def filename_input(purpose, text=""):
     """Get a valid filename from the user"""
-    window = Window.get_window()
+    window = ui.get_window()
     full_prompt = f"Enter the path and filename for {purpose} [~ is supported]"
 
     while True:

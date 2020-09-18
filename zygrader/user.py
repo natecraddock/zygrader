@@ -11,6 +11,7 @@ from zygrader.config import preferences
 from zygrader.ui.window import Window, WinContext
 from zygrader.ui.components import TextInput
 from zygrader import data
+from zygrader import ui
 
 def authenticate(window: Window, zy_api, email, password):
     """Authenticate to the zyBooks api with the email and password"""
@@ -114,7 +115,7 @@ def logout():
         config["password"] = ""
     write_config(config)
 
-    window = Window.get_window()
+    window = ui.get_window()
     msg = ["You have been logged out. Would you like to sign in with different credentials?", "", "Answering `No` will quit zygrader."]
     sign_in = window.create_bool_popup("Sign in?", msg)
 
@@ -145,7 +146,7 @@ def set_editor(editor_index, pref_name):
 
 def set_editor_menu(name):
     """Open the set editor popup"""
-    window = Window.get_window()
+    window = ui.get_window()
     edit_fn = lambda context: set_editor(context.data, name)
     window.create_list_popup("Set Editor", callback=edit_fn, list_fill=draw_text_editors)
 
@@ -180,7 +181,7 @@ def set_class_code_override(code_index: int, pref_name: str):
 
 def set_class_code_override_menu(pref_name: str):
     """Open the set class code override popup"""
-    window = Window.get_window()
+    window = ui.get_window()
     set_fn = lambda context: set_class_code_override(context.data, pref_name)
     window.create_list_popup("Override Class Code", callback=set_fn, list_fill=draw_class_codes)
 
@@ -205,7 +206,7 @@ def password_toggle(name):
         preferences.write_config(config)
 
     else:
-        window = Window.get_window()
+        window = ui.get_window()
         window.create_popup("Remember Password",
                             ["Next time you start zygrader your password will be saved."])
 
@@ -265,7 +266,7 @@ def preferences_callback(context: WinContext):
 
 def preferences_menu():
     """Create the preferences popup"""
-    window = Window.get_window()
+    window = ui.get_window()
     window.set_header(f"Preferences")
 
     window.create_list_popup("User Preferences", callback=preferences_callback,

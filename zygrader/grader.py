@@ -6,6 +6,7 @@ from zygrader.data import model
 from zygrader.config import preferences
 from zygrader.config.shared import SharedData
 from zygrader import data
+from zygrader import ui
 from zygrader import utils
 
 from zygrader.ui import components, UI_GO_BACK
@@ -46,7 +47,7 @@ def update_student_list(window: Window, student_list: components.FilteredList):
 
 def get_submission(lab, student, use_locks=True):
     """Get a submission from zyBooks given the lab and student"""
-    window = Window.get_window()
+    window = ui.get_window()
     zy_api = Zybooks()
 
     # Lock student
@@ -73,7 +74,7 @@ def get_submission(lab, student, use_locks=True):
 def pick_submission(lab: data.model.Lab, student: data.model.Student,
                     submission: data.model.Submission):
     """Allow the user to pick a submission to view"""
-    window = Window.get_window()
+    window = ui.get_window()
     zy_api = Zybooks()
 
     # If the lab has multiple parts, prompt to pick a part
@@ -109,7 +110,7 @@ def view_diff(first: model.Submission, second: model.Submission):
     """View a diff of the two submissions"""
     if (first.flag & model.SubmissionFlag.NO_SUBMISSION or
         second.flag & model.SubmissionFlag.NO_SUBMISSION):
-        window = Window.get_window()
+        window = ui.get_window()
         window.create_popup("No Submission", ["Cannot diff submissions because at least one student has not submitted."])
         return
 
@@ -134,7 +135,7 @@ def run_code_fn(window, context: WinContext, submission):
 
 def pair_programming_submission_callback(lab, submission):
     """Show both pair programming students for viewing a diff"""
-    window = Window.get_window()
+    window = ui.get_window()
 
     options = {
         "Pick Submission": lambda _: pick_submission(lab, submission.student, submission),
@@ -150,7 +151,7 @@ def can_get_through_locks(use_locks, student, lab):
     if not use_locks:
         return True
 
-    window = Window.get_window()
+    window = ui.get_window()
 
     if data.lock.is_locked(student, lab):
         netid = data.lock.get_locked_netid(student, lab)
@@ -183,7 +184,7 @@ def pair_programming_message(first, second) -> list:
 def grade_pair_programming(student_list, first_submission, use_locks):
     """Pick a second student to grade pair programming with"""
     # Get second student
-    window = Window.get_window()
+    window = ui.get_window()
     students = data.get_students()
 
     lab = first_submission.lab
@@ -226,7 +227,7 @@ def grade_pair_programming(student_list, first_submission, use_locks):
 
 def flag_submission(lab, student):
     """Flag a submission with a note"""
-    window = Window.get_window()
+    window = ui.get_window()
 
     note = window.create_text_input("Flag Note", "Enter a flag note")
     if note == UI_GO_BACK:
@@ -311,7 +312,7 @@ def lab_callback(context: WinContext, use_locks=True):
 
 def grade(use_locks=True):
     """Create the list of labs to pick one to grade"""
-    window = Window.get_window()
+    window = ui.get_window()
     labs = data.get_labs()
 
     if use_locks:

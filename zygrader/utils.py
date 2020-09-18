@@ -21,7 +21,7 @@ from zygrader.ui.window import Window
 def suspend_curses(callback_fn):
     """A decorator for any subprocess that must suspend access to curses (zygrader)"""
     def wrapper(*args, **kwargs):
-        window = ui.window.Window.get_window()
+        window = ui.get_window()
         # Clear remaining events in event queue
         window.clear_event_queue()
 
@@ -125,7 +125,7 @@ def get_source_file_paths(directory):
 
 def prep_lab_score_calc():
     """A simple calculator for determining the score for a late prep lab"""
-    window = ui.window.Window.get_window()
+    window = ui.get_window()
     window.set_header("Prep Lab Calculator")
 
     try:
@@ -145,7 +145,7 @@ def prep_lab_score_calc():
 
 def view_students_callback(context):
     """Create a popup to show info for the selected student"""
-    window = ui.window.Window.get_window()
+    window = ui.get_window()
     students = data.get_students()
 
     student = students[context.data]
@@ -156,7 +156,7 @@ def view_students_callback(context):
 
 def view_students():
     """Create the view students filtered list"""
-    window = ui.window.Window.get_window()
+    window = ui.get_window()
     students = data.get_students()
     window.set_header("View Students")
 
@@ -168,7 +168,7 @@ def view_students():
                                 callback=view_students_callback)
 
 def fetch_zybooks_toc():
-    wait_controller = Window.get_window().create_waiting_popup("TOC", ["Fetching TOC from zyBooks"])
+    wait_controller = ui.get_window().create_waiting_popup("TOC", ["Fetching TOC from zyBooks"])
     zy_api = Zybooks()
     toc = zy_api.get_table_of_contents()
     wait_controller.close()

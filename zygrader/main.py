@@ -12,6 +12,7 @@ from zygrader import data
 from zygrader import email
 from zygrader import grader
 from zygrader import logger
+from zygrader import ui
 from zygrader import updater
 from zygrader import user
 from zygrader import utils
@@ -122,7 +123,7 @@ def mainloop_callback(context: WinContext):
 
 def mainloop(admin_mode):
     """Create the main menu that runs until zygrader is exited"""
-    window = Window.get_window()
+    window = ui.get_window()
 
     if admin_mode:
         MAIN_MENU_OPTIONS.append("Admin")

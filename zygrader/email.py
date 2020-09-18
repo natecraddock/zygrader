@@ -6,6 +6,7 @@ from zygrader.grader import update_student_list
 from zygrader.ui.window import Window, WinContext
 from zygrader.ui import components
 from zygrader import data
+from zygrader import ui
 
 def lock_student_callback(context: WinContext):
     window: Window = context.window
@@ -49,7 +50,7 @@ def watch_students(window: Window, student_list: components.FilteredList):
 
 def email_menu():
     """Show the list of students with auto-update and locking."""
-    window = Window.get_window()
+    window = ui.get_window()
     students = data.get_students()
 
     window.set_header("Email Manager")

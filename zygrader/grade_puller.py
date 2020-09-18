@@ -2,6 +2,7 @@ import csv
 import datetime
 
 from zygrader import data
+from zygrader import ui
 from zygrader.ui.window import WinContext, Window
 from zygrader.ui.templates import ZybookSectionSelector, filename_input
 from zygrader.ui.displaystring import DisplayStr
@@ -25,7 +26,7 @@ class GradePuller:
         pass
 
     def __init__(self):
-        self.window = Window.get_window()
+        self.window = ui.get_window()
         self.zy_api = Zybooks()
 
     def pull(self):
