@@ -3,13 +3,12 @@
 import curses
 
 from zygrader.grader import update_student_list
-from zygrader.ui.window import Window, WinContext
 from zygrader.ui import components
 from zygrader import data
 from zygrader import ui
 
-def lock_student_callback(context: WinContext):
-    window: Window = context.window
+def lock_student_callback(context: ui.WinContext):
+    window: ui.Window = context.window
     student = data.get_students()[context.data]
 
     if data.lock.is_locked(student):
@@ -36,12 +35,12 @@ def fill_student_list(students):
             lines.append(line)
     return lines
 
-def update_student_list(window: Window, student_list: components.FilteredList):
+def update_student_list(window: ui.Window, student_list: components.FilteredList):
     """Update the list of students when the locks change"""
     student_list.refresh()
     window.push_refresh_event()
 
-def watch_students(window: Window, student_list: components.FilteredList):
+def watch_students(window: ui.Window, student_list: components.FilteredList):
     """Register paths when the filtered list is created"""
     paths = [data.SharedData.get_locks_directory()]
 

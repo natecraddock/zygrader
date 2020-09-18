@@ -15,8 +15,6 @@ from zygrader import data
 from zygrader import ui
 from zygrader.ui import components
 from zygrader.zybooks import Zybooks
-from zygrader.ui.window import Window
-
 
 def suspend_curses(callback_fn):
     """A decorator for any subprocess that must suspend access to curses (zygrader)"""
@@ -130,12 +128,12 @@ def prep_lab_score_calc():
 
     try:
         old_score = float(window.create_text_input("Original Score", "What was the student's original score?"))
-        if old_score == ui.window.Window.CANCEL:
+        if old_score == ui.Window.CANCEL:
             return
         current_completion = float(window.create_text_input("zyBooks completion",
                                                             "What is the student's current "
                                                             "completion % in zyBooks", "100"))
-        if current_completion == ui.window.Window.CANCEL:
+        if current_completion == ui.Window.CANCEL:
             return
 
         new_score = old_score + ((current_completion - old_score) * 0.6)

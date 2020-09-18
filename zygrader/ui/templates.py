@@ -2,7 +2,6 @@
 
 import os
 
-from .window import Window
 from zygrader.zybooks import Zybooks
 from zygrader import ui
 
@@ -85,7 +84,7 @@ def filename_input(purpose, text=""):
         path = window.create_text_input("Filepath Entry",
                                         full_prompt,
                                         text=text)
-        if path == Window.CANCEL:
+        if path == ui.Window.CANCEL:
             return None
 
         path = os.path.expanduser(path)

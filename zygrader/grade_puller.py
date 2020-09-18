@@ -3,7 +3,6 @@ import datetime
 
 from zygrader import data
 from zygrader import ui
-from zygrader.ui.window import WinContext, Window
 from zygrader.ui.templates import ZybookSectionSelector, filename_input
 from zygrader.ui.displaystring import DisplayStr
 from zygrader.ui import UI_GO_BACK
@@ -149,7 +148,7 @@ class GradePuller:
                          f": {time.strftime('%b %d, %Y at %I:%M:%S%p')}")
                              for section, time in due_times.items()]
 
-        def select_due_times_callback(context: WinContext):
+        def select_due_times_callback(context: ui.WinContext):
             selected_index = context.data
 
             section = class_sections[selected_index]

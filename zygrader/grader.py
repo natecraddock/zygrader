@@ -10,7 +10,6 @@ from zygrader import ui
 from zygrader import utils
 
 from zygrader.ui import components, UI_GO_BACK
-from zygrader.ui.window import Event, WinContext, Window
 from zygrader.zybooks import Zybooks
 
 def color_student_lines(lab, student):
@@ -40,7 +39,7 @@ def fill_student_list(lab, students):
 
     return lines
 
-def update_student_list(window: Window, student_list: components.FilteredList):
+def update_student_list(window: ui.Window, student_list: components.FilteredList):
     """Update the student list when the locks or flags change"""
     student_list.refresh()
     window.push_refresh_event()
@@ -126,9 +125,9 @@ def view_diff(first: model.Submission, second: model.Submission):
                                   second.student.full_name, use_browser)
     utils.view_string(diff, "submissions.diff", use_browser)
 
-def run_code_fn(window, context: WinContext, submission):
+def run_code_fn(window, context: ui.WinContext, submission):
     """Callback to compile and run a submission's code"""
-    use_gdb = context.event.modifier == Event.MOD_ALT
+    use_gdb = context.event.modifier == ui.Event.MOD_ALT
 
     if not submission.compile_and_run_code(use_gdb):
         window.create_popup("Error", ["Could not compile and run code"])
@@ -241,7 +240,7 @@ def diff_parts_fn(window, submission):
     if error:
         window.create_popup("Error", [error])
 
-def student_callback(context: WinContext, lab, use_locks=True):
+def student_callback(context: ui.WinContext, lab, use_locks=True):
     """Show the submission for the selected lab and student"""
     window = context.window
     student_list = context.component
@@ -284,14 +283,14 @@ def student_callback(context: WinContext, lab, use_locks=True):
         if use_locks:
             data.lock.unlock(student, lab)
 
-def watch_students(window: Window, student_list: components.FilteredList):
+def watch_students(window: ui.Window, student_list: components.FilteredList):
     """Register paths when the filtered list is created"""
     paths = [SharedData.get_locks_directory(), SharedData.get_flags_directory()]
 
     update_list = lambda _: update_student_list(window, student_list)
     data.fs_watch.fs_watch_register(paths, "student_list_watch", update_list)
 
-def lab_callback(context: WinContext, use_locks=True):
+def lab_callback(context: ui.WinContext, use_locks=True):
     """Create the list of labs to pick a student to grade"""
     window = context.window
 

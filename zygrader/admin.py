@@ -3,7 +3,6 @@ the class, scan through student submissions, and access to other menus"""
 import time
 import requests
 
-from zygrader.ui.window import WinContext, Window
 from zygrader.ui import UI_GO_BACK
 from zygrader.ui.templates import filename_input
 from zygrader.zybooks import Zybooks
@@ -113,7 +112,7 @@ def submission_search_init(window, labs):
         part = assignment.parts[0]
 
     search_string = window.create_text_input("Search String", "Enter a search string")
-    if search_string == Window.CANCEL:
+    if search_string == ui.Window.CANCEL:
         return
 
     # Get a valid output path
@@ -126,7 +125,7 @@ def submission_search_init(window, labs):
 
 ADMIN_MENU_OPTIONS = ["Submissions Search", "Grade Puller", "Find Unmatched Students", "Remove Locks", "Class Management"]
 
-def admin_menu_callback(context: WinContext):
+def admin_menu_callback(context: ui.WinContext):
     """Run the chosen option on the admin menu"""
     menu_index = context.data
 

@@ -8,12 +8,11 @@ from zygrader import zybooks
 
 from zygrader.class_manager import download_roster
 from zygrader.config import preferences
-from zygrader.ui.window import Window, WinContext
 from zygrader.ui.components import TextInput
 from zygrader import data
 from zygrader import ui
 
-def authenticate(window: Window, zy_api, email, password):
+def authenticate(window: ui.Window, zy_api, email, password):
     """Authenticate to the zyBooks api with the email and password"""
     wait_popup = window.create_waiting_popup("Signing in", [f"Signing into zyBooks as {email}..."])
 
@@ -37,25 +36,25 @@ def get_email():
         return config["email"]
     return ""
 
-def get_password(window: Window):
+def get_password(window: ui.Window):
     """Prompt for the user's password"""
     window.set_header("Sign In")
 
     password = window.create_text_input("Enter Password", "Enter your zyBooks password", mask=TextInput.TEXT_MASKED)
-    if password == Window.CANCEL:
+    if password == ui.Window.CANCEL:
         password = ""
 
     return password
 
 # Create a user account
-def create_account(window: Window, zy_api):
+def create_account(window: ui.Window, zy_api):
     """Create zybooks user account info (email & password) in config"""
     window.set_header("Sign In")
 
     while True:
         # Get user account information
         email = window.create_text_input("Enter Email", "Enter your zyBooks email", mask=None)
-        if email == Window.CANCEL:
+        if email == ui.Window.CANCEL:
             email = ""
         password = get_password(window)
 
@@ -64,7 +63,7 @@ def create_account(window: Window, zy_api):
 
     return email, password
 
-def login(window: Window):
+def login(window: ui.Window):
     """Authenticate to zybooks with the user's email and password
     or create an account if one does not exist"""
     zy_api = zybooks.Zybooks()
@@ -253,7 +252,7 @@ def draw_preferences():
 
     return options
 
-def preferences_callback(context: WinContext):
+def preferences_callback(context: ui.WinContext):
     """Callback to run when a preference is selected"""
     selected_index = context.data
     pref = PREFERENCES[selected_index]

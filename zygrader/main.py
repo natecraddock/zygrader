@@ -20,7 +20,6 @@ from zygrader import utils
 from zygrader.config import preferences
 from zygrader.config import versioning
 from zygrader.config.shared import SharedData
-from zygrader.ui.window import WinContext, Window
 
 def lock_cleanup():
     data.lock.unlock_all_labs_by_grader(getpass.getuser())
@@ -97,7 +96,7 @@ def handle_args(args):
 MAIN_MENU_OPTIONS = ["Grade", "Emails", "Prep Lab Score Calculator", "Run For Fun",
                      "View Students", "Preferences", "Changelog"]
 
-def mainloop_callback(context: WinContext):
+def mainloop_callback(context: ui.WinContext):
     """Run the chosen option from the main menu"""
     option = MAIN_MENU_OPTIONS[context.data]
 
@@ -131,7 +130,7 @@ def mainloop(admin_mode):
     window.set_header(SharedData.get_current_class_code)
     window.create_filtered_list("Option", input_data=MAIN_MENU_OPTIONS, callback=mainloop_callback)
 
-def main(window: Window):
+def main(window: ui.Window):
     """Curses has been initialized, now setup various modules before showing the menu"""
     # Read args to set admin mode
     if "-a" in sys.argv:
@@ -198,7 +197,7 @@ def start():
     data.get_labs()
 
     # Create a zygrader window, callback to main function
-    Window(main, f"zygrader {SharedData.VERSION}")
+    ui.Window(main, f"zygrader {SharedData.VERSION}")
 
     logger.log("zygrader exited normally")
 

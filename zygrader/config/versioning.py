@@ -2,10 +2,10 @@ import os
 
 from distutils.version import LooseVersion
 
-from zygrader.ui.window import Window
 from zygrader.ui import components
 from . import preferences
 from .shared import SharedData
+from zygrader import ui
 
 def load_changelog():
     """Load the changelog into an array of lines"""
@@ -44,7 +44,7 @@ def write_current_version(config):
     config["version"] = SharedData.VERSION.vstring
     preferences.write_config(config)
 
-def do_versioning(window: Window):
+def do_versioning(window: ui.Window):
     """Compare the user's current version in the config and make necessary adjustments
     Also notify the user of new changes"""
 

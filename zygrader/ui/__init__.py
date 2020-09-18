@@ -2,10 +2,10 @@
 # And lists return their (index - 1) to handle that offset
 UI_GO_BACK = -1
 
-# from .window import Window, WinContext
+from .window import Window, WinContext, Event
 from . import components
 from . import window
 
-def get_window() -> window.Window:
+def get_window() -> Window:
     """Utility function to make getting the Window simpler in code"""
-    return window.Window.get_window()
+    return Window.get_window()

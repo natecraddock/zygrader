@@ -2,7 +2,6 @@
 import datetime
 import json
 
-from zygrader.ui.window import WinContext, Window
 from zygrader.ui.components import FilteredList, DatetimeSpinner
 from zygrader.ui.templates import ZybookSectionSelector
 from zygrader.ui import UI_GO_BACK
@@ -42,7 +41,7 @@ def setup_new_class():
     zy_api = Zybooks()
 
     code = window.create_text_input("Class Code", "Enter class code")
-    if code == Window.CANCEL:
+    if code == ui.Window.CANCEL:
         return
 
     # Check if class code is valid
@@ -70,7 +69,7 @@ def add_lab():
     zy_api = Zybooks()
 
     lab_name = window.create_text_input("Lab Name", "Enter the Lab Name")
-    if lab_name == Window.CANCEL:
+    if lab_name == ui.Window.CANCEL:
         return
 
     # Get lab part(s)
@@ -143,7 +142,7 @@ def rename_lab(filtered_list, lab):
     labs = data.get_labs()
 
     name = window.create_text_input("Rename Lab", "Enter Lab's new name", text=lab.name)
-    if name != Window.CANCEL:
+    if name != ui.Window.CANCEL:
         lab.name = name
         data.write_labs(labs)
         filtered_list.refresh()
@@ -259,7 +258,7 @@ def get_class_section(old_section: data.model.ClassSection=None):
         text=init_text
     )
 
-    if section_num_str == Window.CANCEL:
+    if section_num_str == ui.Window.CANCEL:
         return None
 
     section_num = int(section_num_str)
@@ -286,7 +285,7 @@ def add_class_section():
 
     data.write_class_sections(class_sections)
 
-def edit_class_sections_callback(context: WinContext):
+def edit_class_sections_callback(context: ui.WinContext):
     class_section = data.get_class_sections()[context.data]
 
     new_section = get_class_section(old_section=class_section)
@@ -355,7 +354,7 @@ def change_class():
 
 LAB_MANAGE_OPTIONS = ["Add Lab", "Edit Current Labs"]
 
-def lab_manager_callback(context: WinContext):
+def lab_manager_callback(context: ui.WinContext):
     option_index = context.data
     option = LAB_MANAGE_OPTIONS[option_index]
 
@@ -376,7 +375,7 @@ CLASS_SECTION_MANAGE_OPTIONS = ["Add Section",
                                 "Edit Current Sections",
                                 "Sort Current Sections"]
 
-def class_section_manager_callback(context: WinContext):
+def class_section_manager_callback(context: ui.WinContext):
     option_index = context.data
     option = CLASS_SECTION_MANAGE_OPTIONS[option_index]
 
@@ -399,7 +398,7 @@ CLASS_MANAGE_OPTIONS = ["Setup New Class", "Lab Manager",
                         "Class Section Manager",
                         "Download Student Roster", "Change Class"]
 
-def class_manager_callback(context: WinContext):
+def class_manager_callback(context: ui.WinContext):
     """Run the function for each option in CLASS_MANAGE_OPTIONS"""
     option_index = context.data
     option = CLASS_MANAGE_OPTIONS[option_index]
