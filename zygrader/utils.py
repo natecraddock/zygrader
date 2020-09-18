@@ -58,8 +58,8 @@ def diff_files(first, second, title_a, title_b, use_html):
                     diff = html.make_file(file_a.readlines(), file_b.readlines(),
                                           title_a, title_b, context=True)
         else:
-            diff_process = subprocess.Popen(f"diff -w -u --color=always '{path_a}' '{path_b}'",
-                                            shell=True, stdin=PIPE, stdout=PIPE, stderr=PIPE,
+            diff_process = subprocess.Popen(["diff", "-w", "-u", "--color=always", path_a, path_b],
+                                            stdin=PIPE, stdout=PIPE, stderr=PIPE,
                                             universal_newlines=True)
             diff = str(diff_process.communicate()[0])
 
