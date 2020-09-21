@@ -3,7 +3,6 @@ the class, scan through student submissions, and access to other menus"""
 import time
 import requests
 
-from zygrader.ui import UI_GO_BACK
 from zygrader.ui.templates import filename_input
 from zygrader.zybooks import Zybooks
 from zygrader import ui
@@ -96,7 +95,7 @@ def submission_search_init(window, labs):
     # Choose lab
     assignment_index = window.create_filtered_list("Assignment", input_data=labs,
                                                    filter_function=data.Lab.find)
-    if assignment_index is UI_GO_BACK:
+    if assignment_index is ui.GO_BACK:
         return
 
     assignment = labs[assignment_index]
@@ -105,7 +104,7 @@ def submission_search_init(window, labs):
     if len(assignment.parts) > 1:
         part_index = window.create_list_popup("Select Part", input_data=[
             name["name"] for name in assignment.parts])
-        if part_index is UI_GO_BACK:
+        if part_index is ui.GO_BACK:
             return
         part = assignment.parts[part_index]
     else:
@@ -144,7 +143,7 @@ def admin_menu_callback(context: ui.WinContext):
             all_locks = data.lock.get_lock_files()
             lock_index = context.window.create_filtered_list("Choose a lock file",
                                                              input_data=all_locks)
-            if lock_index != UI_GO_BACK:
+            if lock_index != ui.GO_BACK:
                 data.lock.remove_lock_file(all_locks[lock_index])
             else:
                 break

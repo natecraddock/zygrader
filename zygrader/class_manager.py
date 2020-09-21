@@ -4,7 +4,6 @@ import json
 
 from zygrader.ui.components import FilteredList, DatetimeSpinner
 from zygrader.ui.templates import ZybookSectionSelector
-from zygrader.ui import UI_GO_BACK
 from zygrader.zybooks import Zybooks
 from zygrader import data
 from zygrader import ui
@@ -112,7 +111,7 @@ def set_due_date(lab):
         old_date = lab.options["due"]
 
     due_date = window.create_datetime_spinner("Due Date", time=old_date if old_date else None, optional=True)
-    if due_date == UI_GO_BACK:
+    if due_date == ui.GO_BACK:
         return
 
     # Clearing the due date
@@ -269,7 +268,7 @@ def get_class_section(old_section: data.model.ClassSection=None):
         include_date=False
     )
 
-    if default_due_time == UI_GO_BACK:
+    if default_due_time == ui.GO_BACK:
         return None
 
     return data.model.ClassSection(section_num, default_due_time)
@@ -346,7 +345,7 @@ def change_class():
     class_codes = SharedData.get_class_codes()
 
     code_index = window.create_filtered_list("Class", input_data=class_codes)
-    if code_index != UI_GO_BACK:
+    if code_index != ui.GO_BACK:
         SharedData.set_current_class_code(class_codes[code_index])
 
         window.create_popup("Changed Class", [f"Class changed to {class_codes[code_index]}"])

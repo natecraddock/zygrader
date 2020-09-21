@@ -1,6 +1,5 @@
 """Window: The zygrader window manager and input handling"""
 import curses
-import os
 import queue
 import threading
 
@@ -8,7 +7,9 @@ from zygrader.config.preferences import is_preference_set
 from . import components
 from .utils import add_str, resize_window
 
-from . import UI_GO_BACK
+# Negative 1 because "Back" is 0th in the index of lists
+# And lists return their (index - 1) to handle that offset
+GO_BACK = -1
 
 UI_LEFT = 0
 UI_RIGHT = 1
@@ -563,7 +564,7 @@ class Window:
             elif event.type == Event.CHAR_INPUT:
                 popup.addchar(event.value)
             elif event.type == Event.ESC and self.use_esc_back:
-                retval = UI_GO_BACK
+                retval = GO_BACK
                 break
             elif event.type == Event.ENTER and popup.is_confirmed():
                 break
@@ -600,11 +601,11 @@ class Window:
             elif event.type == Event.LEFT and self.left_right_menu_nav:
                 break
             elif event.type == Event.ESC and self.use_esc_back:
-                retval = UI_GO_BACK
+                retval = GO_BACK
                 break
             elif ((event.type == Event.ENTER) or
                   (event.type == Event.RIGHT and self.left_right_menu_nav)):
-                if popup.selected() is UI_GO_BACK:
+                if popup.selected() is GO_BACK:
                     break
                 elif callback:
                     callback(WinContext(self, event, popup, popup.selected()))
@@ -702,7 +703,7 @@ class Window:
                 filtered_list.addchar(event.value)
             elif ((event.type == Event.ENTER) or
                   (event.type == Event.RIGHT and self.left_right_menu_nav)):
-                if callback and filtered_list.selected() != UI_GO_BACK:
+                if callback and filtered_list.selected() != GO_BACK:
                     filtered_list.dirty = True
                     callback(WinContext(self, event, filtered_list, filtered_list.selected()))
 
@@ -718,7 +719,7 @@ class Window:
         self.component_deinit()
 
         if event.type == Event.LEFT and self.left_right_menu_nav:
-            return UI_GO_BACK
+            return GO_BACK
 
         return filtered_list.selected()
 

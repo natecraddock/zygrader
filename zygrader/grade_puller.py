@@ -5,7 +5,6 @@ from zygrader import data
 from zygrader import ui
 from zygrader.ui.templates import ZybookSectionSelector, filename_input
 from zygrader.ui.displaystring import DisplayStr
-from zygrader.ui import UI_GO_BACK
 from zygrader.config.shared import SharedData
 from zygrader.zybooks import Zybooks
 from zygrader.utils import fetch_zybooks_toc
@@ -91,7 +90,7 @@ class GradePuller:
         real_assignments = self.canvas_header[num_id_columns:]
         index = self.window.create_filtered_list("Assignment",
                                                  input_data=real_assignments)
-        if index is UI_GO_BACK:
+        if index is ui.GO_BACK:
             raise GradePuller.StoppingException()
         return real_assignments[index]
 

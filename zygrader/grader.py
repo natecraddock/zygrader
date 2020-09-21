@@ -9,7 +9,6 @@ from zygrader import data
 from zygrader import ui
 from zygrader import utils
 
-from zygrader.ui import components, UI_GO_BACK
 from zygrader.zybooks import Zybooks
 
 def color_student_lines(lab, student):
@@ -26,7 +25,7 @@ def fill_student_list(lab, students):
     lines = []
     num_locked = 0
     for i, student in enumerate(students):
-        line = components.FilteredList.ListLine(i + 1, student)
+        line = ui.components.FilteredList.ListLine(i + 1, student)
         line.color = color_student_lines(lab, student)
 
         if line.color == curses.color_pair(2):
@@ -39,7 +38,7 @@ def fill_student_list(lab, students):
 
     return lines
 
-def update_student_list(window: ui.Window, student_list: components.FilteredList):
+def update_student_list(window: ui.Window, student_list: ui.components.FilteredList):
     """Update the student list when the locks or flags change"""
     student_list.refresh()
     window.push_refresh_event()
@@ -81,7 +80,7 @@ def pick_submission(lab: data.model.Lab, student: data.model.Student,
     if len(lab.parts) > 1:
         part_index = window.create_list_popup("Select Part",
                                               input_data=[name["name"] for name in lab.parts])
-        if part_index is UI_GO_BACK:
+        if part_index is ui.GO_BACK:
             return
 
     # Get list of all submissions for that part
@@ -95,7 +94,7 @@ def pick_submission(lab: data.model.Lab, student: data.model.Student,
     all_submissions.reverse()
 
     submission_index = window.create_list_popup("Select Submission", all_submissions)
-    if submission_index is UI_GO_BACK:
+    if submission_index is ui.GO_BACK:
         return
 
     # Modify submission index to un-reverse the index
@@ -143,7 +142,7 @@ def pair_programming_submission_callback(lab, submission):
     }
 
     window.create_options_popup("Pair Programming Submission",
-                                submission, options, components.Popup.ALIGN_LEFT)
+                                submission, options, ui.components.Popup.ALIGN_LEFT)
     SharedData.running_process = None
 
 def can_get_through_locks(use_locks, student, lab):
@@ -192,7 +191,7 @@ def grade_pair_programming(student_list, first_submission, use_locks):
     student_index = window.create_filtered_list("Student",
                                                 list_fill=lambda: fill_student_list(lab, students),
                                                 filter_function=data.Student.find)
-    if student_index is UI_GO_BACK:
+    if student_index is ui.GO_BACK:
         return
 
     student = students[student_index]
@@ -229,7 +228,7 @@ def flag_submission(lab, student):
     window = ui.get_window()
 
     note = window.create_text_input("Flag Note", "Enter a flag note")
-    if note == UI_GO_BACK:
+    if note == ui.GO_BACK:
         return
 
     data.flags.flag_submission(student, lab, note)
@@ -274,7 +273,7 @@ def student_callback(context: ui.WinContext, lab, use_locks=True):
             del options["Diff Parts"]
 
         window.create_options_popup("Submission", submission,
-                                    options, components.Popup.ALIGN_LEFT)
+                                    options, ui.components.Popup.ALIGN_LEFT)
 
         SharedData.running_process = None
 
@@ -283,7 +282,7 @@ def student_callback(context: ui.WinContext, lab, use_locks=True):
         if use_locks:
             data.lock.unlock(student, lab)
 
-def watch_students(window: ui.Window, student_list: components.FilteredList):
+def watch_students(window: ui.Window, student_list: ui.components.FilteredList):
     """Register paths when the filtered list is created"""
     paths = [SharedData.get_locks_directory(), SharedData.get_flags_directory()]
 

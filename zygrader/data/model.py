@@ -352,7 +352,7 @@ class Submission(Iterable):
         root_dir = self.files_directory
         if len(self.lab.parts) > 1:
             part = self.pick_part()
-            if part == ui.UI_GO_BACK:
+            if part == ui.GO_BACK:
                 return False
 
             root_dir = os.path.join(self.files_directory, self.get_part_identifier(self.lab.parts[part]))
@@ -412,12 +412,12 @@ class Submission(Iterable):
             return "Not enough parts to diff"
         elif len(self.lab.parts) > 2:
             index = self.pick_part("Pick the first part")
-            if index is ui.UI_GO_BACK:
+            if index is ui.GO_BACK:
                 return
             part_a = self.lab.parts[index]
 
             index = self.pick_part("Pick the second part")
-            if index is ui.UI_GO_BACK:
+            if index is ui.GO_BACK:
                 return
             part_b = self.lab.parts[index]
         else:
