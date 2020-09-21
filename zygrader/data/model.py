@@ -392,8 +392,8 @@ class Submission(Iterable):
         print(f"Running {self.student.full_name}'s code")
         print("CTRL+C to terminate")
         print("CTRL+Z to stop (pause)")
-        if not use_gdb:
-            print("ALT+ENTER when running code to use gdb")
+        # if not use_gdb:
+        # print("ALT+ENTER when running code to use gdb")
         print("#############################################################\n")
 
         if use_gdb:

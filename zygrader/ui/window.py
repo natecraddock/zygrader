@@ -38,9 +38,6 @@ class Event:
     SHOME = 18
     SEND = 19
 
-    # Modifier Keys
-    MOD_ALT = 0
-
     def __init__(self, event_type, value, modifier=None):
         self.type = event_type
         self.value = value
@@ -104,22 +101,6 @@ class Window:
         input_code = input_win.getch()
         if input_code == -1:
             return Event(event, event_value)
-
-        # Check for ALT pressed
-        elif input_code == 27:
-            # Check for next character
-            input_code = input_win.getch()
-            if input_code == -1:
-                # Interpret as a single ESC char
-                if self.insert_mode:
-                    event = self.set_mode(Window.MODE_NORMAL)
-                elif self.mark_mode:
-                    event = self.set_mode(Window.MODE_NORMAL)
-                else:
-                    event = Event.ESC
-                return Event(event, event_value)
-            # Character accepted, check next symbol
-            event_mod = Event.MOD_ALT
 
         # Cases for each type of input
         if input_code == curses.KEY_RESIZE:

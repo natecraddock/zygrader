@@ -127,7 +127,7 @@ def view_diff(first: model.Submission, second: model.Submission):
 
 def run_code_fn(window, context: ui.WinContext, submission):
     """Callback to compile and run a submission's code"""
-    use_gdb = context.event.modifier == ui.Event.MOD_ALT
+    use_gdb = False
 
     if not submission.compile_and_run_code(use_gdb):
         window.create_popup("Error", ["Could not compile and run code"])
