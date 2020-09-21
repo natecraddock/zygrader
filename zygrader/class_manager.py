@@ -1,8 +1,6 @@
 """Class Manager: Functions to manage zybooks classes"""
-import datetime
 import json
 
-from zygrader.ui.components import FilteredList, DatetimeSpinner
 from zygrader.ui.templates import ZybookSectionSelector
 from zygrader.zybooks import Zybooks
 from zygrader import data
@@ -115,7 +113,7 @@ def set_due_date(lab):
         return
 
     # Clearing the due date
-    if due_date == DatetimeSpinner.NO_DATE:
+    if due_date == ui.components.DatetimeSpinner.NO_DATE:
         if  "due" in lab.options:
             del lab.options["due"]
     else:
@@ -236,7 +234,7 @@ def edit_labs_callback(lab, filtered_list):
 def draw_lab_list() -> list:
     """Use a callback for drawing the filtered list of labs so it can be refreshed"""
     labs = data.get_labs()
-    return [FilteredList.ListLine(i, lab) for i, lab in enumerate(labs, start=1)]
+    return [ui.components.FilteredList.ListLine(i, lab) for i, lab in enumerate(labs, start=1)]
 
 def edit_labs():
     """Creates a list of labs to edit"""
@@ -300,7 +298,7 @@ def draw_class_section_list() -> list:
     """Use a callback for drawing the filtered list
     of class sections so it can be refreshed"""
     class_sections = data.get_class_sections()
-    return [FilteredList.ListLine(i, el)
+    return [ui.components.FilteredList.ListLine(i, el)
                 for i, el in enumerate(class_sections, start=1)]
 
 def edit_class_sections():

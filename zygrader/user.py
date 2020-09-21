@@ -1,14 +1,12 @@
 """User: User preference window management"""
 import sys
 
-from typing import Type
 from zygrader.config.preferences import write_config
 from zygrader.config.shared import SharedData
 from zygrader import zybooks
 
 from zygrader.class_manager import download_roster
 from zygrader.config import preferences
-from zygrader.ui.components import TextInput
 from zygrader import data
 from zygrader import ui
 
@@ -40,7 +38,8 @@ def get_password(window: ui.Window):
     """Prompt for the user's password"""
     window.set_header("Sign In")
 
-    password = window.create_text_input("Enter Password", "Enter your zyBooks password", mask=TextInput.TEXT_MASKED)
+    password = window.create_text_input("Enter Password", "Enter your zyBooks password",
+                                        mask=ui.components.TextInput.TEXT_MASKED)
     if password == ui.Window.CANCEL:
         password = ""
 

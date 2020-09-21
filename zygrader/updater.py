@@ -2,7 +2,6 @@
 import requests
 import subprocess
 import sys
-
 from distutils.version import LooseVersion
 
 from zygrader.config.shared import SharedData

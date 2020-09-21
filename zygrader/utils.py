@@ -13,7 +13,6 @@ import tempfile
 
 from zygrader import data
 from zygrader import ui
-from zygrader.ui import components
 from zygrader.zybooks import Zybooks
 
 def suspend_curses(callback_fn):
@@ -150,7 +149,7 @@ def view_students_callback(context):
 
     msg = [f"Name: {student.full_name}", f"Email: {student.email}",
            f"Section: {student.section}", f"ID: {student.id}"]
-    window.create_popup("Student Info", msg, components.Popup.ALIGN_LEFT)
+    window.create_popup("Student Info", msg, ui.components.Popup.ALIGN_LEFT)
 
 def view_students():
     """Create the view students filtered list"""
