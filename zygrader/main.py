@@ -109,10 +109,8 @@ def mainloop_callback(context: ui.WinContext):
     elif option == "Emails":
         email.email_menu();
     elif option == "Prep Lab Score Calculator":
-        logger.log("prep lab score calculator tool accessed")
         utils.prep_lab_score_calc()
     elif option == "Admin":
-        logger.log("admin menu accessed")
         admin.admin_menu()
     elif option == "Changelog":
         lines = config.versioning.load_changelog()
