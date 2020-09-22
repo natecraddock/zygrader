@@ -1,6 +1,7 @@
 """Email: Manage locking of student emails from zygrader to prevent double-answering."""
 
 import curses
+import getpass
 
 from zygrader.grader import update_student_list
 from zygrader import data
@@ -12,9 +13,11 @@ def lock_student_callback(context: ui.WinContext):
 
     if data.lock.is_locked(student):
         netid = data.lock.get_locked_netid(student)
-        msg = [f"{netid} is replying to {student.first_name}'s email"]
-        window.create_popup("Student Locked", msg)
-        return
+        if (netid != getpass.getuser()):
+            msg = [f"{netid} is replying to {student.first_name}'s email"]
+            window.create_popup("Student Locked", msg)
+            return
+
     try:
         data.lock.lock(student)
         msg = [f"You have locked {student.full_name} for emailing."]
