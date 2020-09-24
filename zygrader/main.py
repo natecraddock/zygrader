@@ -144,6 +144,9 @@ def mainloop(admin_mode):
     window.set_header(SharedData.get_current_class_code)
     window.create_filtered_list("Option", input_data=MAIN_MENU_OPTIONS, callback=mainloop_callback)
 
+    # Begin the event loop
+    window.loop()
+
 
 def main(window: ui.Window):
     """Curses has been initialized, now setup various modules before showing the menu"""

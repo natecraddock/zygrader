@@ -1,5 +1,6 @@
 """Window: The zygrader window manager and input handling"""
 import curses
+import typing
 
 from zygrader.config.preferences import is_preference_set
 from . import components, input
@@ -15,6 +16,20 @@ class WinContext:
         self.event = event
         self.component = component
         self.data = custom_data
+
+
+class CompomentLayer:
+    def __init__(self):
+        self.title: str = ""
+        self.blocking = False
+
+
+class Tab:
+    """A tab holds a stack of component layers. Zygrader always has 4 tabs, they are not always visible."""
+
+    def __init__(self):
+        self.component_layers: typing.List[CompomentLayer] = []
+        self.open = False
 
 
 class Window:
@@ -42,6 +57,9 @@ class Window:
 
         """Initialize screen and run callback function"""
         self.name = window_name
+
+        self.tabs: typing.List[Tab] = []
+        self.active_tab: Tab = None
 
         # All user input handling is done in a separate thread
         # Inside the input class
@@ -172,6 +190,19 @@ class Window:
         self.header.noutrefresh()
 
         curses.setsyx(*loc)
+
+    def loop(self):
+        """Handle events in a loop until the program is exited"""
+        while True:
+            event = self.input.consume_event()
+
+            if event.type == Event.HEADER_UPDATE:
+                # self.update_header()
+                pass
+            for layer in self.active_tab.component_layers:
+                pass
+                # Handle events in the active layer
+                # Redraw all visible layers
 
     def draw(self):
         """Draw each component in the stack"""
