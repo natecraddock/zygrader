@@ -43,7 +43,8 @@ def fill_student_list(students):
 def update_student_list(window: ui.Window, student_list: ui.components.FilteredList):
     """Update the list of students when the locks change"""
     student_list.refresh()
-    window.push_refresh_event()
+    input = ui.get_input()
+    input.push_refresh_event()
 
 
 def watch_students(window: ui.Window, student_list: ui.components.FilteredList):

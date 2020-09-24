@@ -1,49 +1,10 @@
 """Window: The zygrader window manager and input handling"""
 import curses
-import queue
-import threading
 
 from zygrader.config.preferences import is_preference_set
-from . import components
+from . import components, input
+from .input import Event, GO_BACK
 from .utils import add_str, resize_window
-
-# Negative 1 because "Back" is 0th in the index of lists
-# And lists return their (index - 1) to handle that offset
-GO_BACK = -1
-
-UI_LEFT = 0
-UI_RIGHT = 1
-UI_CENTERED = 2
-
-
-class Event:
-    # Event types
-    NONE = -1
-    BACKSPACE = 0
-    ENTER = 1
-    UP = 2
-    DOWN = 3
-    LEFT = 4
-    RIGHT = 5
-    CHAR_INPUT = 6
-    ESC = 7
-    DELETE = 8
-    REFRESH = 9
-    HOME = 10
-    END = 11
-    TAB = 12
-    BTAB = 13
-    SLEFT = 14
-    SRIGHT = 15
-    SUP = 16
-    SDOWN = 17
-    SHOME = 18
-    SEND = 19
-
-    def __init__(self, event_type, value, modifier=None):
-        self.type = event_type
-        self.value = value
-        self.modifier = modifier
 
 
 class WinContext:
@@ -60,10 +21,6 @@ class Window:
     EVENT_REFRESH_LIST = "flags_and_locks"
     CANCEL = -1
 
-    MODE_NORMAL = 0
-    MODE_INSERT = 1
-    MODE_MARK = 2
-
     instance = None
 
     @staticmethod
@@ -75,174 +32,20 @@ class Window:
     def update_preferences(self):
         self.dark_mode = is_preference_set("dark_mode")
         self.christmas_mode = is_preference_set("christmas_mode")
-        self.vim_mode = is_preference_set("vim_mode")
+        self.input.vim_mode = is_preference_set("vim_mode")
         self.left_right_menu_nav = is_preference_set("left_right_arrow_nav")
         self.clear_filter = is_preference_set("clear_filter")
         self.use_esc_back = is_preference_set("use_esc_back")
-
-    def set_mode(self, mode: int):
-        """Set the vim edit mode"""
-        if mode == Window.MODE_NORMAL:
-            self.insert_mode = False
-            self.mark_mode = False
-        elif mode == Window.MODE_INSERT:
-            self.insert_mode = True
-            self.mark_mode = False
-        elif mode == Window.MODE_MARK:
-            self.insert_mode = False
-            self.mark_mode = True
-
-        self.draw_header()
-        curses.doupdate()
-
-        return Event.NONE
-
-    def get_input(self, input_win) -> Event:
-        """Get input and handle resize events"""
-        event = Event.NONE
-        event_value = Event.NONE
-        event_mod = None
-
-        input_code = input_win.getch()
-        if input_code == -1:
-            return Event(event, event_value)
-
-        # Cases for each type of input
-        if input_code == curses.KEY_RESIZE:
-            self.__resize_terminal()
-            curses.flushinp()
-        elif input_code in {curses.KEY_ENTER, ord("\n"), ord("\r")}:
-            event = Event.ENTER
-        elif input_code == curses.KEY_HOME:
-            event = Event.HOME
-        elif input_code == curses.KEY_END:
-            event = Event.END
-        elif input_code == curses.KEY_UP:
-            event = Event.UP
-        elif input_code == curses.KEY_DOWN:
-            event = Event.DOWN
-        elif input_code == curses.KEY_LEFT:
-            event = Event.LEFT
-        elif input_code == curses.KEY_RIGHT:
-            event = Event.RIGHT
-        elif input_code == curses.KEY_SLEFT:
-            event = Event.SLEFT
-        elif input_code == curses.KEY_SRIGHT:
-            event = Event.SRIGHT
-        elif input_code == curses.KEY_SHOME:
-            event = Event.SHOME
-        elif input_code == curses.KEY_SEND:
-            event = Event.SEND
-        elif input_code == curses.KEY_SR:
-            event = Event.SUP
-        elif input_code == curses.KEY_SF:
-            event = Event.SDOWN
-        elif input_code == ord("\t"):
-            event = Event.TAB
-        elif input_code == curses.KEY_BTAB:
-            event = Event.BTAB
-        elif self.vim_mode:
-            event, event_value = self.get_input_vim(input_code)
-        elif input_code == 27:  # curses does not have a pre-defined constant for ESC
-            event = Event.ESC
-        elif input_code == curses.KEY_BACKSPACE:
-            event = Event.BACKSPACE
-        elif input_code == curses.KEY_DC:
-            event = Event.DELETE
-        elif input_code:
-            event = Event.CHAR_INPUT
-            event_value = chr(input_code)
-
-        self.header_offset += 1
-        return Event(event, event_value, event_mod)
-
-    def get_input_vim(self, input_code):
-        event = Event.NONE
-        event_value = Event.NONE
-
-        if input_code == curses.KEY_BACKSPACE and self.insert_mode:
-            event = Event.BACKSPACE
-        elif input_code == curses.KEY_DC and self.insert_mode:
-            event = Event.DELETE
-        elif input_code == 27:
-            if self.insert_mode:
-                event = self.set_mode(Window.MODE_NORMAL)
-            elif self.mark_mode:
-                event = self.set_mode(Window.MODE_NORMAL)
-            else:
-                event = Event.ESC
-        elif not self.mark_mode and not self.insert_mode and chr(input_code) == "i":
-            event = self.set_mode(Window.MODE_INSERT)
-        elif not self.insert_mode and not self.mark_mode and chr(input_code) == "v":
-            event = self.set_mode(Window.MODE_MARK)
-        elif not self.insert_mode:
-            if chr(input_code) == "h":
-                event = Event.SLEFT if self.mark_mode else Event.LEFT
-            elif chr(input_code) == "j":
-                event = Event.SDOWN if self.mark_mode else Event.DOWN
-            elif chr(input_code) == "k":
-                event = Event.SUP if self.mark_mode else Event.UP
-            elif chr(input_code) == "l":
-                event = Event.SRIGHT if self.mark_mode else Event.RIGHT
-            else:
-                event = Event.NONE
-        elif self.insert_mode:
-            event = Event.CHAR_INPUT
-            event_value = chr(input_code)
-
-        return event, event_value
-
-    def input_thread_fn(self):
-        # Create window for input
-        input_win = curses.newwin(0, 0, 1, 1)
-        input_win.keypad(True)
-        # Makes getch blocking to reduce CPU usage
-        input_win.nodelay(False)
-
-        while True:
-            self.take_input.wait()
-            event = self.get_input(input_win)
-            if not self.take_input.is_set():
-                continue
-            if event.type != Event.NONE:
-                self.event_queue.put_nowait(event)
-
-            # Kill thread at end
-            if self.stop_input:
-                break
-
-    def clear_event_queue(self):
-        """Clear all events from the queue"""
-        while not self.event_queue.empty():
-            self.event_queue.get_nowait()
-
-    def consume_event(self) -> Event:
-        """Consume one event from the event queue. Blocks when no events are found"""
-        return self.event_queue.get()
-
-    def push_refresh_event(self):
-        """Force the ui to refresh even when it is in an input loop"""
-        event = Event(Event.REFRESH, None)
-        self.event_queue.put_nowait(event)
 
     def __init__(self, callback, window_name):
         Window.instance = self
 
         """Initialize screen and run callback function"""
         self.name = window_name
-        self.insert_mode = False
-        self.mark_mode = False
 
-        self.event_queue = queue.Queue()
-
-        # Create a thread to handle input separately
-        # The main thread handles drawing
-        self.input_thread = threading.Thread(target=self.input_thread_fn, name="Input", daemon=True)
-        self.stop_input = False
-
-        # Add an event to toggle input thread
-        self.take_input = threading.Event()
-        self.take_input.set()
+        # All user input handling is done in a separate thread
+        # Inside the input class
+        self.input = input.Input()
 
         # Set user preference variables
         self.update_preferences()
@@ -250,7 +53,6 @@ class Window:
         curses.wrapper(self.__init_curses, callback)
 
         # Cleanup when finished accepting input
-        self.stop_input = True
         self.stdscr.clear()
         self.stdscr.refresh()
         curses.endwin()
@@ -281,7 +83,7 @@ class Window:
         self.__email_text = ""
 
         # Input is now ready to start
-        self.input_thread.start()
+        self.input.input_thread.start()
 
         # Execute callback with a reference to the window object
         callback(self)
@@ -348,9 +150,9 @@ class Window:
         if self.__email_text:
             display_text += f" | {self.__email_text}"
 
-        if self.insert_mode:
+        if self.input.insert_mode:
             display_text += " | INSERT"
-        elif self.mark_mode:
+        elif self.input.mark_mode:
             display_text += " | VISUAL"
 
         # Centered header
@@ -405,9 +207,7 @@ class Window:
         self.stdscr.bkgd(" ", curses.color_pair(1))
 
     def component_init(self, component):
-        # Disable insertion mode on component change
-        self.insert_mode = False
-        self.mark_mode = False
+        self.input.disable_modes()
 
         self.components.append(component)
         if self.__header_title_load:
@@ -419,9 +219,7 @@ class Window:
         self.draw()
 
     def component_deinit(self):
-        # Disable insertion mode on component change
-        self.insert_mode = False
-        self.mark_mode = False
+        self.input.disable_modes()
 
         self.components.pop()
         self.header_titles.pop()
@@ -433,7 +231,7 @@ class Window:
         self.component_init(popup)
 
         while True:
-            event = self.consume_event()
+            event = self.input.consume_event()
 
             if event.type == Event.ENTER:
                 break
@@ -460,7 +258,7 @@ class Window:
             def close(self):
                 if not self.has_exited:
                     self.window.component_deinit()
-                    self.window.clear_event_queue()
+                    self.window.input.clear_event_queue()
                 self.has_exited = True
 
         popup = components.OptionsPopup(self.rows, self.cols, title, message, [], False, align)
@@ -475,7 +273,7 @@ class Window:
         self.component_init(popup)
 
         while True:
-            event = self.consume_event()
+            event = self.input.consume_event()
 
             if event.type in {Event.LEFT, Event.UP, Event.BTAB}:
                 popup.previous()
@@ -502,7 +300,7 @@ class Window:
         self.component_init(popup)
 
         while True:
-            event = self.consume_event()
+            event = self.input.consume_event()
 
             if event.type in {Event.LEFT, Event.UP, Event.BTAB}:
                 popup.previous()
@@ -549,7 +347,7 @@ class Window:
 
         retval = None
         while True:
-            event = self.consume_event()
+            event = self.input.consume_event()
 
             if event.type in {Event.LEFT, Event.BTAB}:
                 popup.previous_field()
@@ -593,7 +391,7 @@ class Window:
 
         retval = None
         while True:
-            event = self.consume_event()
+            event = self.input.consume_event()
 
             if event.type == Event.DOWN:
                 popup.down()
@@ -629,12 +427,12 @@ class Window:
         text_input = components.TextInput(self.rows, self.cols, title, prompt, text, mask)
         self.component_init(text_input)
 
-        if self.vim_mode:
-            self.insert_mode = True
+        if self.input.vim_mode:
+            self.input.insert_mode = True
             self.draw()
 
         while True:
-            event = self.consume_event()
+            event = self.input.consume_event()
 
             if event.type == Event.ENTER:
                 break
@@ -704,7 +502,7 @@ class Window:
             create_fn(filtered_list)
 
         while True:
-            event = self.consume_event()
+            event = self.input.consume_event()
 
             if event.type == Event.DOWN:
                 filtered_list.down()

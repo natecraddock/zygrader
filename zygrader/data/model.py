@@ -7,6 +7,7 @@ import subprocess
 import tempfile
 import time
 from collections import Iterable
+from zygrader.ui.input import Input
 
 from zygrader.config import preferences
 from zygrader.config.shared import SharedData
@@ -311,8 +312,8 @@ class Submission(Iterable):
 
     def do_resume_code(self, process):
         if process:
-            window = ui.get_window()
-            window.take_input.clear()
+            input = ui.get_input()
+            input.take_input.clear()
             curses.endwin()
             SharedData.RUNNING_CODE = True
             process.send_signal(signal.SIGCONT)
@@ -322,7 +323,8 @@ class Submission(Iterable):
         return False
 
     def compile_and_run_code(self, use_gdb):
-        window = ui.get_window()
+        input = ui.get_input()
+
         if self.do_resume_code(SharedData.running_process):
             stopped = self.wait_on_child(SharedData.running_process)
         else:
@@ -348,8 +350,8 @@ class Submission(Iterable):
 
         curses.initscr()
         curses.flushinp()
-        window.take_input.set()
-        window.clear_event_queue()
+        input.take_input.set()
+        input.clear_event_queue()
         curses.doupdate()
         return True
 
@@ -402,9 +404,9 @@ class Submission(Iterable):
         return False
 
     def run_code(self, executable, use_gdb):
-        window = ui.get_window()
-        window.clear_event_queue()
-        window.take_input.clear()
+        input = ui.get_input()
+        input.clear_event_queue()
+        Input.take_input.clear()
         curses.endwin()
 
         print(chr(27) + "[2J", end="")  # Clear the terminal
