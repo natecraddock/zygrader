@@ -87,9 +87,8 @@ def login(window: ui.Window):
     if not config["email"]:
         email, password = create_account(window, zy_api)
 
-        save_password = window.create_bool_popup(
-            "Save Password", ["Would you like to save your password?"]
-        )
+        save_password = window.create_bool_popup("Save Password",
+                                                 ["Would you like to save your password?"])
 
         config["email"] = email
 
@@ -244,7 +243,6 @@ PREFERENCE_ACTION = 3
 
 class Preference:
     """Holds information for a user preference item"""
-
     def __init__(self, name, description, select_fn, _type=PREFERENCE_TOGGLE):
         self.name = name
         self.description = description
@@ -304,6 +302,6 @@ def preferences_menu():
     window = ui.get_window()
     window.set_header(f"Preferences")
 
-    window.create_list_popup(
-        "User Preferences", callback=preferences_callback, list_fill=draw_preferences
-    )
+    window.create_list_popup("User Preferences",
+                             callback=preferences_callback,
+                             list_fill=draw_preferences)

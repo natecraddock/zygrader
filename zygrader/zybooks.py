@@ -236,9 +236,8 @@ class Zybooks:
         else:
             # Strip out late submissions
             if submissions and Zybooks.CHECK_LATE_SUBMISSION in options:
-                submissions = self.__remove_late_submissions(
-                    submissions, options[Zybooks.CHECK_LATE_SUBMISSION]
-                )
+                submissions = self.__remove_late_submissions(submissions,
+                                                             options[Zybooks.CHECK_LATE_SUBMISSION])
 
             # Student has not submitted or did not submit before assignment was due
             if not submissions:
@@ -266,9 +265,8 @@ class Zybooks:
 
     def download_assignment_part(self, assignment, user_id, part, submission_index=None):
         response_part = {"code": Zybooks.NO_ERROR, "name": part["name"], "id": str(part["id"])}
-        submission = self.download_submission(
-            part["id"], user_id, assignment.options, submission_index
-        )
+        submission = self.download_submission(part["id"], user_id, assignment.options,
+                                              submission_index)
 
         if submission["code"] is not Zybooks.NO_SUBMISSION:
             response_part["score"] = submission["score"]

@@ -26,8 +26,7 @@ def load_students() -> list:
                 student["email"],
                 student["section"],
                 student["id"],
-            )
-        )
+            ))
 
     return SharedData.STUDENTS
 

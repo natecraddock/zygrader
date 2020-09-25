@@ -112,9 +112,9 @@ def set_due_date(lab):
     if "due" in lab.options:
         old_date = lab.options["due"]
 
-    due_date = window.create_datetime_spinner(
-        "Due Date", time=old_date if old_date else None, optional=True
-    )
+    due_date = window.create_datetime_spinner("Due Date",
+                                              time=old_date if old_date else None,
+                                              optional=True)
     if due_date == ui.GO_BACK:
         return
 
@@ -268,18 +268,18 @@ def get_class_section(old_section: data.model.ClassSection = None):
     init_text = ""
     if old_section:
         init_text = str(old_section.section_number)
-    section_num_str = window.create_text_input(
-        "Section Number", "Enter the new section number for this section", text=init_text
-    )
+    section_num_str = window.create_text_input("Section Number",
+                                               "Enter the new section number for this section",
+                                               text=init_text)
 
     if section_num_str == ui.Window.CANCEL:
         return None
 
     section_num = int(section_num_str)
 
-    default_due_time = window.create_datetime_spinner(
-        "Section Default Due Time", quickpicks=[(50, 0), (59, 59), (0, 0)], include_date=False
-    )
+    default_due_time = window.create_datetime_spinner("Section Default Due Time",
+                                                      quickpicks=[(50, 0), (59, 59), (0, 0)],
+                                                      include_date=False)
 
     if default_due_time == ui.GO_BACK:
         return None
@@ -325,9 +325,9 @@ def edit_class_sections():
     """Create list of class sections to edit"""
     window = ui.get_window()
 
-    window.create_filtered_list(
-        "Class Section", list_fill=draw_class_section_list, callback=edit_class_sections_callback
-    )
+    window.create_filtered_list("Class Section",
+                                list_fill=draw_class_section_list,
+                                callback=edit_class_sections_callback)
 
 
 def sort_class_sections():
@@ -389,9 +389,9 @@ def lab_manager():
     window = ui.get_window()
     window.set_header("Lab Manager")
 
-    window.create_filtered_list(
-        "Option", input_data=LAB_MANAGE_OPTIONS, callback=lab_manager_callback
-    )
+    window.create_filtered_list("Option",
+                                input_data=LAB_MANAGE_OPTIONS,
+                                callback=lab_manager_callback)
 
 
 CLASS_SECTION_MANAGE_OPTIONS = ["Add Section", "Edit Current Sections", "Sort Current Sections"]
@@ -413,9 +413,9 @@ def class_section_manager():
     window = ui.get_window()
     window.set_header("Class Section Manager")
 
-    window.create_filtered_list(
-        "Option", input_data=CLASS_SECTION_MANAGE_OPTIONS, callback=class_section_manager_callback
-    )
+    window.create_filtered_list("Option",
+                                input_data=CLASS_SECTION_MANAGE_OPTIONS,
+                                callback=class_section_manager_callback)
 
 
 CLASS_MANAGE_OPTIONS = [
@@ -449,6 +449,6 @@ def start():
     window = ui.get_window()
     window.set_header("Class Manager")
 
-    window.create_filtered_list(
-        "Option", input_data=CLASS_MANAGE_OPTIONS, callback=class_manager_callback
-    )
+    window.create_filtered_list("Option",
+                                input_data=CLASS_MANAGE_OPTIONS,
+                                callback=class_manager_callback)

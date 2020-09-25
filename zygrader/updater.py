@@ -22,8 +22,7 @@ def install_from_url(url: str):
     """Install the new version of zygrader from the GitHub tarball url"""
     try:
         subprocess.check_call(
-            [sys.executable, "-m", "pip", "install", "--user", "--upgrade", "--no-cache-dir", url]
-        )
+            [sys.executable, "-m", "pip", "install", "--user", "--upgrade", "--no-cache-dir", url])
     except subprocess.CalledProcessError:
         print("Failed to update zygrader. Exiting")
         print()

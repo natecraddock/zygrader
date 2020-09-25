@@ -45,9 +45,8 @@ class GradePuller:
                 class_sections = self.select_class_sections()
                 due_times = self.select_due_times(class_sections)
 
-                self.add_assignment_to_report(
-                    canvas_assignment, zybook_sections, class_sections, due_times
-                )
+                self.add_assignment_to_report(canvas_assignment, zybook_sections, class_sections,
+                                              due_times)
 
                 msg = ["Add another assignment to the report?"]
                 more_assignments = self.window.create_bool_popup("More Assignments", msg)
@@ -76,10 +75,7 @@ class GradePuller:
         except FileNotFoundError:
             msg = [
                 f"Could not find {path}",
-                (
-                    "Please download the gradebook from Canvas"
-                    " and put it in the place noted above"
-                ),
+                "Please download the gradebook from Canvas and put it in the place noted above",
             ]
             self.window.create_popup("Error in Reading Master CSV", msg)
             raise GradePuller.StoppingException()
@@ -141,28 +137,22 @@ class GradePuller:
         for section in stored_class_sections:
             if section:
                 default_due_times.append(
-                    datetime.datetime.combine(yesterday, section.default_due_time)
-                )
+                    datetime.datetime.combine(yesterday, section.default_due_time))
             else:
                 default_due_times.append(last_night)
 
         due_times = {section: default_due_times[section] for section in class_sections}
-        draw = lambda: [
-            (
-                f"Section {section:>{section_padding}}"
-                f": {time.strftime('%b %d, %Y at %I:%M:%S%p')}"
-            )
-            for section, time in due_times.items()
-        ]
+        draw = lambda: [(f"Section {section:>{section_padding}}"
+                         f": {time.strftime('%b %d, %Y at %I:%M:%S%p')}")
+                        for section, time in due_times.items()]
 
         def select_due_times_callback(context: ui.WinContext):
             selected_index = context.data
 
             section = class_sections[selected_index]
 
-            new_datetime = self.window.create_datetime_spinner(
-                "Due Date", due_times[section], [(50, 0), (59, 59), (0, 0)]
-            )
+            new_datetime = self.window.create_datetime_spinner("Due Date", due_times[section],
+                                                               [(50, 0), (59, 59), (0, 0)])
             due_times[section] = new_datetime
 
             # For convenience, allow the day or datetime to be carried across
@@ -179,18 +169,16 @@ class GradePuller:
                 return
 
             do_carry_date = self.window.create_bool_popup(
-                "Set Due Time", ["Set all sections to this due date (but retain time)?"]
-            )
+                "Set Due Time", ["Set all sections to this due date (but retain time)?"])
             if do_carry_date:
                 for section in due_times:
                     old_datetime = due_times[section]
-                    due_times[section] = datetime.datetime.combine(
-                        date=new_datetime, time=old_datetime.time()
-                    )
+                    due_times[section] = datetime.datetime.combine(date=new_datetime,
+                                                                   time=old_datetime.time())
 
-        self.window.create_list_popup(
-            "Set Due Times (use Back to finish)", callback=select_due_times_callback, list_fill=draw
-        )
+        self.window.create_list_popup("Set Due Times (use Back to finish)",
+                                      callback=select_due_times_callback,
+                                      list_fill=draw)
 
         return due_times
 
@@ -276,9 +264,8 @@ class GradePuller:
                 if len(zybook_id_list) == 1:
                     self._add_entry(canvas_id, zybook_id_list[0])
 
-    def add_assignment_to_report(
-        self, canvas_assignment, zybook_sections, class_sections, due_times
-    ):
+    def add_assignment_to_report(self, canvas_assignment, zybook_sections, class_sections,
+                                 due_times):
         zybooks_students = self.fetch_completion_reports(zybook_sections, due_times)
         mapping = GradePuller.StudentMapping(self.canvas_students, zybooks_students)
 
@@ -394,7 +381,7 @@ class GradePuller:
             raise GradePuller.StoppingException()
 
         with open(path, "w", newline="") as out_file:
-            id_columns = self.canvas_header[: GradePuller.NUM_CANVAS_ID_COLUMNS]
+            id_columns = self.canvas_header[:GradePuller.NUM_CANVAS_ID_COLUMNS]
             fieldnames = id_columns + self.selected_assignments
             writer = csv.DictWriter(out_file, fieldnames=fieldnames, extrasaction="ignore")
             writer.writeheader()
@@ -410,8 +397,7 @@ class GradePuller:
             wait_msg = ["Fetching a completion report from zyBooks"]
             wait_controller = self.window.create_waiting_popup("Fetch Reports", wait_msg)
             zybooks_students, zybooks_header = self.fetch_completion_report(
-                create_last_night(), [zybook_section_1_1]
-            )
+                create_last_night(), [zybook_section_1_1])
             wait_controller.close()
 
             mapping = GradePuller.StudentMapping(self.canvas_students, zybooks_students)

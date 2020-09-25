@@ -25,9 +25,10 @@ def get_tags_list() -> dict:
 def install_from_url(url: str):
     """Install zygrader from the GitHub tarball url"""
     try:
-        subprocess.check_call(
-            [sys.executable, "-m", "pip", "install", "--user", "--no-cache-dir", url]
-        )
+        subprocess.check_call([
+            sys.executable, "-m", "pip", "install", "--user", "--no-cache-dir",
+            url
+        ])
     except subprocess.CalledProcessError:
         print("Failed to install zygrader. Exiting")
 

@@ -18,7 +18,6 @@ from zygrader.zybooks import Zybooks
 
 def suspend_curses(callback_fn):
     """A decorator for any subprocess that must suspend access to curses (zygrader)"""
-
     def wrapper(*args, **kwargs):
         window = ui.get_window()
         # Clear remaining events in event queue
@@ -58,9 +57,11 @@ def diff_files(first, second, title_a, title_b, use_html):
             with open(path_a, "r") as file_a:
                 with open(path_b, "r") as file_b:
                     html = difflib.HtmlDiff(4, 80)
-                    diff = html.make_file(
-                        file_a.readlines(), file_b.readlines(), title_a, title_b, context=True
-                    )
+                    diff = html.make_file(file_a.readlines(),
+                                          file_b.readlines(),
+                                          title_a,
+                                          title_b,
+                                          context=True)
         else:
             diff_process = subprocess.Popen(
                 ["diff", "-w", "-u", "--color=always", path_a, path_b],
@@ -144,17 +145,16 @@ def prep_lab_score_calc():
 
     try:
         old_score = float(
-            window.create_text_input("Original Score", "What was the student's original score?")
-        )
+            window.create_text_input("Original Score", "What was the student's original score?"))
         if old_score == ui.Window.CANCEL:
             return
         current_completion = float(
             window.create_text_input(
                 "zyBooks completion",
-                "What is the student's current " "completion % in zyBooks",
+                "What is the student's current "
+                "completion % in zyBooks",
                 "100",
-            )
-        )
+            ))
         if current_completion == ui.Window.CANCEL:
             return
 
@@ -190,9 +190,9 @@ def view_students():
         window.create_popup("No Students", ["There are no students in the class to show."])
         return
 
-    window.create_filtered_list(
-        "Student Name", input_data=students, callback=view_students_callback
-    )
+    window.create_filtered_list("Student Name",
+                                input_data=students,
+                                callback=view_students_callback)
 
 
 def fetch_zybooks_toc():

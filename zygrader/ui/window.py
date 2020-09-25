@@ -48,7 +48,6 @@ class Event:
 
 class WinContext:
     """A wrapper for the current window context when components execute a callback"""
-
     def __init__(self, window, event: Event, component, custom_data):
         self.window = window
         self.event = event
@@ -227,7 +226,6 @@ class Window:
 
     def __init__(self, callback, window_name):
         Window.instance = self
-
         """Initialize screen and run callback function"""
         self.name = window_name
         self.insert_mode = False
@@ -448,7 +446,6 @@ class Window:
         Exiting the popup must be done by calling close() on the returned control object.
         The creator of the popup should block until it calls close() to avoid input issues.
         """
-
         class WaitingPopupControl:
             def __init__(self, window):
                 self.window = window
@@ -496,9 +493,8 @@ class Window:
         """
         use_dict = bool(isinstance(options, dict))
 
-        popup = components.OptionsPopup(
-            self.rows, self.cols, title, message, options, use_dict, align
-        )
+        popup = components.OptionsPopup(self.rows, self.cols, title, message, options, use_dict,
+                                        align)
         self.component_init(popup)
 
         while True:
@@ -532,18 +528,20 @@ class Window:
         if not use_dict:
             return popup.selected()
 
-    def create_datetime_spinner(
-        self, title, time=None, quickpicks=None, optional=False, include_date=True
-    ):
+    def create_datetime_spinner(self,
+                                title,
+                                time=None,
+                                quickpicks=None,
+                                optional=False,
+                                include_date=True):
         """Create a popup with a datetime spinner to select a datetime.
         time is the initial time to present
         quickpicks is an optional list of (minute, second) pairs.
          If provided, spinning the minute field will spin through the quickpicks
         """
 
-        popup = components.DatetimeSpinner(
-            self.rows, self.cols, title, time, quickpicks, optional, include_date
-        )
+        popup = components.DatetimeSpinner(self.rows, self.cols, title, time, quickpicks, optional,
+                                           include_date)
 
         self.component_init(popup)
 
@@ -608,9 +606,8 @@ class Window:
             elif event.type == Event.ESC and self.use_esc_back:
                 retval = GO_BACK
                 break
-            elif (event.type == Event.ENTER) or (
-                event.type == Event.RIGHT and self.left_right_menu_nav
-            ):
+            elif (event.type == Event.ENTER) or (event.type == Event.RIGHT
+                                                 and self.left_right_menu_nav):
                 if popup.selected() is GO_BACK:
                     break
                 elif callback:
@@ -722,9 +719,8 @@ class Window:
                 break
             elif event.type == Event.CHAR_INPUT:
                 filtered_list.addchar(event.value)
-            elif (event.type == Event.ENTER) or (
-                event.type == Event.RIGHT and self.left_right_menu_nav
-            ):
+            elif (event.type == Event.ENTER) or (event.type == Event.RIGHT
+                                                 and self.left_right_menu_nav):
                 if callback and filtered_list.selected() != GO_BACK:
                     filtered_list.dirty = True
                     callback(WinContext(self, event, filtered_list, filtered_list.selected()))

@@ -24,8 +24,7 @@ class Lab:
         # Convert due datetime strings to objects
         if "due" in self.options:
             self.options["due"] = datetime.datetime.strptime(
-                self.options["due"], "%m.%d.%Y:%H.%M.%S"
-            ).astimezone(tz=None)
+                self.options["due"], "%m.%d.%Y:%H.%M.%S").astimezone(tz=None)
 
     def __str__(self):
         return f"{self.name}"
@@ -77,12 +76,8 @@ class Student:
         email = student.email.lower()
         text = text.lower()
 
-        return (
-            first_name.find(text) is not -1
-            or last_name.find(text) is not -1
-            or full_name.find(text) is not -1
-            or email.find(text) is not -1
-        )
+        return (first_name.find(text) is not -1 or last_name.find(text) is not -1
+                or full_name.find(text) is not -1 or email.find(text) is not -1)
 
 
 class ClassSection:
@@ -116,11 +111,8 @@ class ClassSection:
     def from_json(cls, section_json):
         section_number = section_json["section_number"]
         default_due_time_str = section_json["default_due_time"]
-        default_due_time = (
-            datetime.datetime.strptime(default_due_time_str, ClassSection.DUE_TIME_STORAGE_FORMAT)
-            .astimezone(tz=None)
-            .time()
-        )
+        default_due_time = (datetime.datetime.strptime(
+            default_due_time_str, ClassSection.DUE_TIME_STORAGE_FORMAT).astimezone(tz=None).time())
         return ClassSection(section_number, default_due_time)
 
     def to_json(self):
@@ -305,9 +297,9 @@ class Submission(Iterable):
 
         # Graphical editors
         else:
-            subprocess.run(
-                [editor_path] + files, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
-            )
+            subprocess.run([editor_path] + files,
+                           stdout=subprocess.DEVNULL,
+                           stderr=subprocess.DEVNULL)
 
     def do_resume_code(self, process):
         if process:
@@ -371,18 +363,17 @@ class Submission(Iterable):
             if part == ui.GO_BACK:
                 return False
 
-            root_dir = os.path.join(
-                self.files_directory, self.get_part_identifier(self.lab.parts[part])
-            )
+            root_dir = os.path.join(self.files_directory,
+                                    self.get_part_identifier(self.lab.parts[part]))
 
         files = utils.get_source_file_paths(root_dir)
 
         source_files = [f for f in files if f.endswith(".cpp")]
         compile_command = ["g++", "-g", "-o", executable_name, f"-I{root_dir}"] + source_files
 
-        compile_exit = subprocess.run(
-            compile_command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
-        )
+        compile_exit = subprocess.run(compile_command,
+                                      stdout=subprocess.DEVNULL,
+                                      stderr=subprocess.DEVNULL)
         if compile_exit.returncode != 0:
             return False
 

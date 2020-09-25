@@ -76,9 +76,8 @@ def get_submission(lab, student, use_locks=True):
     return submission
 
 
-def pick_submission(
-    lab: data.model.Lab, student: data.model.Student, submission: data.model.Submission
-):
+def pick_submission(lab: data.model.Lab, student: data.model.Student,
+                    submission: data.model.Submission):
     """Allow the user to pick a submission to view"""
     window = ui.get_window()
     zy_api = Zybooks()
@@ -86,9 +85,8 @@ def pick_submission(
     # If the lab has multiple parts, prompt to pick a part
     part_index = 0
     if len(lab.parts) > 1:
-        part_index = window.create_list_popup(
-            "Select Part", input_data=[name["name"] for name in lab.parts]
-        )
+        part_index = window.create_list_popup("Select Part",
+                                              input_data=[name["name"] for name in lab.parts])
         if part_index is ui.GO_BACK:
             return
 
@@ -116,10 +114,8 @@ def pick_submission(
 
 def view_diff(first: model.Submission, second: model.Submission):
     """View a diff of the two submissions"""
-    if (
-        first.flag & model.SubmissionFlag.NO_SUBMISSION
-        or second.flag & model.SubmissionFlag.NO_SUBMISSION
-    ):
+    if (first.flag & model.SubmissionFlag.NO_SUBMISSION
+            or second.flag & model.SubmissionFlag.NO_SUBMISSION):
         window = ui.get_window()
         window.create_popup(
             "No Submission",
@@ -135,9 +131,8 @@ def view_diff(first: model.Submission, second: model.Submission):
     paths_a.sort()
     paths_b.sort()
 
-    diff = utils.make_diff_string(
-        paths_a, paths_b, first.student.full_name, second.student.full_name, use_browser
-    )
+    diff = utils.make_diff_string(paths_a, paths_b, first.student.full_name,
+                                  second.student.full_name, use_browser)
     utils.view_string(diff, "submissions.diff", use_browser)
 
 
@@ -159,9 +154,8 @@ def pair_programming_submission_callback(lab, submission):
         "View": lambda _: submission.show_files(),
     }
 
-    window.create_options_popup(
-        "Pair Programming Submission", submission, options, ui.components.Popup.ALIGN_LEFT
-    )
+    window.create_options_popup("Pair Programming Submission", submission, options,
+                                ui.components.Popup.ALIGN_LEFT)
     SharedData.running_process = None
 
 
@@ -241,8 +235,7 @@ def grade_pair_programming(student_list, first_submission, use_locks):
 
         first_submission_fn = lambda _: pair_programming_submission_callback(lab, first_submission)
         second_submission_fn = lambda _: pair_programming_submission_callback(
-            lab, second_submission
-        )
+            lab, second_submission)
         options = {
             first_submission.student.full_name: first_submission_fn,
             second_submission.student.full_name: second_submission_fn,
@@ -298,9 +291,8 @@ def student_callback(context: ui.WinContext, lab, use_locks=True):
         options = {
             "Flag": lambda _: flag_submission(lab, student),
             "Pick Submission": lambda _: pick_submission(lab, student, submission),
-            "Pair Programming": lambda _: grade_pair_programming(
-                student_list, submission, use_locks
-            ),
+            "Pair Programming":
+            lambda _: grade_pair_programming(student_list, submission, use_locks),
             "Diff Parts": lambda _: diff_parts_fn(window, submission),
             "Run": lambda context: run_code_fn(window, context, submission),
             "View": lambda _: submission.show_files(),
@@ -310,9 +302,8 @@ def student_callback(context: ui.WinContext, lab, use_locks=True):
         if not (use_locks and submission.flag & data.model.SubmissionFlag.DIFF_PARTS):
             del options["Diff Parts"]
 
-        window.create_options_popup(
-            "Submission", submission, options, ui.components.Popup.ALIGN_LEFT
-        )
+        window.create_options_popup("Submission", submission, options,
+                                    ui.components.Popup.ALIGN_LEFT)
 
         SharedData.running_process = None
 
@@ -369,6 +360,7 @@ def grade(use_locks=True):
 
     # Pick a lab
     lab_select_fn = lambda context: lab_callback(context, use_locks)
-    window.create_filtered_list(
-        "Assignment", input_data=labs, callback=lab_select_fn, filter_function=data.Lab.find
-    )
+    window.create_filtered_list("Assignment",
+                                input_data=labs,
+                                callback=lab_select_fn,
+                                filter_function=data.Lab.find)

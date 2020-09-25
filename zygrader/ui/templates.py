@@ -20,26 +20,21 @@ class ZybookSectionSelector:
         items = []
         chapter_pad_width = len(str(len(self.zybooks_toc)))
         section_pad_width = max(
-            [len(str(len(chapter["sections"]))) for chapter in self.zybooks_toc]
-        )
+            [len(str(len(chapter["sections"]))) for chapter in self.zybooks_toc])
         for chapter in self.zybooks_toc:
             res.append(f"{str(chapter['number']):>{chapter_pad_width}}" f" - {chapter['title']}")
             items.append(chapter["number"])
             if chapters_expanded[chapter["number"]]:
                 for section in chapter["sections"]:
-                    section_string = (
-                        f"{chapter['number']}"
-                        f".{section['number']:<{section_pad_width}}"
-                        f" - {section['title']}"
-                    )
+                    section_string = (f"{chapter['number']}"
+                                      f".{section['number']:<{section_pad_width}}"
+                                      f" - {section['title']}")
                     is_selected = selected_sections[(chapter["number"], section["number"])]
                     if self.is_allowed(section):
                         res.append(f"  [{'X' if is_selected else ' '}]" f" {section_string}")
                     else:
-                        res.append(
-                            f"  -{'X' if is_selected else '-'}-"
-                            f" {section_string} (hidden/optional)"
-                        )
+                        res.append(f"  -{'X' if is_selected else '-'}-"
+                                   f" {section_string} (hidden/optional)")
                     items.append((chapter["number"], section["number"]))
         self.drawn_zybook_items = items
         return res
@@ -57,29 +52,19 @@ class ZybookSectionSelector:
         self.zybooks_toc = self.zy_api.get_table_of_contents()
         if not self.zybooks_toc:
             return None
-        self.zybooks_sections = {
-            (chapter["number"], section["number"]): section
-            for chapter in self.zybooks_toc
-            for section in chapter["sections"]
-        }
+        self.zybooks_sections = {(chapter["number"], section["number"]): section
+                                 for chapter in self.zybooks_toc for section in chapter["sections"]}
 
         chapters_expanded = {chapter["number"]: False for chapter in self.zybooks_toc}
-        selected_sections = {
-            (chapter["number"], section["number"]): False
-            for chapter in self.zybooks_toc
-            for section in chapter["sections"]
-        }
+        selected_sections = {(chapter["number"], section["number"]): False
+                             for chapter in self.zybooks_toc for section in chapter["sections"]}
         draw_sections = lambda: self.draw_zybook_sections(chapters_expanded, selected_sections)
         draw_sections()
         section_callback = lambda context: self.select_zybook_sections_callback(
-            chapters_expanded, selected_sections, context.data
-        )
+            chapters_expanded, selected_sections, context.data)
 
-        title = (
-            "Select zyBook Sections (use Back to finish)"
-            if not title_extra
-            else f"{title_extra} - Select Sections"
-        )
+        title = ("Select zyBook Sections (use Back to finish)"
+                 if not title_extra else f"{title_extra} - Select Sections")
         self.window.create_list_popup(title, callback=section_callback, list_fill=draw_sections)
         res = []
         for section_numbers, selected in selected_sections.items():

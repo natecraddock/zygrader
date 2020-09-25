@@ -66,9 +66,8 @@ def submission_search(lab, search_string, output_path):
                 counter = f"[{student_num}/{len(students)}]"
                 logger.log(f"{counter:12} Checking {student.full_name}")
 
-                match_result = check_student_submissions(
-                    zy_api, str(student.id), lab, search_string
-                )
+                match_result = check_student_submissions(zy_api, str(student.id), lab,
+                                                         search_string)
 
                 if match_result["code"] == Zybooks.DOWNLOAD_TIMEOUT:
                     logger.log("Download timed out... trying again after a few seconds")
@@ -96,9 +95,9 @@ def submission_search_init(window, labs):
     window.set_header("Submissions Search")
 
     # Choose lab
-    assignment_index = window.create_filtered_list(
-        "Assignment", input_data=labs, filter_function=data.Lab.find
-    )
+    assignment_index = window.create_filtered_list("Assignment",
+                                                   input_data=labs,
+                                                   filter_function=data.Lab.find)
     if assignment_index is ui.GO_BACK:
         return
 
@@ -107,8 +106,7 @@ def submission_search_init(window, labs):
     # Select the lab part if needed
     if len(assignment.parts) > 1:
         part_index = window.create_list_popup(
-            "Select Part", input_data=[name["name"] for name in assignment.parts]
-        )
+            "Select Part", input_data=[name["name"] for name in assignment.parts])
         if part_index is ui.GO_BACK:
             return
         part = assignment.parts[part_index]
@@ -154,9 +152,8 @@ def admin_menu_callback(context: ui.WinContext):
     elif option == "Remove Locks":
         while True:
             all_locks = data.lock.get_lock_files()
-            lock_index = context.window.create_filtered_list(
-                "Choose a lock file", input_data=all_locks
-            )
+            lock_index = context.window.create_filtered_list("Choose a lock file",
+                                                             input_data=all_locks)
             if lock_index != ui.GO_BACK:
                 data.lock.remove_lock_file(all_locks[lock_index])
             else:
@@ -170,6 +167,6 @@ def admin_menu():
     window = ui.get_window()
     window.set_header("Admin")
 
-    window.create_filtered_list(
-        "Option", input_data=ADMIN_MENU_OPTIONS, callback=admin_menu_callback
-    )
+    window.create_filtered_list("Option",
+                                input_data=ADMIN_MENU_OPTIONS,
+                                callback=admin_menu_callback)
