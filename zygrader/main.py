@@ -138,14 +138,20 @@ def mainloop(admin_mode):
     """Create the main menu that runs until zygrader is exited"""
     window = ui.get_window()
 
-    if admin_mode:
-        MAIN_MENU_OPTIONS.append("Admin")
+    # if admin_mode:
+    #     MAIN_MENU_OPTIONS.append("Admin")
 
-    window.set_header(SharedData.get_current_class_code)
-    window.create_filtered_list("Option", input_data=MAIN_MENU_OPTIONS, callback=mainloop_callback)
+    # window.set_header(SharedData.get_current_class_code)
+    # window.create_filtered_list("Option", input_data=MAIN_MENU_OPTIONS, callback=mainloop_callback)
+
+    # Create the main menu
+    menu = ui.layers.MenuLayer()
+    menu.register_entry("Grade", grader.grade)
+    window.register_layer(menu)
 
     # Begin the event loop
-    # window.loop()
+    # TODO: Move to main below
+    window.loop()
 
 
 def main(window: ui.Window):

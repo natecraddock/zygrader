@@ -6,6 +6,7 @@ from zygrader.config.preferences import is_preference_set
 from . import components, input
 from .input import Event, GO_BACK
 from .utils import add_str, resize_window
+from .layers import ComponentLayer
 
 
 class WinContext:
@@ -18,17 +19,11 @@ class WinContext:
         self.data = custom_data
 
 
-class CompomentLayer:
-    def __init__(self):
-        self.title: str = ""
-        self.blocking = False
-
-
 class Tab:
     """A tab holds a stack of component layers. Zygrader always has 4 tabs, they are not always visible."""
 
     def __init__(self):
-        self.component_layers: typing.List[CompomentLayer] = []
+        self.component_layers: typing.List[ComponentLayer] = []
         self.open = False
 
 
@@ -59,7 +54,7 @@ class Window:
         self.name = window_name
 
         self.tabs: typing.List[Tab] = []
-        self.active_tab: Tab = None
+        self.active_tab: Tab = Tab()
 
         # All user input handling is done in a separate thread
         # Inside the input class
@@ -191,6 +186,9 @@ class Window:
 
         curses.setsyx(*loc)
 
+    def register_layer(self, layer: ComponentLayer):
+        self.active_tab.component_layers.append(layer)
+
     def loop(self):
         """Handle events in a loop until the program is exited"""
         while True:
@@ -199,10 +197,10 @@ class Window:
             if event.type == Event.HEADER_UPDATE:
                 # self.update_header()
                 pass
-            for layer in self.active_tab.component_layers:
-                pass
-                # Handle events in the active layer
-                # Redraw all visible layers
+            else:
+                for layer in self.active_tab.component_layers:
+                    layer.event_handler(event)
+                    layer.draw()
 
     def draw(self):
         """Draw each component in the stack"""

@@ -2,6 +2,7 @@ from .window import Window, WinContext
 from .input import Event, GO_BACK, Input
 from . import components
 from . import window
+from . import layers
 
 
 def get_window() -> Window:
