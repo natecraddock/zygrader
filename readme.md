@@ -91,9 +91,9 @@ Enter the virtual environment
 $ source ~/.virtualenvs/zygrader/bin/activate
 ```
 
-You must first install zygrader in _develop mode_ before running from source. Run the following from the zygrader repository.
+You must first install zygrader in _develop mode_ before running from source. Run the following from the zygrader repository (installing needed deps).
 ```
-$ pip install requests
+$ pip install requests black
 $ pip install -e .
 ```
 
@@ -111,8 +111,7 @@ deactivate
 Each time you want to test the develop version you must be in the virtual environment. This prevents conflicts between the local and installed versions of zygrader.
 
 Changes can be pushed to the git repository to share between developers. Zygrader checks GitHub for new tags when
-it starts. If a commit has been tagged with a higher version number than the current version it will be downloaded
-and installed.
+it starts. If a commit has been tagged with a higher version number than the current version it will be downloaded and installed.
 
 ## Pushing Updates
 When enough features are ready, a major release can be sent to users. A major release includes:
@@ -139,7 +138,20 @@ $ ./push_update.sh 3.6.0
 $ ./push_update.sh 3.5.1
 ```
 
-## VSCode
+## Environment (VSCode)
+We strongly suggest using Visual Studio Code as a development enviromnent. The minimum recommended settings are:
+* Extensions
+  * Python (Microsoft) - _Python language support_
+  * Pylance (Microsoft) - _Improved Python language server_
+* Configuration (workspace)
+  * editor.formatOnSave: true
+  * python.formatting.provider: "black"
+
+We use `black` for auto code formatting. The above settings will enable auto code formatting
+on save to keep everyone's edits consistent. If you want to run formatting on all
+files, run `find . -name "*.py" -exec python3 -m black {} \;`.
+
+
 After creating a virtual environment, you must select that as the python interpreter in VSCode for development. Enter the
 command `Python: Select Interpreter` and choose the virtual environment. It searches the project folder and `~/.virtualenvs` for python environments so the venv may be created where desired.
 
