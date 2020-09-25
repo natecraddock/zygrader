@@ -5,6 +5,7 @@ from distutils.version import LooseVersion
 
 from . import preferences
 
+
 class SharedData:
     # Zygrader version
     VERSION = LooseVersion("4.7.5")
@@ -73,14 +74,14 @@ class SharedData:
             return False
 
         config = {}
-        with open(cls.SHARED_CONFIG_PATH, 'r') as _file:
+        with open(cls.SHARED_CONFIG_PATH, "r") as _file:
             config = json.load(_file)
 
         return config
 
     @classmethod
     def write_shared_config(cls, config):
-        with open(cls.SHARED_CONFIG_PATH, 'w') as _file:
+        with open(cls.SHARED_CONFIG_PATH, "w") as _file:
             json.dump(config, _file)
 
     @classmethod

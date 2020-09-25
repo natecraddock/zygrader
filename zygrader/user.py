@@ -10,6 +10,7 @@ from zygrader.config import preferences
 from zygrader import data
 from zygrader import ui
 
+
 def authenticate(window: ui.Window, zy_api, email, password):
     """Authenticate to the zyBooks api with the email and password"""
     wait_popup = window.create_waiting_popup("Signing in", [f"Signing into zyBooks as {email}..."])
@@ -27,6 +28,7 @@ def authenticate(window: ui.Window, zy_api, email, password):
         return False
     return True
 
+
 def get_email():
     """Get the user's email address from config"""
     config = preferences.get_config()
@@ -34,16 +36,21 @@ def get_email():
         return config["email"]
     return ""
 
+
 def get_password(window: ui.Window):
     """Prompt for the user's password"""
     window.set_header("Sign In")
 
-    password = window.create_text_input("Enter Password", "Enter your zyBooks password",
-                                        mask=ui.components.TextInput.TEXT_MASKED)
+    password = window.create_text_input(
+        "Enter Password",
+        "Enter your zyBooks password",
+        mask=ui.components.TextInput.TEXT_MASKED,
+    )
     if password == ui.Window.CANCEL:
         password = ""
 
     return password
+
 
 # Create a user account
 def create_account(window: ui.Window, zy_api):
@@ -62,6 +69,7 @@ def create_account(window: ui.Window, zy_api):
 
     return email, password
 
+
 def login(window: ui.Window):
     """Authenticate to zybooks with the user's email and password
     or create an account if one does not exist"""
@@ -79,8 +87,9 @@ def login(window: ui.Window):
     if not config["email"]:
         email, password = create_account(window, zy_api)
 
-        save_password = window.create_bool_popup("Save Password",
-                                                 ["Would you like to save your password?"])
+        save_password = window.create_bool_popup(
+            "Save Password", ["Would you like to save your password?"]
+        )
 
         config["email"] = email
 
@@ -104,6 +113,7 @@ def login(window: ui.Window):
                     preferences.write_config(config)
                 break
 
+
 def logout():
     """Log a user out by erasing their email and password from config"""
     config = preferences.get_config()
@@ -114,13 +124,18 @@ def logout():
     write_config(config)
 
     window = ui.get_window()
-    msg = ["You have been logged out. Would you like to sign in with different credentials?", "", "Answering `No` will quit zygrader."]
+    msg = [
+        "You have been logged out. Would you like to sign in with different credentials?",
+        "",
+        "Answering `No` will quit zygrader.",
+    ]
     sign_in = window.create_bool_popup("Sign in?", msg)
 
     if sign_in:
         login(window)
     else:
         sys.exit()
+
 
 def draw_text_editors():
     """Draw the list of text editors"""
@@ -135,6 +150,7 @@ def draw_text_editors():
 
     return options
 
+
 def set_editor(editor_index, pref_name):
     """Set the user's default editor to the selected editor"""
     config_file = preferences.get_config()
@@ -142,11 +158,13 @@ def set_editor(editor_index, pref_name):
 
     preferences.write_config(config_file)
 
+
 def set_editor_menu(name):
     """Open the set editor popup"""
     window = ui.get_window()
     edit_fn = lambda context: set_editor(context.data, name)
     window.create_list_popup("Set Editor", callback=edit_fn, list_fill=draw_text_editors)
+
 
 def draw_class_codes():
     """Draw the list of class codes"""
@@ -161,6 +179,7 @@ def draw_class_codes():
         else:
             options.append(f"[ ] {code}")
     return options
+
 
 def set_class_code_override(code_index: int, pref_name: str):
     """Set the current class code to the user's overridden code"""
@@ -177,11 +196,13 @@ def set_class_code_override(code_index: int, pref_name: str):
     data.load_labs()
     data.load_class_sections()
 
+
 def set_class_code_override_menu(pref_name: str):
     """Open the set class code override popup"""
     window = ui.get_window()
     set_fn = lambda context: set_class_code_override(context.data, pref_name)
     window.create_list_popup("Override Class Code", callback=set_fn, list_fill=draw_class_codes)
+
 
 def toggle_preference(pref):
     """Toggle a boolean preference"""
@@ -194,6 +215,7 @@ def toggle_preference(pref):
 
     preferences.write_config(config)
 
+
 def password_toggle(name):
     """Toggle saving the user's password in their config file (encoded)"""
     toggle_preference(name)
@@ -205,8 +227,11 @@ def password_toggle(name):
 
     else:
         window = ui.get_window()
-        window.create_popup("Remember Password",
-                            ["Next time you start zygrader your password will be saved."])
+        window.create_popup(
+            "Remember Password",
+            ["Next time you start zygrader your password will be saved."],
+        )
+
 
 # Preference types
 # Toggle for booleans
@@ -216,26 +241,36 @@ PREFERENCE_TOGGLE = 1
 PREFERENCE_MENU = 2
 PREFERENCE_ACTION = 3
 
+
 class Preference:
     """Holds information for a user preference item"""
+
     def __init__(self, name, description, select_fn, _type=PREFERENCE_TOGGLE):
         self.name = name
         self.description = description
         self.select_fn = select_fn
         self.type = _type
 
-PREFERENCES = [Preference("left_right_arrow_nav", "Left/Right Arrow Navigation", toggle_preference),
-               Preference("use_esc_back", "Use Esc key to exit menus", toggle_preference),
-               Preference("clear_filter", "Auto Clear List Filters", toggle_preference),
-               Preference("vim_mode", "Vim Mode", toggle_preference),
-               Preference("dark_mode", "Dark Mode", toggle_preference),
-               Preference("christmas_mode", "Christmas Theme", toggle_preference),
-               Preference("browser_diff", "Open Diffs in Browser", toggle_preference),
-               Preference("save_password", "Remember Password", password_toggle),
-               Preference("class_code", "Override Class Code", set_class_code_override_menu, PREFERENCE_MENU),
-               Preference("editor", "Set Editor", set_editor_menu, PREFERENCE_MENU),
-               Preference("log_out", "Log Out", logout, PREFERENCE_ACTION),
-               ]
+
+PREFERENCES = [
+    Preference("left_right_arrow_nav", "Left/Right Arrow Navigation", toggle_preference),
+    Preference("use_esc_back", "Use Esc key to exit menus", toggle_preference),
+    Preference("clear_filter", "Auto Clear List Filters", toggle_preference),
+    Preference("vim_mode", "Vim Mode", toggle_preference),
+    Preference("dark_mode", "Dark Mode", toggle_preference),
+    Preference("christmas_mode", "Christmas Theme", toggle_preference),
+    Preference("browser_diff", "Open Diffs in Browser", toggle_preference),
+    Preference("save_password", "Remember Password", password_toggle),
+    Preference(
+        "class_code",
+        "Override Class Code",
+        set_class_code_override_menu,
+        PREFERENCE_MENU,
+    ),
+    Preference("editor", "Set Editor", set_editor_menu, PREFERENCE_MENU),
+    Preference("log_out", "Log Out", logout, PREFERENCE_ACTION),
+]
+
 
 def draw_preferences():
     """Create the list of user preferences"""
@@ -251,6 +286,7 @@ def draw_preferences():
 
     return options
 
+
 def preferences_callback(context: ui.WinContext):
     """Callback to run when a preference is selected"""
     selected_index = context.data
@@ -262,10 +298,12 @@ def preferences_callback(context: ui.WinContext):
     else:
         pref.select_fn()
 
+
 def preferences_menu():
     """Create the preferences popup"""
     window = ui.get_window()
     window.set_header(f"Preferences")
 
-    window.create_list_popup("User Preferences", callback=preferences_callback,
-                             list_fill=draw_preferences)
+    window.create_list_popup(
+        "User Preferences", callback=preferences_callback, list_fill=draw_preferences
+    )

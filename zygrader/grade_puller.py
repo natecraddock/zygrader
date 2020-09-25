@@ -9,12 +9,14 @@ from zygrader.config.shared import SharedData
 from zygrader.zybooks import Zybooks
 from zygrader.utils import fetch_zybooks_toc
 
+
 def create_last_night():
     now = datetime.datetime.now()
     yesterday = now - datetime.timedelta(days=1)
     midnight = datetime.time(hour=23, minute=59, second=59)
     last_night = datetime.datetime.combine(yesterday, midnight)
     return last_night
+
 
 class GradePuller:
     NUM_CANVAS_ID_COLUMNS = 5
@@ -43,14 +45,12 @@ class GradePuller:
                 class_sections = self.select_class_sections()
                 due_times = self.select_due_times(class_sections)
 
-                self.add_assignment_to_report(canvas_assignment,
-                                              zybook_sections,
-                                              class_sections,
-                                              due_times)
+                self.add_assignment_to_report(
+                    canvas_assignment, zybook_sections, class_sections, due_times
+                )
 
                 msg = ["Add another assignment to the report?"]
-                more_assignments = self.window.create_bool_popup(
-                    "More Assignments", msg)
+                more_assignments = self.window.create_bool_popup("More Assignments", msg)
 
             self.write_upload_file()
         except GradePuller.StoppingException:
@@ -61,35 +61,40 @@ class GradePuller:
         try:
             self.canvas_students = dict()
             bad_id_count = 0
-            with open(path, 'r', newline='') as canvas_master_file:
+            with open(path, "r", newline="") as canvas_master_file:
                 canvas_reader = csv.DictReader(canvas_master_file)
                 self.canvas_header = canvas_reader.fieldnames
                 self.canvas_points_out_of = canvas_reader.__next__()
                 for row in canvas_reader:
-                    id_str = row['SIS User ID']
+                    id_str = row["SIS User ID"]
                     if id_str:
-                        row['id_number'] = int(id_str)
+                        row["id_number"] = int(id_str)
                     else:
                         bad_id_count += 1
-                        row['id_number'] = f"bad_canvas_id_{bad_id_count}"
-                    self.canvas_students[row['id_number']] = row
+                        row["id_number"] = f"bad_canvas_id_{bad_id_count}"
+                    self.canvas_students[row["id_number"]] = row
         except FileNotFoundError:
-            msg = [f"Could not find {path}",
-                    ("Please download the gradebook from Canvas"
-                     " and put it in the place noted above")]
+            msg = [
+                f"Could not find {path}",
+                (
+                    "Please download the gradebook from Canvas"
+                    " and put it in the place noted above"
+                ),
+            ]
             self.window.create_popup("Error in Reading Master CSV", msg)
             raise GradePuller.StoppingException()
         except PermissionError:
-            msg = [f"Could not open {path} for reading",
-                    "Please have the owner of the file grand read permissions"]
+            msg = [
+                f"Could not open {path} for reading",
+                "Please have the owner of the file grand read permissions",
+            ]
             self.window.create_popup("Error in Reading Master CSV", msg)
             raise GradePuller.StoppingException()
 
     def select_canvas_assignment(self):
         num_id_columns = GradePuller.NUM_CANVAS_ID_COLUMNS
         real_assignments = self.canvas_header[num_id_columns:]
-        index = self.window.create_filtered_list("Assignment",
-                                                 input_data=real_assignments)
+        index = self.window.create_filtered_list("Assignment", input_data=real_assignments)
         if index is ui.GO_BACK:
             raise GradePuller.StoppingException()
         return real_assignments[index]
@@ -102,26 +107,27 @@ class GradePuller:
         return res
 
     def select_class_sections(self):
-        sections_list = [section.section_number
-                             for section in data.get_class_sections()]
+        sections_list = [section.section_number for section in data.get_class_sections()]
 
         selected = [True] * len(sections_list)
+
         def toggle_selected(index):
             selected[index] = not selected[index]
 
         draw_sections = lambda: [
-            f"[{'X' if selected else ' '}] {el}"
-                for el, selected in zip(sections_list, selected)]
+            f"[{'X' if selected else ' '}] {el}" for el, selected in zip(sections_list, selected)
+        ]
         section_callback = lambda context: toggle_selected(context.data)
 
         self.window.create_list_popup(
             "Select Class Sections (use Back to finish)",
-            callback=section_callback, list_fill=draw_sections)
+            callback=section_callback,
+            list_fill=draw_sections,
+        )
 
         if not any(selected):
             raise GradePuller.StoppingException()
-        return [el for el, selected in zip(sections_list, selected)
-                       if selected]
+        return [el for el, selected in zip(sections_list, selected) if selected]
 
     def select_due_times(self, class_sections):
         now = datetime.datetime.now()
@@ -129,23 +135,25 @@ class GradePuller:
         stored_class_sections = data.get_class_sections_in_ordered_list()
         last_night = create_last_night()
 
-        section_padding = max([len(str(section))
-                                   for section in class_sections])
+        section_padding = max([len(str(section)) for section in class_sections])
 
         default_due_times = []
         for section in stored_class_sections:
             if section:
                 default_due_times.append(
-                    datetime.datetime.combine(yesterday,
-                                              section.default_due_time))
+                    datetime.datetime.combine(yesterday, section.default_due_time)
+                )
             else:
                 default_due_times.append(last_night)
 
-        due_times = {section: default_due_times[section]
-                         for section in class_sections}
-        draw = lambda: [(f"Section {section:>{section_padding}}"
-                         f": {time.strftime('%b %d, %Y at %I:%M:%S%p')}")
-                             for section, time in due_times.items()]
+        due_times = {section: default_due_times[section] for section in class_sections}
+        draw = lambda: [
+            (
+                f"Section {section:>{section_padding}}"
+                f": {time.strftime('%b %d, %Y at %I:%M:%S%p')}"
+            )
+            for section, time in due_times.items()
+        ]
 
         def select_due_times_callback(context: ui.WinContext):
             selected_index = context.data
@@ -153,41 +161,36 @@ class GradePuller:
             section = class_sections[selected_index]
 
             new_datetime = self.window.create_datetime_spinner(
-                "Due Date",
-                due_times[section],
-                [(50, 0), (59, 59), (0,0)])
+                "Due Date", due_times[section], [(50, 0), (59, 59), (0, 0)]
+            )
             due_times[section] = new_datetime
 
-            #For convenience, allow the day or datetime to be carried across
+            # For convenience, allow the day or datetime to be carried across
             # all sections so that selecting due times is easier
             # but only if the first section was just edited
             if selected_index != 0 or len(class_sections) <= 1:
                 return
 
             msg = DisplayStr("Set all sections to this due date [u:and time]?")
-            do_carry_datetime = self.window.create_bool_popup(
-                "Set Due Time",
-                [msg])
+            do_carry_datetime = self.window.create_bool_popup("Set Due Time", [msg])
             if do_carry_datetime:
                 for section in due_times:
                     due_times[section] = new_datetime
                 return
 
             do_carry_date = self.window.create_bool_popup(
-                "Set Due Time",
-                ["Set all sections to this due date (but retain time)?"])
+                "Set Due Time", ["Set all sections to this due date (but retain time)?"]
+            )
             if do_carry_date:
                 for section in due_times:
                     old_datetime = due_times[section]
                     due_times[section] = datetime.datetime.combine(
-                        date=new_datetime,
-                        time=old_datetime.time()
+                        date=new_datetime, time=old_datetime.time()
                     )
 
-
-        self.window.create_list_popup("Set Due Times (use Back to finish)",
-                                      callback=select_due_times_callback,
-                                      list_fill=draw)
+        self.window.create_list_popup(
+            "Set Due Times (use Back to finish)", callback=select_due_times_callback, list_fill=draw
+        )
 
         return due_times
 
@@ -211,10 +214,9 @@ class GradePuller:
                 table[j][0] = j
             for i in range(1, len(seq2) + 1):
                 for j in range(1, len(seq1) + 1):
-                    left_score = table[i][j-1] + 1
-                    up_score = table[i-1][j] + 1
-                    diag_score = table[i-1][j-1] + (0 if seq2[i-1] == seq1[j-1]
-                                                        else 1)
+                    left_score = table[i][j - 1] + 1
+                    up_score = table[i - 1][j] + 1
+                    diag_score = table[i - 1][j - 1] + (0 if seq2[i - 1] == seq1[j - 1] else 1)
                     table[i][j] = min(left_score, up_score, diag_score)
             return table[-1][-1]
 
@@ -229,7 +231,7 @@ class GradePuller:
                     continue
 
                 # try matching by netid
-                netid = canvas_student['SIS Login ID']
+                netid = canvas_student["SIS Login ID"]
                 if netid in self.zybook_students:
                     self._add_entry(student_id, netid)
                     continue
@@ -237,16 +239,16 @@ class GradePuller:
             for bad_zybook_id in self.unmatched_zybook_ids.copy():
                 # try to detect if student included issue# in id#
                 zybook_student = self.zybook_students[bad_zybook_id]
-                id_str = zybook_student['Student ID']
+                id_str = zybook_student["Student ID"]
                 id_chrs = [c for c in id_str if c.isdigit()]
                 # the issue number is usually the last two digits
                 #  when students try to include it
                 real_id_chrs = id_chrs[:-2]
                 real_id = None
                 try:
-                    real_id = int(''.join(real_id_chrs))
+                    real_id = int("".join(real_id_chrs))
                 except ValueError:
-                    continue # the student has something very wrong
+                    continue  # the student has something very wrong
                 if real_id in self.unmatched_canvas_ids:
                     self._add_entry(real_id, bad_zybook_id)
                     continue
@@ -257,14 +259,12 @@ class GradePuller:
             for canvas_id in self.unmatched_canvas_ids:
                 for zybook_id in self.unmatched_zybook_ids:
                     canvas_student = self.canvas_students[canvas_id]
-                    canvas_str_id = canvas_student['SIS User ID']
+                    canvas_str_id = canvas_student["SIS User ID"]
                     zybook_student = self.zybook_students[zybook_id]
-                    zybook_str_id = zybook_student['Student ID']
+                    zybook_str_id = zybook_student["Student ID"]
                     if not [c for c in zybook_str_id if c.isalpha()]:
-                        zybook_id_digits = [c for c in zybook_str_id
-                                                if c.isdigit()]
-                        edit_distance = self.edit_distance(zybook_id_digits,
-                                                        canvas_str_id)
+                        zybook_id_digits = [c for c in zybook_str_id if c.isdigit()]
+                        edit_distance = self.edit_distance(zybook_id_digits, canvas_str_id)
                         if edit_distance < EDIT_DISTANCE_CUTOFF:
                             if canvas_id in consider_pairs:
                                 consider_pairs[canvas_id].append(zybook_id)
@@ -276,25 +276,22 @@ class GradePuller:
                 if len(zybook_id_list) == 1:
                     self._add_entry(canvas_id, zybook_id_list[0])
 
-    def add_assignment_to_report(self, canvas_assignment, zybook_sections,
-                                 class_sections, due_times):
-        zybooks_students = self.fetch_completion_reports(zybook_sections,
-                                                         due_times)
-        mapping = GradePuller.StudentMapping(self.canvas_students,
-                                             zybooks_students)
+    def add_assignment_to_report(
+        self, canvas_assignment, zybook_sections, class_sections, due_times
+    ):
+        zybooks_students = self.fetch_completion_reports(zybook_sections, due_times)
+        mapping = GradePuller.StudentMapping(self.canvas_students, zybooks_students)
 
         for canvas_student_id, zybook_student in mapping.mapping.items():
             canvas_student = self.canvas_students[canvas_student_id]
-            class_section = self.parse_section_from_canvas_student(
-                                                                canvas_student)
+            class_section = self.parse_section_from_canvas_student(canvas_student)
             if class_section in class_sections:
-                grade = zybook_student['grade']
+                grade = zybook_student["grade"]
                 canvas_student[canvas_assignment] = grade
             # else leave canvas grade as it was
         for canvas_student_id in mapping.unmatched_canvas_ids:
             canvas_student = self.canvas_students[canvas_student_id]
-            class_section = self.parse_section_from_canvas_student(
-                                                                canvas_student)
+            class_section = self.parse_section_from_canvas_student(canvas_student)
             if class_section in class_sections:
                 canvas_student[canvas_assignment] = 0.0
             # else leave canvas grade as it was
@@ -302,8 +299,8 @@ class GradePuller:
         self.selected_assignments.append(canvas_assignment)
 
     def parse_section_from_canvas_student(self, student):
-        section_str = student['Section']
-        section_num = int(section_str.split('-')[1].split(':')[0])
+        section_str = student["Section"]
+        section_num = int(section_str.split("-")[1].split(":")[0])
         return section_num
 
     def parse_grade_from_canvas_student(self, student, assignment):
@@ -327,7 +324,7 @@ class GradePuller:
         bad_id_count = 0
         report = dict()
         for row in csv_reader:
-            string_id = row['Student ID']
+            string_id = row["Student ID"]
             real_id = None
             num_alpha = len([c for c in string_id if c.isalpha()])
             if num_alpha > 0:
@@ -335,23 +332,20 @@ class GradePuller:
                 real_id = string_id.lower()
             else:
                 try:
-                    real_id = int(''.join(
-                        [c for c in string_id if c.isdigit()]))
+                    real_id = int("".join([c for c in string_id if c.isdigit()]))
                 except ValueError:
                     bad_id_count += 1
-                    real_id = (string_id if string_id
-                                        else f"bad_zybooks_id_{bad_id_count}")
+                    real_id = string_id if string_id else f"bad_zybooks_id_{bad_id_count}"
             while real_id in report:
                 real_id = str(real_id) + "(02)"
-            row['id_number'] = real_id
-            row['grade'] = float(row[total_field_name])
+            row["id_number"] = real_id
+            row["grade"] = float(row[total_field_name])
             report[real_id] = row
 
         return report, header
 
     def fetch_completion_report(self, due_time, zybook_sections):
-        csv_string = self.zy_api.get_completion_report(due_time,
-                                                       zybook_sections)
+        csv_string = self.zy_api.get_completion_report(due_time, zybook_sections)
         if not csv_string:
             raise GradePuller.StoppingException()
 
@@ -363,11 +357,12 @@ class GradePuller:
         for section_num, due_time in due_times.items():
             due_time_to_sections[due_time].append(section_num)
 
-        wait_msg = ["Fetching completion reports from zyBooks",
-                    "(one per unique due time)",
-                    f"Completed 0/{len(unique_due_times)}"]
-        wait_controller = self.window.create_waiting_popup("Fetch Reports",
-                                                           wait_msg)
+        wait_msg = [
+            "Fetching completion reports from zyBooks",
+            "(one per unique due time)",
+            f"Completed 0/{len(unique_due_times)}",
+        ]
+        wait_controller = self.window.create_waiting_popup("Fetch Reports", wait_msg)
         num_completed = 0
 
         zybooks_students = dict()
@@ -377,11 +372,11 @@ class GradePuller:
             bad_section_count = 0
             for id, row in report.items():
                 try:
-                    if (int(row['Class section'])) in class_section_list:
+                    if (int(row["Class section"])) in class_section_list:
                         zybooks_students[id] = row
                 except ValueError:
-                    bad_section_count +=1
-                    key = f'bad_zy_class_section_{bad_section_count}'
+                    bad_section_count += 1
+                    key = f"bad_zy_class_section_{bad_section_count}"
                     zybooks_students[key] = row
 
             num_completed += 1
@@ -392,17 +387,16 @@ class GradePuller:
         return zybooks_students
 
     def write_upload_file(self):
-        default_path_str  = "~/" + "&".join(self.selected_assignments) + ".csv"
-        default_path_str = default_path_str.replace(" ","")
+        default_path_str = "~/" + "&".join(self.selected_assignments) + ".csv"
+        default_path_str = default_path_str.replace(" ", "")
         path = filename_input(purpose="the upload file", text=default_path_str)
         if path is None:
             raise GradePuller.StoppingException()
 
-        with open(path, 'w', newline='') as out_file:
-            id_columns = self.canvas_header[:GradePuller.NUM_CANVAS_ID_COLUMNS]
+        with open(path, "w", newline="") as out_file:
+            id_columns = self.canvas_header[: GradePuller.NUM_CANVAS_ID_COLUMNS]
             fieldnames = id_columns + self.selected_assignments
-            writer = csv.DictWriter(out_file, fieldnames=fieldnames,
-                                    extrasaction='ignore')
+            writer = csv.DictWriter(out_file, fieldnames=fieldnames, extrasaction="ignore")
             writer.writeheader()
             writer.writerow(self.canvas_points_out_of)
             writer.writerows(self.canvas_students.values())
@@ -412,31 +406,40 @@ class GradePuller:
             self.read_canvas_csv()
             zybooks_toc = fetch_zybooks_toc()
 
-            zybook_section_1_1 = zybooks_toc[0]['sections'][0]
+            zybook_section_1_1 = zybooks_toc[0]["sections"][0]
             wait_msg = ["Fetching a completion report from zyBooks"]
-            wait_controller = self.window.create_waiting_popup("Fetch Reports",
-                                                               wait_msg)
+            wait_controller = self.window.create_waiting_popup("Fetch Reports", wait_msg)
             zybooks_students, zybooks_header = self.fetch_completion_report(
-                create_last_night(), [zybook_section_1_1])
+                create_last_night(), [zybook_section_1_1]
+            )
             wait_controller.close()
 
-            mapping = GradePuller.StudentMapping(self.canvas_students,
-                                                 zybooks_students)
+            mapping = GradePuller.StudentMapping(self.canvas_students, zybooks_students)
 
-            unmatched_canvas_students = [self.canvas_students[id]
-                                        for id in mapping.unmatched_canvas_ids]
-            unmatched_zybook_students = [zybooks_students[id]
-                                        for id in mapping.unmatched_zybook_ids]
+            unmatched_canvas_students = [
+                self.canvas_students[id] for id in mapping.unmatched_canvas_ids
+            ]
+            unmatched_zybook_students = [
+                zybooks_students[id] for id in mapping.unmatched_zybook_ids
+            ]
 
             num_id_columns = GradePuller.NUM_CANVAS_ID_COLUMNS
             canvas_report_headers = self.canvas_header[:num_id_columns]
-            self.report_list(unmatched_canvas_students, canvas_report_headers,
-                             "unmatched canvas students", "~/unmatched_canvas.csv")
+            self.report_list(
+                unmatched_canvas_students,
+                canvas_report_headers,
+                "unmatched canvas students",
+                "~/unmatched_canvas.csv",
+            )
 
             num_id_columns = GradePuller.NUM_ZYBOOKS_ID_COLUMNS
             zybooks_report_headers = zybooks_header[:num_id_columns]
-            self.report_list(unmatched_zybook_students, zybooks_report_headers,
-                             "unmatched zybooks students", "~/unmatched_zybooks.csv")
+            self.report_list(
+                unmatched_zybook_students,
+                zybooks_report_headers,
+                "unmatched zybooks students",
+                "~/unmatched_zybooks.csv",
+            )
 
         except GradePuller.StoppingException:
             msg = ["Finding Bad Zybooks Student ID#s stopped"]
@@ -451,8 +454,7 @@ class GradePuller:
         if path is None:
             raise GradePuller.StoppingException()
 
-        with open(path, 'w', newline='') as out_file:
-            writer = csv.DictWriter(out_file, fieldnames=headers,
-                                    extrasaction='ignore')
+        with open(path, "w", newline="") as out_file:
+            writer = csv.DictWriter(out_file, fieldnames=headers, extrasaction="ignore")
             writer.writeheader()
             writer.writerows(data)

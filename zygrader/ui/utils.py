@@ -1,6 +1,7 @@
 import curses
 from zygrader.ui.displaystring import DisplayStr
 
+
 def add_str(window, y, x, text, attrs=0):
     """Wrapper around addstr to catch errors"""
     try:
@@ -14,6 +15,7 @@ def add_str(window, y, x, text, attrs=0):
             window.addstr(y, x, text, attrs)
     except curses.error:
         pass
+
 
 def resize_window(window, rows, cols):
     """Wrapper around resize to catch errors"""

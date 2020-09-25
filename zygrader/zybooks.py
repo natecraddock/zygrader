@@ -6,6 +6,7 @@ import zipfile
 
 from zygrader.config.shared import SharedData
 
+
 class SectionResponse:
     def __init__(self):
         self.success = False
@@ -21,7 +22,7 @@ class Zybooks:
     ERROR = 4
 
     SUBMISSION_HIGHEST = "highest_score"  # Grade the most recent of the highest score
-    CHECK_LATE_SUBMISSION = "due" # Remove late submissions
+    CHECK_LATE_SUBMISSION = "due"  # Remove late submissions
 
     session = None
     token = ""
@@ -78,7 +79,7 @@ class Zybooks:
 
         This function returns the report as a string to be parsed as needed by the user
         """
-        section_ids = [section['canonical_section_id'] for section in zybook_sections]
+        section_ids = [section["canonical_section_id"] for section in zybook_sections]
 
         aware_due_time = due_time.astimezone()
         offset_minutes = int(-(aware_due_time.tzinfo.utcoffset(None) / timedelta(minutes=1)))
@@ -132,7 +133,7 @@ class Zybooks:
 
         The class code is of the format: BYUCS142Winter2020
         """
-        url = f"https://zyserver.zybooks.com/v1/zybooks?zybooks=[\"{code}\"]"
+        url = f'https://zyserver.zybooks.com/v1/zybooks?zybooks=["{code}"]'
         payload = {"auth_token": Zybooks.token}
         r = Zybooks.session.get(url, json=payload)
 
@@ -194,7 +195,10 @@ class Zybooks:
         if not submissions:
             return []
 
-        return [f"{self.get_time_string(s)}  Score: {self._get_score(s):3}/{self._get_max_score(s)}" for s in submissions]
+        return [
+            f"{self.get_time_string(s)}  Score: {self._get_score(s):3}/{self._get_max_score(s)}"
+            for s in submissions
+        ]
 
     def __remove_late_submissions(self, submissions, due_time):
         for submission in submissions[:]:
@@ -206,7 +210,7 @@ class Zybooks:
         return submissions
 
     def __get_submission_highest_score(self, submissions):
-        return max(reversed(submissions), key=self._get_score) # Thanks Teikn
+        return max(reversed(submissions), key=self._get_score)  # Thanks Teikn
 
     def __get_submission_most_recent(self, submissions):
         return submissions[-1]
@@ -232,7 +236,9 @@ class Zybooks:
         else:
             # Strip out late submissions
             if submissions and Zybooks.CHECK_LATE_SUBMISSION in options:
-                submissions = self.__remove_late_submissions(submissions, options[Zybooks.CHECK_LATE_SUBMISSION])
+                submissions = self.__remove_late_submissions(
+                    submissions, options[Zybooks.CHECK_LATE_SUBMISSION]
+                )
 
             # Student has not submitted or did not submit before assignment was due
             if not submissions:
@@ -260,7 +266,9 @@ class Zybooks:
 
     def download_assignment_part(self, assignment, user_id, part, submission_index=None):
         response_part = {"code": Zybooks.NO_ERROR, "name": part["name"], "id": str(part["id"])}
-        submission = self.download_submission(part["id"], user_id, assignment.options, submission_index)
+        submission = self.download_submission(
+            part["id"], user_id, assignment.options, submission_index
+        )
 
         if submission["code"] is not Zybooks.NO_SUBMISSION:
             response_part["score"] = submission["score"]
@@ -282,7 +290,13 @@ class Zybooks:
         So this function compiles the individual scores from each part
         """
         user_id = str(student.id)
-        response = {"code": Zybooks.NO_ERROR, "name": assignment.name, "score": 0, "max_score": 0, "parts": []}
+        response = {
+            "code": Zybooks.NO_ERROR,
+            "name": assignment.name,
+            "score": 0,
+            "max_score": 0,
+            "parts": [],
+        }
 
         has_submitted = False
         for part in assignment.parts:
@@ -320,6 +334,6 @@ class Zybooks:
             return Zybooks.ERROR
 
         # Write zip to cache
-        with open(cached_name, 'wb') as _file:
+        with open(cached_name, "wb") as _file:
             _file.write(zip_response.content)
         return zipfile.ZipFile(cached_name)

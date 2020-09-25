@@ -11,6 +11,7 @@ from zygrader import class_manager
 from zygrader import grade_puller
 from zygrader import utils
 
+
 def check_student_submissions(zy_api, student_id, lab, search_string):
     """Search for a substring in all of a student's submissions for a given lab"""
     response = {"code": Zybooks.NO_SUBMISSION}
@@ -46,6 +47,7 @@ def check_student_submissions(zy_api, student_id, lab, search_string):
 
     return response
 
+
 def submission_search(lab, search_string, output_path):
     """Search through student submissions for a given string
 
@@ -64,8 +66,9 @@ def submission_search(lab, search_string, output_path):
                 counter = f"[{student_num}/{len(students)}]"
                 logger.log(f"{counter:12} Checking {student.full_name}")
 
-                match_result = check_student_submissions(zy_api, str(student.id),
-                                                         lab, search_string)
+                match_result = check_student_submissions(
+                    zy_api, str(student.id), lab, search_string
+                )
 
                 if match_result["code"] == Zybooks.DOWNLOAD_TIMEOUT:
                     logger.log("Download timed out... trying again after a few seconds")
@@ -93,8 +96,9 @@ def submission_search_init(window, labs):
     window.set_header("Submissions Search")
 
     # Choose lab
-    assignment_index = window.create_filtered_list("Assignment", input_data=labs,
-                                                   filter_function=data.Lab.find)
+    assignment_index = window.create_filtered_list(
+        "Assignment", input_data=labs, filter_function=data.Lab.find
+    )
     if assignment_index is ui.GO_BACK:
         return
 
@@ -102,8 +106,9 @@ def submission_search_init(window, labs):
 
     # Select the lab part if needed
     if len(assignment.parts) > 1:
-        part_index = window.create_list_popup("Select Part", input_data=[
-            name["name"] for name in assignment.parts])
+        part_index = window.create_list_popup(
+            "Select Part", input_data=[name["name"] for name in assignment.parts]
+        )
         if part_index is ui.GO_BACK:
             return
         part = assignment.parts[part_index]
@@ -122,7 +127,15 @@ def submission_search_init(window, labs):
     # Run the submission search
     submission_search(part, search_string, output_path)
 
-ADMIN_MENU_OPTIONS = ["Submissions Search", "Grade Puller", "Find Unmatched Students", "Remove Locks", "Class Management"]
+
+ADMIN_MENU_OPTIONS = [
+    "Submissions Search",
+    "Grade Puller",
+    "Find Unmatched Students",
+    "Remove Locks",
+    "Class Management",
+]
+
 
 def admin_menu_callback(context: ui.WinContext):
     """Run the chosen option on the admin menu"""
@@ -141,8 +154,9 @@ def admin_menu_callback(context: ui.WinContext):
     elif option == "Remove Locks":
         while True:
             all_locks = data.lock.get_lock_files()
-            lock_index = context.window.create_filtered_list("Choose a lock file",
-                                                             input_data=all_locks)
+            lock_index = context.window.create_filtered_list(
+                "Choose a lock file", input_data=all_locks
+            )
             if lock_index != ui.GO_BACK:
                 data.lock.remove_lock_file(all_locks[lock_index])
             else:
@@ -150,10 +164,12 @@ def admin_menu_callback(context: ui.WinContext):
     elif option == "Class Management":
         class_manager.start()
 
+
 def admin_menu():
     """Create the admin menu"""
     window = ui.get_window()
     window.set_header("Admin")
 
-    window.create_filtered_list("Option", input_data=ADMIN_MENU_OPTIONS,
-                                callback=admin_menu_callback)
+    window.create_filtered_list(
+        "Option", input_data=ADMIN_MENU_OPTIONS, callback=admin_menu_callback
+    )

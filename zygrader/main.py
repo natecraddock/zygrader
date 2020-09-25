@@ -21,11 +21,14 @@ from zygrader.config import preferences
 from zygrader.config import versioning
 from zygrader.config.shared import SharedData
 
+
 def lock_cleanup():
     data.lock.unlock_all_labs_by_grader(getpass.getuser())
 
+
 def sighup_handler(signum, frame):
     lock_cleanup()
+
 
 def sigint_handler(signum, frame):
     if SharedData.RUNNING_CODE:
@@ -39,12 +42,14 @@ def sigint_handler(signum, frame):
         lock_cleanup()
         sys.exit(0)
 
+
 def sigtstp_handler(signum, frame):
     if SharedData.RUNNING_CODE:
         # If child process is running
         if SharedData.running_process.poll() is None:
             SharedData.RUNNING_CODE = False
             SharedData.running_process.send_signal(signal.SIGTSTP)
+
 
 def parse_args():
     """Parse CMD args"""
@@ -58,13 +63,14 @@ def parse_args():
 
     return parser.parse_args()
 
+
 def handle_args(args):
     if args.set_data_dir:
         if preferences.set_data_directory(args.set_data_dir):
             print(f"Successfully set the shared data dir to {args.set_data_dir}")
             time.sleep(1)
         else:
-            print(f"Error: The path \"{args.set_data_dir}\" does not exist.")
+            print(f'Error: The path "{args.set_data_dir}" does not exist.')
             sys.exit()
 
     if args.init_data_dir:
@@ -72,7 +78,7 @@ def handle_args(args):
             print(f"Error: the path {args.init_data_dir} does not exist.")
             sys.exit()
 
-        shared_data_dir = os.path.join(args.init_data_dir, 'zygrader_data')
+        shared_data_dir = os.path.join(args.init_data_dir, "zygrader_data")
 
         print(f"Warning: You are about to create the following directory:")
         print(f"{shared_data_dir}")
@@ -93,8 +99,17 @@ def handle_args(args):
         print(f"zygrader --set-data-dir {shared_data_dir}")
         sys.exit()
 
-MAIN_MENU_OPTIONS = ["Grade", "Emails", "Prep Lab Score Calculator", "Run For Fun",
-                     "View Students", "Preferences", "Changelog"]
+
+MAIN_MENU_OPTIONS = [
+    "Grade",
+    "Emails",
+    "Prep Lab Score Calculator",
+    "Run For Fun",
+    "View Students",
+    "Preferences",
+    "Changelog",
+]
+
 
 def mainloop_callback(context: ui.WinContext):
     """Run the chosen option from the main menu"""
@@ -107,7 +122,7 @@ def mainloop_callback(context: ui.WinContext):
     elif option == "Preferences":
         user.preferences_menu()
     elif option == "Emails":
-        email.email_menu();
+        email.email_menu()
     elif option == "Prep Lab Score Calculator":
         utils.prep_lab_score_calc()
     elif option == "Admin":
@@ -118,6 +133,7 @@ def mainloop_callback(context: ui.WinContext):
     elif option == "View Students":
         utils.view_students()
 
+
 def mainloop(admin_mode):
     """Create the main menu that runs until zygrader is exited"""
     window = ui.get_window()
@@ -127,6 +143,7 @@ def mainloop(admin_mode):
 
     window.set_header(SharedData.get_current_class_code)
     window.create_filtered_list("Option", input_data=MAIN_MENU_OPTIONS, callback=mainloop_callback)
+
 
 def main(window: ui.Window):
     """Curses has been initialized, now setup various modules before showing the menu"""
@@ -149,6 +166,7 @@ def main(window: ui.Window):
 
     mainloop(admin_mode)
 
+
 def start():
     """Setup before initializing curses"""
 
@@ -158,7 +176,7 @@ def start():
     signal.signal(signal.SIGHUP, sighup_handler)
 
     # Set a short ESC key delay (curses environment variable)
-    os.environ.setdefault('ESCDELAY', '25')
+    os.environ.setdefault("ESCDELAY", "25")
 
     args = parse_args()
 
@@ -198,6 +216,7 @@ def start():
     ui.Window(main, f"zygrader {SharedData.VERSION}")
 
     logger.log("zygrader exited normally")
+
 
 if __name__ == "__main__":
     start()

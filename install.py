@@ -13,6 +13,7 @@ import sys
 REPO_NAME = "natecraddock/zygrader"
 API_URL = f"https://api.github.com/repos/{REPO_NAME}/tags"
 
+
 def get_tags_list() -> dict:
     """Get list of tags for zygrader from GitHub"""
     r = requests.get(API_URL)
@@ -20,19 +21,23 @@ def get_tags_list() -> dict:
         return {}
     return r.json()
 
+
 def install_from_url(url: str):
     """Install zygrader from the GitHub tarball url"""
     try:
-        subprocess.check_call([sys.executable, "-m", "pip", "install",
-                               "--user", "--no-cache-dir", url])
+        subprocess.check_call(
+            [sys.executable, "-m", "pip", "install", "--user", "--no-cache-dir", url]
+        )
     except subprocess.CalledProcessError:
         print("Failed to install zygrader. Exiting")
+
 
 def install_zygrader():
     """ Install the most recent tagged release. """
     tags = get_tags_list()
     url = tags[0]["tarball_url"]
     install_from_url(url)
+
 
 if __name__ == "__main__":
     install_zygrader()

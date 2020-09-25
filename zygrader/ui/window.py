@@ -15,6 +15,7 @@ UI_LEFT = 0
 UI_RIGHT = 1
 UI_CENTERED = 2
 
+
 class Event:
     # Event types
     NONE = -1
@@ -44,13 +45,16 @@ class Event:
         self.value = value
         self.modifier = modifier
 
+
 class WinContext:
     """A wrapper for the current window context when components execute a callback"""
+
     def __init__(self, window, event: Event, component, custom_data):
         self.window = window
         self.event = event
         self.component = component
         self.data = custom_data
+
 
 class Window:
     EVENT_REFRESH_LIST = "flags_and_locks"
@@ -107,7 +111,7 @@ class Window:
         if input_code == curses.KEY_RESIZE:
             self.__resize_terminal()
             curses.flushinp()
-        elif input_code in {curses.KEY_ENTER, ord('\n'), ord('\r')}:
+        elif input_code in {curses.KEY_ENTER, ord("\n"), ord("\r")}:
             event = Event.ENTER
         elif input_code == curses.KEY_HOME:
             event = Event.HOME
@@ -133,13 +137,13 @@ class Window:
             event = Event.SUP
         elif input_code == curses.KEY_SF:
             event = Event.SDOWN
-        elif input_code == ord('\t'):
+        elif input_code == ord("\t"):
             event = Event.TAB
         elif input_code == curses.KEY_BTAB:
             event = Event.BTAB
         elif self.vim_mode:
             event, event_value = self.get_input_vim(input_code)
-        elif input_code == 27: #curses does not have a pre-defined constant for ESC
+        elif input_code == 27:  # curses does not have a pre-defined constant for ESC
             event = Event.ESC
         elif input_code == curses.KEY_BACKSPACE:
             event = Event.BACKSPACE
@@ -492,8 +496,9 @@ class Window:
         """
         use_dict = bool(isinstance(options, dict))
 
-        popup = components.OptionsPopup(self.rows, self.cols, title,
-                                        message, options, use_dict, align)
+        popup = components.OptionsPopup(
+            self.rows, self.cols, title, message, options, use_dict, align
+        )
         self.component_init(popup)
 
         while True:
@@ -527,17 +532,18 @@ class Window:
         if not use_dict:
             return popup.selected()
 
-    def create_datetime_spinner(self, title, time=None,
-                                quickpicks=None, optional=False,
-                                include_date=True):
+    def create_datetime_spinner(
+        self, title, time=None, quickpicks=None, optional=False, include_date=True
+    ):
         """Create a popup with a datetime spinner to select a datetime.
         time is the initial time to present
         quickpicks is an optional list of (minute, second) pairs.
          If provided, spinning the minute field will spin through the quickpicks
         """
 
-        popup = components.DatetimeSpinner(self.rows, self.cols, title, time,
-                                           quickpicks, optional, include_date)
+        popup = components.DatetimeSpinner(
+            self.rows, self.cols, title, time, quickpicks, optional, include_date
+        )
 
         self.component_init(popup)
 
@@ -575,7 +581,6 @@ class Window:
 
         return retval if retval else popup.get_time()
 
-
     def create_list_popup(self, title, input_data=None, callback=None, list_fill=None):
         """Create a popup with a list of options that can be scrolled and selected
 
@@ -603,8 +608,9 @@ class Window:
             elif event.type == Event.ESC and self.use_esc_back:
                 retval = GO_BACK
                 break
-            elif ((event.type == Event.ENTER) or
-                  (event.type == Event.RIGHT and self.left_right_menu_nav)):
+            elif (event.type == Event.ENTER) or (
+                event.type == Event.RIGHT and self.left_right_menu_nav
+            ):
                 if popup.selected() is GO_BACK:
                     break
                 elif callback:
@@ -646,7 +652,7 @@ class Window:
                 text_input.left(shift_pressed=True)
             elif event.type == Event.SRIGHT:
                 text_input.right(shift_pressed=True)
-            elif event.type == Event.ESC: # Always allow exiting from text input with ESC
+            elif event.type == Event.ESC:  # Always allow exiting from text input with ESC
                 break
             elif event.type == Event.HOME:
                 text_input.cursor_to_beginning()
@@ -666,8 +672,15 @@ class Window:
             return Window.CANCEL
         return text_input.text
 
-    def create_filtered_list(self, prompt, input_data=None, callback=None,
-                             list_fill=None, filter_function=None, create_fn=None):
+    def create_filtered_list(
+        self,
+        prompt,
+        input_data=None,
+        callback=None,
+        list_fill=None,
+        filter_function=None,
+        create_fn=None,
+    ):
         """
         If input_data (list) is supplied, the list will be drawn from the string representations
         of that data. If list_fill (function) is supplied, then list_fill will be called to generate
@@ -675,8 +688,16 @@ class Window:
 
         create_fn: A function to run when the list is created, with the filtered list as an argument
         """
-        filtered_list = components.FilteredList(1, 0, self.rows - 1, self.cols,
-                                             input_data, list_fill, prompt, filter_function)
+        filtered_list = components.FilteredList(
+            1,
+            0,
+            self.rows - 1,
+            self.cols,
+            input_data,
+            list_fill,
+            prompt,
+            filter_function,
+        )
         self.component_init(filtered_list)
 
         if create_fn:
@@ -701,8 +722,9 @@ class Window:
                 break
             elif event.type == Event.CHAR_INPUT:
                 filtered_list.addchar(event.value)
-            elif ((event.type == Event.ENTER) or
-                  (event.type == Event.RIGHT and self.left_right_menu_nav)):
+            elif (event.type == Event.ENTER) or (
+                event.type == Event.RIGHT and self.left_right_menu_nav
+            ):
                 if callback and filtered_list.selected() != GO_BACK:
                     filtered_list.dirty = True
                     callback(WinContext(self, event, filtered_list, filtered_list.selected()))

@@ -9,6 +9,7 @@ from zygrader.config.shared import SharedData
 REPO_NAME = "natecraddock/zygrader"
 API_URL = f"https://api.github.com/repos/{REPO_NAME}/tags"
 
+
 def get_tags_list() -> dict:
     """Get list of tags for zygrader from GitHub"""
     r = requests.get(API_URL)
@@ -16,15 +17,18 @@ def get_tags_list() -> dict:
         return {}
     return r.json()
 
+
 def install_from_url(url: str):
     """Install the new version of zygrader from the GitHub tarball url"""
     try:
-        subprocess.check_call([sys.executable, "-m", "pip", "install",
-                               "--user", "--upgrade", "--no-cache-dir", url])
+        subprocess.check_call(
+            [sys.executable, "-m", "pip", "install", "--user", "--upgrade", "--no-cache-dir", url]
+        )
     except subprocess.CalledProcessError:
         print("Failed to update zygrader. Exiting")
         print()
         sys.exit()
+
 
 def uninstall_zygrader():
     """Uninstall zygrader before downgrading"""
@@ -34,6 +38,7 @@ def uninstall_zygrader():
         print("Failed to uninstall zygrader. Exiting")
         print()
         sys.exit()
+
 
 def get_latest_version():
     """Check the zygrader git repo tags for a new version"""
@@ -46,6 +51,7 @@ def get_latest_version():
         return latest
 
     return SharedData.VERSION
+
 
 def update_zygrader(latest_version):
     """Download zygrader from the git repository and update it"""
@@ -64,6 +70,7 @@ def update_zygrader(latest_version):
 
     print("zygrader successfully updated. Please run zygrader again.")
     print()
+
 
 def install_version(version: str):
     """Specify a version to install from pip"""

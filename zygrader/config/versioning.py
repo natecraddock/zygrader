@@ -6,6 +6,7 @@ from . import preferences
 from .shared import SharedData
 from zygrader import ui
 
+
 def load_changelog():
     """Load the changelog into an array of lines"""
     lines = []
@@ -16,6 +17,7 @@ def load_changelog():
             if not line.startswith("#"):
                 lines.append(line.rstrip())
     return lines
+
 
 def get_version_message(version: str):
     """Get the message for the zygrader version from the changelog"""
@@ -36,12 +38,15 @@ def get_version_message(version: str):
 
     return msg
 
+
 def compare_versions(zygrader_version, user_version):
     return LooseVersion(user_version) < LooseVersion(zygrader_version)
+
 
 def write_current_version(config):
     config["version"] = SharedData.VERSION.vstring
     preferences.write_config(config)
+
 
 def do_versioning(window: ui.Window):
     """Compare the user's current version in the config and make necessary adjustments

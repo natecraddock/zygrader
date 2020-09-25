@@ -14,6 +14,7 @@ from zygrader import utils
 from zygrader import ui
 from zygrader.zybooks import Zybooks
 
+
 class Lab:
     def __init__(self, name, parts, options):
         self.name = name
@@ -22,7 +23,9 @@ class Lab:
 
         # Convert due datetime strings to objects
         if "due" in self.options:
-            self.options["due"] = datetime.datetime.strptime(self.options["due"], "%m.%d.%Y:%H.%M.%S").astimezone(tz=None)
+            self.options["due"] = datetime.datetime.strptime(
+                self.options["due"], "%m.%d.%Y:%H.%M.%S"
+            ).astimezone(tz=None)
 
     def __str__(self):
         return f"{self.name}"
@@ -74,8 +77,13 @@ class Student:
         email = student.email.lower()
         text = text.lower()
 
-        return first_name.find(text) is not -1 or last_name.find(text) is not -1 or \
-               full_name.find(text) is not -1 or email.find(text) is not -1
+        return (
+            first_name.find(text) is not -1
+            or last_name.find(text) is not -1
+            or full_name.find(text) is not -1
+            or email.find(text) is not -1
+        )
+
 
 class ClassSection:
     DUE_TIME_STORAGE_FORMAT = "%H.%M.%S"
@@ -99,9 +107,7 @@ class ClassSection:
         self.default_due_time = other.default_due_time
 
     def __str__(self):
-        time_str = self.default_due_time.strftime(
-            ClassSection.DUE_TIME_DISPLAY_FORMAT
-        )
+        time_str = self.default_due_time.strftime(ClassSection.DUE_TIME_DISPLAY_FORMAT)
         section_padding = len(str(ClassSection.max_section_num))
         section_str = f"{self.section_number:>{section_padding}}"
         return f"Section {section_str} - Default Due Time: {time_str}"
@@ -110,17 +116,16 @@ class ClassSection:
     def from_json(cls, section_json):
         section_number = section_json["section_number"]
         default_due_time_str = section_json["default_due_time"]
-        default_due_time = datetime.datetime.strptime(
-            default_due_time_str, ClassSection.DUE_TIME_STORAGE_FORMAT
-            ).astimezone(tz=None).time()
+        default_due_time = (
+            datetime.datetime.strptime(default_due_time_str, ClassSection.DUE_TIME_STORAGE_FORMAT)
+            .astimezone(tz=None)
+            .time()
+        )
         return ClassSection(section_number, default_due_time)
 
     def to_json(self):
-        time_str = self.default_due_time.strftime(
-            ClassSection.DUE_TIME_STORAGE_FORMAT
-        )
-        return {"section_number": self.section_number,
-                "default_due_time": time_str}
+        time_str = self.default_due_time.strftime(ClassSection.DUE_TIME_STORAGE_FORMAT)
+        return {"section_number": self.section_number, "default_due_time": time_str}
 
 
 class SubmissionFlag(enum.Flag):
@@ -191,10 +196,12 @@ class Submission(Iterable):
         # Only grade if student has submitted
         if self.response["code"] is Zybooks.NO_SUBMISSION:
             self.flag = SubmissionFlag.NO_SUBMISSION
-            self.msg = [f"{self.student.full_name} - {self.lab.name}",
-                        "",
-                        "No submission before the due date.",
-                        "If the student has an exception, pick a submission to grade."]
+            self.msg = [
+                f"{self.student.full_name} - {self.lab.name}",
+                "",
+                "No submission before the due date.",
+                "If the student has an exception, pick a submission to grade.",
+            ]
             return
 
         self.construct_submission()
@@ -281,7 +288,14 @@ class Submission(Iterable):
 
             if user_editor == "Vim":
                 # Use "-p" to open in tabs
-                cmds = ["--cmd", "set tabpagemax=100", "--cmd", "set laststatus=2", "--cmd", "set number"]
+                cmds = [
+                    "--cmd",
+                    "set tabpagemax=100",
+                    "--cmd",
+                    "set laststatus=2",
+                    "--cmd",
+                    "set number",
+                ]
                 subprocess.run([editor_path, "-p"] + files + cmds, stderr=subprocess.DEVNULL)
             elif user_editor == "Emacs":
                 # Force terminal with "-nw"
@@ -291,7 +305,9 @@ class Submission(Iterable):
 
         # Graphical editors
         else:
-            subprocess.run([editor_path] + files, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            subprocess.run(
+                [editor_path] + files, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
+            )
 
     def do_resume_code(self, process):
         if process:
@@ -313,7 +329,7 @@ class Submission(Iterable):
             # Get path to executable
             executable = self.compile_code()
             if not executable:
-                return False # Could not compile code
+                return False  # Could not compile code
 
             SharedData.RUNNING_CODE = True
             stopped = self.run_code(executable, use_gdb)
@@ -355,14 +371,18 @@ class Submission(Iterable):
             if part == ui.GO_BACK:
                 return False
 
-            root_dir = os.path.join(self.files_directory, self.get_part_identifier(self.lab.parts[part]))
+            root_dir = os.path.join(
+                self.files_directory, self.get_part_identifier(self.lab.parts[part])
+            )
 
         files = utils.get_source_file_paths(root_dir)
 
         source_files = [f for f in files if f.endswith(".cpp")]
         compile_command = ["g++", "-g", "-o", executable_name, f"-I{root_dir}"] + source_files
 
-        compile_exit = subprocess.run(compile_command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        compile_exit = subprocess.run(
+            compile_command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
+        )
         if compile_exit.returncode != 0:
             return False
 
@@ -387,7 +407,7 @@ class Submission(Iterable):
         window.take_input.clear()
         curses.endwin()
 
-        print(chr(27) + "[2J", end='') # Clear the terminal
+        print(chr(27) + "[2J", end="")  # Clear the terminal
         print("#############################################################")
         print(f"Running {self.student.full_name}'s code")
         print("CTRL+C to terminate")

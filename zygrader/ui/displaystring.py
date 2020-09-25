@@ -1,7 +1,7 @@
 import curses
 
-#The docstring contains \\\\ to show a \\ when interpreted
-class DisplayStr():
+# The docstring contains \\\\ to show a \\ when interpreted
+class DisplayStr:
     """A Class to allow (basic) formatting of strings
      inside a curses display.
 
@@ -19,9 +19,9 @@ class DisplayStr():
     """
 
     FORMAT_CODES = {
-        'u': curses.A_UNDERLINE,
-        's': curses.A_STANDOUT,
-        'f': curses.A_BLINK # f for flash, and to not conflict with bold
+        "u": curses.A_UNDERLINE,
+        "s": curses.A_STANDOUT,
+        "f": curses.A_BLINK  # f for flash, and to not conflict with bold
         # Bold doesn't look good in light mode
         #  - figure out why and fix before adding it
         #'b': curses.A_BOLD
@@ -30,7 +30,7 @@ class DisplayStr():
     def __init__(self, content: str):
         self._orig_str = content
         self.segments = DisplayStr._parse_content(content)
-        self._display_chars = ''.join(seg[0] for seg in self.segments)
+        self._display_chars = "".join(seg[0] for seg in self.segments)
 
     def __repr__(self):
         return self._orig_str
@@ -47,7 +47,7 @@ class DisplayStr():
         if isinstance(other, DisplayStr):
             otherstr = other._orig_str
         othersegs = DisplayStr._parse_content(otherstr)
-        otherdisp = ''.join(seg[0] for seg in othersegs)
+        otherdisp = "".join(seg[0] for seg in othersegs)
         return otherstr, othersegs, otherdisp
 
     def __add__(self, other):
@@ -148,8 +148,8 @@ class DisplayStr():
         if not newsegs[0][0]:
             del newsegs[0]
 
-        newsegs = [(''.join(seg[0]), seg[1]) for seg in newsegs]
-        disp = ''.join(seg[0] for seg in newsegs)
+        newsegs = [("".join(seg[0]), seg[1]) for seg in newsegs]
+        disp = "".join(seg[0] for seg in newsegs)
 
         ret = DisplayStr("")
         ret._orig_str = f"<sliced DStr (no creation string): {disp}>"
@@ -212,18 +212,18 @@ class DisplayStr():
 
         for c in content:
             if state == S_TEXT:
-                if c == '\\':
+                if c == "\\":
                     state = S_ESCAPE
-                elif c == '[':
+                elif c == "[":
                     formatter_chars = []
                     state = S_FORMATTERS
-                elif c == ']':
+                elif c == "]":
                     format_stack.pop()
                     segments.append(([], format_stack[-1]))
                 else:
                     segments[-1][0].append(c)
             elif state == S_FORMATTERS:
-                if c == ':':
+                if c == ":":
                     formatter = format_stack[-1]
                     for fchar in formatter_chars:
                         if fchar in DisplayStr.FORMAT_CODES:
@@ -236,4 +236,4 @@ class DisplayStr():
             elif state == S_ESCAPE:
                 segments[-1][0].append(c)
 
-        return [(''.join(seg[0]), seg[1]) for seg in segments]
+        return [("".join(seg[0]), seg[1]) for seg in segments]

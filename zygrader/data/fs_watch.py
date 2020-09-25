@@ -6,6 +6,7 @@ import typing
 
 from zygrader import ui
 
+
 class WatchData:
     def __init__(self, paths: list, identifier: str, callback: typing.Callable[[str], None]):
         self.paths = {}
@@ -31,8 +32,10 @@ class WatchData:
         if changed:
             self.callback(self.identifier)
 
+
 WATCH_INTEREST = []
 WATCH_DELAY = 1
+
 
 def fs_watch():
     """Watch loop"""
@@ -44,14 +47,17 @@ def fs_watch():
         for watch in WATCH_INTEREST:
             watch.check_paths()
 
+
 def start_fs_watch():
     """Start a file watch thread"""
     watch_thread = threading.Thread(target=fs_watch, name="FS Watch Thread", daemon=True)
     watch_thread.start()
 
+
 def fs_watch_register(paths: list, identifier: str, callback: callable):
     """Register paths with a callback function"""
     WATCH_INTEREST.append(WatchData(paths, identifier, callback))
+
 
 def fs_watch_unregister(identifier: str):
     """Unregister a path from the file system watch"""

@@ -5,6 +5,7 @@ from collections import Iterable
 
 from .utils import add_str, resize_window
 
+
 class Component:
     def __init__(self):
         # This determines if a component blocks layers beneath it completely
@@ -18,6 +19,7 @@ class Component:
 
     def close(self):
         raise NotImplementedError
+
 
 class Popup(Component):
     # Semi-arbitrary max/min restrictions for popups
@@ -82,7 +84,6 @@ class Popup(Component):
                 wrapped_lines.append(line)
                 break
         return wrapped_lines
-
 
     def __draw_message_left(self, message: list):
         longest_line = max([len(l) for l in message])
@@ -205,11 +206,11 @@ class OptionsPopup(Popup):
             return self.options[key]
         return self.options[self.index]
 
+
 class DatetimeSpinner(Popup):
     NO_DATE = "datetime_no_date"
 
-    def __init__(self, height, width, title, time,
-                 quickpicks, optional, include_date):
+    def __init__(self, height, width, title, time, quickpicks, optional, include_date):
         super().__init__(height, width, title, [], Popup.ALIGN_CENTER)
 
         if time is None:
@@ -245,7 +246,9 @@ class DatetimeSpinner(Popup):
 
         return date.replace(year, month, day)
 
-    def __replace_date(self, date: datetime.date, year=None, month=None, day=None) -> datetime.datetime:
+    def __replace_date(
+        self, date: datetime.date, year=None, month=None, day=None
+    ) -> datetime.datetime:
         """A wrapper around datetime.datetime.replace that checks for out-of range dates
         like a Feb 29 on a non-leap year"""
 
@@ -271,48 +274,60 @@ class DatetimeSpinner(Popup):
         self.fields = []
         if self.include_date:
             self.fields = [
-                           {'name': 'month',
-                            'x_offset': 0,
-                            'unit': None,
-                            'formatter': '%b'},
-                           {'name': 'day',
-                            'x_offset': 4,
-                            'unit': datetime.timedelta(days=1),
-                            'formatter': '%d'},
-                           {'name': 'year',
-                            'x_offset': 10,
-                            'unit': None,
-                            'formatter': '%y'}]
+                {"name": "month", "x_offset": 0, "unit": None, "formatter": "%b"},
+                {
+                    "name": "day",
+                    "x_offset": 4,
+                    "unit": datetime.timedelta(days=1),
+                    "formatter": "%d",
+                },
+                {"name": "year", "x_offset": 10, "unit": None, "formatter": "%y"},
+            ]
         self.fields = self.fields + [
-                                     {'name': 'hour',
-                                      'x_offset': 0 + date_x_fill,
-                                      'unit': datetime.timedelta(hours=1),
-                                      'formatter': '%I'},
-                                     {'name': 'minute',
-                                      'x_offset': 3 + date_x_fill,
-                                      'unit': datetime.timedelta(minutes=1),
-                                      'formatter': '%M'},
-                                     {'name': 'second',
-                                      'x_offset': 6 + date_x_fill,
-                                      'unit': datetime.timedelta(seconds=1),
-                                      'formatter': '%S'},
-                                     {'name': 'period',
-                                      'x_offset': 8 + date_x_fill,
-                                      'unit': datetime.timedelta(hours=12),
-                                      'formatter': '%p'},
-                                     {'name': 'confirm',
-                                      'x_offset': 13 + date_x_fill,
-                                      'unit': None,
-                                      'formatter': None,
-                                      'display_name': "Confirm"}]
+            {
+                "name": "hour",
+                "x_offset": 0 + date_x_fill,
+                "unit": datetime.timedelta(hours=1),
+                "formatter": "%I",
+            },
+            {
+                "name": "minute",
+                "x_offset": 3 + date_x_fill,
+                "unit": datetime.timedelta(minutes=1),
+                "formatter": "%M",
+            },
+            {
+                "name": "second",
+                "x_offset": 6 + date_x_fill,
+                "unit": datetime.timedelta(seconds=1),
+                "formatter": "%S",
+            },
+            {
+                "name": "period",
+                "x_offset": 8 + date_x_fill,
+                "unit": datetime.timedelta(hours=12),
+                "formatter": "%p",
+            },
+            {
+                "name": "confirm",
+                "x_offset": 13 + date_x_fill,
+                "unit": None,
+                "formatter": None,
+                "display_name": "Confirm",
+            },
+        ]
 
         # If the date is optional (show 'No Date')
         if self.optional:
-            self.fields.append({'name': 'no_date',
-                                    'x_offset': 23 + date_x_fill,
-                                    'unit': None,
-                                    'formatter': None,
-                                    'display_name': "No Date"})
+            self.fields.append(
+                {
+                    "name": "no_date",
+                    "x_offset": 23 + date_x_fill,
+                    "unit": None,
+                    "formatter": None,
+                    "display_name": "No Date",
+                }
+            )
 
     def __init_format_str(self):
         self.format_str = ""
@@ -321,13 +336,15 @@ class DatetimeSpinner(Popup):
         self.format_str = self.format_str + "%I:%M:%S%p"
 
     def __init_input_str(self):
-        self.input_str = ''
+        self.input_str = ""
         self.input_str_last_field_index = None
         self._reset_month_str_position()
 
     def draw(self):
-        date_str = (f"{self.time.strftime(self.format_str)} "
-                    f"| Confirm{' | No Date' if self.optional else ''}")
+        date_str = (
+            f"{self.time.strftime(self.format_str)} "
+            f"| Confirm{' | No Date' if self.optional else ''}"
+        )
         self.message = [date_str]
         super().draw_text()
 
@@ -335,23 +352,23 @@ class DatetimeSpinner(Popup):
         time_x = self.cols // 2 - len(date_str) // 2
 
         field = self.fields[self.field_index]
-        field_x = time_x + field['x_offset']
+        field_x = time_x + field["x_offset"]
 
         # Special Cases for confirm/no date
-        if 'display_name' in field:
-            field_str = field['display_name']
+        if "display_name" in field:
+            field_str = field["display_name"]
         else:
-            field_str = self.time.strftime(field['formatter'])
+            field_str = self.time.strftime(field["formatter"])
 
         add_str(self.window, time_y, field_x, field_str, curses.A_STANDOUT)
 
         self.window.noutrefresh()
 
     def is_confirmed(self) -> str:
-        return self.fields[self.field_index]['name'] in {'confirm', 'no_date'}
+        return self.fields[self.field_index]["name"] in {"confirm", "no_date"}
 
     def get_time(self):
-        if self.fields[self.field_index]['name'] == 'no_date':
+        if self.fields[self.field_index]["name"] == "no_date":
             return DatetimeSpinner.NO_DATE
         return self.time if self.include_date else self.time.time()
 
@@ -369,14 +386,14 @@ class DatetimeSpinner(Popup):
 
     def increment_field(self):
         field = self.fields[self.field_index]
-        if field['name'] == 'minute' and self.quickpicks:
+        if field["name"] == "minute" and self.quickpicks:
             self._increment_quickpick()
         else:
             self._increment_field()
 
     def decrement_field(self):
         field = self.fields[self.field_index]
-        if field['name'] == 'minute' and self.quickpicks:
+        if field["name"] == "minute" and self.quickpicks:
             self._decrement_quickpick()
         else:
             self._decrement_field()
@@ -389,31 +406,29 @@ class DatetimeSpinner(Popup):
 
     def _increment_field(self):
         field = self.fields[self.field_index]
-        if field['unit']:
-            self.time = self.time + field['unit']
+        if field["unit"]:
+            self.time = self.time + field["unit"]
         else:
-            if field['name'] == 'month':
-                #month is in 1..12, this incs 12->1
+            if field["name"] == "month":
+                # month is in 1..12, this incs 12->1
                 new_month = (self.time.month % 12) + 1
                 self.time = self.__replace_date(self.time, month=new_month)
-            elif field['name'] == 'year':
-                new_year = min(max(self.time.year + 1, datetime.MINYEAR),
-                               datetime.MAXYEAR)
+            elif field["name"] == "year":
+                new_year = min(max(self.time.year + 1, datetime.MINYEAR), datetime.MAXYEAR)
                 self.time = self.__replace_date(self.time, year=new_year)
 
     def _decrement_field(self):
         field = self.fields[self.field_index]
-        if field['unit']:
-            self.time = self.time - field['unit']
+        if field["unit"]:
+            self.time = self.time - field["unit"]
         else:
-            if field['name'] == 'month':
+            if field["name"] == "month":
                 new_month = self.time.month - 1
                 if new_month == 0:
                     new_month = 12
                 self.time = self.__replace_date(self.time, month=new_month)
-            elif field['name'] == 'year':
-                new_year = min(max(self.time.year - 1, datetime.MINYEAR),
-                               datetime.MAXYEAR)
+            elif field["name"] == "year":
+                new_year = min(max(self.time.year - 1, datetime.MINYEAR), datetime.MAXYEAR)
                 self.time = self.__replace_date(self.time, year=new_year)
 
     def _increment_quickpick(self):
@@ -436,32 +451,31 @@ class DatetimeSpinner(Popup):
 
     def addchar(self, c):
         if self.input_str_last_field_index != self.field_index:
-            self.input_str = ''
+            self.input_str = ""
         self.input_str_last_field_index = self.field_index
 
         if c.isdigit():
             self.input_str += c
 
             if self._set_field_numerically():
-                self.input_str = ''
+                self.input_str = ""
                 self.next_field()
         else:
-            if self.fields[self.field_index]['name'] == 'month':
+            if self.fields[self.field_index]["name"] == "month":
                 if self._set_month_from_chars(c):
                     self._reset_month_str_position()
                     self.next_field()
-            if self.fields[self.field_index]['name'] == 'period':
+            if self.fields[self.field_index]["name"] == "period":
                 c = c.lower()
                 if c in "ap":
                     current_period = self.time.strftime("%p")[0].lower()
                     delta = datetime.timedelta()
-                    if c == 'p' and current_period == 'a':
+                    if c == "p" and current_period == "a":
                         delta = datetime.timedelta(hours=12)
-                    elif c == 'a' and current_period == 'p':
+                    elif c == "a" and current_period == "p":
                         delta = datetime.timedelta(hours=-12)
                     self.time = self.time + delta
                     self.next_field()
-
 
     def _set_field_numerically(self):
         """Attempts to set the current field to
@@ -469,38 +483,38 @@ class DatetimeSpinner(Popup):
         Returns true if the input_str completely fills the current field"""
         try:
             new_val = int(self.input_str)
-            field_name = self.fields[self.field_index]['name']
+            field_name = self.fields[self.field_index]["name"]
             str_len = len(self.input_str)
 
-            if field_name == 'month':
+            if field_name == "month":
                 self.time = self.__replace_date(self.time, month=new_val)
-                #1 could be Jan or Oct-Dec,
+                # 1 could be Jan or Oct-Dec,
                 # but other single digits are complete
                 return new_val > 1 or str_len >= 2
-            elif field_name == 'day':
+            elif field_name == "day":
                 self.time = self.__replace_date(self.time, day=new_val)
-                #1-3 could have a second digit,
+                # 1-3 could have a second digit,
                 # but other single digits are complete
                 return new_val > 3 or str_len >= 2
-            elif field_name == 'year':
+            elif field_name == "year":
                 century = self.time.year - (self.time.year % 100)
                 new_year = century + new_val
                 self.time = self.__replace_date(self.time, year=new_year)
-                #user only enters last two digits
+                # user only enters last two digits
                 return len(self.input_str) >= 2
-            elif field_name == 'hour':
+            elif field_name == "hour":
                 self.time = self.time.replace(hour=new_val)
-                #1 could have a second digit,
+                # 1 could have a second digit,
                 # but other single digits are complete
                 return new_val > 1 or str_len >= 2
-            elif field_name == 'minute':
+            elif field_name == "minute":
                 self.time = self.time.replace(minute=new_val)
-                #1-5 could have a second digit,
+                # 1-5 could have a second digit,
                 # but other single digits are complete
                 return new_val > 5 or str_len >= 2
-            elif field_name == 'second':
+            elif field_name == "second":
                 self.time = self.time.replace(second=new_val)
-                #1-5 could have a second digit,
+                # 1-5 could have a second digit,
                 # but other single digits are complete
                 return new_val > 5 or str_len >= 2
 
@@ -508,55 +522,27 @@ class DatetimeSpinner(Popup):
             return False
 
     MONTH_STR_PATH = {
-        'j': (1, False, {
-            'a': (1, True, {
-                'n': (1, True, 'uary')
-            }),
-            'u': (6, False, {
-                'n': (6, True, 'e'),
-                'l': (7, True, 'y')
-            })
-        }),
-        'f': (2, True, {
-            'e': (2, True, {
-                'b': (2, True, 'ruary')
-            })
-        }),
-        'm': (3, False, {
-            'a': (3, False, {
-                'r': (3, True, 'ch'),
-                'y': (5, True, '')
-            })
-        }),
-        'a': (4, False, {
-            'p': (4, True, {
-                'r': (4, True, 'il')
-            }),
-            'u': (8, True, {
-                'g': (8, True, 'ust')
-            })
-        }),
-        's': (9, True, {
-            'e': (9, True, {
-                'p': (9, True, 'tember')
-            })
-        }),
-        'o': (10, True, {
-            'c': (10, True, {
-                't': (10, True, 'ober')
-            })
-        }),
-        'n': (11, True, {
-            'o': (11, True, {
-                'v': (11, True, 'ember')
-            })
-        }),
-        'd': (12, True, {
-            'e': (12, True, {
-                'c': (12, True, 'ember')
-            })
-        })
+        "j": (
+            1,
+            False,
+            {
+                "a": (1, True, {"n": (1, True, "uary")}),
+                "u": (6, False, {"n": (6, True, "e"), "l": (7, True, "y")}),
+            },
+        ),
+        "f": (2, True, {"e": (2, True, {"b": (2, True, "ruary")})}),
+        "m": (3, False, {"a": (3, False, {"r": (3, True, "ch"), "y": (5, True, "")})}),
+        "a": (
+            4,
+            False,
+            {"p": (4, True, {"r": (4, True, "il")}), "u": (8, True, {"g": (8, True, "ust")})},
+        ),
+        "s": (9, True, {"e": (9, True, {"p": (9, True, "tember")})}),
+        "o": (10, True, {"c": (10, True, {"t": (10, True, "ober")})}),
+        "n": (11, True, {"o": (11, True, {"v": (11, True, "ember")})}),
+        "d": (12, True, {"e": (12, True, {"c": (12, True, "ember")})}),
     }
+
     def _reset_month_str_position(self):
         self.month_str_position = DatetimeSpinner.MONTH_STR_PATH
         self.month_str_len = 0
@@ -577,10 +563,11 @@ class DatetimeSpinner(Popup):
             self._reset_month_str_position()
             return self._set_month_from_chars(newchar, recursed=True)
 
-class FilteredList(Component):
 
-    class ListLine():
+class FilteredList(Component):
+    class ListLine:
         """Represents a single line of the list"""
+
         def __init__(self, index, data):
             self.index = index
             self.data = data
@@ -604,7 +591,7 @@ class FilteredList(Component):
     def __fill_text(self, lines):
         line_number = 0
 
-        draw_lines = lines[self.scroll:self.scroll+self.rows - 1]
+        draw_lines = lines[self.scroll : self.scroll + self.rows - 1]
 
         for line in draw_lines:
             if (line_number + self.scroll) == self.selected_index:
@@ -775,7 +762,7 @@ class TextInput(Popup):
         super().__init__(height, width, title, [prompt], Popup.ALIGN_CENTER)
 
         self.prompt = prompt
-        self.masked = (mask is TextInput.TEXT_MASKED)
+        self.masked = mask is TextInput.TEXT_MASKED
 
         self.text = text
         self.text_width = self.cols - (TextInput.PADDING * 2)
@@ -787,9 +774,12 @@ class TextInput(Popup):
         self.reset_marks()
 
         # Create a text input
-        self.text_input = curses.newwin(TextInput.TEXT_HEIGHT, self.text_width,
-                                        self.y + self.rows - TextInput.TEXT_HEIGHT - 1,
-                                        self.x + TextInput.PADDING)
+        self.text_input = curses.newwin(
+            TextInput.TEXT_HEIGHT,
+            self.text_width,
+            self.y + self.rows - TextInput.TEXT_HEIGHT - 1,
+            self.x + TextInput.PADDING,
+        )
         self.text_input.bkgd(" ", curses.color_pair(1))
         curses.curs_set(1)
 
@@ -872,8 +862,8 @@ class TextInput(Popup):
         self.right()
 
     def delselection(self):
-        left = self.text[:min(self.marks)]
-        right = self.text[max(self.marks) + 1:]
+        left = self.text[: min(self.marks)]
+        right = self.text[max(self.marks) + 1 :]
         self.text = left + right
         self.cursor_index = min(self.marks)
         self.reset_marks()
@@ -887,7 +877,7 @@ class TextInput(Popup):
             return
 
         # Remove character at cursor location
-        self.text = self.text[:self.cursor_index - 1] + self.text[self.cursor_index:]
+        self.text = self.text[: self.cursor_index - 1] + self.text[self.cursor_index :]
         self.left()
 
     def delcharforward(self):
@@ -899,10 +889,11 @@ class TextInput(Popup):
             return
 
         # Remove character just forward of cursor location
-        self.text = self.text[:self.cursor_index] + self.text[self.cursor_index + 1:]
+        self.text = self.text[: self.cursor_index] + self.text[self.cursor_index + 1 :]
 
     def _cursor_mover(move_func):
         """Wrap a cursor-moving function without moving marks"""
+
         def wrapped(self, shift_pressed=False):
             if shift_pressed:
                 if not self.marks:
@@ -912,6 +903,7 @@ class TextInput(Popup):
             else:
                 move_func(self)
                 self.reset_marks()
+
         return wrapped
 
     @_cursor_mover
@@ -932,6 +924,7 @@ class TextInput(Popup):
 
     def reset_marks(self):
         self.marks = []
+
 
 class Logger(Component):
     PADDING = 2
@@ -979,8 +972,10 @@ class Logger(Component):
 
         self.draw()
 
+
 class ListPopup(FilteredList, Popup):
     """A list in a popup view"""
+
     V_PADDING = Popup.PADDING * 2
 
     def __init__(self, rows, cols, title, input_data, list_fill):
@@ -1006,13 +1001,17 @@ class ListPopup(FilteredList, Popup):
     def draw_list(self):
         line = 0
 
-        for l in self.data[self.scroll:self.scroll + self.rows - ListPopup.V_PADDING]:
+        for l in self.data[self.scroll : self.scroll + self.rows - ListPopup.V_PADDING]:
             if (line + self.scroll) == self.selected_index:
                 display_text = f"> {str(l)}"
-                add_str(self.window, Popup.PADDING + line, Popup.PADDING, display_text, curses.A_DIM)
+                add_str(
+                    self.window, Popup.PADDING + line, Popup.PADDING, display_text, curses.A_DIM
+                )
             else:
                 display_text = f"  {str(l)}"
-                add_str(self.window, Popup.PADDING + line, Popup.PADDING, display_text, curses.A_BOLD)
+                add_str(
+                    self.window, Popup.PADDING + line, Popup.PADDING, display_text, curses.A_BOLD
+                )
             line += 1
 
     def draw(self):

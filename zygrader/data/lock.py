@@ -10,13 +10,16 @@ from zygrader import logger
 from .model import Student
 from .model import Lab
 
+
 def get_lock_files():
     """Return a list of all lock files"""
     return [l for l in os.listdir(SharedData.get_locks_directory()) if l.endswith(".lock")]
 
+
 def get_lock_log_path():
     """Return path to lock log file"""
     return os.path.join(SharedData.get_logs_directory(), "locks_log.csv")
+
 
 def log(name, lab, event_type, lock="LOCK"):
     """Logging utility for lock files
@@ -31,12 +34,13 @@ def log(name, lab, event_type, lock="LOCK"):
     timestamp = datetime.datetime.now().isoformat()
 
     line = f"{timestamp},{event_type},{name},{lab},{getpass.getuser()},{lock}\n"
-    with open(lock_log, 'a') as _log:
+    with open(lock_log, "a") as _log:
         _log.write(line)
 
     logger.log(f"{name},{lab},{lock},{event_type}")
 
-def get_lock_file_path(student: Student, lab: Lab=None):
+
+def get_lock_file_path(student: Student, lab: Lab = None):
     """Return path for lock file"""
     username = getpass.getuser()
 
@@ -52,7 +56,8 @@ def get_lock_file_path(student: Student, lab: Lab=None):
 
     return os.path.join(SharedData.get_locks_directory(), lock_path)
 
-def is_locked(student: Student, lab: Lab=None):
+
+def is_locked(student: Student, lab: Lab = None):
     """Check if a submission is locked for a given student and lab"""
     # Try to match this against all the lock files in the directory
     lock_path = os.path.basename(get_lock_file_path(student, lab))
@@ -67,7 +72,8 @@ def is_locked(student: Student, lab: Lab=None):
 
     return False
 
-def get_locked_netid(student: Student, lab: Lab=None):
+
+def get_locked_netid(student: Student, lab: Lab = None):
     """Return netid of locked submission"""
     # Try to match this against all the lock files in the directory
     lock_path = os.path.basename(get_lock_file_path(student, lab))
@@ -79,7 +85,8 @@ def get_locked_netid(student: Student, lab: Lab=None):
 
     return ""
 
-def lock(student: Student, lab: Lab=None):
+
+def lock(student: Student, lab: Lab = None):
     """Lock the submission for the given student (and lab if given)
 
     Locking is done by creating a file with of the following format:
@@ -89,14 +96,15 @@ def lock(student: Student, lab: Lab=None):
     """
     lock = get_lock_file_path(student, lab)
 
-    open(lock, 'w').close()
+    open(lock, "w").close()
 
     if lab:
         log(student.full_name, lab.name, "LAB")
     else:
         log(student.full_name, "N/A", "EMAIL")
 
-def unlock(student: Student, lab: Lab=None):
+
+def unlock(student: Student, lab: Lab = None):
     """Unlock the submission for the given student and lab"""
     lock = get_lock_file_path(student, lab)
 
@@ -107,6 +115,7 @@ def unlock(student: Student, lab: Lab=None):
         log(student.full_name, lab.name, "LAB", "UNLOCK")
     else:
         log(student.full_name, "N/A", "EMAIL", "UNLOCK")
+
 
 def unlock_all_labs_by_grader(username: str):
     """Remove all lock files for a given grader"""
@@ -120,10 +129,12 @@ def unlock_all_labs_by_grader(username: str):
 
     logger.log("All locks under the current grader were removed", logger.WARNING)
 
+
 def unlock_all_labs():
     """Remove all locks"""
     for lock in get_lock_files():
         os.remove(os.path.join(SharedData.get_locks_directory(), lock))
+
 
 def remove_lock_file(_file):
     """Remove a specific lock file (not logged to locks_log.csv)"""

@@ -7,9 +7,10 @@ from zygrader import data
 from zygrader import ui
 from zygrader.config.shared import SharedData
 
+
 def save_roster(roster):
     """Save the roster of students to a json file"""
-    roster = roster["roster"] # It is stored under "roster" in the json
+    roster = roster["roster"]  # It is stored under "roster" in the json
 
     # Download students (and others)
     students = []
@@ -29,8 +30,9 @@ def save_roster(roster):
             students.append(student)
 
     out_path = SharedData.get_student_data()
-    with open(out_path, 'w') as _file:
+    with open(out_path, "w") as _file:
         json.dump(students, _file, indent=2)
+
 
 def setup_new_class():
     """Setup a new class based on a zyBooks class code"""
@@ -59,6 +61,7 @@ def setup_new_class():
     window.create_popup("Finished", ["Successfully downloaded student roster"])
 
     class_section_manager()
+
 
 def add_lab():
     """Add a lab to the current class"""
@@ -93,6 +96,7 @@ def add_lab():
 
     data.write_labs(all_labs)
 
+
 def set_due_date(lab):
     """Set a cutoff date for a lab
 
@@ -108,19 +112,22 @@ def set_due_date(lab):
     if "due" in lab.options:
         old_date = lab.options["due"]
 
-    due_date = window.create_datetime_spinner("Due Date", time=old_date if old_date else None, optional=True)
+    due_date = window.create_datetime_spinner(
+        "Due Date", time=old_date if old_date else None, optional=True
+    )
     if due_date == ui.GO_BACK:
         return
 
     # Clearing the due date
     if due_date == ui.components.DatetimeSpinner.NO_DATE:
-        if  "due" in lab.options:
+        if "due" in lab.options:
             del lab.options["due"]
     else:
         # Remove time zone information
         lab.options["due"] = due_date.astimezone(tz=None)
 
     data.write_labs(labs)
+
 
 def toggle_lab_option(lab, option):
     """Toggle a boolean lab option (T/F value)"""
@@ -131,6 +138,7 @@ def toggle_lab_option(lab, option):
 
     labs = data.get_labs()
     data.write_labs(labs)
+
 
 def rename_lab(filtered_list, lab):
     """Rename a lab"""
@@ -144,10 +152,13 @@ def rename_lab(filtered_list, lab):
         data.write_labs(labs)
         filtered_list.refresh()
 
-EDIT_OPTIONS = {"highest_score": "Grade Highest Scoring Submission",
-                "diff_parts": "Diff Submission Parts",
-                "due": None,
-                }
+
+EDIT_OPTIONS = {
+    "highest_score": "Grade Highest Scoring Submission",
+    "diff_parts": "Diff Submission Parts",
+    "due": None,
+}
+
 
 def edit_lab_options_draw(lab):
     """Callback to draw the list of lab edit options"""
@@ -163,12 +174,13 @@ def edit_lab_options_draw(lab):
 
     # Handle due date separately
     if "due" in lab.options:
-        due_date = lab.options['due'].strftime("%m.%d.%Y:%H.%M.%S")
+        due_date = lab.options["due"].strftime("%m.%d.%Y:%H.%M.%S")
         options.append(f"    Due Date: {due_date}")
     else:
         options.append(f"    Due Date: None")
 
     return options
+
 
 def edit_lab_options_callback(lab, selected_index):
     """Callback to run when an edit lab option is chosen"""
@@ -179,6 +191,7 @@ def edit_lab_options_callback(lab, selected_index):
     elif option == "due":
         set_due_date(lab)
 
+
 def edit_lab_options(lab):
     """Create a popup listing the options in EDIT_OPTIONS"""
     window = ui.get_window()
@@ -186,6 +199,7 @@ def edit_lab_options(lab):
     draw = lambda: edit_lab_options_draw(lab)
     callback = lambda context: edit_lab_options_callback(lab, context.data)
     window.create_list_popup("Editing Lab Options", callback=callback, list_fill=draw)
+
 
 def move_lab(filtered_list, lab, step):
     """Move a lab up or down the list of labs"""
@@ -203,6 +217,7 @@ def move_lab(filtered_list, lab, step):
     filtered_list.refresh()
     filtered_list.selected_index += step
 
+
 def remove_fn(filtered_list, window, lab) -> bool:
     """Remove a lab from the list"""
     msg = [f"Are you sure you want to remove {lab.name}?"]
@@ -216,6 +231,7 @@ def remove_fn(filtered_list, window, lab) -> bool:
     filtered_list.refresh()
     return remove
 
+
 def edit_labs_callback(lab, filtered_list):
     """Create a popup for basic lab editing options"""
     window = ui.get_window()
@@ -225,16 +241,18 @@ def edit_labs_callback(lab, filtered_list):
         "Rename": lambda _: rename_lab(filtered_list, lab),
         "Move Up": lambda _: move_lab(filtered_list, lab, -1),
         "Move Down": lambda _: move_lab(filtered_list, lab, 1),
-        "Edit Options": lambda _: edit_lab_options(lab)
+        "Edit Options": lambda _: edit_lab_options(lab),
     }
 
     msg = [f"Editing {lab.name}", "", "Select an option"]
     window.create_options_popup("Edit Lab", msg, options)
 
+
 def draw_lab_list() -> list:
     """Use a callback for drawing the filtered list of labs so it can be refreshed"""
     labs = data.get_labs()
     return [ui.components.FilteredList.ListLine(i, lab) for i, lab in enumerate(labs, start=1)]
+
 
 def edit_labs():
     """Creates a list of labs to edit"""
@@ -243,16 +261,15 @@ def edit_labs():
     edit_fn = lambda context: edit_labs_callback(data.get_labs()[context.data], context.component)
     window.create_filtered_list("Lab", list_fill=draw_lab_list, callback=edit_fn)
 
-def get_class_section(old_section: data.model.ClassSection=None):
+
+def get_class_section(old_section: data.model.ClassSection = None):
     window = ui.get_window()
 
     init_text = ""
     if old_section:
         init_text = str(old_section.section_number)
     section_num_str = window.create_text_input(
-        "Section Number",
-        "Enter the new section number for this section",
-        text=init_text
+        "Section Number", "Enter the new section number for this section", text=init_text
     )
 
     if section_num_str == ui.Window.CANCEL:
@@ -261,15 +278,14 @@ def get_class_section(old_section: data.model.ClassSection=None):
     section_num = int(section_num_str)
 
     default_due_time = window.create_datetime_spinner(
-        "Section Default Due Time",
-        quickpicks=[(50, 0), (59, 59), (0, 0)],
-        include_date=False
+        "Section Default Due Time", quickpicks=[(50, 0), (59, 59), (0, 0)], include_date=False
     )
 
     if default_due_time == ui.GO_BACK:
         return None
 
     return data.model.ClassSection(section_num, default_due_time)
+
 
 def add_class_section():
     """Add a class section to the current class"""
@@ -281,6 +297,7 @@ def add_class_section():
     class_sections.append(new_class_section)
 
     data.write_class_sections(class_sections)
+
 
 def edit_class_sections_callback(context: ui.WinContext):
     class_section = data.get_class_sections()[context.data]
@@ -294,20 +311,24 @@ def edit_class_sections_callback(context: ui.WinContext):
     data.write_class_sections(data.get_class_sections())
     context.component.refresh()
 
+
 def draw_class_section_list() -> list:
     """Use a callback for drawing the filtered list
     of class sections so it can be refreshed"""
     class_sections = data.get_class_sections()
-    return [ui.components.FilteredList.ListLine(i, el)
-                for i, el in enumerate(class_sections, start=1)]
+    return [
+        ui.components.FilteredList.ListLine(i, el) for i, el in enumerate(class_sections, start=1)
+    ]
+
 
 def edit_class_sections():
     """Create list of class sections to edit"""
     window = ui.get_window()
 
-    window.create_filtered_list("Class Section",
-                                list_fill=draw_class_section_list,
-                                callback=edit_class_sections_callback)
+    window.create_filtered_list(
+        "Class Section", list_fill=draw_class_section_list, callback=edit_class_sections_callback
+    )
+
 
 def sort_class_sections():
     class_sections = data.get_class_sections()
@@ -318,6 +339,7 @@ def sort_class_sections():
 
     msg = ["The Class Sections are now sorted by section number"]
     window.create_popup("Finished", msg)
+
 
 def download_roster(silent=False):
     """Download the roster of students from zybooks and save to disk"""
@@ -333,6 +355,7 @@ def download_roster(silent=False):
         save_roster(roster)
     if not silent:
         window.create_popup("Finished", ["Successfully downloaded student roster"])
+
 
 def change_class():
     """Change the current class.
@@ -351,6 +374,7 @@ def change_class():
 
 LAB_MANAGE_OPTIONS = ["Add Lab", "Edit Current Labs"]
 
+
 def lab_manager_callback(context: ui.WinContext):
     option_index = context.data
     option = LAB_MANAGE_OPTIONS[option_index]
@@ -360,17 +384,18 @@ def lab_manager_callback(context: ui.WinContext):
     elif option == "Edit Current Labs":
         edit_labs()
 
+
 def lab_manager():
     window = ui.get_window()
     window.set_header("Lab Manager")
 
-    window.create_filtered_list("Option",
-                                input_data=LAB_MANAGE_OPTIONS,
-                                callback=lab_manager_callback)
+    window.create_filtered_list(
+        "Option", input_data=LAB_MANAGE_OPTIONS, callback=lab_manager_callback
+    )
 
-CLASS_SECTION_MANAGE_OPTIONS = ["Add Section",
-                                "Edit Current Sections",
-                                "Sort Current Sections"]
+
+CLASS_SECTION_MANAGE_OPTIONS = ["Add Section", "Edit Current Sections", "Sort Current Sections"]
+
 
 def class_section_manager_callback(context: ui.WinContext):
     option_index = context.data
@@ -383,17 +408,24 @@ def class_section_manager_callback(context: ui.WinContext):
     elif option == "Sort Current Sections":
         sort_class_sections()
 
+
 def class_section_manager():
     window = ui.get_window()
     window.set_header("Class Section Manager")
 
-    window.create_filtered_list("Option",
-                                input_data=CLASS_SECTION_MANAGE_OPTIONS,
-                                callback=class_section_manager_callback)
+    window.create_filtered_list(
+        "Option", input_data=CLASS_SECTION_MANAGE_OPTIONS, callback=class_section_manager_callback
+    )
 
-CLASS_MANAGE_OPTIONS = ["Setup New Class", "Lab Manager",
-                        "Class Section Manager",
-                        "Download Student Roster", "Change Class"]
+
+CLASS_MANAGE_OPTIONS = [
+    "Setup New Class",
+    "Lab Manager",
+    "Class Section Manager",
+    "Download Student Roster",
+    "Change Class",
+]
+
 
 def class_manager_callback(context: ui.WinContext):
     """Run the function for each option in CLASS_MANAGE_OPTIONS"""
@@ -411,10 +443,12 @@ def class_manager_callback(context: ui.WinContext):
     elif option == "Download Student Roster":
         download_roster()
 
+
 def start():
     """Create the main class manager menu"""
     window = ui.get_window()
     window.set_header("Class Manager")
 
-    window.create_filtered_list("Option", input_data=CLASS_MANAGE_OPTIONS,
-                                callback=class_manager_callback)
+    window.create_filtered_list(
+        "Option", input_data=CLASS_MANAGE_OPTIONS, callback=class_manager_callback
+    )
