@@ -145,7 +145,7 @@ def mainloop(admin_mode):
     window.create_filtered_list("Option", input_data=MAIN_MENU_OPTIONS, callback=mainloop_callback)
 
     # Begin the event loop
-    window.loop()
+    # window.loop()
 
 
 def main(window: ui.Window):

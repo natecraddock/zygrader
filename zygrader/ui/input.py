@@ -113,7 +113,7 @@ class Input:
         # Cases for each type of input
         if input_code == curses.KEY_RESIZE:
             #TODO: Send resize event
-            self.__resize_terminal()
+            # self.__resize_terminal()
             curses.flushinp()
         elif input_code in {curses.KEY_ENTER, ord('\n'), ord('\r')}:
             event = Event.ENTER
