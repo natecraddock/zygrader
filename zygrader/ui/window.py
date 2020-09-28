@@ -170,9 +170,11 @@ class Window:
                 event = self.set_mode(Window.MODE_NORMAL)
             else:
                 event = Event.ESC
-        elif not self.mark_mode and not self.insert_mode and chr(input_code) == "i":
+        elif not self.mark_mode and not self.insert_mode and chr(
+                input_code) == "i":
             event = self.set_mode(Window.MODE_INSERT)
-        elif not self.insert_mode and not self.mark_mode and chr(input_code) == "v":
+        elif not self.insert_mode and not self.mark_mode and chr(
+                input_code) == "v":
             event = self.set_mode(Window.MODE_MARK)
         elif not self.insert_mode:
             if chr(input_code) == "h":
@@ -235,7 +237,9 @@ class Window:
 
         # Create a thread to handle input separately
         # The main thread handles drawing
-        self.input_thread = threading.Thread(target=self.input_thread_fn, name="Input", daemon=True)
+        self.input_thread = threading.Thread(target=self.input_thread_fn,
+                                             name="Input",
+                                             daemon=True)
         self.stop_input = False
 
         # Add an event to toggle input thread
@@ -440,7 +444,10 @@ class Window:
 
         self.component_deinit()
 
-    def create_waiting_popup(self, title, message, align=components.Popup.ALIGN_CENTER):
+    def create_waiting_popup(self,
+                             title,
+                             message,
+                             align=components.Popup.ALIGN_CENTER):
         """Create a popup that the user cannot exit out of.
 
         Exiting the popup must be done by calling close() on the returned control object.
@@ -460,15 +467,20 @@ class Window:
                     self.window.clear_event_queue()
                 self.has_exited = True
 
-        popup = components.OptionsPopup(self.rows, self.cols, title, message, [], False, align)
+        popup = components.OptionsPopup(self.rows, self.cols, title, message,
+                                        [], False, align)
         self.component_init(popup)
 
         return WaitingPopupControl(self)
 
-    def create_bool_popup(self, title, message, align=components.Popup.ALIGN_CENTER):
+    def create_bool_popup(self,
+                          title,
+                          message,
+                          align=components.Popup.ALIGN_CENTER):
         """Create a popup with title and message that returns true/false"""
         options = ["Yes", "No"]
-        popup = components.OptionsPopup(self.rows, self.cols, title, message, options, False, align)
+        popup = components.OptionsPopup(self.rows, self.cols, title, message,
+                                        options, False, align)
         self.component_init(popup)
 
         while True:
@@ -487,14 +499,18 @@ class Window:
 
         return popup.selected() == options[0]
 
-    def create_options_popup(self, title, message, options, align=components.Popup.ALIGN_CENTER):
+    def create_options_popup(self,
+                             title,
+                             message,
+                             options,
+                             align=components.Popup.ALIGN_CENTER):
         """Create a popup with multiple options that can be selected with the keyboard.
         options is either a dictionary of string to callback function pairs or a list of strings
         """
         use_dict = bool(isinstance(options, dict))
 
-        popup = components.OptionsPopup(self.rows, self.cols, title, message, options, use_dict,
-                                        align)
+        popup = components.OptionsPopup(self.rows, self.cols, title, message,
+                                        options, use_dict, align)
         self.component_init(popup)
 
         while True:
@@ -540,8 +556,8 @@ class Window:
          If provided, spinning the minute field will spin through the quickpicks
         """
 
-        popup = components.DatetimeSpinner(self.rows, self.cols, title, time, quickpicks, optional,
-                                           include_date)
+        popup = components.DatetimeSpinner(self.rows, self.cols, title, time,
+                                           quickpicks, optional, include_date)
 
         self.component_init(popup)
 
@@ -579,14 +595,19 @@ class Window:
 
         return retval if retval else popup.get_time()
 
-    def create_list_popup(self, title, input_data=None, callback=None, list_fill=None):
+    def create_list_popup(self,
+                          title,
+                          input_data=None,
+                          callback=None,
+                          list_fill=None):
         """Create a popup with a list of options that can be scrolled and selected
 
         If input_data (list) is supplied, the list will be drawn from the string representations
         of that data. If list_fill (function) is supplied, then list_fill will be called to generate
         a list to be drawn.
         """
-        popup = components.ListPopup(self.rows, self.cols, title, input_data, list_fill)
+        popup = components.ListPopup(self.rows, self.cols, title, input_data,
+                                     list_fill)
         self.component_init(popup)
 
         retval = None
@@ -621,9 +642,14 @@ class Window:
 
         return retval if retval else popup.selected()
 
-    def create_text_input(self, title, prompt, text="", mask=components.TextInput.TEXT_NORMAL):
+    def create_text_input(self,
+                          title,
+                          prompt,
+                          text="",
+                          mask=components.TextInput.TEXT_NORMAL):
         """Get text input from the user"""
-        text_input = components.TextInput(self.rows, self.cols, title, prompt, text, mask)
+        text_input = components.TextInput(self.rows, self.cols, title, prompt,
+                                          text, mask)
         self.component_init(text_input)
 
         if self.vim_mode:
@@ -723,7 +749,9 @@ class Window:
                                                  and self.left_right_menu_nav):
                 if callback and filtered_list.selected() != GO_BACK:
                     filtered_list.dirty = True
-                    callback(WinContext(self, event, filtered_list, filtered_list.selected()))
+                    callback(
+                        WinContext(self, event, filtered_list,
+                                   filtered_list.selected()))
 
                     if self.clear_filter:
                         filtered_list.clear_filter()

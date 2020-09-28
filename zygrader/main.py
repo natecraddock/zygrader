@@ -53,13 +53,25 @@ def sigtstp_handler(signum, frame):
 
 def parse_args():
     """Parse CMD args"""
-    parser = argparse.ArgumentParser(description="download and inspect zyBooks data for grading")
-    parser.add_argument("-s", "--set-data-dir", help="Data path for shared zygrader files")
-    parser.add_argument("--init-data-dir", help="Create the folder for shared zygrader files")
-    parser.add_argument("-a", "--admin", action="store_true", help="Enable admin features")
+    parser = argparse.ArgumentParser(
+        description="download and inspect zyBooks data for grading")
+    parser.add_argument("-s",
+                        "--set-data-dir",
+                        help="Data path for shared zygrader files")
+    parser.add_argument("--init-data-dir",
+                        help="Create the folder for shared zygrader files")
+    parser.add_argument("-a",
+                        "--admin",
+                        action="store_true",
+                        help="Enable admin features")
     group = parser.add_mutually_exclusive_group()
-    group.add_argument("-n", "--no-update", action="store_true", help="Do not check for updates")
-    group.add_argument("-i", "--install-version", help="Specify version to install")
+    group.add_argument("-n",
+                       "--no-update",
+                       action="store_true",
+                       help="Do not check for updates")
+    group.add_argument("-i",
+                       "--install-version",
+                       help="Specify version to install")
 
     return parser.parse_args()
 
@@ -67,7 +79,8 @@ def parse_args():
 def handle_args(args):
     if args.set_data_dir:
         if preferences.set_data_directory(args.set_data_dir):
-            print(f"Successfully set the shared data dir to {args.set_data_dir}")
+            print(
+                f"Successfully set the shared data dir to {args.set_data_dir}")
             time.sleep(1)
         else:
             print(f'Error: The path "{args.set_data_dir}" does not exist.')
@@ -142,7 +155,9 @@ def mainloop(admin_mode):
         MAIN_MENU_OPTIONS.append("Admin")
 
     window.set_header(SharedData.get_current_class_code)
-    window.create_filtered_list("Option", input_data=MAIN_MENU_OPTIONS, callback=mainloop_callback)
+    window.create_filtered_list("Option",
+                                input_data=MAIN_MENU_OPTIONS,
+                                callback=mainloop_callback)
 
 
 def main(window: ui.Window):

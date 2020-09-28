@@ -43,9 +43,14 @@ class Lab:
         return name.find(text) is not -1
 
     def to_json(self):
-        lab = {"name": self.name, "parts": self.parts, "options": self.options.copy()}
+        lab = {
+            "name": self.name,
+            "parts": self.parts,
+            "options": self.options.copy()
+        }
         if "due" in lab["options"] and type(lab["options"]["due"]) is not str:
-            lab["options"]["due"] = lab["options"]["due"].strftime("%m.%d.%Y:%H.%M.%S")
+            lab["options"]["due"] = lab["options"]["due"].strftime(
+                "%m.%d.%Y:%H.%M.%S")
 
         return lab
 
@@ -76,7 +81,8 @@ class Student:
         email = student.email.lower()
         text = text.lower()
 
-        return (first_name.find(text) is not -1 or last_name.find(text) is not -1
+        return (first_name.find(text) is not -1
+                or last_name.find(text) is not -1
                 or full_name.find(text) is not -1 or email.find(text) is not -1)
 
 
@@ -102,7 +108,8 @@ class ClassSection:
         self.default_due_time = other.default_due_time
 
     def __str__(self):
-        time_str = self.default_due_time.strftime(ClassSection.DUE_TIME_DISPLAY_FORMAT)
+        time_str = self.default_due_time.strftime(
+            ClassSection.DUE_TIME_DISPLAY_FORMAT)
         section_padding = len(str(ClassSection.max_section_num))
         section_str = f"{self.section_number:>{section_padding}}"
         return f"Section {section_str} - Default Due Time: {time_str}"
@@ -112,12 +119,17 @@ class ClassSection:
         section_number = section_json["section_number"]
         default_due_time_str = section_json["default_due_time"]
         default_due_time = (datetime.datetime.strptime(
-            default_due_time_str, ClassSection.DUE_TIME_STORAGE_FORMAT).astimezone(tz=None).time())
+            default_due_time_str,
+            ClassSection.DUE_TIME_STORAGE_FORMAT).astimezone(tz=None).time())
         return ClassSection(section_number, default_due_time)
 
     def to_json(self):
-        time_str = self.default_due_time.strftime(ClassSection.DUE_TIME_STORAGE_FORMAT)
-        return {"section_number": self.section_number, "default_due_time": time_str}
+        time_str = self.default_due_time.strftime(
+            ClassSection.DUE_TIME_STORAGE_FORMAT)
+        return {
+            "section_number": self.section_number,
+            "default_due_time": time_str
+        }
 
 
 class SubmissionFlag(enum.Flag):
@@ -256,10 +268,12 @@ class Submission(Iterable):
             files = utils.extract_zip(zip_file)
 
             # Write file to subdirectory in temporary directory
-            part_directory = os.path.join(tmp_dir, self.get_part_identifier(part))
+            part_directory = os.path.join(tmp_dir,
+                                          self.get_part_identifier(part))
             os.makedirs(part_directory)
             for file_name in files.keys():
-                with open(os.path.join(part_directory, file_name), "w") as source_file:
+                with open(os.path.join(part_directory, file_name),
+                          "w") as source_file:
                     source_file.write(files[file_name])
 
         return tmp_dir
@@ -288,10 +302,12 @@ class Submission(Iterable):
                     "--cmd",
                     "set number",
                 ]
-                subprocess.run([editor_path, "-p"] + files + cmds, stderr=subprocess.DEVNULL)
+                subprocess.run([editor_path, "-p"] + files + cmds,
+                               stderr=subprocess.DEVNULL)
             elif user_editor == "Emacs":
                 # Force terminal with "-nw"
-                subprocess.run([editor_path, "-nw"] + files, stderr=subprocess.DEVNULL)
+                subprocess.run([editor_path, "-nw"] + files,
+                               stderr=subprocess.DEVNULL)
             else:
                 subprocess.run([editor_path] + files, stderr=subprocess.DEVNULL)
 
@@ -309,7 +325,8 @@ class Submission(Iterable):
             SharedData.RUNNING_CODE = True
             process.send_signal(signal.SIGCONT)
             print("Resumed student code")
-            print("#############################################################")
+            print(
+                "#############################################################")
             return True
         return False
 
@@ -330,12 +347,16 @@ class Submission(Iterable):
             SharedData.running_process = None
 
             SharedData.RUNNING_CODE = False
-            print("\n#############################################################")
+            print(
+                "\n#############################################################"
+            )
             print("Press ENTER to continue")
             input()
 
         else:
-            print("\n#############################################################")
+            print(
+                "\n#############################################################"
+            )
             print("Paused student code\n")
 
         curses.initscr()
@@ -363,13 +384,15 @@ class Submission(Iterable):
             if part == ui.GO_BACK:
                 return False
 
-            root_dir = os.path.join(self.files_directory,
-                                    self.get_part_identifier(self.lab.parts[part]))
+            root_dir = os.path.join(
+                self.files_directory,
+                self.get_part_identifier(self.lab.parts[part]))
 
         files = utils.get_source_file_paths(root_dir)
 
         source_files = [f for f in files if f.endswith(".cpp")]
-        compile_command = ["g++", "-g", "-o", executable_name, f"-I{root_dir}"] + source_files
+        compile_command = ["g++", "-g", "-o", executable_name, f"-I{root_dir}"
+                           ] + source_files
 
         compile_exit = subprocess.run(compile_command,
                                       stdout=subprocess.DEVNULL,
@@ -387,7 +410,8 @@ class Submission(Iterable):
                 break
 
         # If the running process still exists
-        if SharedData.running_process and SharedData.running_process.poll() is None:
+        if SharedData.running_process and SharedData.running_process.poll(
+        ) is None:
             return True
 
         return False
@@ -408,7 +432,8 @@ class Submission(Iterable):
         print("#############################################################\n")
 
         if use_gdb:
-            process = subprocess.Popen(["gdb", executable], stderr=subprocess.DEVNULL)
+            process = subprocess.Popen(["gdb", executable],
+                                       stderr=subprocess.DEVNULL)
         else:
             process = subprocess.Popen([executable], stderr=subprocess.DEVNULL)
         SharedData.running_process = process
@@ -436,8 +461,10 @@ class Submission(Iterable):
             part_a = self.lab.parts[0]
             part_b = self.lab.parts[1]
 
-        path_a = os.path.join(self.files_directory, self.get_part_identifier(part_a))
-        path_b = os.path.join(self.files_directory, self.get_part_identifier(part_b))
+        path_a = os.path.join(self.files_directory,
+                              self.get_part_identifier(part_a))
+        path_b = os.path.join(self.files_directory,
+                              self.get_part_identifier(part_b))
 
         # Only diff if both have submissions
         if not (os.path.exists(path_a) and os.path.exists(path_b)):
@@ -446,5 +473,6 @@ class Submission(Iterable):
         part_a_paths = [os.path.join(path_a, f) for f in os.listdir(path_a)]
         part_b_paths = [os.path.join(path_b, f) for f in os.listdir(path_b)]
 
-        diff = utils.make_diff_string(part_a_paths, part_b_paths, path_a, path_b, use_browser)
+        diff = utils.make_diff_string(part_a_paths, part_b_paths, path_a,
+                                      path_b, use_browser)
         utils.view_string(diff, "parts.diff", use_browser)

@@ -16,7 +16,8 @@ def color_student_lines(lab, student):
     """Color the student names in the grader based on locked, flagged, or normal status"""
     if data.lock.is_locked(student, lab) and not isinstance(student, str):
         return curses.color_pair(2)
-    if data.flags.is_submission_flagged(student, lab) and not isinstance(student, str):
+    if data.flags.is_submission_flagged(student,
+                                        lab) and not isinstance(student, str):
         return curses.color_pair(7)
     return curses.color_pair(1)
 
@@ -41,7 +42,8 @@ def fill_student_list(lab, students):
     return lines
 
 
-def update_student_list(window: ui.Window, student_list: ui.components.FilteredList):
+def update_student_list(window: ui.Window,
+                        student_list: ui.components.FilteredList):
     """Update the student list when the locks or flags change"""
     student_list.refresh()
     window.push_refresh_event()
@@ -85,8 +87,8 @@ def pick_submission(lab: data.model.Lab, student: data.model.Student,
     # If the lab has multiple parts, prompt to pick a part
     part_index = 0
     if len(lab.parts) > 1:
-        part_index = window.create_list_popup("Select Part",
-                                              input_data=[name["name"] for name in lab.parts])
+        part_index = window.create_list_popup(
+            "Select Part", input_data=[name["name"] for name in lab.parts])
         if part_index is ui.GO_BACK:
             return
 
@@ -94,13 +96,15 @@ def pick_submission(lab: data.model.Lab, student: data.model.Student,
     part = lab.parts[part_index]
     all_submissions = zy_api.get_submissions_list(part["id"], student.id)
     if not all_submissions:
-        window.create_popup("No Submissions", ["The student did not submit this part"])
+        window.create_popup("No Submissions",
+                            ["The student did not submit this part"])
         return
 
     # Reverse to display most recent submission first
     all_submissions.reverse()
 
-    submission_index = window.create_list_popup("Select Submission", all_submissions)
+    submission_index = window.create_list_popup("Select Submission",
+                                                all_submissions)
     if submission_index is ui.GO_BACK:
         return
 
@@ -108,7 +112,8 @@ def pick_submission(lab: data.model.Lab, student: data.model.Student,
     submission_index = abs(submission_index - (len(all_submissions) - 1))
 
     # Fetch that submission
-    part_response = zy_api.download_assignment_part(lab, student.id, part, submission_index)
+    part_response = zy_api.download_assignment_part(lab, student.id, part,
+                                                    submission_index)
     submission.update_part(part_response, part_index)
 
 
@@ -119,7 +124,9 @@ def view_diff(first: model.Submission, second: model.Submission):
         window = ui.get_window()
         window.create_popup(
             "No Submission",
-            ["Cannot diff submissions because at least one student has not submitted."],
+            [
+                "Cannot diff submissions because at least one student has not submitted."
+            ],
         )
         return
 
@@ -149,13 +156,16 @@ def pair_programming_submission_callback(lab, submission):
     window = ui.get_window()
 
     options = {
-        "Pick Submission": lambda _: pick_submission(lab, submission.student, submission),
-        "Run": lambda context: run_code_fn(window, context, submission),
-        "View": lambda _: submission.show_files(),
+        "Pick Submission":
+        lambda _: pick_submission(lab, submission.student, submission),
+        "Run":
+        lambda context: run_code_fn(window, context, submission),
+        "View":
+        lambda _: submission.show_files(),
     }
 
-    window.create_options_popup("Pair Programming Submission", submission, options,
-                                ui.components.Popup.ALIGN_LEFT)
+    window.create_options_popup("Pair Programming Submission", submission,
+                                options, ui.components.Popup.ALIGN_LEFT)
     SharedData.running_process = None
 
 
@@ -233,16 +243,19 @@ def grade_pair_programming(student_list, first_submission, use_locks):
         # Redraw the original list
         update_student_list(window, student_list)
 
-        first_submission_fn = lambda _: pair_programming_submission_callback(lab, first_submission)
+        first_submission_fn = lambda _: pair_programming_submission_callback(
+            lab, first_submission)
         second_submission_fn = lambda _: pair_programming_submission_callback(
             lab, second_submission)
         options = {
             first_submission.student.full_name: first_submission_fn,
             second_submission.student.full_name: second_submission_fn,
-            "View Diff": lambda _: view_diff(first_submission, second_submission),
+            "View Diff":
+            lambda _: view_diff(first_submission, second_submission),
         }
 
-        msg = lambda: pair_programming_message(first_submission, second_submission)
+        msg = lambda: pair_programming_message(first_submission,
+                                               second_submission)
         window.create_options_popup("Pair Programming", msg, options)
 
     finally:
@@ -289,17 +302,24 @@ def student_callback(context: ui.WinContext, lab, use_locks=True):
         update_student_list(window, student_list)
 
         options = {
-            "Flag": lambda _: flag_submission(lab, student),
-            "Pick Submission": lambda _: pick_submission(lab, student, submission),
+            "Flag":
+            lambda _: flag_submission(lab, student),
+            "Pick Submission":
+            lambda _: pick_submission(lab, student, submission),
             "Pair Programming":
-            lambda _: grade_pair_programming(student_list, submission, use_locks),
-            "Diff Parts": lambda _: diff_parts_fn(window, submission),
-            "Run": lambda context: run_code_fn(window, context, submission),
-            "View": lambda _: submission.show_files(),
+            lambda _: grade_pair_programming(student_list, submission, use_locks
+                                             ),
+            "Diff Parts":
+            lambda _: diff_parts_fn(window, submission),
+            "Run":
+            lambda context: run_code_fn(window, context, submission),
+            "View":
+            lambda _: submission.show_files(),
         }
 
         # Add option to diff parts if this lab requires it
-        if not (use_locks and submission.flag & data.model.SubmissionFlag.DIFF_PARTS):
+        if not (use_locks
+                and submission.flag & data.model.SubmissionFlag.DIFF_PARTS):
             del options["Diff Parts"]
 
         window.create_options_popup("Submission", submission, options,
@@ -330,7 +350,8 @@ def lab_callback(context: ui.WinContext, use_locks=True):
 
     students = data.get_students()
 
-    student_select_fn = lambda context: student_callback(context, lab, use_locks)
+    student_select_fn = lambda context: student_callback(
+        context, lab, use_locks)
 
     # Get student
     window.create_filtered_list(

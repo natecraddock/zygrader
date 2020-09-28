@@ -104,7 +104,10 @@ def view_string(string, file_name, use_html=False):
         _file.write(string)
 
     if use_html:
-        subprocess.Popen(f"xdg-open {file_path}", shell=True, stdout=DEVNULL, stderr=DEVNULL)
+        subprocess.Popen(f"xdg-open {file_path}",
+                         shell=True,
+                         stdout=DEVNULL,
+                         stderr=DEVNULL)
     else:
         subprocess.run(["less", "-r", f"{file_path}"], stderr=DEVNULL)
 
@@ -123,7 +126,10 @@ def extract_zip(input_zip, file_prefix=None):
             for name in input_zip.namelist()
         }
     else:
-        return {f"{name}": __format_file(input_zip.read(name)) for name in input_zip.namelist()}
+        return {
+            f"{name}": __format_file(input_zip.read(name))
+            for name in input_zip.namelist()
+        }
 
 
 def get_source_file_paths(directory):
@@ -145,7 +151,8 @@ def prep_lab_score_calc():
 
     try:
         old_score = float(
-            window.create_text_input("Original Score", "What was the student's original score?"))
+            window.create_text_input("Original Score",
+                                     "What was the student's original score?"))
         if old_score == ui.Window.CANCEL:
             return
         current_completion = float(
@@ -159,7 +166,8 @@ def prep_lab_score_calc():
             return
 
         new_score = old_score + ((current_completion - old_score) * 0.6)
-        window.create_popup("New Score", [f"The student's new score is: {new_score}"])
+        window.create_popup("New Score",
+                            [f"The student's new score is: {new_score}"])
     except ValueError:
         window.create_popup("Error", ["Invalid input"])
 
@@ -187,7 +195,8 @@ def view_students():
     window.set_header("View Students")
 
     if not students:
-        window.create_popup("No Students", ["There are no students in the class to show."])
+        window.create_popup("No Students",
+                            ["There are no students in the class to show."])
         return
 
     window.create_filtered_list("Student Name",
@@ -196,7 +205,8 @@ def view_students():
 
 
 def fetch_zybooks_toc():
-    wait_controller = ui.get_window().create_waiting_popup("TOC", ["Fetching TOC from zyBooks"])
+    wait_controller = ui.get_window().create_waiting_popup(
+        "TOC", ["Fetching TOC from zyBooks"])
     zy_api = Zybooks()
     toc = zy_api.get_table_of_contents()
     wait_controller.close()

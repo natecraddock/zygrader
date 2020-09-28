@@ -13,7 +13,8 @@ from zygrader import ui
 
 def authenticate(window: ui.Window, zy_api, email, password):
     """Authenticate to the zyBooks api with the email and password"""
-    wait_popup = window.create_waiting_popup("Signing in", [f"Signing into zyBooks as {email}..."])
+    wait_popup = window.create_waiting_popup(
+        "Signing in", [f"Signing into zyBooks as {email}..."])
 
     success = zy_api.authenticate(email, password)
 
@@ -59,7 +60,9 @@ def create_account(window: ui.Window, zy_api):
 
     while True:
         # Get user account information
-        email = window.create_text_input("Enter Email", "Enter your zyBooks email", mask=None)
+        email = window.create_text_input("Enter Email",
+                                         "Enter your zyBooks email",
+                                         mask=None)
         if email == ui.Window.CANCEL:
             email = ""
         password = get_password(window)
@@ -87,8 +90,8 @@ def login(window: ui.Window):
     if not config["email"]:
         email, password = create_account(window, zy_api)
 
-        save_password = window.create_bool_popup("Save Password",
-                                                 ["Would you like to save your password?"])
+        save_password = window.create_bool_popup(
+            "Save Password", ["Would you like to save your password?"])
 
         config["email"] = email
 
@@ -162,7 +165,9 @@ def set_editor_menu(name):
     """Open the set editor popup"""
     window = ui.get_window()
     edit_fn = lambda context: set_editor(context.data, name)
-    window.create_list_popup("Set Editor", callback=edit_fn, list_fill=draw_text_editors)
+    window.create_list_popup("Set Editor",
+                             callback=edit_fn,
+                             list_fill=draw_text_editors)
 
 
 def draw_class_codes():
@@ -200,7 +205,9 @@ def set_class_code_override_menu(pref_name: str):
     """Open the set class code override popup"""
     window = ui.get_window()
     set_fn = lambda context: set_class_code_override(context.data, pref_name)
-    window.create_list_popup("Override Class Code", callback=set_fn, list_fill=draw_class_codes)
+    window.create_list_popup("Override Class Code",
+                             callback=set_fn,
+                             list_fill=draw_class_codes)
 
 
 def toggle_preference(pref):
@@ -251,7 +258,8 @@ class Preference:
 
 
 PREFERENCES = [
-    Preference("left_right_arrow_nav", "Left/Right Arrow Navigation", toggle_preference),
+    Preference("left_right_arrow_nav", "Left/Right Arrow Navigation",
+               toggle_preference),
     Preference("use_esc_back", "Use Esc key to exit menus", toggle_preference),
     Preference("clear_filter", "Auto Clear List Filters", toggle_preference),
     Preference("vim_mode", "Vim Mode", toggle_preference),

@@ -21,8 +21,10 @@ def get_tags_list() -> dict:
 def install_from_url(url: str):
     """Install the new version of zygrader from the GitHub tarball url"""
     try:
-        subprocess.check_call(
-            [sys.executable, "-m", "pip", "install", "--user", "--upgrade", "--no-cache-dir", url])
+        subprocess.check_call([
+            sys.executable, "-m", "pip", "install", "--user", "--upgrade",
+            "--no-cache-dir", url
+        ])
     except subprocess.CalledProcessError:
         print("Failed to update zygrader. Exiting")
         print()
@@ -32,7 +34,8 @@ def install_from_url(url: str):
 def uninstall_zygrader():
     """Uninstall zygrader before downgrading"""
     try:
-        subprocess.check_call([sys.executable, "-m", "pip", "uninstall", "-y", "zygrader"])
+        subprocess.check_call(
+            [sys.executable, "-m", "pip", "uninstall", "-y", "zygrader"])
     except subprocess.CalledProcessError:
         print("Failed to uninstall zygrader. Exiting")
         print()
@@ -83,7 +86,9 @@ def install_version(version: str):
             uninstall_zygrader()
             install_from_url(tag["tarball_url"])
 
-            print(f"zygrader {version} successfully installed. Please run zygrader again.")
+            print(
+                f"zygrader {version} successfully installed. Please run zygrader again."
+            )
             print()
             sys.exit()
 

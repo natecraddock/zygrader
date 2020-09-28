@@ -79,13 +79,18 @@ class Zybooks:
 
         This function returns the report as a string to be parsed as needed by the user
         """
-        section_ids = [section["canonical_section_id"] for section in zybook_sections]
+        section_ids = [
+            section["canonical_section_id"] for section in zybook_sections
+        ]
 
         aware_due_time = due_time.astimezone()
-        offset_minutes = int(-(aware_due_time.tzinfo.utcoffset(None) / timedelta(minutes=1)))
+        offset_minutes = int(-(aware_due_time.tzinfo.utcoffset(None) /
+                               timedelta(minutes=1)))
 
-        due_time_for_zybook = aware_due_time.astimezone(tz=timezone(timedelta()))
-        due_time_str = due_time_for_zybook.strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3] + "Z"
+        due_time_for_zybook = aware_due_time.astimezone(
+            tz=timezone(timedelta()))
+        due_time_str = due_time_for_zybook.strftime(
+            "%Y-%m-%dT%H:%M:%S.%f")[:-3] + "Z"
 
         query_string = f"?time_zone_offset={offset_minutes}&end_date={due_time_str}&sections={str(section_ids).replace(' ', '')}"
 
@@ -236,8 +241,8 @@ class Zybooks:
         else:
             # Strip out late submissions
             if submissions and Zybooks.CHECK_LATE_SUBMISSION in options:
-                submissions = self.__remove_late_submissions(submissions,
-                                                             options[Zybooks.CHECK_LATE_SUBMISSION])
+                submissions = self.__remove_late_submissions(
+                    submissions, options[Zybooks.CHECK_LATE_SUBMISSION])
 
             # Student has not submitted or did not submit before assignment was due
             if not submissions:
@@ -263,9 +268,18 @@ class Zybooks:
         # Success
         return response
 
-    def download_assignment_part(self, assignment, user_id, part, submission_index=None):
-        response_part = {"code": Zybooks.NO_ERROR, "name": part["name"], "id": str(part["id"])}
-        submission = self.download_submission(part["id"], user_id, assignment.options,
+    def download_assignment_part(self,
+                                 assignment,
+                                 user_id,
+                                 part,
+                                 submission_index=None):
+        response_part = {
+            "code": Zybooks.NO_ERROR,
+            "name": part["name"],
+            "id": str(part["id"])
+        }
+        submission = self.download_submission(part["id"], user_id,
+                                              assignment.options,
                                               submission_index)
 
         if submission["code"] is not Zybooks.NO_SUBMISSION:
@@ -298,7 +312,8 @@ class Zybooks:
 
         has_submitted = False
         for part in assignment.parts:
-            response_part = self.download_assignment_part(assignment, user_id, part)
+            response_part = self.download_assignment_part(
+                assignment, user_id, part)
             if response_part["code"] is not Zybooks.NO_SUBMISSION:
                 has_submitted = True
 
@@ -322,7 +337,8 @@ class Zybooks:
         Returns a ZipFile
         """
         # Check if the zip file is already cached. Only use the basename of the url
-        cached_name = os.path.join(SharedData.get_cache_directory(), os.path.basename(url))
+        cached_name = os.path.join(SharedData.get_cache_directory(),
+                                   os.path.basename(url))
         if os.path.exists(cached_name):
             return zipfile.ZipFile(cached_name)
 
