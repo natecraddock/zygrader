@@ -93,7 +93,7 @@ $ source ~/.virtualenvs/zygrader/bin/activate
 
 You must first install zygrader in _develop mode_ before running from source. Run the following from the zygrader repository (installing needed deps).
 ```
-$ pip install requests black
+$ pip install requests yapf
 $ pip install -e .
 ```
 
@@ -145,11 +145,11 @@ We strongly suggest using Visual Studio Code as a development enviromnent. The m
   * Pylance (Microsoft) - _Improved Python language server_
 * Configuration (workspace)
   * editor.formatOnSave: true
-  * python.formatting.provider: "black"
+  * python.formatting.provider: "yapf"
 
-We use `black` for auto code formatting. The above settings will enable auto code formatting
+We use `yapf` for auto code formatting. The above settings will enable auto code formatting
 on save to keep everyone's edits consistent. If you want to run formatting on all
-files, run `find . -name "*.py" -exec python3 -m black {} \;`.
+files, run `find . -name "*.py" -exec python3 -m yapf -i {} \;`.
 
 
 After creating a virtual environment, you must select that as the python interpreter in VSCode for development. Enter the
