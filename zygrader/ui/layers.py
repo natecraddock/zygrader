@@ -6,6 +6,7 @@ from .input import Event
 from . import window
 from . import components
 
+
 class ComponentLayer:
     def __init__(self):
         self.title: str = ""
@@ -18,20 +19,25 @@ class ComponentLayer:
     def event_handler(self, event: Event):
         pass
 
+
 class MenuLayer(ComponentLayer):
     """A reusable menu that supports searching the options."""
-
     def __init__(self):
         super().__init__()
         self.entries = {}
 
         win = window.Window.get_window()
-        self.filtered_list = components.FilteredList(1, 0, win.rows - 1, win.cols, [], None, "hey", None)
+        self.filtered_list = components.FilteredList(1, 0, win.rows - 1,
+                                                     win.cols, [], None, "hey",
+                                                     None)
 
     def __update_lines(self):
         """Update the lines in the FilteredList"""
-        lines = [components.FilteredList.ListLine(i, option) for i, option in enumerate(self.entries)]
-        self.filtered_list.create_lines(lines)
+        lines = [
+            components.FilteredList.ListLine(i, option)
+            for i, option in enumerate(self.entries)
+        ]
+        self.filtered_list.create_lines(self.entries.keys())
 
     def register_entry(self, name: str, fn: typing.Callable):
         self.entries[name] = fn
@@ -59,8 +65,8 @@ class MenuLayer(ComponentLayer):
             pass
         elif event.type == Event.CHAR_INPUT:
             self.filtered_list.addchar(event.value)
-        elif ((event.type == Event.ENTER) or
-                (event.type == Event.RIGHT and self.left_right_menu_nav)):
+        elif ((event.type == Event.ENTER)
+              or (event.type == Event.RIGHT and self.left_right_menu_nav)):
             pass
             # TODO: Handle this event
             # if callback and self.filtered_list.selected() != GO_BACK:

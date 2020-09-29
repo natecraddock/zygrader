@@ -147,6 +147,12 @@ def mainloop_callback(context: ui.WinContext):
         utils.view_students()
 
 
+def view_changelog():
+    window = ui.get_window()
+    lines = config.versioning.load_changelog()
+    window.create_list_popup("Changelog", lines)
+
+
 def mainloop(admin_mode):
     """Create the main menu that runs until zygrader is exited"""
     window = ui.get_window()
@@ -161,6 +167,14 @@ def mainloop(admin_mode):
     # Create the main menu
     menu = ui.layers.MenuLayer()
     menu.register_entry("Grade", grader.grade)
+    menu.register_entry("Emails", email.email_menu)
+    menu.register_entry("Prep Lab Score Calculator", utils.prep_lab_score_calc)
+    menu.register_entry("Run For Fun", lambda: grader.grade(use_locks=False))
+    menu.register_entry("View Students", utils.view_students)
+    menu.register_entry("Preferences", user.preferences_menu)
+    menu.register_entry("Changelog", view_changelog)
+    if admin_mode:
+        menu.register_entry("Admin", admin.admin_menu)
     window.register_layer(menu)
 
     # Begin the event loop

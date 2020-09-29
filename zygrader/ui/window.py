@@ -189,15 +189,17 @@ class Window:
     def loop(self):
         """Handle events in a loop until the program is exited"""
         while True:
+            for layer in self.active_tab.component_layers:
+                # layer.event_handler(event)
+                layer.draw()
             event = self.input.consume_event()
-
             if event.type == Event.HEADER_UPDATE:
                 # self.update_header()
                 pass
-            else:
-                for layer in self.active_tab.component_layers:
-                    layer.event_handler(event)
-                    layer.draw()
+
+            # All windows have been tagged for redraw with noutrefresh
+            # Now do a single draw pass with doupdate
+            curses.doupdate()
 
     def draw(self):
         """Draw each component in the stack"""
@@ -251,7 +253,10 @@ class Window:
         self.header_titles.pop()
         self.draw()
 
-    def create_popup(self, title, message, align=components.Popup.ALIGN_CENTER):
+    def create_popup(self,
+                     title,
+                     message,
+                     align=components.Popup.ALIGN_CENTER):
         """Create a popup with title and message that returns after enter"""
         popup = components.Popup(self.rows, self.cols, title, message, align)
         self.component_init(popup)
