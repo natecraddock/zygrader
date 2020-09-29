@@ -102,6 +102,7 @@ class Window:
         event_value = Event.NONE
         event_mod = None
 
+        # Nodelay causes exception when no input is given
         input_code = input_win.getch()
         if input_code == -1:
             return Event(event, event_value)
@@ -197,8 +198,7 @@ class Window:
         # Create window for input
         input_win = curses.newwin(0, 0, 1, 1)
         input_win.keypad(True)
-        # Makes getch blocking to reduce CPU usage
-        input_win.nodelay(False)
+        input_win.nodelay(True)
 
         while True:
             self.take_input.wait()
