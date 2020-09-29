@@ -8,7 +8,8 @@ from zygrader import ui
 
 
 class WatchData:
-    def __init__(self, paths: list, identifier: str, callback: typing.Callable[[str], None]):
+    def __init__(self, paths: list, identifier: str,
+                 callback: typing.Callable[[str], None]):
         self.paths = {}
         for path in paths:
             self.paths[path] = 0
@@ -50,7 +51,9 @@ def fs_watch():
 
 def start_fs_watch():
     """Start a file watch thread"""
-    watch_thread = threading.Thread(target=fs_watch, name="FS Watch Thread", daemon=True)
+    watch_thread = threading.Thread(target=fs_watch,
+                                    name="FS Watch Thread",
+                                    daemon=True)
     watch_thread.start()
 
 

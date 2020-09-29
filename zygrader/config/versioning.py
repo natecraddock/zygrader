@@ -62,7 +62,8 @@ def do_versioning(window: ui.Window):
     if compare_versions(version, user_version):
         msg = get_version_message(version)
 
-        window.create_popup(f"Version {version}", msg, ui.components.Popup.ALIGN_LEFT)
+        window.create_popup(f"Version {version}", msg,
+                            ui.components.Popup.ALIGN_LEFT)
 
     version = "4.1.0"
     if compare_versions(version, user_version):
@@ -71,19 +72,22 @@ def do_versioning(window: ui.Window):
         # Add new default preference
         config["class_code"] = "No Override"
 
-        window.create_popup(f"Version {version}", msg, ui.components.Popup.ALIGN_LEFT)
+        window.create_popup(f"Version {version}", msg,
+                            ui.components.Popup.ALIGN_LEFT)
 
     version = "4.2.0"
     if compare_versions(version, user_version):
         msg = get_version_message(version)
 
-        window.create_popup(f"Version {version}", msg, ui.components.Popup.ALIGN_LEFT)
+        window.create_popup(f"Version {version}", msg,
+                            ui.components.Popup.ALIGN_LEFT)
 
     version = "4.7.1"
     if compare_versions(version, user_version):
         msg = get_version_message(version)
 
-        window.create_popup(f"Version {version}", msg, ui.components.Popup.ALIGN_LEFT)
+        window.create_popup(f"Version {version}", msg,
+                            ui.components.Popup.ALIGN_LEFT)
 
     # Write the current version to the user's config file
     write_current_version(config)

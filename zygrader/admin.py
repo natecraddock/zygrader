@@ -30,7 +30,8 @@ def check_student_submissions(zy_api, student_id, lab, search_string):
 
         # If there was an error
         if zip_file == Zybooks.ERROR:
-            response["error"] = f"Error fetching submission {zy_api.get_time_string(submission)}"
+            response[
+                "error"] = f"Error fetching submission {zy_api.get_time_string(submission)}"
             continue
 
         extracted_zip_files = utils.extract_zip(zip_file)
@@ -67,24 +68,29 @@ def submission_search(lab, search_string, output_path):
                 logger.log(f"{counter:12} Checking {student.full_name}")
 
                 match_result = check_student_submissions(
-                    zy_api, str(student.id), lab, search_string
-                )
+                    zy_api, str(student.id), lab, search_string)
 
                 if match_result["code"] == Zybooks.DOWNLOAD_TIMEOUT:
-                    logger.log("Download timed out... trying again after a few seconds")
-                    log_file.write("Download timed out... trying again after a few seconds\n")
+                    logger.log(
+                        "Download timed out... trying again after a few seconds"
+                    )
+                    log_file.write(
+                        "Download timed out... trying again after a few seconds\n"
+                    )
                     time.sleep(5)
                 else:
                     break
 
             if match_result["code"] == Zybooks.NO_ERROR:
-                log_file.write(f"{student.full_name} matched {match_result['time']}\n")
+                log_file.write(
+                    f"{student.full_name} matched {match_result['time']}\n")
 
                 logger.append(f" found {search_string}")
 
             # Check for and log errors
             if "error" in match_result:
-                log_file.write(f"ERROR on {student.full_name}: {match_result['error']}\n")
+                log_file.write(
+                    f"ERROR on {student.full_name}: {match_result['error']}\n")
 
             student_num += 1
 
@@ -97,8 +103,7 @@ def submission_search_init(window, labs):
 
     # Choose lab
     assignment_index = window.create_filtered_list(
-        "Assignment", input_data=labs, filter_function=data.Lab.find
-    )
+        "Assignment", input_data=labs, filter_function=data.Lab.find)
     if assignment_index is ui.GO_BACK:
         return
 
@@ -107,15 +112,16 @@ def submission_search_init(window, labs):
     # Select the lab part if needed
     if len(assignment.parts) > 1:
         part_index = window.create_list_popup(
-            "Select Part", input_data=[name["name"] for name in assignment.parts]
-        )
+            "Select Part",
+            input_data=[name["name"] for name in assignment.parts])
         if part_index is ui.GO_BACK:
             return
         part = assignment.parts[part_index]
     else:
         part = assignment.parts[0]
 
-    search_string = window.create_text_input("Search String", "Enter a search string")
+    search_string = window.create_text_input("Search String",
+                                             "Enter a search string")
     if search_string == ui.Window.CANCEL:
         return
 
@@ -155,8 +161,7 @@ def admin_menu_callback(context: ui.WinContext):
         while True:
             all_locks = data.lock.get_lock_files()
             lock_index = context.window.create_filtered_list(
-                "Choose a lock file", input_data=all_locks
-            )
+                "Choose a lock file", input_data=all_locks)
             if lock_index != ui.GO_BACK:
                 data.lock.remove_lock_file(all_locks[lock_index])
             else:
@@ -170,6 +175,6 @@ def admin_menu():
     window = ui.get_window()
     window.set_header("Admin")
 
-    window.create_filtered_list(
-        "Option", input_data=ADMIN_MENU_OPTIONS, callback=admin_menu_callback
-    )
+    window.create_filtered_list("Option",
+                                input_data=ADMIN_MENU_OPTIONS,
+                                callback=admin_menu_callback)

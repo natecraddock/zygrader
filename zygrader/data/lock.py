@@ -13,7 +13,10 @@ from .model import Lab
 
 def get_lock_files():
     """Return a list of all lock files"""
-    return [l for l in os.listdir(SharedData.get_locks_directory()) if l.endswith(".lock")]
+    return [
+        l for l in os.listdir(SharedData.get_locks_directory())
+        if l.endswith(".lock")
+    ]
 
 
 def get_lock_log_path():
@@ -127,7 +130,8 @@ def unlock_all_labs_by_grader(username: str):
         if lock_parts[0] == username:
             os.remove(os.path.join(SharedData.get_locks_directory(), lock))
 
-    logger.log("All locks under the current grader were removed", logger.WARNING)
+    logger.log("All locks under the current grader were removed",
+               logger.WARNING)
 
 
 def unlock_all_labs():

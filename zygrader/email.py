@@ -40,7 +40,8 @@ def fill_student_list(students):
     return lines
 
 
-def update_student_list(window: ui.Window, student_list: ui.components.FilteredList):
+def update_student_list(window: ui.Window,
+                        student_list: ui.components.FilteredList):
     """Update the list of students when the locks change"""
     student_list.refresh()
     input = ui.get_input()
@@ -52,7 +53,8 @@ def watch_students(window: ui.Window, student_list: ui.components.FilteredList):
     paths = [data.SharedData.get_locks_directory()]
 
     update_list = lambda _: update_student_list(window, student_list)
-    data.fs_watch.fs_watch_register(paths, "student_email_list_watch", update_list)
+    data.fs_watch.fs_watch_register(paths, "student_email_list_watch",
+                                    update_list)
 
 
 def email_menu():

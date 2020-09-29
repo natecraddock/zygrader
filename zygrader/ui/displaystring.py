@@ -1,5 +1,6 @@
 import curses
 
+
 # The docstring contains \\\\ to show a \\ when interpreted
 class DisplayStr:
     """A Class to allow (basic) formatting of strings

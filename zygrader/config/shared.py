@@ -66,7 +66,8 @@ class SharedData:
     @classmethod
     def initialize_class_data(cls, class_code):
         cls.CLASS_CODE = class_code
-        cls.CLASS_DIRECTORY = os.path.join(cls.ZYGRADER_DATA_DIRECTORY, class_code)
+        cls.CLASS_DIRECTORY = os.path.join(cls.ZYGRADER_DATA_DIRECTORY,
+                                           class_code)
 
     @classmethod
     def get_shared_config(cls):

@@ -50,8 +50,10 @@ class Popup(Component):
         curses.curs_set(0)
 
     def __calculate_size(self):
-        self.rows = min(Popup.ROWS_MAX, self.available_rows - (Popup.PADDING * 2))
-        self.cols = min(Popup.COLS_MAX, self.available_cols - (Popup.PADDING * 2))
+        self.rows = min(Popup.ROWS_MAX,
+                        self.available_rows - (Popup.PADDING * 2))
+        self.cols = min(Popup.COLS_MAX,
+                        self.available_cols - (Popup.PADDING * 2))
         self.y = (self.available_rows - self.rows) // 2
         self.x = (self.available_cols - self.cols) // 2
 
@@ -96,7 +98,8 @@ class Popup(Component):
         for line in message:
             wrapped_lines = self.__calculate_wrapping(line)
             for wrapped in wrapped_lines:
-                add_str(self.window, message_y + message_row, message_x, wrapped)
+                add_str(self.window, message_y + message_row, message_x,
+                        wrapped)
                 message_row += 1
 
     def __draw_message_center(self, message: list):
@@ -106,7 +109,8 @@ class Popup(Component):
             wrapped_lines = self.__calculate_wrapping(line)
             for wrapped in wrapped_lines:
                 message_x = self.cols // 2 - len(wrapped) // 2
-                add_str(self.window, message_y + message_row, message_x, wrapped)
+                add_str(self.window, message_y + message_row, message_x,
+                        wrapped)
                 message_row += 1
 
     def draw_title(self):
@@ -211,7 +215,8 @@ class OptionsPopup(Popup):
 class DatetimeSpinner(Popup):
     NO_DATE = "datetime_no_date"
 
-    def __init__(self, height, width, title, time, quickpicks, optional, include_date):
+    def __init__(self, height, width, title, time, quickpicks, optional,
+                 include_date):
         super().__init__(height, width, title, [], Popup.ALIGN_CENTER)
 
         if time is None:
@@ -247,9 +252,11 @@ class DatetimeSpinner(Popup):
 
         return date.replace(year, month, day)
 
-    def __replace_date(
-        self, date: datetime.date, year=None, month=None, day=None
-    ) -> datetime.datetime:
+    def __replace_date(self,
+                       date: datetime.date,
+                       year=None,
+                       month=None,
+                       day=None) -> datetime.datetime:
         """A wrapper around datetime.datetime.replace that checks for out-of range dates
         like a Feb 29 on a non-leap year"""
 
@@ -275,14 +282,24 @@ class DatetimeSpinner(Popup):
         self.fields = []
         if self.include_date:
             self.fields = [
-                {"name": "month", "x_offset": 0, "unit": None, "formatter": "%b"},
+                {
+                    "name": "month",
+                    "x_offset": 0,
+                    "unit": None,
+                    "formatter": "%b"
+                },
                 {
                     "name": "day",
                     "x_offset": 4,
                     "unit": datetime.timedelta(days=1),
                     "formatter": "%d",
                 },
-                {"name": "year", "x_offset": 10, "unit": None, "formatter": "%y"},
+                {
+                    "name": "year",
+                    "x_offset": 10,
+                    "unit": None,
+                    "formatter": "%y"
+                },
             ]
         self.fields = self.fields + [
             {
@@ -320,15 +337,13 @@ class DatetimeSpinner(Popup):
 
         # If the date is optional (show 'No Date')
         if self.optional:
-            self.fields.append(
-                {
-                    "name": "no_date",
-                    "x_offset": 23 + date_x_fill,
-                    "unit": None,
-                    "formatter": None,
-                    "display_name": "No Date",
-                }
-            )
+            self.fields.append({
+                "name": "no_date",
+                "x_offset": 23 + date_x_fill,
+                "unit": None,
+                "formatter": None,
+                "display_name": "No Date",
+            })
 
     def __init_format_str(self):
         self.format_str = ""
@@ -342,10 +357,8 @@ class DatetimeSpinner(Popup):
         self._reset_month_str_position()
 
     def draw(self):
-        date_str = (
-            f"{self.time.strftime(self.format_str)} "
-            f"| Confirm{' | No Date' if self.optional else ''}"
-        )
+        date_str = (f"{self.time.strftime(self.format_str)} "
+                    f"| Confirm{' | No Date' if self.optional else ''}")
         self.message = [date_str]
         super().draw_text()
 
@@ -415,7 +428,8 @@ class DatetimeSpinner(Popup):
                 new_month = (self.time.month % 12) + 1
                 self.time = self.__replace_date(self.time, month=new_month)
             elif field["name"] == "year":
-                new_year = min(max(self.time.year + 1, datetime.MINYEAR), datetime.MAXYEAR)
+                new_year = min(max(self.time.year + 1, datetime.MINYEAR),
+                               datetime.MAXYEAR)
                 self.time = self.__replace_date(self.time, year=new_year)
 
     def _decrement_field(self):
@@ -429,7 +443,8 @@ class DatetimeSpinner(Popup):
                     new_month = 12
                 self.time = self.__replace_date(self.time, month=new_month)
             elif field["name"] == "year":
-                new_year = min(max(self.time.year - 1, datetime.MINYEAR), datetime.MAXYEAR)
+                new_year = min(max(self.time.year - 1, datetime.MINYEAR),
+                               datetime.MAXYEAR)
                 self.time = self.__replace_date(self.time, year=new_year)
 
     def _increment_quickpick(self):
@@ -527,21 +542,58 @@ class DatetimeSpinner(Popup):
             1,
             False,
             {
-                "a": (1, True, {"n": (1, True, "uary")}),
-                "u": (6, False, {"n": (6, True, "e"), "l": (7, True, "y")}),
+                "a": (1, True, {
+                    "n": (1, True, "uary")
+                }),
+                "u": (6, False, {
+                    "n": (6, True, "e"),
+                    "l": (7, True, "y")
+                }),
             },
         ),
-        "f": (2, True, {"e": (2, True, {"b": (2, True, "ruary")})}),
-        "m": (3, False, {"a": (3, False, {"r": (3, True, "ch"), "y": (5, True, "")})}),
+        "f": (2, True, {
+            "e": (2, True, {
+                "b": (2, True, "ruary")
+            })
+        }),
+        "m": (3, False, {
+            "a": (3, False, {
+                "r": (3, True, "ch"),
+                "y": (5, True, "")
+            })
+        }),
         "a": (
             4,
             False,
-            {"p": (4, True, {"r": (4, True, "il")}), "u": (8, True, {"g": (8, True, "ust")})},
+            {
+                "p": (4, True, {
+                    "r": (4, True, "il")
+                }),
+                "u": (8, True, {
+                    "g": (8, True, "ust")
+                })
+            },
         ),
-        "s": (9, True, {"e": (9, True, {"p": (9, True, "tember")})}),
-        "o": (10, True, {"c": (10, True, {"t": (10, True, "ober")})}),
-        "n": (11, True, {"o": (11, True, {"v": (11, True, "ember")})}),
-        "d": (12, True, {"e": (12, True, {"c": (12, True, "ember")})}),
+        "s": (9, True, {
+            "e": (9, True, {
+                "p": (9, True, "tember")
+            })
+        }),
+        "o": (10, True, {
+            "c": (10, True, {
+                "t": (10, True, "ober")
+            })
+        }),
+        "n": (11, True, {
+            "o": (11, True, {
+                "v": (11, True, "ember")
+            })
+        }),
+        "d": (12, True, {
+            "e": (12, True, {
+                "c": (12, True, "ember")
+            })
+        }),
     }
 
     def _reset_month_str_position(self):
@@ -568,7 +620,6 @@ class DatetimeSpinner(Popup):
 class FilteredList(Component):
     class ListLine:
         """Represents a single line of the list"""
-
         def __init__(self, index, data):
             self.index = index
             self.data = data
@@ -592,15 +643,17 @@ class FilteredList(Component):
     def __fill_text(self, lines):
         line_number = 0
 
-        draw_lines = lines[self.scroll : self.scroll + self.rows - 1]
+        draw_lines = lines[self.scroll:self.scroll + self.rows - 1]
 
         for line in draw_lines:
             if (line_number + self.scroll) == self.selected_index:
                 display_text = f"> {line.text}"
-                add_str(self.window, line_number, 0, display_text, curses.A_BOLD | line.color)
+                add_str(self.window, line_number, 0, display_text,
+                        curses.A_BOLD | line.color)
             else:
                 display_text = f"  {line.text}"
-                add_str(self.window, line_number, 0, display_text, curses.A_DIM | line.color)
+                add_str(self.window, line_number, 0, display_text,
+                        curses.A_DIM | line.color)
 
             line_number += 1
 
@@ -615,7 +668,8 @@ class FilteredList(Component):
         self.options = lines
         self.dirty = True
 
-    def __init__(self, y, x, rows, cols, options, list_fill, prompt, filter_function):
+    def __init__(self, y, x, rows, cols, options, list_fill, prompt,
+                 filter_function):
         self.blocking = True
 
         # Flag to determine if the list needs to be updated.
@@ -677,7 +731,8 @@ class FilteredList(Component):
         self.text_input.erase()
 
         if self.dirty:
-            self.data = self.__filter_data(self.options, self.filter_function, self.filter_text)
+            self.data = self.__filter_data(self.options, self.filter_function,
+                                           self.filter_text)
 
         # If no matches, set selected index to 0
         if len(self.data) is 1:
@@ -790,7 +845,8 @@ class TextInput(Popup):
         self.text_width = self.cols - (TextInput.PADDING * 2)
 
         try:
-            self.text_input.mvwin(self.rows - TextInput.TEXT_HEIGHT - 1, self.x + TextInput.PADDING)
+            self.text_input.mvwin(self.rows - TextInput.TEXT_HEIGHT - 1,
+                                  self.x + TextInput.PADDING)
         except:
             pass
         resize_window(self.text_input, TextInput.TEXT_HEIGHT, self.text_width)
@@ -863,8 +919,8 @@ class TextInput(Popup):
         self.right()
 
     def delselection(self):
-        left = self.text[: min(self.marks)]
-        right = self.text[max(self.marks) + 1 :]
+        left = self.text[:min(self.marks)]
+        right = self.text[max(self.marks) + 1:]
         self.text = left + right
         self.cursor_index = min(self.marks)
         self.reset_marks()
@@ -878,7 +934,8 @@ class TextInput(Popup):
             return
 
         # Remove character at cursor location
-        self.text = self.text[: self.cursor_index - 1] + self.text[self.cursor_index :]
+        self.text = self.text[:self.cursor_index -
+                              1] + self.text[self.cursor_index:]
         self.left()
 
     def delcharforward(self):
@@ -890,11 +947,11 @@ class TextInput(Popup):
             return
 
         # Remove character just forward of cursor location
-        self.text = self.text[: self.cursor_index] + self.text[self.cursor_index + 1 :]
+        self.text = self.text[:self.
+                              cursor_index] + self.text[self.cursor_index + 1:]
 
     def _cursor_mover(move_func):
         """Wrap a cursor-moving function without moving marks"""
-
         def wrapped(self, shift_pressed=False):
             if shift_pressed:
                 if not self.marks:
@@ -993,7 +1050,8 @@ class ListPopup(FilteredList, Popup):
         self.selected_index = 1
 
     def set_scroll(self):
-        if (self.selected_index + 1) > self.scroll + self.rows - ListPopup.V_PADDING:
+        if (self.selected_index +
+                1) > self.scroll + self.rows - ListPopup.V_PADDING:
             self.scroll = self.selected_index + ListPopup.V_PADDING - self.rows + 1
         # Cursor set above view
         elif self.selected_index < self.scroll:
@@ -1002,17 +1060,16 @@ class ListPopup(FilteredList, Popup):
     def draw_list(self):
         line = 0
 
-        for l in self.data[self.scroll : self.scroll + self.rows - ListPopup.V_PADDING]:
+        for l in self.data[self.scroll:self.scroll + self.rows -
+                           ListPopup.V_PADDING]:
             if (line + self.scroll) == self.selected_index:
                 display_text = f"> {str(l)}"
-                add_str(
-                    self.window, Popup.PADDING + line, Popup.PADDING, display_text, curses.A_DIM
-                )
+                add_str(self.window, Popup.PADDING + line, Popup.PADDING,
+                        display_text, curses.A_DIM)
             else:
                 display_text = f"  {str(l)}"
-                add_str(
-                    self.window, Popup.PADDING + line, Popup.PADDING, display_text, curses.A_BOLD
-                )
+                add_str(self.window, Popup.PADDING + line, Popup.PADDING,
+                        display_text, curses.A_BOLD)
             line += 1
 
     def draw(self):

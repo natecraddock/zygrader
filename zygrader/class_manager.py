@@ -76,7 +76,8 @@ def add_lab():
     parts = []
 
     section_selector = ZybookSectionSelector(allow_optional_and_hidden=True)
-    section_numbers = section_selector.select_zybook_sections(return_just_numbers=True)
+    section_numbers = section_selector.select_zybook_sections(
+        return_just_numbers=True)
 
     for chapter, section in section_numbers:
         part = {}
@@ -113,8 +114,7 @@ def set_due_date(lab):
         old_date = lab.options["due"]
 
     due_date = window.create_datetime_spinner(
-        "Due Date", time=old_date if old_date else None, optional=True
-    )
+        "Due Date", time=old_date if old_date else None, optional=True)
     if due_date == ui.GO_BACK:
         return
 
@@ -146,7 +146,9 @@ def rename_lab(filtered_list, lab):
 
     labs = data.get_labs()
 
-    name = window.create_text_input("Rename Lab", "Enter Lab's new name", text=lab.name)
+    name = window.create_text_input("Rename Lab",
+                                    "Enter Lab's new name",
+                                    text=lab.name)
     if name != ui.Window.CANCEL:
         lab.name = name
         data.write_labs(labs)
@@ -198,7 +200,9 @@ def edit_lab_options(lab):
 
     draw = lambda: edit_lab_options_draw(lab)
     callback = lambda context: edit_lab_options_callback(lab, context.data)
-    window.create_list_popup("Editing Lab Options", callback=callback, list_fill=draw)
+    window.create_list_popup("Editing Lab Options",
+                             callback=callback,
+                             list_fill=draw)
 
 
 def move_lab(filtered_list, lab, step):
@@ -251,15 +255,21 @@ def edit_labs_callback(lab, filtered_list):
 def draw_lab_list() -> list:
     """Use a callback for drawing the filtered list of labs so it can be refreshed"""
     labs = data.get_labs()
-    return [ui.components.FilteredList.ListLine(i, lab) for i, lab in enumerate(labs, start=1)]
+    return [
+        ui.components.FilteredList.ListLine(i, lab)
+        for i, lab in enumerate(labs, start=1)
+    ]
 
 
 def edit_labs():
     """Creates a list of labs to edit"""
     window = ui.get_window()
 
-    edit_fn = lambda context: edit_labs_callback(data.get_labs()[context.data], context.component)
-    window.create_filtered_list("Lab", list_fill=draw_lab_list, callback=edit_fn)
+    edit_fn = lambda context: edit_labs_callback(data.get_labs()[context.data],
+                                                 context.component)
+    window.create_filtered_list("Lab",
+                                list_fill=draw_lab_list,
+                                callback=edit_fn)
 
 
 def get_class_section(old_section: data.model.ClassSection = None):
@@ -269,8 +279,9 @@ def get_class_section(old_section: data.model.ClassSection = None):
     if old_section:
         init_text = str(old_section.section_number)
     section_num_str = window.create_text_input(
-        "Section Number", "Enter the new section number for this section", text=init_text
-    )
+        "Section Number",
+        "Enter the new section number for this section",
+        text=init_text)
 
     if section_num_str == ui.Window.CANCEL:
         return None
@@ -278,8 +289,9 @@ def get_class_section(old_section: data.model.ClassSection = None):
     section_num = int(section_num_str)
 
     default_due_time = window.create_datetime_spinner(
-        "Section Default Due Time", quickpicks=[(50, 0), (59, 59), (0, 0)], include_date=False
-    )
+        "Section Default Due Time",
+        quickpicks=[(50, 0), (59, 59), (0, 0)],
+        include_date=False)
 
     if default_due_time == ui.GO_BACK:
         return None
@@ -317,7 +329,8 @@ def draw_class_section_list() -> list:
     of class sections so it can be refreshed"""
     class_sections = data.get_class_sections()
     return [
-        ui.components.FilteredList.ListLine(i, el) for i, el in enumerate(class_sections, start=1)
+        ui.components.FilteredList.ListLine(i, el)
+        for i, el in enumerate(class_sections, start=1)
     ]
 
 
@@ -325,9 +338,9 @@ def edit_class_sections():
     """Create list of class sections to edit"""
     window = ui.get_window()
 
-    window.create_filtered_list(
-        "Class Section", list_fill=draw_class_section_list, callback=edit_class_sections_callback
-    )
+    window.create_filtered_list("Class Section",
+                                list_fill=draw_class_section_list,
+                                callback=edit_class_sections_callback)
 
 
 def sort_class_sections():
@@ -354,7 +367,8 @@ def download_roster(silent=False):
     if roster:
         save_roster(roster)
     if not silent:
-        window.create_popup("Finished", ["Successfully downloaded student roster"])
+        window.create_popup("Finished",
+                            ["Successfully downloaded student roster"])
 
 
 def change_class():
@@ -369,7 +383,8 @@ def change_class():
     if code_index != ui.GO_BACK:
         SharedData.set_current_class_code(class_codes[code_index])
 
-        window.create_popup("Changed Class", [f"Class changed to {class_codes[code_index]}"])
+        window.create_popup("Changed Class",
+                            [f"Class changed to {class_codes[code_index]}"])
 
 
 LAB_MANAGE_OPTIONS = ["Add Lab", "Edit Current Labs"]
@@ -389,12 +404,16 @@ def lab_manager():
     window = ui.get_window()
     window.set_header("Lab Manager")
 
-    window.create_filtered_list(
-        "Option", input_data=LAB_MANAGE_OPTIONS, callback=lab_manager_callback
-    )
+    window.create_filtered_list("Option",
+                                input_data=LAB_MANAGE_OPTIONS,
+                                callback=lab_manager_callback)
 
 
-CLASS_SECTION_MANAGE_OPTIONS = ["Add Section", "Edit Current Sections", "Sort Current Sections"]
+CLASS_SECTION_MANAGE_OPTIONS = [
+    "Add Section",
+    "Edit Current Sections",
+    "Sort Current Sections",
+]
 
 
 def class_section_manager_callback(context: ui.WinContext):
@@ -413,9 +432,9 @@ def class_section_manager():
     window = ui.get_window()
     window.set_header("Class Section Manager")
 
-    window.create_filtered_list(
-        "Option", input_data=CLASS_SECTION_MANAGE_OPTIONS, callback=class_section_manager_callback
-    )
+    window.create_filtered_list("Option",
+                                input_data=CLASS_SECTION_MANAGE_OPTIONS,
+                                callback=class_section_manager_callback)
 
 
 CLASS_MANAGE_OPTIONS = [
@@ -449,6 +468,6 @@ def start():
     window = ui.get_window()
     window.set_header("Class Manager")
 
-    window.create_filtered_list(
-        "Option", input_data=CLASS_MANAGE_OPTIONS, callback=class_manager_callback
-    )
+    window.create_filtered_list("Option",
+                                input_data=CLASS_MANAGE_OPTIONS,
+                                callback=class_manager_callback)
