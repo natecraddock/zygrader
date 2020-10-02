@@ -20,6 +20,10 @@ def suspend_curses(callback_fn):
     """A decorator for any subprocess that must suspend access to curses (zygrader)"""
     def wrapper(*args, **kwargs):
         window = ui.get_window()
+
+        # Ensure the input thread doesn't lock while suspended.
+        # Use 2/10 of a second as a delay
+        curses.halfdelay(2)
         # Clear remaining events in event queue
         window.clear_event_queue()
 
@@ -31,6 +35,8 @@ def suspend_curses(callback_fn):
 
         curses.flushinp()
         curses.initscr()
+        # Restore nodelay
+        curses.cbreak()
         window.take_input.set()
         window.clear_event_queue()
         curses.doupdate()
