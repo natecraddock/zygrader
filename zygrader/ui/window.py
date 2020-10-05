@@ -253,10 +253,7 @@ class Window:
         self.header_titles.pop()
         self.draw()
 
-    def create_popup(self,
-                     title,
-                     message,
-                     align=components.Popup.ALIGN_CENTER):
+    def create_popup(self, title, message, align=components.Popup.ALIGN_CENTER):
         """Create a popup with title and message that returns after enter"""
         popup = components.Popup(self.rows, self.cols, title, message, align)
         self.component_init(popup)
