@@ -22,6 +22,7 @@ class Tab:
     """A tab holds a stack of component layers. Zygrader always has 4 tabs, they are not always visible."""
     def __init__(self):
         self.component_layers: typing.List[ComponentLayer] = []
+        self.active_layer: ComponentLayer = None
         self.open = False
 
 
@@ -187,20 +188,28 @@ class Window:
 
     def register_layer(self, layer: ComponentLayer):
         self.active_tab.component_layers.append(layer)
+        self.active_tab.active_layer = layer
 
     def loop(self):
         """Handle events in a loop until the program is exited"""
         while True:
-            for layer in self.active_tab.component_layers:
-                # layer.event_handler(event)
-                layer.draw()
+            # Get the event on the front of the queue
             event = self.events.get_event()
+
+            # Events are either handled directly by the window manager or
+            # are passed to the active component layer in the active tab.
             if event.type == Event.HEADER_UPDATE:
                 # self.update_header()
                 pass
+            else:
+                self.active_tab.active_layer.event_handler(event)
 
-            # All windows have been tagged for redraw with noutrefresh
-            # Now do a single draw pass with doupdate
+            # Recalculate windows
+            for layer in self.active_tab.component_layers:
+                layer.draw()
+
+            # All windows have been tagged for redraw with noutrefresh,
+            # now do a single draw pass with doupdate.
             curses.doupdate()
 
     def draw(self):
