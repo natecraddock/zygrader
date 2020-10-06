@@ -135,7 +135,7 @@ def mainloop_callback(context: ui.WinContext):
     elif option == "Preferences":
         user.preferences_menu()
     elif option == "Emails":
-        email.email_menu()
+        email_manager.email_menu()
     elif option == "Prep Lab Score Calculator":
         utils.prep_lab_score_calc()
     elif option == "Admin":
