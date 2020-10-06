@@ -9,7 +9,7 @@ import time
 from zygrader import admin
 from zygrader import config
 from zygrader import data
-from zygrader import email
+from zygrader import email_manager
 from zygrader import grader
 from zygrader import logger
 from zygrader import ui
