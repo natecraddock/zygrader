@@ -207,13 +207,13 @@ def start():
         sys.exit()
 
     # Setup user configuration
-    preferences.initial_config()
+    preferences.initialize()
 
     # Handle configuration based args after config has been initialized
     handle_args(args)
 
     # Check for shared data dir
-    data_dir = preferences.get_preference("data_dir")
+    data_dir = preferences.get("data_dir")
     if not data_dir:
         print("You have not set the shared data directory")
         print("Please run with the flag --set-data-dir [path]")

@@ -3,7 +3,7 @@ import curses
 import queue
 import threading
 
-from zygrader.config.preferences import is_preference_set
+from zygrader.config import preferences
 from . import components
 from .utils import add_str, resize_window
 
@@ -72,12 +72,12 @@ class Window:
         return None
 
     def update_preferences(self):
-        self.dark_mode = is_preference_set("dark_mode")
-        self.christmas_mode = is_preference_set("christmas_mode")
-        self.vim_mode = is_preference_set("vim_mode")
-        self.left_right_menu_nav = is_preference_set("left_right_arrow_nav")
-        self.clear_filter = is_preference_set("clear_filter")
-        self.use_esc_back = is_preference_set("use_esc_back")
+        self.dark_mode = preferences.get("dark_mode")
+        self.christmas_mode = preferences.get("christmas_mode")
+        self.vim_mode = preferences.get("vim_mode")
+        self.left_right_menu_nav = preferences.get("left_right_arrow_nav")
+        self.clear_filter = preferences.get("clear_filter")
+        self.use_esc_back = preferences.get("use_esc_back")
 
     def set_mode(self, mode: int):
         """Set the vim edit mode"""

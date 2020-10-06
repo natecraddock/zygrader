@@ -283,7 +283,7 @@ class Submission(Iterable):
         if self.flag & SubmissionFlag.NO_SUBMISSION:
             # Can't show popup here because curses is disabled...
             return
-        user_editor = preferences.get_config()["editor"]
+        user_editor = preferences.get("editor")
         editor_path = preferences.EDITORS[user_editor]
 
         files = utils.get_source_file_paths(self.files_directory)
@@ -442,7 +442,7 @@ class Submission(Iterable):
         return self.wait_on_child(process)
 
     def diff_parts(self):
-        use_browser = preferences.is_preference_set("browser_diff")
+        use_browser = preferences.get("browser_diff")
 
         if len(self.lab.parts) < 2:
             return "Not enough parts to diff"

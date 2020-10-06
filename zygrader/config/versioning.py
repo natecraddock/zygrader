@@ -43,7 +43,7 @@ def compare_versions(zygrader_version, user_version):
     return LooseVersion(user_version) < LooseVersion(zygrader_version)
 
 
-def write_current_version(config):
+def write_config(config):
     config["version"] = SharedData.VERSION.vstring
     preferences.write_config(config)
 
@@ -52,6 +52,7 @@ def do_versioning(window: ui.Window):
     """Compare the user's current version in the config and make necessary adjustments
     Also notify the user of new changes"""
 
+    # To modify the config with more flexibility, we need access to the raw json.
     config = preferences.get_config()
     user_version = config["version"]
 
@@ -89,5 +90,41 @@ def do_versioning(window: ui.Window):
         window.create_popup(f"Version {version}", msg,
                             ui.components.Popup.ALIGN_LEFT)
 
+    version = "4.8.0"
+    if compare_versions(version, user_version):
+        msg = get_version_message(version)
+
+        # Preferences are now stored as true/false json values,
+        # rather than relying on the presence of a key. Update existing
+        # user's preferences.
+
+        # Update booleans.
+        for key in {
+                "left_right_arrow_nav", "use_esc_back", "clear_filter",
+                "vim_mode", "dark_mode", "christmas_mode", "browser_diff",
+                "save_password"
+        }:
+            if key in config:
+                config[key] = True
+            else:
+                config[key] = False
+
+        # Set string preferences to their defaults if they don't exist.
+        if not "version" in config:
+            config["verison"] = SharedData.VERSION.vstring
+        if not "email" in config:
+            config["email"] = ""
+        if not "password" in config:
+            config["password"] = ""
+        if not "class_code" in config:
+            config["class_code"] = "No Override"
+        if not "editor" in config:
+            config["editor"] = "Pluma"
+        if not "data_dir" in config:
+            config["data_dir"] = ""
+
+        window.create_popup(f"Version {version}", msg,
+                            ui.components.Popup.ALIGN_LEFT)
+
     # Write the current version to the user's config file
-    write_current_version(config)
+    write_config(config)
