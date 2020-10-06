@@ -1,5 +1,8 @@
 # Try to keep lines shorter than 70 characters
 
+4.8.0
+* Refactor user preferences.
+
 4.7.1
 * Add email manager to lock student's emails.
 * Reduce CPU usage.

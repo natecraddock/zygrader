@@ -168,8 +168,8 @@ def main(window: ui.Window):
     else:
         admin_mode = False
 
-    # Apply versioning
-    versioning.do_versioning(window)
+    # Notify the user of changes
+    versioning.show_versioning_message(window)
 
     # Log in user
     user.login(window)
@@ -208,6 +208,9 @@ def start():
 
     # Setup user configuration
     preferences.initialize()
+
+    # Apply versioning changes to preferences
+    versioning.do_versioning()
 
     # Handle configuration based args after config has been initialized
     handle_args(args)

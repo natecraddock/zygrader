@@ -48,9 +48,8 @@ def write_config(config):
     preferences.write_config(config)
 
 
-def do_versioning(window: ui.Window):
-    """Compare the user's current version in the config and make necessary adjustments
-    Also notify the user of new changes"""
+def do_versioning():
+    """Compare the user's current version in the config and make necessary adjustments."""
 
     # To modify the config with more flexibility, we need access to the raw json.
     config = preferences.get_config()
@@ -59,41 +58,13 @@ def do_versioning(window: ui.Window):
     if isinstance(user_version, float):
         user_version = str(user_version)
 
-    version = "4.0.0"
-    if compare_versions(version, user_version):
-        msg = get_version_message(version)
-
-        window.create_popup(f"Version {version}", msg,
-                            ui.components.Popup.ALIGN_LEFT)
-
     version = "4.1.0"
     if compare_versions(version, user_version):
-        msg = get_version_message(version)
-
         # Add new default preference
         config["class_code"] = "No Override"
 
-        window.create_popup(f"Version {version}", msg,
-                            ui.components.Popup.ALIGN_LEFT)
-
-    version = "4.2.0"
-    if compare_versions(version, user_version):
-        msg = get_version_message(version)
-
-        window.create_popup(f"Version {version}", msg,
-                            ui.components.Popup.ALIGN_LEFT)
-
-    version = "4.7.1"
-    if compare_versions(version, user_version):
-        msg = get_version_message(version)
-
-        window.create_popup(f"Version {version}", msg,
-                            ui.components.Popup.ALIGN_LEFT)
-
     version = "4.8.0"
     if compare_versions(version, user_version):
-        msg = get_version_message(version)
-
         # Preferences are now stored as true/false json values,
         # rather than relying on the presence of a key. Update existing
         # user's preferences.
@@ -123,8 +94,42 @@ def do_versioning(window: ui.Window):
         if not "data_dir" in config:
             config["data_dir"] = ""
 
+    # Write the current version to the user's config file
+    write_config(config)
+
+
+def show_versioning_message(window: ui.Window):
+    """Notify the user of new changes in the changelog."""
+
+    # To modify the config with more flexibility, we need access to the raw json.
+    user_version = preferences.get("version")
+
+    version = "4.0.0"
+    if compare_versions(version, user_version):
+        msg = get_version_message(version)
         window.create_popup(f"Version {version}", msg,
                             ui.components.Popup.ALIGN_LEFT)
 
-    # Write the current version to the user's config file
-    write_config(config)
+    version = "4.1.0"
+    if compare_versions(version, user_version):
+        msg = get_version_message(version)
+        window.create_popup(f"Version {version}", msg,
+                            ui.components.Popup.ALIGN_LEFT)
+
+    version = "4.2.0"
+    if compare_versions(version, user_version):
+        msg = get_version_message(version)
+        window.create_popup(f"Version {version}", msg,
+                            ui.components.Popup.ALIGN_LEFT)
+
+    version = "4.7.1"
+    if compare_versions(version, user_version):
+        msg = get_version_message(version)
+        window.create_popup(f"Version {version}", msg,
+                            ui.components.Popup.ALIGN_LEFT)
+
+    version = "4.8.0"
+    if compare_versions(version, user_version):
+        msg = get_version_message(version)
+        window.create_popup(f"Version {version}", msg,
+                            ui.components.Popup.ALIGN_LEFT)
