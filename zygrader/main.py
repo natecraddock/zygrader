@@ -167,7 +167,7 @@ def mainloop(admin_mode):
     # Create the main menu
     menu = ui.layers.MenuLayer()
     menu.register_entry("Grade", grader.grade)
-    menu.register_entry("Emails", email.email_menu)
+    menu.register_entry("Emails", email_manager.email_menu)
     menu.register_entry("Prep Lab Score Calculator", utils.prep_lab_score_calc)
     menu.register_entry("Run For Fun", lambda: grader.grade(use_locks=False))
     menu.register_entry("View Students", utils.view_students)

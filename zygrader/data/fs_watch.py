@@ -40,10 +40,7 @@ WATCH_DELAY = 1
 
 def fs_watch():
     """Watch loop"""
-    input = ui.get_input()
-
     while True:
-        input.take_input.wait()
         time.sleep(WATCH_DELAY)
         for watch in WATCH_INTEREST:
             watch.check_paths()

@@ -46,8 +46,8 @@ def update_student_list(window: ui.Window,
                         student_list: ui.components.FilteredList):
     """Update the student list when the locks or flags change"""
     student_list.refresh()
-    input = ui.get_input()
-    input.push_refresh_event()
+    events = ui.get_events()
+    events.push_refresh_event()
 
 
 def get_submission(lab, student, use_locks=True):

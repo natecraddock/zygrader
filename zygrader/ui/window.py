@@ -3,8 +3,8 @@ import curses
 import typing
 
 from zygrader.config.preferences import is_preference_set
-from . import components, input
-from .input import Event, GO_BACK
+from . import components, events
+from .events import Event, GO_BACK
 from .utils import add_str, resize_window
 from .layers import ComponentLayer
 
@@ -40,7 +40,7 @@ class Window:
     def update_preferences(self):
         self.dark_mode = is_preference_set("dark_mode")
         self.christmas_mode = is_preference_set("christmas_mode")
-        self.input.vim_mode = is_preference_set("vim_mode")
+        self.events.vim_mode = is_preference_set("vim_mode")
         self.left_right_menu_nav = is_preference_set("left_right_arrow_nav")
         self.clear_filter = is_preference_set("clear_filter")
         self.use_esc_back = is_preference_set("use_esc_back")
@@ -53,13 +53,6 @@ class Window:
         self.tabs: typing.List[Tab] = []
         self.active_tab: Tab = Tab()
 
-        # All user input handling is done in a separate thread
-        # Inside the input class
-        self.input = input.Input()
-
-        # Set user preference variables
-        self.update_preferences()
-
         curses.wrapper(self.__init_curses, callback)
 
         # Cleanup when finished accepting input
@@ -70,6 +63,12 @@ class Window:
     def __init_curses(self, stdscr, callback):
         """Configure basic curses settings"""
         self.stdscr = stdscr
+
+        # We use halfdelay with a delay of 1/10 of a second to prevent
+        # using the 100% of a CPU core while checking for input.
+        # Previously we used nodelay(True) which caused excessive CPU cycles.
+        # We must use at least halfdelay to prevent input from blocking.
+        curses.halfdelay(1)
 
         self.__get_window_dimensions()
 
@@ -92,8 +91,11 @@ class Window:
         self.__header_title_load = ""
         self.__email_text = ""
 
-        # Input is now ready to start
-        self.input.input_thread.start()
+        # All user input handling is done inside the EventManager class.
+        self.events = events.EventManager()
+
+        # Set user preference variables
+        self.update_preferences()
 
         # Execute callback with a reference to the window object
         callback(self)
@@ -160,9 +162,9 @@ class Window:
         if self.__email_text:
             display_text += f" | {self.__email_text}"
 
-        if self.input.insert_mode:
+        if self.events.insert_mode:
             display_text += " | INSERT"
-        elif self.input.mark_mode:
+        elif self.events.mark_mode:
             display_text += " | VISUAL"
 
         # Centered header
@@ -192,7 +194,7 @@ class Window:
             for layer in self.active_tab.component_layers:
                 # layer.event_handler(event)
                 layer.draw()
-            event = self.input.consume_event()
+            event = self.events.get_event()
             if event.type == Event.HEADER_UPDATE:
                 # self.update_header()
                 pass
@@ -235,7 +237,7 @@ class Window:
         self.stdscr.bkgd(" ", curses.color_pair(1))
 
     def component_init(self, component):
-        self.input.disable_modes()
+        self.events.disable_modes()
 
         self.components.append(component)
         if self.__header_title_load:
@@ -247,7 +249,7 @@ class Window:
         self.draw()
 
     def component_deinit(self):
-        self.input.disable_modes()
+        self.events.disable_modes()
 
         self.components.pop()
         self.header_titles.pop()
@@ -259,7 +261,7 @@ class Window:
         self.component_init(popup)
 
         while True:
-            event = self.input.consume_event()
+            event = self.events.get_event()
 
             if event.type == Event.ENTER:
                 break
@@ -288,7 +290,7 @@ class Window:
             def close(self):
                 if not self.has_exited:
                     self.window.component_deinit()
-                    self.window.input.clear_event_queue()
+                    self.window.events.clear_event_queue()
                 self.has_exited = True
 
         popup = components.OptionsPopup(self.rows, self.cols, title, message,
@@ -308,7 +310,7 @@ class Window:
         self.component_init(popup)
 
         while True:
-            event = self.input.consume_event()
+            event = self.events.get_event()
 
             if event.type in {Event.LEFT, Event.UP, Event.BTAB}:
                 popup.previous()
@@ -338,7 +340,7 @@ class Window:
         self.component_init(popup)
 
         while True:
-            event = self.input.consume_event()
+            event = self.events.get_event()
 
             if event.type in {Event.LEFT, Event.UP, Event.BTAB}:
                 popup.previous()
@@ -387,7 +389,7 @@ class Window:
 
         retval = None
         while True:
-            event = self.input.consume_event()
+            event = self.events.get_event()
 
             if event.type in {Event.LEFT, Event.BTAB}:
                 popup.previous_field()
@@ -436,7 +438,7 @@ class Window:
 
         retval = None
         while True:
-            event = self.input.consume_event()
+            event = self.events.get_event()
 
             if event.type == Event.DOWN:
                 popup.down()
@@ -476,12 +478,12 @@ class Window:
                                           text, mask)
         self.component_init(text_input)
 
-        if self.input.vim_mode:
-            self.input.insert_mode = True
+        if self.events.vim_mode:
+            self.events.insert_mode = True
             self.draw()
 
         while True:
-            event = self.input.consume_event()
+            event = self.events.get_event()
 
             if event.type == Event.ENTER:
                 break
@@ -551,7 +553,7 @@ class Window:
             create_fn(filtered_list)
 
         while True:
-            event = self.input.consume_event()
+            event = self.events.get_event()
 
             if event.type == Event.DOWN:
                 filtered_list.down()

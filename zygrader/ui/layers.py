@@ -2,7 +2,7 @@
 
 import typing
 
-from .input import Event
+from .events import Event
 from . import window
 from . import components
 

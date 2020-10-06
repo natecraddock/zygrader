@@ -19,20 +19,16 @@ from zygrader.zybooks import Zybooks
 def suspend_curses(callback_fn):
     """A decorator for any subprocess that must suspend access to curses (zygrader)"""
     def wrapper(*args, **kwargs):
-        input = ui.get_input()
+        events = ui.get_events()
         # Clear remaining events in event queue
-        input.clear_event_queue()
-
-        # Pause user input thread
-        input.take_input.clear()
+        events.clear_event_queue()
         curses.endwin()
 
         callback_fn(*args, **kwargs)
 
         curses.flushinp()
         curses.initscr()
-        input.take_input.set()
-        input.clear_event_queue()
+        events.clear_event_queue()
         curses.doupdate()
 
     return wrapper

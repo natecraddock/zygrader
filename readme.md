@@ -238,7 +238,7 @@ The callback for the input thread. An empty curses window is created for reading
 #### `get_input() / get_input_vim()`
 This reads the input. If no input is read an Event of type NONE is returned. Otherwise the input code is read and the corresponding Event object is returned. If Vim keybindings are enabled, the `get_input_vim()` function will be called to handle that special case.
 
-#### `consume_event()`
+#### `get_event()`
 Called from the draw thread. Blocks when no events are in the queue.
 
 #### `push_refresh_event()`
