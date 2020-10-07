@@ -2,6 +2,9 @@
 
 4.8.0
 * Refactor user preferences.
+* Code cleanup.
+* Allow opening self-locked students in the email manager.
+* Fix diffing for pair programming.
 
 4.7.1
 * Add email manager to lock student's emails.
