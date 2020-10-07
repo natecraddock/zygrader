@@ -211,11 +211,11 @@ def toggle_preference(pref):
     preferences.set(pref, not current_value)
 
 
-def password_toggle(name):
+def save_password_toggle(preference_name):
     """Toggle saving the user's password in their config file (encoded)"""
-    toggle_preference(name)
+    toggle_preference(preference_name)
 
-    if not preferences.get(name):
+    if not preferences.get(preference_name):
         preferences.set("password", "")
     else:
         window = ui.get_window()
@@ -252,7 +252,7 @@ PREFERENCES = [
     Preference("dark_mode", "Dark Mode", toggle_preference),
     Preference("christmas_mode", "Christmas Theme", toggle_preference),
     Preference("browser_diff", "Open Diffs in Browser", toggle_preference),
-    Preference("save_password", "Remember Password", password_toggle),
+    Preference("save_password", "Remember Password", save_password_toggle),
     Preference(
         "class_code",
         "Override Class Code",
