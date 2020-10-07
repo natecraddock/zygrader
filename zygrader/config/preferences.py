@@ -67,7 +67,7 @@ def get_config() -> dict:
 
 def get(key: str) -> typing.Union[str, bool]:
     """Get a preference"""
-    if key not in DEFAULT_PREFERENCES.keys():
+    if key not in DEFAULT_PREFERENCES:
         raise KeyError("Invalid Preferences Key")
 
     if PREFERENCES == {}:
@@ -78,7 +78,7 @@ def get(key: str) -> typing.Union[str, bool]:
 
 def set(key: str, value: typing.Union[str, bool]):
     """Set a preference"""
-    if key not in DEFAULT_PREFERENCES.keys():
+    if key not in DEFAULT_PREFERENCES:
         raise KeyError("Invalid Preferences Key")
 
     PREFERENCES[key] = value
