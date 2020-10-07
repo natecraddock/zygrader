@@ -1,7 +1,7 @@
 """User: User preference window management"""
+import base64
 import sys
 
-from zygrader.config.preferences import write_config
 from zygrader.config.shared import SharedData
 from zygrader import zybooks
 
@@ -9,6 +9,17 @@ from zygrader.class_manager import download_roster
 from zygrader.config import preferences
 from zygrader import data
 from zygrader import ui
+
+
+def decode_password(password):
+    """Decode a base64 encoded password"""
+    decoded = base64.b64decode(password)
+    return decoded.decode("utf-8")
+
+
+def encode_password(password):
+    """Encode a password in base64 for slight security"""
+    return str(base64.b64encode(password.encode("ascii")), "utf-8")
 
 
 def authenticate(window: ui.Window, zy_api, email, password):
@@ -28,14 +39,6 @@ def authenticate(window: ui.Window, zy_api, email, password):
         window.create_popup("Error", ["Invalid Credentials"])
         return False
     return True
-
-
-def get_email():
-    """Get the user's email address from config"""
-    config = preferences.get_config()
-    if "email" in config:
-        return config["email"]
-    return ""
 
 
 def get_password(window: ui.Window):
@@ -77,53 +80,49 @@ def login(window: ui.Window):
     """Authenticate to zybooks with the user's email and password
     or create an account if one does not exist"""
     zy_api = zybooks.Zybooks()
-    config = preferences.get_config()
+
+    email = preferences.get("email")
+    password = preferences.get("password")
 
     # If user email and password exists, authenticate and return
-    if "email" in config and "password" in config and config["password"]:
-        password = preferences.decode_password(config)
-        authenticate(window, zy_api, config["email"], password)
-        window.set_email(config["email"])
-        return config
+    if email and password:
+        password = decode_password(password)
+        authenticate(window, zy_api, email, password)
+        window.set_email(email)
+        return
 
     # User does not have account created
-    if not config["email"]:
+    if not email:
         email, password = create_account(window, zy_api)
 
         save_password = window.create_bool_popup(
             "Save Password", ["Would you like to save your password?"])
 
-        config["email"] = email
-
+        preferences.set("email", email)
         if save_password:
-            config["save_password"] = ""
-            preferences.encode_password(config, password)
+            preferences.set("save_password", True)
+            password = encode_password(password)
+            preferences.set("password", password)
 
-        preferences.write_config(config)
         window.set_email(email)
 
-    # User has not saved password, re-prompt
-    elif "password" in config and not config["password"]:
-        email = config["email"]
-
+    # User has account (email), but has not saved their password.
+    # Ask user for their password.
+    elif not password:
         while True:
             password = get_password(window)
 
             if authenticate(window, zy_api, email, password):
-                if preferences.is_preference_set("save_password"):
-                    preferences.encode_password(config, password)
-                    preferences.write_config(config)
+                if preferences.get("save_password"):
+                    password = encode_password(password)
+                    preferences.set("password", password)
                 break
 
 
 def logout():
     """Log a user out by erasing their email and password from config"""
-    config = preferences.get_config()
-    if "email" in config:
-        config["email"] = ""
-    if "password" in config:
-        config["password"] = ""
-    write_config(config)
+    preferences.set("email", "")
+    preferences.set("password", "")
 
     window = ui.get_window()
     msg = [
@@ -142,7 +141,7 @@ def logout():
 def draw_text_editors():
     """Draw the list of text editors"""
     options = []
-    current_editor = preferences.get_preference("editor")
+    current_editor = preferences.get("editor")
 
     for name in preferences.EDITORS:
         if current_editor == name:
@@ -155,10 +154,8 @@ def draw_text_editors():
 
 def set_editor(editor_index, pref_name):
     """Set the user's default editor to the selected editor"""
-    config_file = preferences.get_config()
-    config_file[pref_name] = list(preferences.EDITORS.keys())[editor_index]
-
-    preferences.write_config(config_file)
+    editor = list(preferences.EDITORS.keys())[editor_index]
+    preferences.set(pref_name, editor)
 
 
 def set_editor_menu(name):
@@ -174,7 +171,7 @@ def draw_class_codes():
     """Draw the list of class codes"""
     class_codes = SharedData.get_class_codes()
     class_codes.insert(0, "No Override")
-    current_code = preferences.get_preference("class_code")
+    current_code = preferences.get("class_code")
 
     options = []
     for code in class_codes:
@@ -187,12 +184,10 @@ def draw_class_codes():
 
 def set_class_code_override(code_index: int, pref_name: str):
     """Set the current class code to the user's overridden code"""
-    config_file = preferences.get_config()
     class_codes = SharedData.get_class_codes()
     class_codes.insert(0, "No Override")
 
-    config_file[pref_name] = class_codes[code_index]
-    preferences.write_config(config_file)
+    preferences.set(pref_name, class_codes[code_index])
 
     # Update all data to use the new class code
     SharedData.initialize_shared_data(SharedData.ZYGRADER_DATA_DIRECTORY)
@@ -212,25 +207,16 @@ def set_class_code_override_menu(pref_name: str):
 
 def toggle_preference(pref):
     """Toggle a boolean preference"""
-    config = preferences.get_config()
-
-    if pref in config:
-        del config[pref]
-    else:
-        config[pref] = ""
-
-    preferences.write_config(config)
+    current_value = preferences.get(pref)
+    preferences.set(pref, not current_value)
 
 
-def password_toggle(name):
+def save_password_toggle(preference_name):
     """Toggle saving the user's password in their config file (encoded)"""
-    toggle_preference(name)
-    config = preferences.get_config()
+    toggle_preference(preference_name)
 
-    if name not in config:
-        config["password"] = ""
-        preferences.write_config(config)
-
+    if not preferences.get(preference_name):
+        preferences.set("password", "")
     else:
         window = ui.get_window()
         window.create_popup(
@@ -266,7 +252,7 @@ PREFERENCES = [
     Preference("dark_mode", "Dark Mode", toggle_preference),
     Preference("christmas_mode", "Christmas Theme", toggle_preference),
     Preference("browser_diff", "Open Diffs in Browser", toggle_preference),
-    Preference("save_password", "Remember Password", password_toggle),
+    Preference("save_password", "Remember Password", save_password_toggle),
     Preference(
         "class_code",
         "Override Class Code",
@@ -285,7 +271,7 @@ def draw_preferences():
         if pref.type in {PREFERENCE_MENU, PREFERENCE_ACTION}:
             options.append(f"    {pref.description}")
         else:
-            if preferences.is_preference_set(pref.name):
+            if preferences.get(pref.name):
                 options.append(f"[X] {pref.description}")
             else:
                 options.append(f"[ ] {pref.description}")

@@ -190,8 +190,8 @@ def main(window: ui.Window):
     else:
         admin_mode = False
 
-    # Apply versioning
-    versioning.do_versioning(window)
+    # Notify the user of changes
+    versioning.show_versioning_message(window)
 
     # Log in user
     user.login(window)
@@ -229,13 +229,16 @@ def start():
         sys.exit()
 
     # Setup user configuration
-    preferences.initial_config()
+    preferences.initialize()
+
+    # Apply versioning changes to preferences
+    versioning.do_versioning()
 
     # Handle configuration based args after config has been initialized
     handle_args(args)
 
     # Check for shared data dir
-    data_dir = preferences.get_preference("data_dir")
+    data_dir = preferences.get("data_dir")
     if not data_dir:
         print("You have not set the shared data directory")
         print("Please run with the flag --set-data-dir [path]")

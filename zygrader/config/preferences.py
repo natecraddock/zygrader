@@ -1,10 +1,11 @@
 """Preferences: Functions for managing user preferences"""
 import os
 import json
-import base64
+import typing
 
 from .shared import SharedData
 
+# Valid text editors for viewing submissions.
 EDITORS = {
     "Pluma": "/usr/bin/pluma",
     "Gedit": "/usr/bin/gedit",
@@ -16,20 +17,74 @@ EDITORS = {
     "Less": "/usr/bin/less",
 }
 
-DEFAULT_CONFIG = {
+# The default configuration for a new user of zygrader.
+# Also used for determining if a key is valid for set() and get().
+DEFAULT_PREFERENCES = {
     "version": SharedData.VERSION.vstring,
     "email": "",
     "password": "",
-    "clear_filter": "",
-    "left_right_arrow_nav": "left_right_arrow_nav",
+    "left_right_arrow_nav": True,
+    "use_esc_back": False,
+    "clear_filter": True,
+    "vim_mode": False,
+    "dark_mode": True,
+    "christmas_mode": False,
+    "browser_diff": False,
+    "save_password": False,
+    "class_code": "No Override",
     "editor": "Pluma",
     "data_dir": "",
-    "class_code": "No Override",
-    "dark_mode": "",
 }
 
 CONFIG_PATH = os.path.join(os.path.expanduser("~"), ".config/zygrader")
 CONFIG_FILE = "config.json"
+
+# Store the current user preferences in memory to prevent frequent disk access.
+PREFERENCES = {}
+
+# Callback functions for entities interested in knowing when preferences are updated.
+OBSERVERS = []
+
+
+def write_config(config):
+    """Write the user's config to disk"""
+    config_path = os.path.join(CONFIG_PATH, CONFIG_FILE)
+
+    with open(config_path, "w") as config_file:
+        json.dump(config, config_file)
+
+
+def get_config() -> dict:
+    """Get the user's config from disk"""
+    global PREFERENCES
+    config_path = os.path.join(CONFIG_PATH, CONFIG_FILE)
+
+    with open(config_path, "r") as config_file:
+        PREFERENCES = json.load(config_file)
+
+    return PREFERENCES
+
+
+def get(key: str) -> typing.Union[str, bool]:
+    """Get a preference"""
+    if key not in DEFAULT_PREFERENCES:
+        raise KeyError("Invalid Preferences Key")
+
+    if PREFERENCES == {}:
+        get_config()
+
+    return PREFERENCES[key]
+
+
+def set(key: str, value: typing.Union[str, bool]):
+    """Set a preference"""
+    if key not in DEFAULT_PREFERENCES:
+        raise KeyError("Invalid Preferences Key")
+
+    PREFERENCES[key] = value
+
+    # Write preferences every time they are set
+    write_config(PREFERENCES)
 
 
 def install(config_dir):
@@ -41,54 +96,16 @@ def install(config_dir):
     # Create config file
     if not os.path.exists(os.path.join(config_dir, CONFIG_FILE)):
         with open(os.path.join(config_dir, CONFIG_FILE), "w") as config_file:
-            json.dump(DEFAULT_CONFIG, config_file)
+            json.dump(DEFAULT_PREFERENCES, config_file)
 
 
-def initial_config():
+def initialize():
     """Wrapper around install() to set the path for the config directory"""
     # Ensure user config exists
     install(CONFIG_PATH)
 
-
-def write_config(config):
-    """Write the user's config to disk"""
-    config_path = os.path.join(CONFIG_PATH, CONFIG_FILE)
-
-    with open(config_path, "w") as config_file:
-        json.dump(config, config_file)
-
-
-def get_config():
-    """Get the user's config from disk"""
-    config_path = os.path.join(CONFIG_PATH, CONFIG_FILE)
-
-    with open(config_path, "r") as config_file:
-        return json.load(config_file)
-
-
-def is_preference_set(pref):
-    """Return True if a preference is set, False otherwise"""
-    return pref in get_config()
-
-
-def get_preference(pref):
-    """Get a preference from the config file"""
-    config = get_config()
-    if pref in config:
-        return config[pref]
-    return ""
-
-
-def decode_password(config):
-    """Decode a base64 encoded password"""
-    decoded = base64.b64decode(config["password"])
-    return decoded.decode("utf-8")
-
-
-def encode_password(config, password):
-    """Encode a password in base64 for slight security"""
-    encode = base64.b64encode(password.encode("ascii"))
-    config["password"] = str(encode, "utf-8")
+    # Load preferences into memory
+    get_config()
 
 
 def set_data_directory(path):
@@ -96,7 +113,5 @@ def set_data_directory(path):
     if not os.path.exists(path):
         return False
 
-    config = get_config()
-    config["data_dir"] = path
-    write_config(config)
+    set("data_dir", path)
     return True

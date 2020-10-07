@@ -131,7 +131,7 @@ def view_diff(first: model.Submission, second: model.Submission):
         )
         return
 
-    use_browser = preferences.is_preference_set("browser_diff")
+    use_browser = preferences.get("browser_diff")
 
     paths_a = utils.get_source_file_paths(first.files_directory)
     paths_b = utils.get_source_file_paths(second.files_directory)
