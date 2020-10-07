@@ -198,12 +198,7 @@ class Window:
         # Create window for input
         input_win = curses.newwin(0, 0, 1, 1)
         input_win.keypad(True)
-
-        # We use halfdelay with a delay of 1/10 of a second to prevent
-        # using the 100% of a CPU core while checking for input.
-        # Previously we used nodelay(True) which caused excessive CPU cycles.
-        # We must use at least halfdelay to prevent input from blocking.
-        curses.halfdelay(1)
+        input_win.nodelay(True)
 
         while True:
             self.take_input.wait()
