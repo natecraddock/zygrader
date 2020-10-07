@@ -182,6 +182,15 @@ def mainloop(admin_mode):
     window.loop()
 
 
+def preference_update_fn():
+    """Callback that is run when preferences are updated"""
+    window = ui.get_window()
+    window.update_preferences()
+
+    events = ui.get_events()
+    events.update_preferences()
+
+
 def main(window: ui.Window):
     """Curses has been initialized, now setup various modules before showing the menu"""
     # Read args to set admin mode
@@ -189,6 +198,9 @@ def main(window: ui.Window):
         admin_mode = True
     else:
         admin_mode = False
+
+    # Register preference update callback
+    preferences.add_observer(preference_update_fn)
 
     # Notify the user of changes
     versioning.show_versioning_message(window)

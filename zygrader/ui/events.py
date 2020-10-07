@@ -2,6 +2,8 @@
 
 import curses
 
+from zygrader.config import preferences
+
 # Negative 1 because "Back" is 0th in the index of lists
 # And lists return their (index - 1) to handle that offset
 GO_BACK = -1
@@ -60,6 +62,10 @@ class EventManager:
         self.vim_mode = False
         self.insert_mode = False
         self.mark_mode = False
+
+    def update_preferences(self):
+        """Update the input settings from user preferences"""
+        self.vim_mode = preferences.get("vim_mode")
 
     def __queue_push(self, event: Event):
         self.event_queue.append(event)

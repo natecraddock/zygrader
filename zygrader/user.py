@@ -286,7 +286,6 @@ def preferences_callback(context: ui.WinContext):
 
     if pref.type in {PREFERENCE_MENU, PREFERENCE_TOGGLE}:
         pref.select_fn(pref.name)
-        context.window.update_preferences()
     else:
         pref.select_fn()
 

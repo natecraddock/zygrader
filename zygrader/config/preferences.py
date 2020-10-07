@@ -86,6 +86,15 @@ def set(key: str, value: typing.Union[str, bool]):
     # Write preferences every time they are set
     write_config(PREFERENCES)
 
+    # Notify observers
+    for observer_fn in OBSERVERS:
+        observer_fn()
+
+
+def add_observer(observer_fn):
+    """Register a function to be called when the preferences are saved"""
+    OBSERVERS.append(observer_fn)
+
 
 def install(config_dir):
     """Create the user's configuration directory"""

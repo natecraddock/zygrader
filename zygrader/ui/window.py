@@ -41,7 +41,6 @@ class Window:
     def update_preferences(self):
         self.dark_mode = preferences.get("dark_mode")
         self.christmas_mode = preferences.get("christmas_mode")
-        self.events.vim_mode = preferences.get("vim_mode")
         self.left_right_menu_nav = preferences.get("left_right_arrow_nav")
         self.clear_filter = preferences.get("clear_filter")
         self.use_esc_back = preferences.get("use_esc_back")
@@ -53,6 +52,9 @@ class Window:
 
         self.tabs: typing.List[Tab] = []
         self.active_tab: Tab = Tab()
+
+        # Load user preference variables
+        self.update_preferences()
 
         curses.wrapper(self.__init_curses, callback)
 
@@ -94,9 +96,6 @@ class Window:
 
         # All user input handling is done inside the EventManager class.
         self.events = events.EventManager()
-
-        # Set user preference variables
-        self.update_preferences()
 
         # Execute callback with a reference to the window object
         callback(self)
