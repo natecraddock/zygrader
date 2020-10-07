@@ -43,9 +43,8 @@ def compare_versions(zygrader_version, user_version):
     return LooseVersion(user_version) < LooseVersion(zygrader_version)
 
 
-def write_config(config):
-    config["version"] = SharedData.VERSION.vstring
-    preferences.write_config(config)
+def update_user_version():
+    preferences.set("version", SharedData.VERSION.vstring)
 
 
 def do_versioning():
@@ -94,9 +93,6 @@ def do_versioning():
         if not "data_dir" in config:
             config["data_dir"] = ""
 
-    # Write the current version to the user's config file
-    write_config(config)
-
 
 def show_versioning_message(window: ui.Window):
     """Notify the user of new changes in the changelog."""
@@ -133,3 +129,9 @@ def show_versioning_message(window: ui.Window):
         msg = get_version_message(version)
         window.create_popup(f"Version {version}", msg,
                             ui.components.Popup.ALIGN_LEFT)
+
+    # Write the current version to the user's config file.
+    # It is important to not update the number in do_versioning,
+    # otherwise the version number here will be updated and popups
+    # will not show.
+    update_user_version()
