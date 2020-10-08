@@ -63,9 +63,17 @@ class EventManager:
         self.insert_mode = False
         self.mark_mode = False
 
+        # Input preferences
+        self.left_right_menu_nav = False
+        self.use_esc_back = False
+
+        self.update_preferences()
+
     def update_preferences(self):
         """Update the input settings from user preferences"""
         self.vim_mode = preferences.get("vim_mode")
+        self.left_right_menu_nav = preferences.get("left_right_arrow_nav")
+        self.use_esc_back = preferences.get("use_esc_back")
 
     def __queue_push(self, event: Event):
         self.event_queue.append(event)

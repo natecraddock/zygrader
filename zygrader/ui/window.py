@@ -41,9 +41,7 @@ class Window:
     def update_preferences(self):
         self.dark_mode = preferences.get("dark_mode")
         self.christmas_mode = preferences.get("christmas_mode")
-        self.left_right_menu_nav = preferences.get("left_right_arrow_nav")
         self.clear_filter = preferences.get("clear_filter")
-        self.use_esc_back = preferences.get("use_esc_back")
 
     def __init__(self, callback, window_name):
         Window.instance = self
@@ -201,7 +199,7 @@ class Window:
                 # self.update_header()
                 pass
             else:
-                self.active_tab.active_layer.event_handler(event)
+                self.active_tab.active_layer.event_handler(event, self.events)
 
             # Recalculate windows
             for layer in self.active_tab.component_layers:

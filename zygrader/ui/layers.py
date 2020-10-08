@@ -2,9 +2,8 @@
 
 import typing
 
-from .events import Event
-from . import window
-from . import components
+from .events import Event, EventManager
+from . import window, components
 
 
 class ComponentLayer:
@@ -16,7 +15,7 @@ class ComponentLayer:
     def draw(self):
         pass
 
-    def event_handler(self, event: Event):
+    def event_handler(self, event: Event, event_manager: EventManager):
         pass
 
 
@@ -46,7 +45,7 @@ class MenuLayer(ComponentLayer):
     def draw(self):
         self.filtered_list.draw()
 
-    def event_handler(self, event: Event):
+    def event_handler(self, event: Event, event_manager: EventManager):
         if event.type == Event.DOWN:
             self.filtered_list.down()
         elif event.type == Event.UP:
@@ -55,18 +54,19 @@ class MenuLayer(ComponentLayer):
             self.filtered_list.to_top()
         elif event.type == Event.END:
             self.filtered_list.to_bottom()
-        elif event.type == Event.LEFT and self.left_right_menu_nav:
+        elif event.type == Event.LEFT and event_manager.left_right_menu_nav:
             # TODO: Handle this event
             pass
         elif event.type == Event.BACKSPACE:
             self.filtered_list.delchar()
-        elif event.type == Event.ESC and self.use_esc_back:
+        elif event.type == Event.ESC and event_manager.use_esc_back:
             # TODO: Handle this event
             pass
         elif event.type == Event.CHAR_INPUT:
             self.filtered_list.addchar(event.value)
-        elif ((event.type == Event.ENTER)
-              or (event.type == Event.RIGHT and self.left_right_menu_nav)):
+        elif (
+            (event.type == Event.ENTER) or
+            (event.type == Event.RIGHT and event_manager.left_right_menu_nav)):
             pass
             # TODO: Handle this event
             # if callback and self.filtered_list.selected() != GO_BACK:
