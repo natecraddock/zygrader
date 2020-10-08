@@ -93,7 +93,7 @@ class Window:
         self.__email_text = ""
 
         # All user input handling is done inside the EventManager class.
-        self.events = events.EventManager()
+        self.event_manager = events.EventManager()
 
         # Execute callback with a reference to the window object
         callback(self)
@@ -160,9 +160,9 @@ class Window:
         if self.__email_text:
             display_text += f" | {self.__email_text}"
 
-        if self.events.insert_mode:
+        if self.event_manager.insert_mode:
             display_text += " | INSERT"
-        elif self.events.mark_mode:
+        elif self.event_manager.mark_mode:
             display_text += " | VISUAL"
 
         # Centered header
@@ -191,7 +191,7 @@ class Window:
         """Handle events in a loop until the program is exited"""
         while True:
             # Get the event on the front of the queue
-            event = self.events.get_event()
+            event = self.event_manager.get_event()
 
             # Events are either handled directly by the window manager or
             # are passed to the active component layer in the active tab.
@@ -199,7 +199,8 @@ class Window:
                 # self.update_header()
                 pass
             else:
-                self.active_tab.active_layer.event_handler(event, self.events)
+                self.active_tab.active_layer.event_handler(
+                    event, self.event_manager)
 
             # Recalculate windows
             for layer in self.active_tab.component_layers:
@@ -243,7 +244,7 @@ class Window:
         self.stdscr.bkgd(" ", curses.color_pair(1))
 
     def component_init(self, component):
-        self.events.disable_modes()
+        self.event_manager.disable_modes()
 
         self.components.append(component)
         if self.__header_title_load:
@@ -255,7 +256,7 @@ class Window:
         self.draw()
 
     def component_deinit(self):
-        self.events.disable_modes()
+        self.event_manager.disable_modes()
 
         self.components.pop()
         self.header_titles.pop()
@@ -267,7 +268,7 @@ class Window:
         self.component_init(popup)
 
         while True:
-            event = self.events.get_event()
+            event = self.event_manager.get_event()
 
             if event.type == Event.ENTER:
                 break
@@ -316,7 +317,7 @@ class Window:
         self.component_init(popup)
 
         while True:
-            event = self.events.get_event()
+            event = self.event_manager.get_event()
 
             if event.type in {Event.LEFT, Event.UP, Event.BTAB}:
                 popup.previous()
@@ -346,7 +347,7 @@ class Window:
         self.component_init(popup)
 
         while True:
-            event = self.events.get_event()
+            event = self.event_manager.get_event()
 
             if event.type in {Event.LEFT, Event.UP, Event.BTAB}:
                 popup.previous()
@@ -395,7 +396,7 @@ class Window:
 
         retval = None
         while True:
-            event = self.events.get_event()
+            event = self.event_manager.get_event()
 
             if event.type in {Event.LEFT, Event.BTAB}:
                 popup.previous_field()
@@ -444,7 +445,7 @@ class Window:
 
         retval = None
         while True:
-            event = self.events.get_event()
+            event = self.event_manager.get_event()
 
             if event.type == Event.DOWN:
                 popup.down()
@@ -484,12 +485,12 @@ class Window:
                                           text, mask)
         self.component_init(text_input)
 
-        if self.events.vim_mode:
-            self.events.insert_mode = True
+        if self.event_manager.vim_mode:
+            self.event_manager.insert_mode = True
             self.draw()
 
         while True:
-            event = self.events.get_event()
+            event = self.event_manager.get_event()
 
             if event.type == Event.ENTER:
                 break
@@ -559,7 +560,7 @@ class Window:
             create_fn(filtered_list)
 
         while True:
-            event = self.events.get_event()
+            event = self.event_manager.get_event()
 
             if event.type == Event.DOWN:
                 filtered_list.down()

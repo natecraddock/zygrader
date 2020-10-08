@@ -11,4 +11,4 @@ def get_window() -> Window:
 
 
 def get_events() -> EventManager:
-    return get_window().events
+    return get_window().event_manager
