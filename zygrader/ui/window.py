@@ -6,7 +6,7 @@ from zygrader.config import preferences
 from . import components, events
 from .events import Event, GO_BACK
 from .utils import add_str, resize_window
-from .layers import ComponentLayer
+from .layers import ComponentLayer, FunctionLayer
 
 
 class WinContext:
@@ -19,10 +19,13 @@ class WinContext:
 
 
 class Tab:
-    """A tab holds a stack of component layers. Zygrader always has 4 tabs, they are not always visible."""
+    """A tab holds a stack of layers. Zygrader always has 4 tabs, they are not always visible."""
     def __init__(self):
-        self.component_layers: typing.List[ComponentLayer] = []
-        self.active_layer: ComponentLayer = None
+        # A layer is either a component, or a coroutine (FunctionLayer)
+        # to be executed within the event loop.
+        self.layers: typing.List[typing.Union(ComponentLayer,
+                                              FunctionLayer)] = []
+        self.active_layer: typing.Union(ComponentLayer, FunctionLayer) = None
         self.open = False
 
 
@@ -184,12 +187,22 @@ class Window:
         curses.setsyx(*loc)
 
     def register_layer(self, layer: ComponentLayer):
-        self.active_tab.component_layers.append(layer)
+        self.active_tab.layers.append(layer)
         self.active_tab.active_layer = layer
 
     def loop(self):
         """Handle events in a loop until the program is exited"""
+
+        # For coroutines
+        result = None
+
         while True:
+
+            # Execute code in a coroutine
+            if isinstance(self.active_tab.active_layer, FunctionLayer):
+                coroutine = self.active_tab.active_layer.fn
+                coroutine.send(result)
+
             # Get the event on the front of the queue
             event = self.event_manager.get_event()
 
@@ -198,12 +211,17 @@ class Window:
             if event.type == Event.HEADER_UPDATE:
                 # self.update_header()
                 pass
+            elif event.type == Event.LAYER_CLOSE:
+                self.active_tab.layers.pop()
             else:
                 self.active_tab.active_layer.event_handler(
                     event, self.event_manager)
 
+            if len(self.active_tab.layers) == 0:
+                break
+
             # Recalculate windows
-            for layer in self.active_tab.component_layers:
+            for layer in self.active_tab.layers:
                 layer.draw()
 
             # All windows have been tagged for redraw with noutrefresh,
@@ -297,7 +315,7 @@ class Window:
             def close(self):
                 if not self.has_exited:
                     self.window.component_deinit()
-                    self.window.events.clear_event_queue()
+                    self.window.event_manager.clear_event_queue()
                 self.has_exited = True
 
         popup = components.OptionsPopup(self.rows, self.cols, title, message,

@@ -6,6 +6,11 @@ from .events import Event, EventManager
 from . import window, components
 
 
+class FunctionLayer:
+    def __init__(self, fn: typing.Coroutine):
+        self.fn = fn()
+
+
 class ComponentLayer:
     def __init__(self):
         self.title: str = ""
@@ -17,6 +22,25 @@ class ComponentLayer:
 
     def event_handler(self, event: Event, event_manager: EventManager):
         pass
+
+
+class WaitPopup(ComponentLayer):
+    """A popup that stays visibile until a process completes."""
+    def __init__(self):
+        super().__init__()
+
+        win = window.Window.get_window()
+        self.component = components.OptionsPopup(win.rows, win.cols, "", "",
+                                                 ["Cancel"], False,
+                                                 components.Popup.ALIGN_LEFT)
+
+    def draw(self):
+        self.component.draw()
+
+    def event_handler(self, event: Event, event_manager: EventManager):
+        if event.type == Event.ENTER:
+            # Cancel was selected
+            pass
 
 
 class MenuLayer(ComponentLayer):
@@ -60,8 +84,8 @@ class MenuLayer(ComponentLayer):
         elif event.type == Event.BACKSPACE:
             self.filtered_list.delchar()
         elif event.type == Event.ESC and event_manager.use_esc_back:
-            # TODO: Handle this event
-            pass
+            # TODO: Handle this event by the window manager?
+            event_manager.push_layer_close_event()
         elif event.type == Event.CHAR_INPUT:
             self.filtered_list.addchar(event.value)
         elif (

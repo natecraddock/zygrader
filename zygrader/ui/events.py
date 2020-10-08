@@ -42,6 +42,8 @@ class Event:
     SEND = 19
     HEADER_UPDATE = 20
 
+    LAYER_CLOSE = 21
+
     def __init__(self, event_type, value, modifier=None):
         self.type = event_type
         self.value = value
@@ -94,6 +96,10 @@ class EventManager:
         """Force the ui to refresh even when it is in an input loop"""
         event = Event(Event.REFRESH, None)
         self.event_queue.put_nowait(event)
+
+    def push_layer_close_event(self):
+        event = Event(Event.LAYER_CLOSE, None)
+        self.__queue_push(event)
 
     def set_mode(self, mode: int):
         """Set the vim edit mode"""
