@@ -2,6 +2,7 @@
 import base64
 import sys
 
+from zygrader.zybooks import Zybooks
 from zygrader.config.shared import SharedData
 from zygrader import zybooks
 
@@ -22,21 +23,34 @@ def encode_password(password):
     return str(base64.b64encode(password.encode("ascii")), "utf-8")
 
 
-def authenticate(window: ui.Window, zy_api, email, password):
+def authenticate(window: ui.Window, zy_api: Zybooks, email, password):
     """Authenticate to the zyBooks api with the email and password"""
-    wait_popup = window.create_waiting_popup(
-        "Signing in", [f"Signing into zyBooks as {email}..."])
+    def wait_fn():
+        success = zy_api.authenticate(email, password)
+        if success:
+            download_roster(silent=True)
+        return False
 
-    success = zy_api.authenticate(email, password)
+    popup = ui.layers.WaitPopup("Signing in")
+    popup.set_message([f"Signing into zyBooks as {email}..."])
+    popup.set_wait_fn(wait_fn)
+    window.register_layer(popup)
 
-    # Always fetch the latest roster when starting zygrader
-    if success:
-        download_roster(silent=True)
+    authenticated = yield
 
-    wait_popup.close()
+    # wait_popup = window.create_waiting_popup(
+    #     "Signing in",)
 
-    if not success:
-        window.create_popup("Error", ["Invalid Credentials"])
+    # success = zy_api.authenticate(email, password)
+
+    # # Always fetch the latest roster when starting zygrader
+    # if success:
+    #     download_roster(silent=True)
+
+    # wait_popup.close()
+
+    if not authenticated:
+        # window.create_popup("Error", ["Invalid Credentials"])
         return False
     return True
 
@@ -84,12 +98,12 @@ def login(window: ui.Window):
     email = preferences.get("email")
     password = preferences.get("password")
 
-    # If user email and password exists, authenticate and return
+    # If user email and password exist, authenticate and return
     if email and password:
         password = decode_password(password)
-        authenticate(window, zy_api, email, password)
+        yield from authenticate(window, zy_api, email, password)
         window.set_email(email)
-        return
+        # return
 
     # User does not have account created
     if not email:

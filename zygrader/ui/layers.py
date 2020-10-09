@@ -7,15 +7,18 @@ from . import window, components
 
 
 class FunctionLayer:
-    def __init__(self, fn: typing.Coroutine):
-        self.fn = fn()
+    def __init__(self, fn: typing.Coroutine, *args, **kwargs):
+        self.fn = fn(*args, **kwargs)
 
 
 class ComponentLayer:
     def __init__(self):
         self.title: str = ""
-        self.blocking = False
         self.component = None
+
+        self.blocking = False
+        self.has_fn = False
+        self.returns_result = False
 
     def draw(self):
         pass
@@ -26,13 +29,14 @@ class ComponentLayer:
 
 class WaitPopup(ComponentLayer):
     """A popup that stays visibile until a process completes."""
-    def __init__(self):
+    def __init__(self, title):
         super().__init__()
 
         win = window.Window.get_window()
-        self.component = components.OptionsPopup(win.rows, win.cols, "", "",
-                                                 ["Cancel"], False,
+        self.component = components.OptionsPopup(win.rows, win.cols, title,
+                                                 ["hey"], ["Cancel"], False,
                                                  components.Popup.ALIGN_LEFT)
+        self.wait_fn = None
 
     def draw(self):
         self.component.draw()
@@ -40,7 +44,14 @@ class WaitPopup(ComponentLayer):
     def event_handler(self, event: Event, event_manager: EventManager):
         if event.type == Event.ENTER:
             # Cancel was selected
-            pass
+            event_manager.push_layer_close_event()
+
+    def set_message(self, message):
+        self.component.set_message(message)
+
+    def set_wait_fn(self, wait_fn):
+        self.has_fn = True
+        self.wait_fn = wait_fn
 
 
 class MenuLayer(ComponentLayer):

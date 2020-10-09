@@ -205,15 +205,19 @@ def main(window: ui.Window):
     # Notify the user of changes
     versioning.show_versioning_message(window)
 
-    # Log in user
-    user.login(window)
-
     # Start file watch thread
     data.fs_watch.start_fs_watch()
 
-    logger.log("zygrader started")
+    # Log in user
+    login = ui.layers.FunctionLayer(user.login, window)
+    window.register_layer(login)
 
-    mainloop(admin_mode)
+    # user.login(window)
+
+    # logger.log("zygrader started")
+
+    # mainloop(admin_mode)
+    window.loop()
 
 
 def start():

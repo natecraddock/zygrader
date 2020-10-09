@@ -6,7 +6,7 @@ from zygrader.config import preferences
 from . import components, events
 from .events import Event, GO_BACK
 from .utils import add_str, resize_window
-from .layers import ComponentLayer, FunctionLayer
+from .layers import ComponentLayer, FunctionLayer, WaitPopup
 
 
 class WinContext:
@@ -190,6 +190,10 @@ class Window:
         self.active_tab.layers.append(layer)
         self.active_tab.active_layer = layer
 
+    def register_layer_for_result(self, layer: ComponentLayer):
+        layer.returns_result = True
+        self.register_layer(layer)
+
     def loop(self):
         """Handle events in a loop until the program is exited"""
 
@@ -197,11 +201,24 @@ class Window:
         result = None
 
         while True:
+            # When there are no more layers, exit the main loop
+            if not self.active_tab.layers:
+                break
 
             # Execute code in a coroutine
             if isinstance(self.active_tab.active_layer, FunctionLayer):
-                coroutine = self.active_tab.active_layer.fn
-                coroutine.send(result)
+                try:
+                    coroutine = self.active_tab.active_layer.fn
+                    coroutine.send(result)
+                    continue
+                except StopIteration:
+                    self.active_tab.layers.pop()
+                    if self.active_tab.layers:
+                        self.active_tab.active_layer = self.active_tab.layers[
+                            -1]
+                    else:
+                        self.active_tab.active_layer = None
+                    continue
 
             # Get the event on the front of the queue
             event = self.event_manager.get_event()
@@ -213,20 +230,27 @@ class Window:
                 pass
             elif event.type == Event.LAYER_CLOSE:
                 self.active_tab.layers.pop()
+                self.active_tab.active_layer = self.active_tab.layers[-1]
             else:
                 self.active_tab.active_layer.event_handler(
                     event, self.event_manager)
 
-            if len(self.active_tab.layers) == 0:
-                break
-
             # Recalculate windows
             for layer in self.active_tab.layers:
-                layer.draw()
+                try:
+                    layer.draw()
+                except:
+                    pass
 
             # All windows have been tagged for redraw with noutrefresh,
             # now do a single draw pass with doupdate.
             curses.doupdate()
+
+            if self.active_tab.active_layer.has_fn:
+                result = self.active_tab.active_layer.wait_fn()
+                self.active_tab.layers.pop()
+                if self.active_tab.layers:
+                    self.active_tab.active_layer = self.active_tab.layers[-1]
 
     def draw(self):
         """Draw each component in the stack"""

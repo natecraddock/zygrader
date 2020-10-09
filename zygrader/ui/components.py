@@ -160,6 +160,9 @@ class Popup(Component):
 
         resize_window(self.window, self.rows, self.cols)
 
+    def set_message(self, message):
+        self.message = message
+
 
 class OptionsPopup(Popup):
     def __init__(self, height, width, title, message, options, use_dict, align):
