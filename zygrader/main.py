@@ -201,6 +201,7 @@ def main(window: ui.Window):
 
     # Register preference update callback
     preferences.add_observer(preference_update_fn)
+    preferences.update_observers()
 
     # Notify the user of changes
     versioning.show_versioning_message(window)

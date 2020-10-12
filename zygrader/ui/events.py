@@ -69,8 +69,6 @@ class EventManager:
         self.left_right_menu_nav = False
         self.use_esc_back = False
 
-        self.update_preferences()
-
     def update_preferences(self):
         """Update the input settings from user preferences"""
         self.vim_mode = preferences.get("vim_mode")

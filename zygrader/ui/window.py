@@ -18,17 +18,6 @@ class WinContext:
         self.data = custom_data
 
 
-class Tab:
-    """A tab holds a stack of layers. Zygrader always has 4 tabs, they are not always visible."""
-    def __init__(self):
-        # A layer is either a component, or a coroutine (FunctionLayer)
-        # to be executed within the event loop.
-        self.layers: typing.List[typing.Union(ComponentLayer,
-                                              FunctionLayer)] = []
-        self.active_layer: typing.Union(ComponentLayer, FunctionLayer) = None
-        self.open = False
-
-
 class Window:
     EVENT_REFRESH_LIST = "flags_and_locks"
     CANCEL = -1
@@ -46,16 +35,16 @@ class Window:
         self.christmas_mode = preferences.get("christmas_mode")
         self.clear_filter = preferences.get("clear_filter")
 
+        self.update_window()
+
     def __init__(self, callback, window_name):
         Window.instance = self
         """Initialize screen and run callback function"""
         self.name = window_name
 
-        self.tabs: typing.List[Tab] = []
-        self.active_tab: Tab = Tab()
-
-        # Load user preference variables
-        self.update_preferences()
+        self.layers: typing.List[typing.Union(ComponentLayer,
+                                              FunctionLayer)] = []
+        self.active_layer: typing.Union(ComponentLayer, FunctionLayer) = None
 
         curses.wrapper(self.__init_curses, callback)
 
@@ -187,8 +176,17 @@ class Window:
         curses.setsyx(*loc)
 
     def register_layer(self, layer: ComponentLayer):
-        self.active_tab.layers.append(layer)
-        self.active_tab.active_layer = layer
+        """Register a layer in the event loop."""
+        self.layers.append(layer)
+        self.active_layer = layer
+
+    def run_layer_for_result(self, layer: ComponentLayer):
+        """Run a layer outside of the normal event loop and return a result.
+
+        This is used for code that needs to get some user input and then continue
+        a functions execution.
+        """
+        pass
 
     def register_layer_for_result(self, layer: ComponentLayer):
         layer.returns_result = True
@@ -202,41 +200,40 @@ class Window:
 
         while True:
             # When there are no more layers, exit the main loop
-            if not self.active_tab.layers:
+            if not self.layers:
                 break
 
             # Execute code in a coroutine
-            if isinstance(self.active_tab.active_layer, FunctionLayer):
+            if isinstance(self.active_layer, FunctionLayer):
                 try:
-                    coroutine = self.active_tab.active_layer.fn
+                    coroutine = self.active_layer.fn
                     coroutine.send(result)
                     continue
                 except StopIteration:
-                    self.active_tab.layers.pop()
-                    if self.active_tab.layers:
-                        self.active_tab.active_layer = self.active_tab.layers[
-                            -1]
+                    self.layers.pop()
+                    if self.layers:
+                        self.active_layer = self.layers[-1]
                     else:
-                        self.active_tab.active_layer = None
+                        self.active_layer = None
                     continue
 
             # Get the event on the front of the queue
             event = self.event_manager.get_event()
 
             # Events are either handled directly by the window manager or
-            # are passed to the active component layer in the active tab.
+            # are passed to the active component layer.
             if event.type == Event.HEADER_UPDATE:
                 # self.update_header()
                 pass
             elif event.type == Event.LAYER_CLOSE:
-                self.active_tab.layers.pop()
-                self.active_tab.active_layer = self.active_tab.layers[-1]
+                self.layers.pop()
+                self.active_layer = self.layers[-1]
             else:
-                self.active_tab.active_layer.event_handler(
-                    event, self.event_manager)
+                self.active_layer.event_handler(event, self.event_manager)
 
             # Recalculate windows
-            for layer in self.active_tab.layers:
+            self.draw()
+            for layer in self.layers:
                 try:
                     layer.draw()
                 except:
@@ -246,11 +243,11 @@ class Window:
             # now do a single draw pass with doupdate.
             curses.doupdate()
 
-            if self.active_tab.active_layer.has_fn:
-                result = self.active_tab.active_layer.wait_fn()
-                self.active_tab.layers.pop()
-                if self.active_tab.layers:
-                    self.active_tab.active_layer = self.active_tab.layers[-1]
+            if self.active_layer.has_fn:
+                result = self.active_layer.wait_fn()
+                self.layers.pop()
+                if self.layers:
+                    self.active_layer = self.layers[-1]
 
     def draw(self):
         """Draw each component in the stack"""
@@ -259,20 +256,6 @@ class Window:
         self.stdscr.noutrefresh()
 
         self.draw_header()
-
-        # Find last blocking component
-        block_index = 0
-        for index in reversed(range(len(self.components))):
-            if self.components[index].blocking:
-                block_index = index
-                break
-
-        for component in self.components[block_index:]:
-            component.draw()
-
-        # All windows have been tagged for redraw with noutrefresh
-        # Now do a single draw pass with doupdate
-        curses.doupdate()
 
     def update_window(self):
         if self.dark_mode:

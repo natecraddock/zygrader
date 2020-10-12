@@ -46,6 +46,11 @@ PREFERENCES = {}
 OBSERVERS = []
 
 
+def update_observers():
+    for observer_fn in OBSERVERS:
+        observer_fn()
+
+
 def write_config(config):
     """Write the user's config to disk"""
     config_path = os.path.join(CONFIG_PATH, CONFIG_FILE)
@@ -87,8 +92,7 @@ def set(key: str, value: typing.Union[str, bool]):
     write_config(PREFERENCES)
 
     # Notify observers
-    for observer_fn in OBSERVERS:
-        observer_fn()
+    update_observers()
 
 
 def add_observer(observer_fn):
