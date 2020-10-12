@@ -180,13 +180,30 @@ class Window:
         self.layers.append(layer)
         self.active_layer = layer
 
+    def run_layer(self, layer: ComponentLayer):
+        self.register_layer(layer)
+
+        while layer in self.layers:
+            self.handle_events()
+            self.draw()
+
+        return layer.text
+
     def run_layer_for_result(self, layer: ComponentLayer):
         """Run a layer outside of the normal event loop and return a result.
 
         This is used for code that needs to get some user input and then continue
         a functions execution.
         """
-        pass
+        self.register_layer(layer)
+
+        self.handle_events()
+        self.draw()
+        result = self.active_layer.update()
+        self.layers.pop()
+        if self.layers:
+            self.active_layer = self.layers[-1]
+        return result
 
     def register_layer_for_result(self, layer: ComponentLayer):
         layer.returns_result = True
@@ -194,60 +211,31 @@ class Window:
 
     def loop(self):
         """Handle events in a loop until the program is exited"""
-
-        # For coroutines
-        result = None
-
         while True:
             # When there are no more layers, exit the main loop
             if not self.layers:
                 break
 
-            # Execute code in a coroutine
-            if isinstance(self.active_layer, FunctionLayer):
-                try:
-                    coroutine = self.active_layer.fn
-                    coroutine.send(result)
-                    continue
-                except StopIteration:
-                    self.layers.pop()
-                    if self.layers:
-                        self.active_layer = self.layers[-1]
-                    else:
-                        self.active_layer = None
-                    continue
+            self.handle_events()
 
-            # Get the event on the front of the queue
-            event = self.event_manager.get_event()
-
-            # Events are either handled directly by the window manager or
-            # are passed to the active component layer.
-            if event.type == Event.HEADER_UPDATE:
-                # self.update_header()
-                pass
-            elif event.type == Event.LAYER_CLOSE:
-                self.layers.pop()
-                self.active_layer = self.layers[-1]
-            else:
-                self.active_layer.event_handler(event, self.event_manager)
-
-            # Recalculate windows
+            # Recalculate windows and redraw
             self.draw()
-            for layer in self.layers:
-                try:
-                    layer.draw()
-                except:
-                    pass
 
-            # All windows have been tagged for redraw with noutrefresh,
-            # now do a single draw pass with doupdate.
-            curses.doupdate()
+    def handle_events(self):
+        # Get the event on the front of the queue
+        event = self.event_manager.get_event()
 
-            if self.active_layer.has_fn:
-                result = self.active_layer.wait_fn()
-                self.layers.pop()
-                if self.layers:
-                    self.active_layer = self.layers[-1]
+        # Events are either handled directly by the window manager or
+        # are passed to the active component layer.
+        if event.type == Event.HEADER_UPDATE:
+            # self.update_header()
+            pass
+        elif event.type == Event.LAYER_CLOSE:
+            self.layers.pop()
+            if self.layers:
+                self.active_layer = self.layers[-1]
+        else:
+            self.active_layer.event_handler(event, self.event_manager)
 
     def draw(self):
         """Draw each component in the stack"""
@@ -256,6 +244,16 @@ class Window:
         self.stdscr.noutrefresh()
 
         self.draw_header()
+
+        for layer in self.layers:
+            try:
+                layer.draw()
+            except:
+                pass
+
+        # All windows have been tagged for redraw with noutrefresh,
+        # now do a single draw pass with doupdate.
+        curses.doupdate()
 
     def update_window(self):
         if self.dark_mode:

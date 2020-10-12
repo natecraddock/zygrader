@@ -209,11 +209,8 @@ def main(window: ui.Window):
     # Start file watch thread
     data.fs_watch.start_fs_watch()
 
-    # Log in user
-    login = ui.layers.FunctionLayer(user.login, window)
-    window.register_layer(login)
-
-    # user.login(window)
+    # Authenticate the user
+    user.login(window)
 
     # logger.log("zygrader started")
 

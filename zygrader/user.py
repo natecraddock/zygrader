@@ -29,41 +29,29 @@ def authenticate(window: ui.Window, zy_api: Zybooks, email, password):
         success = zy_api.authenticate(email, password)
         if success:
             download_roster(silent=True)
-        return False
+        return success
 
     popup = ui.layers.WaitPopup("Signing in")
     popup.set_message([f"Signing into zyBooks as {email}..."])
     popup.set_wait_fn(wait_fn)
-    window.register_layer(popup)
-
-    authenticated = yield
-
-    # wait_popup = window.create_waiting_popup(
-    #     "Signing in",)
-
-    # success = zy_api.authenticate(email, password)
-
-    # # Always fetch the latest roster when starting zygrader
-    # if success:
-    #     download_roster(silent=True)
-
-    # wait_popup.close()
+    authenticated = window.run_layer_for_result(popup)
 
     if not authenticated:
-        # window.create_popup("Error", ["Invalid Credentials"])
-        return False
-    return True
+        popup = ui.layers.Popup("Error")
+        popup.set_message(["Invalid Credentials"])
+        window.run_layer(popup)
+    return authenticated
 
 
 def get_password(window: ui.Window):
     """Prompt for the user's password"""
     window.set_header("Sign In")
 
-    password = window.create_text_input(
-        "Enter Password",
-        "Enter your zyBooks password",
-        mask=ui.components.TextInput.TEXT_MASKED,
-    )
+    text_input = ui.layers.TextInputLayer(
+        "Enter Password", mask=ui.components.TextInput.TEXT_MASKED)
+    text_input.set_prompt("Enter your zyBooks password")
+    password = window.run_layer(text_input)
+
     if password == ui.Window.CANCEL:
         password = ""
 
@@ -77,9 +65,10 @@ def create_account(window: ui.Window, zy_api):
 
     while True:
         # Get user account information
-        email = window.create_text_input("Enter Email",
-                                         "Enter your zyBooks email",
-                                         mask=None)
+        text_input = ui.layers.TextInputLayer("Enter Email")
+        text_input.set_prompt("Enter your zyBooks email")
+        email = window.run_layer(text_input)
+
         if email == ui.Window.CANCEL:
             email = ""
         password = get_password(window)
@@ -101,9 +90,9 @@ def login(window: ui.Window):
     # If user email and password exist, authenticate and return
     if email and password:
         password = decode_password(password)
-        yield from authenticate(window, zy_api, email, password)
+        authenticate(window, zy_api, email, password)
         window.set_email(email)
-        # return
+        return
 
     # User does not have account created
     if not email:
