@@ -182,13 +182,13 @@ class TextInputLayer(ComponentLayer):
 
 class MenuLayer(ComponentLayer):
     """A reusable menu that supports searching the options."""
-    def __init__(self):
+    def __init__(self, prompt):
         super().__init__()
         self.entries = {}
 
         win = window.Window.get_window()
         self.component = components.FilteredList(1, 0, win.rows - 1, win.cols,
-                                                 [], None, "hey", None)
+                                                 [], None, prompt, None)
 
     def __update_lines(self):
         """Update the lines in the FilteredList"""
@@ -212,8 +212,7 @@ class MenuLayer(ComponentLayer):
         elif event.type == Event.END:
             self.component.to_bottom()
         elif event.type == Event.LEFT and event_manager.left_right_menu_nav:
-            # TODO: Handle this event
-            pass
+            event_manager.push_layer_close_event()
         elif event.type == Event.BACKSPACE:
             self.component.delchar()
         elif event.type == Event.ESC and event_manager.use_esc_back:
@@ -224,11 +223,14 @@ class MenuLayer(ComponentLayer):
         elif (
             (event.type == Event.ENTER) or
             (event.type == Event.RIGHT and event_manager.left_right_menu_nav)):
-            pass
-            # TODO: Handle this event
+            key = list(self.entries.keys())[self.component.selected()]
+            self.entries[key]()
+
             # if callback and self.component.selected() != GO_BACK:
             #     self.component.dirty = True
-            #     callback(WinContext(self, event, self.component, self.component.selected()))
+            #     callback(
+            #         WinContext(self, event, self.component,
+            #                    self.component.selected()))
             #     if self.clear_filter:
             #         self.component.clear_filter()
             #     self.component.refresh()
