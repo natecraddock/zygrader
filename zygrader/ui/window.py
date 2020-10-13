@@ -6,7 +6,7 @@ from zygrader.config import preferences
 from . import components, events
 from .events import Event, GO_BACK
 from .utils import add_str, resize_window
-from .layers import ComponentLayer, FunctionLayer, WaitPopup
+from .layers import ComponentLayer, WaitPopup
 
 
 class WinContext:
@@ -42,9 +42,8 @@ class Window:
         """Initialize screen and run callback function"""
         self.name = window_name
 
-        self.layers: typing.List[typing.Union(ComponentLayer,
-                                              FunctionLayer)] = []
-        self.active_layer: typing.Union(ComponentLayer, FunctionLayer) = None
+        self.layers: typing.List[ComponentLayer] = []
+        self.active_layer: ComponentLayer = None
 
         curses.wrapper(self.__init_curses, callback)
 
@@ -184,10 +183,9 @@ class Window:
         self.register_layer(layer)
 
         while layer in self.layers:
+            layer.update(self.event_manager)
             self.handle_events()
             self.draw()
-
-        return layer.text
 
     def run_layer_for_result(self, layer: ComponentLayer):
         """Run a layer outside of the normal event loop and return a result.
@@ -197,25 +195,18 @@ class Window:
         """
         self.register_layer(layer)
 
-        self.handle_events()
-        self.draw()
-        result = self.active_layer.update()
-        self.layers.pop()
-        if self.layers:
-            self.active_layer = self.layers[-1]
-        return result
+        while layer in self.layers:
+            self.handle_events()
+            self.draw()
 
     def register_layer_for_result(self, layer: ComponentLayer):
         layer.returns_result = True
         self.register_layer(layer)
 
     def loop(self):
-        """Handle events in a loop until the program is exited"""
-        while True:
-            # When there are no more layers, exit the main loop
-            if not self.layers:
-                break
-
+        """Handle events in a loop until the program is exited."""
+        # When there are no more layers, exit the main loop
+        while self.layers:
             self.handle_events()
 
             # Recalculate windows and redraw

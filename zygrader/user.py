@@ -1,5 +1,6 @@
 """User: User preference window management"""
 import base64
+from queue import Queue
 import sys
 
 from zygrader.zybooks import Zybooks
@@ -24,8 +25,8 @@ def encode_password(password):
 
 
 def authenticate(window: ui.Window, zy_api: Zybooks, email, password):
-    """Authenticate to the zyBooks api with the email and password"""
-    def wait_fn():
+    """Authenticate to the zyBooks api with the email and password."""
+    def wait_fn(queue: Queue):
         success = zy_api.authenticate(email, password)
         if success:
             download_roster(silent=True)
@@ -34,8 +35,9 @@ def authenticate(window: ui.Window, zy_api: Zybooks, email, password):
     popup = ui.layers.WaitPopup("Signing in")
     popup.set_message([f"Signing into zyBooks as {email}..."])
     popup.set_wait_fn(wait_fn)
-    authenticated = window.run_layer_for_result(popup)
+    window.run_layer(popup)
 
+    authenticated = popup.result
     if not authenticated:
         popup = ui.layers.Popup("Error")
         popup.set_message(["Invalid Credentials"])
@@ -50,8 +52,9 @@ def get_password(window: ui.Window):
     text_input = ui.layers.TextInputLayer(
         "Enter Password", mask=ui.components.TextInput.TEXT_MASKED)
     text_input.set_prompt("Enter your zyBooks password")
-    password = window.run_layer(text_input)
+    window.run_layer_for_result(text_input)
 
+    password = text_input.text
     if password == ui.Window.CANCEL:
         password = ""
 
@@ -67,8 +70,9 @@ def create_account(window: ui.Window, zy_api):
         # Get user account information
         text_input = ui.layers.TextInputLayer("Enter Email")
         text_input.set_prompt("Enter your zyBooks email")
-        email = window.run_layer(text_input)
+        window.run_layer_for_result(text_input)
 
+        email = text_input.text
         if email == ui.Window.CANCEL:
             email = ""
         password = get_password(window)
@@ -97,11 +101,13 @@ def login(window: ui.Window):
     # User does not have account created
     if not email:
         email, password = create_account(window, zy_api)
-
-        save_password = window.create_bool_popup(
-            "Save Password", ["Would you like to save your password?"])
-
         preferences.set("email", email)
+
+        popup = ui.layers.BoolPopup("Save Password")
+        popup.set_message(["Would you like to save your password?"])
+        window.run_layer_for_result(popup)
+
+        save_password = popup.get_result()
         if save_password:
             preferences.set("save_password", True)
             password = encode_password(password)

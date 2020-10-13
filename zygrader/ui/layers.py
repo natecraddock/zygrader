@@ -1,14 +1,41 @@
 """Layers: The components and handlers that make up the user interface."""
 
+import queue
+import threading
 import typing
 
 from .events import Event, EventManager
 from . import window, components
 
 
-class FunctionLayer:
-    def __init__(self, fn: typing.Coroutine, *args, **kwargs):
-        self.fn = fn(*args, **kwargs)
+class WorkerThread:
+    """Execute a function in a separate thread and send data back to the owner ComponentLayer.
+
+    The data queue is for sending data from the worker thread function to the component.
+    The worker_fn should accept a single argument which is the queue.
+    """
+    def __init__(self, thread_fn, name="Worker Thread"):
+        self.data_queue = queue.Queue()
+        self.thread_fn = thread_fn
+        self.__result = None
+
+        self.__thread = threading.Thread(target=self.thread_wrap,
+                                         name=name,
+                                         daemon=True)
+
+    def thread_wrap(self):
+        self.__result = self.thread_fn(self.data_queue)
+
+    def start(self):
+        self.__thread.start()
+
+    def is_finished(self):
+        return not self.__thread.is_alive()
+
+    def get_result(self):
+        if not self.is_finished():
+            raise AssertionError("The thread isn't finished yet!")
+        return self.__result
 
 
 class ComponentLayer:
@@ -44,16 +71,45 @@ class Popup(ComponentLayer):
         self.component.set_message(message)
 
 
+class BoolPopup(ComponentLayer):
+    """A popup that asks for a Yes/No response."""
+    __OPTIONS = ["Yes", "No"]
+
+    def __init__(self, title):
+        super().__init__()
+
+        win = window.Window.get_window()
+        self.component = components.OptionsPopup(win.rows, win.cols, title, [],
+                                                 BoolPopup.__OPTIONS, False,
+                                                 components.Popup.ALIGN_LEFT)
+
+    def event_handler(self, event: Event, event_manager: EventManager):
+        if event.type in {Event.LEFT, Event.UP, Event.BTAB}:
+            self.component.previous()
+        elif event.type in {Event.RIGHT, Event.DOWN, Event.TAB}:
+            self.component.next()
+        elif event.type == Event.ENTER:
+            event_manager.push_layer_close_event()
+
+    def get_result(self) -> bool:
+        return self.component.selected() == BoolPopup.__OPTIONS[0]
+
+    def set_message(self, message):
+        self.component.set_message(message)
+
+
 class WaitPopup(ComponentLayer):
     """A popup that stays visibile until a process completes."""
     def __init__(self, title):
         super().__init__()
 
         win = window.Window.get_window()
+        # TODO: Cleanup constructor
         self.component = components.OptionsPopup(win.rows, win.cols, title,
                                                  ["hey"], ["Cancel"], False,
                                                  components.Popup.ALIGN_LEFT)
         self.wait_fn = None
+        self.worker_thread = None
 
     def event_handler(self, event: Event, event_manager: EventManager):
         if event.type == Event.ENTER:
@@ -66,9 +122,13 @@ class WaitPopup(ComponentLayer):
     def set_wait_fn(self, wait_fn):
         self.has_fn = True
         self.wait_fn = wait_fn
+        self.worker_thread = WorkerThread(wait_fn, "Wait Popup")
+        self.worker_thread.start()
 
-    def update(self):
-        return self.wait_fn()
+    def update(self, event_manager: EventManager):
+        if self.worker_thread.is_finished():
+            self.result = self.worker_thread.get_result()
+            event_manager.push_layer_close_event()
 
 
 class TextInputLayer(ComponentLayer):

@@ -214,8 +214,7 @@ def main(window: ui.Window):
 
     # logger.log("zygrader started")
 
-    # mainloop(admin_mode)
-    window.loop()
+    mainloop(admin_mode)
 
 
 def start():
