@@ -4,8 +4,6 @@ import threading
 import time
 import typing
 
-from zygrader import ui
-
 
 class WatchData:
     def __init__(self, paths: list, identifier: str,
