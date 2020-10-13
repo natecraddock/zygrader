@@ -304,6 +304,6 @@ def preferences_menu():
     window = ui.get_window()
     window.set_header(f"Preferences")
 
-    window.create_list_popup("User Preferences",
-                             callback=preferences_callback,
-                             list_fill=draw_preferences)
+    popup = ui.layers.ListPopup("User Preferences", preferences_callback,
+                                draw_preferences)
+    window.register_layer(popup)

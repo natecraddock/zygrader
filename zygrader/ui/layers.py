@@ -236,3 +236,40 @@ class MenuLayer(ComponentLayer):
             #     self.component.refresh()
             # else:
             #     break
+
+
+class ListPopup(ComponentLayer):
+    def __init__(self, title, input_data, list_fill):
+        super().__init__()
+
+        win = window.Window.get_window()
+        self.component = components.ListPopup(win.rows, win.cols, title, None,
+                                              list_fill)
+
+    def event_handler(self, event: Event, event_manager: EventManager):
+        if event.type == Event.DOWN:
+            self.component.down()
+        elif event.type == Event.UP:
+            self.component.up()
+        elif event.type == Event.HOME:
+            self.component.to_top()
+        elif event.type == Event.END:
+            self.component.to_bottom()
+        elif event.type == Event.LEFT and event_manager.left_right_menu_nav:
+            event_manager.push_layer_close_event()
+        elif event.type == Event.ESC and event_manager.use_esc_back:
+            # TODO: Use the wm for this?
+            event_manager.push_layer_close_event()
+            # retval = GO_BACK
+        elif (event.type
+              == Event.ENTER) or (event.type == Event.RIGHT
+                                  and event_manager.left_right_menu_nav):
+            pass
+            # if self.component.selected() is GO_BACK:
+            #     break
+            # elif callback:
+            #     callback(
+            #         WinContext(self, event, self.component,
+            #                    self.component.selected()))
+            # else:
+            #     break
