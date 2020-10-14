@@ -6,7 +6,7 @@ from zygrader.config import preferences
 from . import components, events
 from .events import Event, GO_BACK
 from .utils import add_str, resize_window
-from .layers import ComponentLayer, WaitPopup
+from .layers import ComponentLayer
 
 
 class WinContext:
@@ -19,7 +19,7 @@ class WinContext:
 
 
 class Window:
-    EVENT_REFRESH_LIST = "flags_and_locks"
+    # TODO: remove
     CANCEL = -1
 
     instance = None
@@ -198,10 +198,6 @@ class Window:
         while layer in self.layers:
             self.handle_events()
             self.draw()
-
-    def register_layer_for_result(self, layer: ComponentLayer):
-        layer.returns_result = True
-        self.register_layer(layer)
 
     def loop(self):
         """Handle events in a loop until the program is exited."""
