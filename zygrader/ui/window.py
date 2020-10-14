@@ -179,6 +179,11 @@ class Window:
         self.layers.append(layer)
         self.active_layer = layer
 
+    def unregister_layer(self):
+        """Remove the top layer from the stack."""
+        self.layers.pop()
+        self.active_layer = self.layers[-1] if self.layers else None
+
     def run_layer(self, layer: ComponentLayer):
         self.register_layer(layer)
 
@@ -218,9 +223,7 @@ class Window:
             # self.update_header()
             pass
         elif event.type == Event.LAYER_CLOSE:
-            self.layers.pop()
-            if self.layers:
-                self.active_layer = self.layers[-1]
+            self.unregister_layer()
         else:
             self.active_layer.event_handler(event, self.event_manager)
 
