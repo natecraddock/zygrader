@@ -55,13 +55,12 @@ def get_password(window: ui.Window):
     text_input = ui.layers.TextInputLayer(
         "Enter Password", mask=ui.components.TextInput.TEXT_MASKED)
     text_input.set_prompt("Enter your zyBooks password")
-    window.run_layer_for_result(text_input)
+    window.run_layer(text_input)
 
-    password = text_input.text
-    if password == ui.Window.CANCEL:
-        password = ""
+    if text_input.was_canceled():
+        return False
 
-    return password
+    return text_input.get_text()
 
 
 # Create a user account
@@ -73,12 +72,15 @@ def create_account(window: ui.Window, zy_api):
         # Get user account information
         text_input = ui.layers.TextInputLayer("Enter Email")
         text_input.set_prompt("Enter your zyBooks email")
-        window.run_layer_for_result(text_input)
+        window.run_layer(text_input)
 
-        email = text_input.text
-        if email == ui.Window.CANCEL:
-            email = ""
+        if text_input.was_canceled():
+            return False
+
+        email = text_input.get_text()
         password = get_password(window)
+        if not password:
+            return False
 
         if authenticate(window, zy_api, email, password):
             break
@@ -103,12 +105,16 @@ def login(window: ui.Window):
 
     # User does not have account created
     if not email:
-        email, password = create_account(window, zy_api)
+        credentials = create_account(window, zy_api)
+        if not credentials:
+            return False
+
+        email, password = credentials
         preferences.set("email", email)
 
         popup = ui.layers.BoolPopup("Save Password")
         popup.set_message(["Would you like to save your password?"])
-        window.run_layer_for_result(popup)
+        window.run_layer(popup)
 
         save_password = popup.get_result()
         if save_password:
@@ -123,12 +129,16 @@ def login(window: ui.Window):
     elif not password:
         while True:
             password = get_password(window)
+            if not password:
+                return False
 
             if authenticate(window, zy_api, email, password):
                 if preferences.get("save_password"):
                     password = encode_password(password)
                     preferences.set("password", password)
                 break
+
+    return True
 
 
 def logout():

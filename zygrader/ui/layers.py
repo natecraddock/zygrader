@@ -46,12 +46,19 @@ class ComponentLayer:
         self.blocking = False
         self.has_fn = False
         self.returns_result = False
+        self._canceled = False
 
     def draw(self):
         self.component.draw()
 
     def event_handler(self, event: Event, event_manager: EventManager):
         pass
+
+    def update(self, event_manager: EventManager):
+        pass
+
+    def was_canceled(self) -> bool:
+        return self._canceled
 
 
 class Popup(ComponentLayer):
@@ -102,8 +109,6 @@ class WaitPopup(ComponentLayer):
     """A popup that stays visibile until a process completes."""
     def __init__(self, title):
         super().__init__()
-
-        self.__canceled = False
         self.__result = None
 
         win = window.Window.get_window()
@@ -115,10 +120,10 @@ class WaitPopup(ComponentLayer):
         self.worker_thread = None
 
     def event_handler(self, event: Event, event_manager: EventManager):
-        if event.type == Event.ENTER:
+        if event.type in {Event.ENTER, Event.ESC}:
             # Cancel was selected
             event_manager.push_layer_close_event()
-            self.__canceled = True
+            self._canceled = True
 
     def set_message(self, message):
         self.component.set_message(message)
@@ -134,9 +139,6 @@ class WaitPopup(ComponentLayer):
             self.__result = self.worker_thread.get_result()
             event_manager.push_layer_close_event()
 
-    def was_canceled(self) -> bool:
-        return self.__canceled
-
     def get_result(self) -> any:
         return self.__result
 
@@ -146,8 +148,6 @@ class TextInputLayer(ComponentLayer):
     def __init__(self, title, mask=components.TextInput.TEXT_NORMAL):
         super().__init__()
 
-        self.text = ""
-
         win = window.Window.get_window()
         self.component = components.TextInput(win.rows, win.cols, title, "", "",
                                               mask)
@@ -156,7 +156,6 @@ class TextInputLayer(ComponentLayer):
 
     def event_handler(self, event: Event, event_manager: EventManager):
         if event.type == Event.ENTER:
-            self.text = self.component.text
             event_manager.push_layer_close_event()
         elif event.type == Event.BACKSPACE:
             self.component.delchar()
@@ -174,6 +173,7 @@ class TextInputLayer(ComponentLayer):
             self.component.right(shift_pressed=True)
         elif event.type == Event.ESC:  # Always allow exiting from text input with ESC
             event_manager.push_layer_close_event()
+            self._canceled = True
         elif event.type == Event.HOME:
             self.component.cursor_to_beginning()
         elif event.type == Event.END:
@@ -188,6 +188,9 @@ class TextInputLayer(ComponentLayer):
 
     def set_text(self, text: str):
         self.component.text = text
+
+    def get_text(self):
+        return self.component.text
 
 
 class MenuLayer(ComponentLayer):

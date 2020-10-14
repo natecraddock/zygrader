@@ -192,18 +192,6 @@ class Window:
             self.handle_events()
             self.draw()
 
-    def run_layer_for_result(self, layer: ComponentLayer):
-        """Run a layer outside of the normal event loop and return a result.
-
-        This is used for code that needs to get some user input and then continue
-        a functions execution.
-        """
-        self.register_layer(layer)
-
-        while layer in self.layers:
-            self.handle_events()
-            self.draw()
-
     def loop(self):
         """Handle events in a loop until the program is exited."""
         # When there are no more layers, exit the main loop
