@@ -2,6 +2,7 @@ import calendar
 import curses
 import datetime
 from collections import Iterable
+from typing import Callable
 
 from .utils import add_str, resize_window
 
@@ -619,6 +620,158 @@ class DatetimeSpinner(Popup):
             return self._set_month_from_chars(newchar, recursed=True)
 
 
+class SearchableList(Component):
+    """Abstract base class for scrollable, searchable lists.
+
+    Assumes that the lines are Rows.
+    """
+    def __init__(self):
+        self._rows = 0
+
+        self._lines = []
+        self._filtered_lines = []
+
+        self._searchable = False
+        self._search_fn = None
+        self._search_prompt = ""
+        self._search_text = ""
+
+        self._scroll = 0
+        self._selected_index = 0
+
+    def set_lines(self, lines):
+        self._lines = lines
+        self.filter()
+
+    def set_searchable(self, prompt: str, search_fn: Callable):
+        self._searchable = True
+        self._search_prompt = prompt
+        self._search_fn = search_fn
+
+    def filter(self):
+        if not self._searchable:
+            # If we don't support searching for this instance just use
+            # a copy of the lines.
+            self._filtered_lines = self._lines[:]
+        else:
+            # Use the filtered lines from the input search function.
+            # The search function should take a list and return a
+            # subset of the original list.
+
+            # TODO: Take into account the first entry which is usually
+            # A special action (back, quit, etc.)
+            self._filtered_lines = self._search_fn(self._lines)
+
+    def set_scroll(self):
+        # Cursor set below view
+        if (self._selected_index + 1) > self._scroll + self._rows - 1:
+            self._scroll = self._selected_index + 2 - self._rows
+
+        # Cursor set above view
+        elif self._selected_index < self._scroll:
+            self._scroll = self._selected_index
+
+    def down(self):
+        self._selected_index = (self._selected_index + 1) % len(
+            self._filtered_lines)
+        self.set_scroll()
+
+    def up(self):
+        self._selected_index = (self._selected_index - 1) % len(
+            self._filtered_lines)
+        self.set_scroll()
+
+    def to_top(self):
+        self._selected_index = 0
+        self.set_scroll()
+
+    def to_bottom(self):
+        self._selected_index = len(self._filtered_lines) - 1
+        self.set_scroll()
+
+    def delchar(self):
+        self._search_text = self._search_text[:-1]
+
+        self._selected_index = 0
+        self.set_scroll()
+        self._selected_index = 1
+
+        self.dirty = True
+
+    def addchar(self, c):
+        self._search_text += c
+        self._selected_index = 0
+
+        self.set_scroll()
+        self._selected_index = 1
+
+        self.dirty = True
+
+    def selected(self):
+        if self._selected_index < 0 or self._selected_index > len(
+                self._filtered_lines) - 1:
+            self._selected_index = len(self._filtered_lines) - 1
+
+        return self._filtered_lines[self._selected_index].index - 1
+
+    def clear_filter(self):
+        self._search_text = ""
+        self._selected_index = 0
+        self.set_scroll()
+        self._selected_index = 1
+
+    def flag_dirty(self):
+        self.dirty = True
+
+
+class NewFilteredList(SearchableList):
+    def __init__(self, y, x, rows, cols):
+        super().__init__()
+
+        self.x = x
+        self.y = y
+        self._rows = rows
+        self.cols = cols
+
+        # List box
+        # TODO: Handle vertical sizing dependant on _searchable
+        self.window = curses.newwin(self._rows - 1, self.cols, y, x)
+        self.window.bkgd(" ", curses.color_pair(1))
+
+        # Text input area
+        self.text_input = curses.newwin(1, self.cols, self._rows, 0)
+        self.text_input.bkgd(" ", curses.color_pair(1))
+
+    def draw(self):
+        SELECTED_PREFIX = "] "
+        UNSELECTED_PREFIX = "  "
+
+        self.window.erase()
+
+        if len(self._filtered_lines) == 1:
+            self._selected_index = 1
+
+        # Draw the list lines
+        # TODO: Can we avoid slicing here?
+        visible_lines = self._filtered_lines[self._scroll:self._scroll +
+                                             self._rows - 1]
+        for line_number, line in enumerate(visible_lines):
+            if line_number + self._scroll == self._selected_index:
+                add_str(self.window, line_number, 0, f"{SELECTED_PREFIX}{line}",
+                        curses.A_BOLD)
+            else:
+                add_str(self.window, line_number, 0,
+                        f"{UNSELECTED_PREFIX}{line}", curses.A_DIM)
+        self.window.noutrefresh()
+
+        # Draw the optional search field
+        if self._searchable:
+            self.text_input.erase()
+            add_str(self.text_input, 0, 0,
+                    f"{self._search_prompt}: {self._search_text}")
+            self.text_input.noutrefresh()
+
+
 class FilteredList(Component):
     class ListLine:
         """Represents a single line of the list"""
@@ -806,6 +959,10 @@ class FilteredList(Component):
 
     def flag_dirty(self):
         self.dirty = True
+
+
+class NewPopupList(Popup, SearchableList):
+    pass
 
 
 class TextInput(Popup):

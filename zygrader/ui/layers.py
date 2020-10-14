@@ -200,16 +200,19 @@ class ListLayer(ComponentLayer):
         self.entries = {}
 
         win = window.Window.get_window()
-        self.component = components.FilteredList(1, 0, win.rows - 1, win.cols,
-                                                 [], None, prompt, None)
+        self.component = components.NewFilteredList(1, 0, win.rows - 1,
+                                                    win.cols)
+        # self.component = components.FilteredList(1, 0, win.rows - 1, win.cols,
+        #                                          [], None, prompt, None)
 
     def __update_lines(self):
         """Update the lines in the FilteredList"""
-        lines = [
-            components.FilteredList.ListLine(i, option)
-            for i, option in enumerate(self.entries)
-        ]
-        self.component.create_lines(self.entries.keys())
+        # lines = [
+        #     components.FilteredList.ListLine(i, option)
+        #     for i, option in enumerate(self.entries)
+        # ]
+        # self.component.create_lines(self.entries.keys())
+        self.component.set_lines(list(self.entries.keys()))
 
     def register_entry(self, name: str, fn: typing.Callable):
         self.entries[name] = fn
