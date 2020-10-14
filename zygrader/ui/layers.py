@@ -193,8 +193,8 @@ class TextInputLayer(ComponentLayer):
         return self.component.text
 
 
-class MenuLayer(ComponentLayer):
-    """A reusable menu that supports searching the options."""
+class ListLayer(ComponentLayer):
+    """A reusable list that supports searching the options."""
     def __init__(self, prompt):
         super().__init__()
         self.entries = {}

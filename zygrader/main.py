@@ -113,40 +113,6 @@ def handle_args(args):
         sys.exit()
 
 
-MAIN_MENU_OPTIONS = [
-    "Grade",
-    "Emails",
-    "Prep Lab Score Calculator",
-    "Run For Fun",
-    "View Students",
-    "Preferences",
-    "Changelog",
-]
-
-
-def mainloop_callback(context: ui.WinContext):
-    """Run the chosen option from the main menu"""
-    option = MAIN_MENU_OPTIONS[context.data]
-
-    if option == "Grade":
-        grader.grade()
-    elif option == "Run For Fun":
-        grader.grade(use_locks=False)
-    elif option == "Preferences":
-        user.preferences_menu()
-    elif option == "Emails":
-        email_manager.email_menu()
-    elif option == "Prep Lab Score Calculator":
-        utils.prep_lab_score_calc()
-    elif option == "Admin":
-        admin.admin_menu()
-    elif option == "Changelog":
-        lines = config.versioning.load_changelog()
-        context.window.create_list_popup("Changelog", lines)
-    elif option == "View Students":
-        utils.view_students()
-
-
 def view_changelog():
     window = ui.get_window()
     lines = config.versioning.load_changelog()
@@ -157,15 +123,8 @@ def mainloop(admin_mode):
     """Create the main menu that runs until zygrader is exited"""
     window = ui.get_window()
 
-    # if admin_mode:
-    #     MAIN_MENU_OPTIONS.append("Admin")
-    # window.set_header(SharedData.get_current_class_code)
-    # window.create_filtered_list("Option",
-    #                             input_data=MAIN_MENU_OPTIONS,
-    #                             callback=mainloop_callback)
-
     # Create the main menu
-    menu = ui.layers.MenuLayer("Option")
+    menu = ui.layers.ListLayer("Option")
     menu.register_entry("Grade", grader.grade)
     menu.register_entry("Emails", email_manager.email_menu)
     menu.register_entry("Prep Lab Score Calculator", utils.prep_lab_score_calc)
@@ -178,7 +137,6 @@ def mainloop(admin_mode):
     window.register_layer(menu)
 
     # Begin the event loop
-    # TODO: Move to main below
     window.loop()
 
 

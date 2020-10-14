@@ -1,7 +1,6 @@
 import calendar
 import curses
 import datetime
-import typing
 from collections import Iterable
 
 from .utils import add_str, resize_window
