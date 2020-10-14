@@ -103,6 +103,9 @@ class WaitPopup(ComponentLayer):
     def __init__(self, title):
         super().__init__()
 
+        self.__canceled = False
+        self.__result = None
+
         win = window.Window.get_window()
         # TODO: Cleanup constructor
         self.component = components.OptionsPopup(win.rows, win.cols, title,
@@ -115,6 +118,7 @@ class WaitPopup(ComponentLayer):
         if event.type == Event.ENTER:
             # Cancel was selected
             event_manager.push_layer_close_event()
+            self.__canceled = True
 
     def set_message(self, message):
         self.component.set_message(message)
@@ -127,8 +131,14 @@ class WaitPopup(ComponentLayer):
 
     def update(self, event_manager: EventManager):
         if self.worker_thread.is_finished():
-            self.result = self.worker_thread.get_result()
+            self.__result = self.worker_thread.get_result()
             event_manager.push_layer_close_event()
+
+    def was_canceled(self) -> bool:
+        return self.__canceled
+
+    def get_result(self) -> any:
+        return self.__result
 
 
 class TextInputLayer(ComponentLayer):

@@ -210,7 +210,8 @@ def main(window: ui.Window):
     data.fs_watch.start_fs_watch()
 
     # Authenticate the user
-    user.login(window)
+    if not user.login(window):
+        return
 
     # logger.log("zygrader started")
 

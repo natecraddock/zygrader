@@ -37,7 +37,10 @@ def authenticate(window: ui.Window, zy_api: Zybooks, email, password):
     popup.set_wait_fn(wait_fn)
     window.run_layer(popup)
 
-    authenticated = popup.result
+    if popup.was_canceled():
+        return False
+
+    authenticated = popup.get_result()
     if not authenticated:
         popup = ui.layers.Popup("Error")
         popup.set_message(["Invalid Credentials"])
@@ -94,9 +97,9 @@ def login(window: ui.Window):
     # If user email and password exist, authenticate and return
     if email and password:
         password = decode_password(password)
-        authenticate(window, zy_api, email, password)
+        authenticated = authenticate(window, zy_api, email, password)
         window.set_email(email)
-        return
+        return authenticated
 
     # User does not have account created
     if not email:
