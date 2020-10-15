@@ -652,7 +652,9 @@ class ScrollableList(Component):
         self._exit_line = ScrollableList.Line(0, "Back")
 
     def set_lines(self, lines):
-        self._lines = [ScrollableList.create_line(line) for line in lines]
+        self._lines = [
+            ScrollableList.create_line(i, line) for i, line in enumerate(lines)
+        ]
         self.__create_display_lines()
 
     def set_searchable(self, prompt: str, search_fn: Callable):
@@ -747,7 +749,7 @@ class ScrollableList(Component):
         return self._display_lines[self.selected_index].index
 
 
-class NewFilteredList(ScrollableList):
+class FilteredList(ScrollableList):
     def __init__(self, y, x, rows, cols):
         super().__init__()
 
@@ -795,7 +797,7 @@ class NewFilteredList(ScrollableList):
             self.text_input.noutrefresh()
 
 
-class NewListPopup(Popup, ScrollableList):
+class ListPopup(Popup, ScrollableList):
     V_PADDING = Popup.PADDING * 2
 
     def __init__(self, rows, cols, title, align):
@@ -811,7 +813,7 @@ class NewListPopup(Popup, ScrollableList):
         self.draw_title()
 
         visible_lines = self._display_lines[self._scroll:self._scroll +
-                                            self.rows - NewListPopup.V_PADDING]
+                                            self.rows - ListPopup.V_PADDING]
         for line_number, line in enumerate(visible_lines):
             if line + self._scroll == self._selected_index:
                 add_str(self.window, Popup.PADDING + line_number, Popup.PADDING,
@@ -824,195 +826,6 @@ class NewListPopup(Popup, ScrollableList):
 
     def resize(self, rows, cols):
         Popup.resize(self, rows, cols)
-
-
-class FilteredList(Component):
-    class ListLine:
-        """Represents a single line of the list"""
-        def __init__(self, index, data):
-            self.index = index
-            self.data = data
-            self.text = str(data)
-            self.color = curses.color_pair(1)
-
-    def filter_string(self, line, filter):
-        return line.text.lower().find(filter.lower()) is not -1
-
-    def __filter_data(self, input_data, filter_function, filter_text):
-        # Apply filter (via function)
-        data = input_data[:1]
-
-        for line in input_data[1:]:
-            if filter_text == "" or filter_function(line, filter_text):
-                data.append(line)
-
-        self.dirty = False
-        return data
-
-    def __fill_text(self, lines):
-        line_number = 0
-
-        draw_lines = lines[self.scroll:self.scroll + self.rows - 1]
-
-        for line in draw_lines:
-            if (line_number + self.scroll) == self.selected_index:
-                display_text = f"> {line.text}"
-                add_str(self.window, line_number, 0, display_text,
-                        curses.A_BOLD | line.color)
-            else:
-                display_text = f"  {line.text}"
-                add_str(self.window, line_number, 0, display_text,
-                        curses.A_DIM | line.color)
-
-            line_number += 1
-
-    def create_lines(self, options):
-        lines = [FilteredList.ListLine(0, "Back")]
-
-        if self.list_fill:
-            lines += self.list_fill()
-        else:
-            for i, option in enumerate(options):
-                lines.append(FilteredList.ListLine(i + 1, option))
-        self.options = lines
-        self.dirty = True
-
-    def __init__(self, y, x, rows, cols, options, list_fill, prompt,
-                 filter_function):
-        self.blocking = True
-
-        # Flag to determine if the list needs to be updated.
-        # Only scrolling the list does not require an update of the list items,
-        # but after filtering the list should be regenerated.
-        self.dirty = True
-
-        self.y = y
-        self.x = x
-
-        self.rows = rows
-        self.cols = cols
-
-        self.list_fill = list_fill
-        self.create_lines(options)
-
-        if filter_function:
-            self.filter_function = filter_function
-        else:
-            self.filter_function = self.filter_string
-
-        self.scroll = 0
-        self.selected_index = 1
-        self.selected_index = self.selected_index
-        self.filter_text = ""
-
-        self.prompt = prompt
-
-        # List box
-        self.window = curses.newwin(self.rows - 1, self.cols, y, x)
-        self.window.bkgd(" ", curses.color_pair(1))
-
-        # Text input
-        self.text_input = curses.newwin(1, cols, self.rows, 0)
-        self.text_input.bkgd(" ", curses.color_pair(1))
-
-        curses.curs_set(1)
-
-    def resize(self, rows, width):
-        self.rows = rows - 1
-        self.cols = width
-
-        try:
-            self.window.mvwin(self.y, self.x)
-            self.text_input.mvwin(self.rows, 0)
-        except:
-            pass
-
-        resize_window(self.window, self.rows - 1, self.cols)
-        resize_window(self.text_input, 1, self.cols)
-
-    def refresh(self):
-        if self.list_fill:
-            self.create_lines(None)
-        self.flag_dirty()
-
-    def draw(self):
-        self.window.erase()
-        self.text_input.erase()
-
-        if self.dirty:
-            self.data = self.__filter_data(self.options, self.filter_function,
-                                           self.filter_text)
-
-        # If no matches, set selected index to 0
-        if len(self.data) is 1:
-            self.selected_index = 0
-
-        self.__fill_text(self.data)
-        self.window.noutrefresh()
-
-        add_str(self.text_input, 0, 0, f"{self.prompt}: {self.filter_text}")
-        self.text_input.noutrefresh()
-
-    def clear(self):
-        curses.curs_set(0)
-
-    def set_scroll(self):
-        # Cursor set below view
-        if (self.selected_index + 1) > self.scroll + self.rows - 1:
-            self.scroll = self.selected_index + 2 - self.rows
-
-        # Cursor set above view
-        elif self.selected_index < self.scroll:
-            self.scroll = self.selected_index
-
-    def down(self):
-        self.selected_index = (self.selected_index + 1) % len(self.data)
-        self.set_scroll()
-
-    def up(self):
-        self.selected_index = (self.selected_index - 1) % len(self.data)
-        self.set_scroll()
-
-    def to_top(self):
-        self.selected_index = 0
-        self.set_scroll()
-
-    def to_bottom(self):
-        self.selected_index = len(self.data) - 1
-        self.set_scroll()
-
-    def delchar(self):
-        self.filter_text = self.filter_text[:-1]
-
-        self.selected_index = 0
-        self.set_scroll()
-        self.selected_index = 1
-
-        self.dirty = True
-
-    def addchar(self, c):
-        self.filter_text += c
-        self.selected_index = 0
-
-        self.set_scroll()
-        self.selected_index = 1
-
-        self.dirty = True
-
-    def selected(self):
-        if self.selected_index < 0 or self.selected_index > len(self.data) - 1:
-            self.selected_index = len(self.data) - 1
-
-        return self.data[self.selected_index].index - 1
-
-    def clear_filter(self):
-        self.filter_text = ""
-        self.selected_index = 0
-        self.set_scroll()
-        self.selected_index = 1
-
-    def flag_dirty(self):
-        self.dirty = True
 
 
 class TextInput(Popup):
@@ -1238,64 +1051,3 @@ class Logger(Component):
         self.__log[-1] += entry
 
         self.draw()
-
-
-class ListPopup(FilteredList, Popup):
-    """A list in a popup view"""
-
-    V_PADDING = Popup.PADDING * 2
-
-    def __init__(self, rows, cols, title, input_data, list_fill):
-        self.blocking = False
-        Popup.__init__(self, rows, cols, title, None, None)
-
-        if input_data:
-            self.data = ["Back"] + input_data[:]
-        else:
-            self.data = []
-        self.list_fill = list_fill
-
-        self.scroll = 0
-        self.selected_index = 1
-
-    def set_scroll(self):
-        if (self.selected_index +
-                1) > self.scroll + self.rows - ListPopup.V_PADDING:
-            self.scroll = self.selected_index + ListPopup.V_PADDING - self.rows + 1
-        # Cursor set above view
-        elif self.selected_index < self.scroll:
-            self.scroll = self.selected_index
-
-    def draw_list(self):
-        line = 0
-
-        for l in self.data[self.scroll:self.scroll + self.rows -
-                           ListPopup.V_PADDING]:
-            if (line + self.scroll) == self.selected_index:
-                display_text = f"> {str(l)}"
-                add_str(self.window, Popup.PADDING + line, Popup.PADDING,
-                        display_text, curses.A_DIM)
-            else:
-                display_text = f"  {str(l)}"
-                add_str(self.window, Popup.PADDING + line, Popup.PADDING,
-                        display_text, curses.A_BOLD)
-            line += 1
-
-    def draw(self):
-        self.window.erase()
-        self.window.border()
-
-        self.draw_title()
-
-        if self.list_fill:
-            self.data = ["Back"] + self.list_fill()
-
-        self.draw_list()
-
-        self.window.noutrefresh()
-
-    def resize(self, rows, cols):
-        Popup.resize(self, rows, cols)
-
-    def selected(self):
-        return self.selected_index - 1

@@ -201,7 +201,7 @@ class ListLayer(ComponentLayer):
         self.entries = {}
 
         win = window.Window.get_window()
-        self.component = components.NewFilteredList(1, 0, win.rows - 1,
+        self.component = components.FilteredList(1, 0, win.rows - 1,
                                                     win.cols)
 
     def __update_lines(self):
