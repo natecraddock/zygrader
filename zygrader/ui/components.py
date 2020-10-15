@@ -807,6 +807,8 @@ class ListPopup(Popup, ScrollableList):
         Popup.__init__(self, rows, cols, title, [], align)
         ScrollableList.__init__(self)
 
+        self._rows = self.rows - ListPopup.V_PADDING + 1
+
     def draw(self):
         self.window.erase()
         self.window.border()
@@ -816,7 +818,7 @@ class ListPopup(Popup, ScrollableList):
         visible_lines = self._display_lines[self._scroll:self._scroll +
                                             self.rows - ListPopup.V_PADDING]
         for line_number, line in enumerate(visible_lines):
-            if line + self._scroll == self._selected_index:
+            if line_number + self._scroll == self._selected_index:
                 add_str(self.window, Popup.PADDING + line_number, Popup.PADDING,
                         f"{ScrollableList.SELECTED_PREFIX}{line.text}",
                         curses.A_BOLD)

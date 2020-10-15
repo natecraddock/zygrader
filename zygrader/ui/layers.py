@@ -218,7 +218,7 @@ class RowHolder:
 
         def __add_row(self, text: str, _type=TEXT):
             row = RowHolder.Row(text, _type)
-            self._rows.append(row)
+            self.__subrows.append(row)
             return row
 
         def add_row_text(self, text: str):
@@ -305,11 +305,13 @@ class ListLayer(ComponentLayer, RowHolder):
             event_manager.push_layer_close_event()
         elif event.type == Event.BACKSPACE:
             self.component.delchar()
+            self.build()
         elif event.type == Event.ESC and event_manager.use_esc_back:
             # TODO: Handle this event by the window manager?
             event_manager.push_layer_close_event()
         elif event.type == Event.CHAR_INPUT:
             self.component.addchar(event.value)
+            self.build()
         elif (
             (event.type == Event.ENTER) or
             (event.type == Event.RIGHT and event_manager.left_right_menu_nav)):
@@ -328,13 +330,21 @@ class ListLayer(ComponentLayer, RowHolder):
             #     break
 
 
-class ListPopup(ComponentLayer):
-    def __init__(self, title, input_data, list_fill):
-        super().__init__()
+class ListPopup(ComponentLayer, RowHolder):
+    def __init__(self, title):
+        ComponentLayer.__init__(self)
+        RowHolder.__init__(self)
 
         win = window.Window.get_window()
         self.component = components.ListPopup(win.rows, win.cols, title,
                                               components.Popup.ALIGN_CENTER)
+
+    def build(self):
+        # TODO: This could be moved to the RowHolder
+        text_rows = []
+        for row in self._rows:
+            text_rows.append(str(row))
+        self.component.set_lines(text_rows)
 
     def event_handler(self, event: Event, event_manager: EventManager):
         if event.type == Event.DOWN:

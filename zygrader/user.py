@@ -317,6 +317,31 @@ def preferences_menu():
     window = ui.get_window()
     window.set_header(f"Preferences")
 
-    popup = ui.layers.ListPopup("User Preferences", preferences_callback,
-                                draw_preferences)
+    popup = ui.layers.ListPopup("User Preferences")
+
+    popup.add_row_toggle("Left/Right Arrow Navigation")
+    popup.add_row_toggle("Use Esc key to exit menus")
+    popup.add_row_toggle("Auto Clear List Filters")
+    popup.add_row_toggle("Vim Mode")
+    popup.add_row_toggle("Dark Mode")
+    popup.add_row_toggle("Christmas Theme")
+    popup.add_row_toggle("Open Diffs in Browser")
+    popup.add_row_toggle("Remember Password")
+
+    # Class code selector
+    row = popup.add_row_parent("Class Code Override")
+    # TODO: Fill with class codes
+
+    # Editor selection
+    row = popup.add_row_parent("Editor")
+    row.add_row_radio("Pluma")
+    row.add_row_radio("Gedit")
+    row.add_row_radio("VSCode")
+    row.add_row_radio("Atom")
+    row.add_row_radio("Vim")
+    row.add_row_radio("Emacs")
+    row.add_row_radio("Nano")
+    row.add_row_radio("Less")
+
+    popup.add_row_text("Log Out", logout)
     window.register_layer(popup)

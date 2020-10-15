@@ -227,10 +227,7 @@ class Window:
         self.draw_header()
 
         for layer in self.layers:
-            try:
-                layer.draw()
-            except:
-                pass
+            layer.draw()
 
         # All windows have been tagged for redraw with noutrefresh,
         # now do a single draw pass with doupdate.
