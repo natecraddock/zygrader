@@ -3,7 +3,7 @@
 import queue
 import threading
 import typing
-from typing import Callable
+from typing import Callable, List
 
 from .events import Event, EventManager
 from . import window, components
@@ -48,6 +48,9 @@ class ComponentLayer:
         self.has_fn = False
         self.returns_result = False
         self._canceled = False
+
+    def build(self):
+        """An optional function to finalize construction of a Layer upon registration."""
 
     def draw(self):
         self.component.draw()
@@ -194,29 +197,100 @@ class TextInputLayer(ComponentLayer):
         return self.component.text
 
 
-class ListLayer(ComponentLayer):
+class RowHolder:
+    class Row:
+        # Row types
+        TEXT = 0
+        PARENT = 1
+        TOGGLE = 2
+        RADIO = 3
+
+        def __init__(self, text: str, _type):
+            self.__type = _type
+            self.__text = text
+
+            self.__subrows: List[self.__class__] = []
+            self.__callback_fn = None
+
+        def __str__(self):
+            """Render a textual representation of this row."""
+            return self.__text
+
+        def __add_row(self, text: str, _type=TEXT):
+            row = RowHolder.Row(text, _type)
+            self._rows.append(row)
+            return row
+
+        def add_row_text(self, text: str):
+            self.__add_row(text)
+
+        def add_row_parent(self, text: str):
+            return self.__add_row(text, RowHolder.Row.PARENT)
+
+        def add_row_toggle(self, text: str):
+            self.__add_row(text, RowHolder.Row.TOGGLE)
+
+        def add_row_radio(self, text: str):
+            self.__add_row(text, RowHolder.Row.RADIO)
+
+        def set_callback_fn(self, callback_fn):
+            self.__callback_fn = callback_fn
+
+        def do_action(self):
+            self.__callback_fn()
+
+    def __init__(self):
+        self._rows: List[RowHolder.Row] = []
+
+    def __add_row(self, text: str, _type=Row.TEXT):
+        row = RowHolder.Row(text, _type)
+        self._rows.append(row)
+        return row
+
+    def add_row_text(self, text: str, callback_fn):
+        row = self.__add_row(text)
+        row.set_callback_fn(callback_fn)
+
+    def add_row_parent(self, text: str) -> Row:
+        return self.__add_row(text, RowHolder.Row.PARENT)
+
+    def add_row_toggle(self, text: str):
+        self.__add_row(text, RowHolder.Row.TOGGLE)
+
+    def add_row_radio(self, text: str):
+        self.__add_row(text, RowHolder.Row.RADIO)
+
+    def __row_from_index(self, index):
+        # This will become more complex as nesting is introduced
+        return self._rows[index]
+
+    def select_row(self, index):
+        row = self.__row_from_index(index)
+        row.do_action()
+
+
+class ListLayer(ComponentLayer, RowHolder):
     """A reusable list that supports searching the options."""
     def __init__(self):
-        super().__init__()
-        self.entries = {}
+        ComponentLayer.__init__(self)
+        RowHolder.__init__(self)
 
         win = window.Window.get_window()
-        self.component = components.FilteredList(1, 0, win.rows - 1,
-                                                    win.cols)
+        self.component = components.FilteredList(1, 0, win.rows - 1, win.cols)
 
-    def __update_lines(self):
-        """Update the lines in the FilteredList"""
-        self.component.set_lines(list(self.entries.keys()))
+    def build(self):
+        # TODO: This could be moved to the RowHolder
+        text_rows = []
+        for row in self._rows:
+            text_rows.append(str(row))
+        self.component.set_lines(text_rows)
 
+    # TODO: move somewhere else?
     def __string_search_fn(text: str, search_str: str):
         return text.lower().find(search_str.lower()) != -1
 
     def set_searchable(self, prompt: str, search_fn=__string_search_fn):
         self.component.set_searchable(prompt, search_fn)
-
-    def add_row(self, name: str, fn: typing.Callable):
-        self.entries[name] = fn
-        self.__update_lines()
 
     def event_handler(self, event: Event, event_manager: EventManager):
         if event.type == Event.DOWN:
@@ -239,8 +313,8 @@ class ListLayer(ComponentLayer):
         elif (
             (event.type == Event.ENTER) or
             (event.type == Event.RIGHT and event_manager.left_right_menu_nav)):
-            key = list(self.entries.keys())[self.component.selected()]
-            self.entries[key]()
+
+            self.select_row(self.component.get_selected_index())
 
             # if callback and self.component.selected() != GO_BACK:
             #     self.component.dirty = True
@@ -259,8 +333,8 @@ class ListPopup(ComponentLayer):
         super().__init__()
 
         win = window.Window.get_window()
-        self.component = components.ListPopup(win.rows, win.cols, title, None,
-                                              list_fill)
+        self.component = components.ListPopup(win.rows, win.cols, title,
+                                              components.Popup.ALIGN_CENTER)
 
     def event_handler(self, event: Event, event_manager: EventManager):
         if event.type == Event.DOWN:

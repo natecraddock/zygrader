@@ -179,6 +179,9 @@ class Window:
         self.layers.append(layer)
         self.active_layer = layer
 
+        # Run any finalizing actions this layer needs
+        layer.build()
+
     def unregister_layer(self):
         """Remove the top layer from the stack."""
         self.layers.pop()

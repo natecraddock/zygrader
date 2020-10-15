@@ -622,6 +622,10 @@ class DatetimeSpinner(Popup):
 
 class ScrollableList(Component):
     """Base class for scrollable, sortable, searchable lists."""
+
+    SELECTED_PREFIX = "| "
+    UNSELECTED_PREFIX = " " * len(SELECTED_PREFIX)
+
     class Line:
         def __init__(self, index, text, color=0, sort_index=0):
             self.index = index
@@ -647,7 +651,7 @@ class ScrollableList(Component):
         self._sortable = False
 
         self._scroll = 0
-        self._selected_index = 0
+        self._selected_index = 1
 
         self._exit_line = ScrollableList.Line(0, "Back")
 
@@ -746,7 +750,7 @@ class ScrollableList(Component):
 
     def get_selected_index(self):
         """Get the original index of the selected line."""
-        return self._display_lines[self.selected_index].index
+        return self._display_lines[self._selected_index].index
 
 
 class FilteredList(ScrollableList):
@@ -768,9 +772,6 @@ class FilteredList(ScrollableList):
         self.text_input.bkgd(" ", curses.color_pair(1))
 
     def draw(self):
-        SELECTED_PREFIX = "] "
-        UNSELECTED_PREFIX = "  "
-
         self.window.erase()
 
         if len(self._display_lines) == 1:
@@ -783,10 +784,12 @@ class FilteredList(ScrollableList):
         for line_number, line in enumerate(visible_lines):
             if line_number + self._scroll == self._selected_index:
                 add_str(self.window, line_number, 0,
-                        f"{SELECTED_PREFIX}{line.text}", curses.A_BOLD)
+                        f"{ScrollableList.SELECTED_PREFIX}{line.text}",
+                        curses.A_BOLD)
             else:
                 add_str(self.window, line_number, 0,
-                        f"{UNSELECTED_PREFIX}{line.text}", curses.A_DIM)
+                        f"{ScrollableList.UNSELECTED_PREFIX}{line.text}",
+                        curses.A_DIM)
         self.window.noutrefresh()
 
         # Draw the optional search field
@@ -802,11 +805,9 @@ class ListPopup(Popup, ScrollableList):
 
     def __init__(self, rows, cols, title, align):
         Popup.__init__(self, rows, cols, title, [], align)
+        ScrollableList.__init__(self)
 
     def draw(self):
-        SELECTED_PREFIX = "] "
-        UNSELECTED_PREFIX = "  "
-
         self.window.erase()
         self.window.border()
 
@@ -817,10 +818,12 @@ class ListPopup(Popup, ScrollableList):
         for line_number, line in enumerate(visible_lines):
             if line + self._scroll == self._selected_index:
                 add_str(self.window, Popup.PADDING + line_number, Popup.PADDING,
-                        f"{SELECTED_PREFIX}{line.text}", curses.A_BOLD)
+                        f"{ScrollableList.SELECTED_PREFIX}{line.text}",
+                        curses.A_BOLD)
             else:
                 add_str(self.window, Popup.PADDING + line_number, Popup.PADDING,
-                        f"{UNSELECTED_PREFIX}{line.text}", curses.A_DIM)
+                        f"{ScrollableList.UNSELECTED_PREFIX}{line.text}",
+                        curses.A_DIM)
 
         self.window.noutrefresh()
 
