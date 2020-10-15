@@ -620,6 +620,7 @@ class DatetimeSpinner(Popup):
             return self._set_month_from_chars(newchar, recursed=True)
 
 
+# TODO: Incorporate sorting!!!
 class SearchableList(Component):
     """Abstract base class for scrollable, searchable lists.
 
@@ -660,7 +661,10 @@ class SearchableList(Component):
 
             # TODO: Take into account the first entry which is usually
             # A special action (back, quit, etc.)
-            self._filtered_lines = self._search_fn(self._lines)
+            self._filtered_lines = [self._lines[0]]
+            for line in self._lines[1:]:
+                if self._search_fn(line, self._search_text):
+                    self._filtered_lines.append(line)
 
     def set_scroll(self):
         # Cursor set below view

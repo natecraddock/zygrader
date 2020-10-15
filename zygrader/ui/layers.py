@@ -3,6 +3,7 @@
 import queue
 import threading
 import typing
+from typing import Callable
 
 from .events import Event, EventManager
 from . import window, components
@@ -213,6 +214,12 @@ class ListLayer(ComponentLayer):
         # ]
         # self.component.create_lines(self.entries.keys())
         self.component.set_lines(list(self.entries.keys()))
+
+    def __string_search_fn(text: str, search_str: str):
+        return text.lower().find(search_str.lower()) != -1
+
+    def set_searchable(self, prompt: str, search_fn=__string_search_fn):
+        self.component.set_searchable(prompt, search_fn)
 
     def register_entry(self, name: str, fn: typing.Callable):
         self.entries[name] = fn
