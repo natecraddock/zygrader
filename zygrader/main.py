@@ -124,17 +124,17 @@ def mainloop(admin_mode):
     window = ui.get_window()
 
     # Create the main menu
-    menu = ui.layers.ListLayer("Option")
-    # menu.set_searchable("Option")
-    menu.register_entry("Grade", grader.grade)
-    menu.register_entry("Emails", email_manager.email_menu)
-    menu.register_entry("Prep Lab Score Calculator", utils.prep_lab_score_calc)
-    menu.register_entry("Run For Fun", lambda: grader.grade(use_locks=False))
-    menu.register_entry("View Students", utils.view_students)
-    menu.register_entry("Preferences", user.preferences_menu)
-    menu.register_entry("Changelog", view_changelog)
+    menu = ui.layers.ListLayer()
+    # menu.set_searchable(prompt="Option")
+    menu.add_row("Grade", grader.grade)
+    menu.add_row("Emails", email_manager.email_menu)
+    menu.add_row("Prep Lab Score Calculator", utils.prep_lab_score_calc)
+    menu.add_row("Run For Fun", lambda: grader.grade(use_locks=False))
+    menu.add_row("View Students", utils.view_students)
+    menu.add_row("Preferences", user.preferences_menu)
+    menu.add_row("Changelog", view_changelog)
     if admin_mode:
-        menu.register_entry("Admin", admin.admin_menu)
+        menu.add_row("Admin", admin.admin_menu)
     window.register_layer(menu)
 
     # Begin the event loop

@@ -196,23 +196,16 @@ class TextInputLayer(ComponentLayer):
 
 class ListLayer(ComponentLayer):
     """A reusable list that supports searching the options."""
-    def __init__(self, prompt):
+    def __init__(self):
         super().__init__()
         self.entries = {}
 
         win = window.Window.get_window()
         self.component = components.NewFilteredList(1, 0, win.rows - 1,
                                                     win.cols)
-        # self.component = components.FilteredList(1, 0, win.rows - 1, win.cols,
-        #                                          [], None, prompt, None)
 
     def __update_lines(self):
         """Update the lines in the FilteredList"""
-        # lines = [
-        #     components.FilteredList.ListLine(i, option)
-        #     for i, option in enumerate(self.entries)
-        # ]
-        # self.component.create_lines(self.entries.keys())
         self.component.set_lines(list(self.entries.keys()))
 
     def __string_search_fn(text: str, search_str: str):
@@ -221,7 +214,7 @@ class ListLayer(ComponentLayer):
     def set_searchable(self, prompt: str, search_fn=__string_search_fn):
         self.component.set_searchable(prompt, search_fn)
 
-    def register_entry(self, name: str, fn: typing.Callable):
+    def add_row(self, name: str, fn: typing.Callable):
         self.entries[name] = fn
         self.__update_lines()
 
