@@ -197,6 +197,30 @@ class TextInputLayer(ComponentLayer):
         return self.component.text
 
 
+class Radio:
+    pass
+
+
+class Toggle:
+    def __init__(self, name, get_fn, set_fn):
+        self.__toggled = False
+        self.__name = name
+        self.__get_fn = get_fn
+        self.__set_fn = set_fn
+
+        self.get()
+
+    def get(self):
+        self.__toggled = self.__get_fn(self.__name)
+
+    def toggle(self):
+        self.__set_fn(self.__name, not self.__toggled)
+        self.get()
+
+    def is_toggled(self):
+        return self.__toggled
+
+
 class RowHolder:
     class Row:
         # Row types
@@ -212,9 +236,18 @@ class RowHolder:
             self.__subrows: List[self.__class__] = []
             self.__callback_fn = None
 
+            self.__toggle: Toggle = None
+
         def __str__(self):
             """Render a textual representation of this row."""
-            return self.__text
+            if self.__type == RowHolder.Row.TEXT:
+                return self.__text
+            if self.__type == RowHolder.Row.PARENT:
+                return self.__text
+            elif self.__type == RowHolder.Row.TOGGLE:
+                return f"[{'x' if self.__toggle.is_toggled() else ' '}] " + self.__text
+            elif self.__type == RowHolder.Row.RADIO:
+                return "( ) " + self.__text
 
         def __add_row(self, text: str, _type=TEXT):
             row = RowHolder.Row(text, _type)
@@ -227,8 +260,9 @@ class RowHolder:
         def add_row_parent(self, text: str):
             return self.__add_row(text, RowHolder.Row.PARENT)
 
-        def add_row_toggle(self, text: str):
-            self.__add_row(text, RowHolder.Row.TOGGLE)
+        def add_row_toggle(self, text: str, toggle: Toggle):
+            row = self.__add_row(text, RowHolder.Row.TOGGLE)
+            self.set_toggle_ob(toggle)
 
         def add_row_radio(self, text: str):
             self.__add_row(text, RowHolder.Row.RADIO)
@@ -236,8 +270,18 @@ class RowHolder:
         def set_callback_fn(self, callback_fn):
             self.__callback_fn = callback_fn
 
+        def set_toggle_ob(self, toggle: Toggle):
+            self.__toggle = toggle
+
         def do_action(self):
-            self.__callback_fn()
+            if self.__type == RowHolder.Row.TEXT:
+                self.__callback_fn()
+            if self.__type == RowHolder.Row.PARENT:
+                pass
+            elif self.__type == RowHolder.Row.TOGGLE:
+                self.__toggle.toggle()
+            elif self.__type == RowHolder.Row.RADIO:
+                pass
 
     def __init__(self):
         self._rows: List[RowHolder.Row] = []
@@ -254,8 +298,9 @@ class RowHolder:
     def add_row_parent(self, text: str) -> Row:
         return self.__add_row(text, RowHolder.Row.PARENT)
 
-    def add_row_toggle(self, text: str):
-        self.__add_row(text, RowHolder.Row.TOGGLE)
+    def add_row_toggle(self, text: str, toggle: Toggle):
+        row = self.__add_row(text, RowHolder.Row.TOGGLE)
+        row.set_toggle_ob(toggle)
 
     def add_row_radio(self, text: str):
         self.__add_row(text, RowHolder.Row.RADIO)
@@ -364,7 +409,9 @@ class ListPopup(ComponentLayer, RowHolder):
         elif (event.type
               == Event.ENTER) or (event.type == Event.RIGHT
                                   and event_manager.left_right_menu_nav):
-            pass
+
+            self.select_row(self.component.get_selected_index())
+            self.build()
             # if self.component.selected() is GO_BACK:
             #     break
             # elif callback:

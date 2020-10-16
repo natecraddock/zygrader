@@ -312,6 +312,11 @@ def preferences_callback(context: ui.WinContext):
         pref.select_fn()
 
 
+class PreferenceToggle(ui.layers.Toggle):
+    def __init__(self, name):
+        super().__init__(name, preferences.get, preferences.set)
+
+
 def preferences_menu():
     """Create the preferences popup"""
     window = ui.get_window()
@@ -319,14 +324,14 @@ def preferences_menu():
 
     popup = ui.layers.ListPopup("User Preferences")
 
-    popup.add_row_toggle("Left/Right Arrow Navigation")
-    popup.add_row_toggle("Use Esc key to exit menus")
-    popup.add_row_toggle("Auto Clear List Filters")
-    popup.add_row_toggle("Vim Mode")
-    popup.add_row_toggle("Dark Mode")
-    popup.add_row_toggle("Christmas Theme")
-    popup.add_row_toggle("Open Diffs in Browser")
-    popup.add_row_toggle("Remember Password")
+    popup.add_row_toggle("Left/Right Arrow Navigation", PreferenceToggle("left_right_arrow_nav"))
+    popup.add_row_toggle("Use Esc key to exit menus", PreferenceToggle("use_esc_back"))
+    popup.add_row_toggle("Auto Clear List Filters", PreferenceToggle("clear_filter"))
+    popup.add_row_toggle("Vim Mode", PreferenceToggle("vim_mode"))
+    popup.add_row_toggle("Dark Mode", PreferenceToggle("dark_mode"))
+    popup.add_row_toggle("Christmas Theme", PreferenceToggle("christmas_mode"))
+    popup.add_row_toggle("Open Diffs in Browser", PreferenceToggle("browser_diff"))
+    popup.add_row_toggle("Remember Password", PreferenceToggle("save_password"))
 
     # Class code selector
     row = popup.add_row_parent("Class Code Override")
