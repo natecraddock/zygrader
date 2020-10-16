@@ -143,176 +143,46 @@ def login(window: ui.Window):
 
 def logout():
     """Log a user out by erasing their email and password from config"""
+    window = ui.get_window()
+
+    # Clear account information
     preferences.set("email", "")
     preferences.set("password", "")
 
-    window = ui.get_window()
     msg = [
         "You have been logged out. Would you like to sign in with different credentials?",
         "",
         "Answering `No` will quit zygrader.",
     ]
-    sign_in = window.create_bool_popup("Sign in?", msg)
+    popup = ui.layers.BoolPopup("Sign in?")
+    popup.set_message(msg)
 
+    sign_in = window.run_layer(popup)
     if sign_in:
         login(window)
     else:
+        # TODO: Use the event manager to handle this case!
         sys.exit()
 
 
-def draw_text_editors():
-    """Draw the list of text editors"""
-    options = []
-    current_editor = preferences.get("editor")
-
-    for name in preferences.EDITORS:
-        if current_editor == name:
-            options.append(f"[X] {name}")
-        else:
-            options.append(f"[ ] {name}")
-
-    return options
-
-
-def set_editor(editor_index, pref_name):
-    """Set the user's default editor to the selected editor"""
-    editor = list(preferences.EDITORS.keys())[editor_index]
-    preferences.set(pref_name, editor)
-
-
-def set_editor_menu(name):
-    """Open the set editor popup"""
-    window = ui.get_window()
-    edit_fn = lambda context: set_editor(context.data, name)
-    window.create_list_popup("Set Editor",
-                             callback=edit_fn,
-                             list_fill=draw_text_editors)
-
-
-def draw_class_codes():
-    """Draw the list of class codes"""
-    class_codes = SharedData.get_class_codes()
-    class_codes.insert(0, "No Override")
-    current_code = preferences.get("class_code")
-
-    options = []
-    for code in class_codes:
-        if current_code == code:
-            options.append(f"[X] {code}")
-        else:
-            options.append(f"[ ] {code}")
-    return options
-
-
-def set_class_code_override(code_index: int, pref_name: str):
-    """Set the current class code to the user's overridden code"""
-    class_codes = SharedData.get_class_codes()
-    class_codes.insert(0, "No Override")
-
-    preferences.set(pref_name, class_codes[code_index])
-
-    # Update all data to use the new class code
-    SharedData.initialize_shared_data(SharedData.ZYGRADER_DATA_DIRECTORY)
-    data.load_students()
-    data.load_labs()
-    data.load_class_sections()
-
-
-def set_class_code_override_menu(pref_name: str):
-    """Open the set class code override popup"""
-    window = ui.get_window()
-    set_fn = lambda context: set_class_code_override(context.data, pref_name)
-    window.create_list_popup("Override Class Code",
-                             callback=set_fn,
-                             list_fill=draw_class_codes)
-
-
-def toggle_preference(pref):
-    """Toggle a boolean preference"""
-    current_value = preferences.get(pref)
-    preferences.set(pref, not current_value)
-
-
-def save_password_toggle(preference_name):
+def save_password_toggle():
     """Toggle saving the user's password in their config file (encoded)"""
-    toggle_preference(preference_name)
-
-    if not preferences.get(preference_name):
+    if not preferences.get("save_password"):
         preferences.set("password", "")
     else:
         window = ui.get_window()
-        window.create_popup(
-            "Remember Password",
-            ["Next time you start zygrader your password will be saved."],
-        )
-
-
-# Preference types
-# Toggle for booleans
-# Menu for submenus
-# Action for 1 time actions
-PREFERENCE_TOGGLE = 1
-PREFERENCE_MENU = 2
-PREFERENCE_ACTION = 3
-
-
-class Preference:
-    """Holds information for a user preference item"""
-    def __init__(self, name, description, select_fn, _type=PREFERENCE_TOGGLE):
-        self.name = name
-        self.description = description
-        self.select_fn = select_fn
-        self.type = _type
-
-
-PREFERENCES = [
-    Preference("left_right_arrow_nav", "Left/Right Arrow Navigation",
-               toggle_preference),
-    Preference("use_esc_back", "Use Esc key to exit menus", toggle_preference),
-    Preference("clear_filter", "Auto Clear List Filters", toggle_preference),
-    Preference("vim_mode", "Vim Mode", toggle_preference),
-    Preference("dark_mode", "Dark Mode", toggle_preference),
-    Preference("christmas_mode", "Christmas Theme", toggle_preference),
-    Preference("browser_diff", "Open Diffs in Browser", toggle_preference),
-    Preference("save_password", "Remember Password", save_password_toggle),
-    Preference(
-        "class_code",
-        "Override Class Code",
-        set_class_code_override_menu,
-        PREFERENCE_MENU,
-    ),
-    Preference("editor", "Set Editor", set_editor_menu, PREFERENCE_MENU),
-    Preference("log_out", "Log Out", logout, PREFERENCE_ACTION),
-]
-
-
-def draw_preferences():
-    """Create the list of user preferences"""
-    options = []
-    for pref in PREFERENCES:
-        if pref.type in {PREFERENCE_MENU, PREFERENCE_ACTION}:
-            options.append(f"    {pref.description}")
-        else:
-            if preferences.get(pref.name):
-                options.append(f"[X] {pref.description}")
-            else:
-                options.append(f"[ ] {pref.description}")
-
-    return options
-
-
-def preferences_callback(context: ui.WinContext):
-    """Callback to run when a preference is selected"""
-    selected_index = context.data
-    pref = PREFERENCES[selected_index]
-
-    if pref.type in {PREFERENCE_MENU, PREFERENCE_TOGGLE}:
-        pref.select_fn(pref.name)
-    else:
-        pref.select_fn()
+        popup = ui.layers.Popup("Remember Password")
+        popup.set_message(
+            ["Next time you start zygrader your password will be saved."])
+        window.run_layer(popup)
 
 
 class PreferenceToggle(ui.layers.Toggle):
+    def __init__(self, name, extra_fn=None):
+        super().__init__(name, preferences.get, preferences.set, extra_fn)
+
+
+class PreferenceRadio(ui.layers.Radio):
     def __init__(self, name):
         super().__init__(name, preferences.get, preferences.set)
 
@@ -324,29 +194,44 @@ def preferences_menu():
 
     popup = ui.layers.ListPopup("User Preferences")
 
-    popup.add_row_toggle("Left/Right Arrow Navigation", PreferenceToggle("left_right_arrow_nav"))
-    popup.add_row_toggle("Use Esc key to exit menus", PreferenceToggle("use_esc_back"))
-    popup.add_row_toggle("Auto Clear List Filters", PreferenceToggle("clear_filter"))
-    popup.add_row_toggle("Vim Mode", PreferenceToggle("vim_mode"))
-    popup.add_row_toggle("Dark Mode", PreferenceToggle("dark_mode"))
-    popup.add_row_toggle("Christmas Theme", PreferenceToggle("christmas_mode"))
-    popup.add_row_toggle("Open Diffs in Browser", PreferenceToggle("browser_diff"))
-    popup.add_row_toggle("Remember Password", PreferenceToggle("save_password"))
+    row = popup.add_row_parent("Appearance")
+    row.add_row_toggle("Dark Mode", PreferenceToggle("dark_mode"))
+    row.add_row_toggle("Christmas Theme", PreferenceToggle("christmas_mode"))
+
+    row = popup.add_row_parent("Navigation")
+    row.add_row_toggle("Vim Mode", PreferenceToggle("vim_mode"))
+    row.add_row_toggle("Left/Right Arrow Navigation",
+                       PreferenceToggle("left_right_arrow_nav"))
+    row.add_row_toggle("Use Esc key to exit menus",
+                       PreferenceToggle("use_esc_back"))
+
+    # Editor selection submenu
+    row = popup.add_row_parent("Text Editor")
+    radio = PreferenceRadio("editor")
+    for editor_name in preferences.EDITORS:
+        radio.add_value(editor_name)
+    for editor_name in preferences.EDITORS:
+        row.add_row_radio(editor_name, radio)
+
+    row = popup.add_row_parent("Other")
+    row.add_row_toggle("Auto Clear List Filters",
+                       PreferenceToggle("clear_filter"))
+    row.add_row_toggle("Open Diffs in Browser",
+                       PreferenceToggle("browser_diff"))
 
     # Class code selector
-    row = popup.add_row_parent("Class Code Override")
-    # TODO: Fill with class codes
+    row = popup.add_row_parent("Class Code")
+    radio = PreferenceRadio("class_code")
+    class_codes = SharedData.get_class_codes()
+    class_codes.insert(0, "No Override")
+    for code in class_codes:
+        radio.add_value(code)
+    for code in class_codes:
+        row.add_row_radio(code, radio)
 
-    # Editor selection
-    row = popup.add_row_parent("Editor")
-    row.add_row_radio("Pluma")
-    row.add_row_radio("Gedit")
-    row.add_row_radio("VSCode")
-    row.add_row_radio("Atom")
-    row.add_row_radio("Vim")
-    row.add_row_radio("Emacs")
-    row.add_row_radio("Nano")
-    row.add_row_radio("Less")
+    row = popup.add_row_parent("Account")
+    row.add_row_toggle("Remember Password",
+                       PreferenceToggle("save_password", save_password_toggle))
+    row.add_row_text("Log Out", logout)
 
-    popup.add_row_text("Log Out", logout)
     window.register_layer(popup)
