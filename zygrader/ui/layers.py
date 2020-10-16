@@ -192,6 +192,7 @@ class TextInputLayer(ComponentLayer):
 
     def set_text(self, text: str):
         self.component.text = text
+        self.component.cursor_index = len(text)
 
     def get_text(self):
         return self.component.text

@@ -9,7 +9,6 @@ from zygrader import zybooks
 
 from zygrader.class_manager import download_roster
 from zygrader.config import preferences
-from zygrader import data
 from zygrader import ui
 
 
