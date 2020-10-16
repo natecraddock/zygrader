@@ -116,7 +116,11 @@ def handle_args(args):
 def view_changelog():
     window = ui.get_window()
     lines = config.versioning.load_changelog()
-    window.create_list_popup("Changelog", lines)
+
+    popup = ui.layers.ListPopup("Changelog")
+    for line in lines:
+        popup.add_row_text(line)
+    window.run_layer(popup)
 
 
 def mainloop(admin_mode):

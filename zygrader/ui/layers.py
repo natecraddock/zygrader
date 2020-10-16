@@ -275,7 +275,7 @@ class Row:
         self.__subrows.append(row)
         return row
 
-    def add_row_text(self, text: str, callback_fn):
+    def add_row_text(self, text: str, callback_fn=None):
         row = self.__add_row(text)
         row.set_callback_fn(callback_fn)
 
@@ -309,7 +309,7 @@ class Row:
         self.__radio = radio
 
     def do_action(self):
-        if self.__type == Row.TEXT:
+        if self.__type == Row.TEXT and self.__callback_fn:
             self.__callback_fn()
         if self.__type == Row.PARENT:
             if self.__subrows:
