@@ -234,108 +234,91 @@ class Toggle:
         return self.__toggled
 
 
-class RowHolder:
-    class Row:
-        # Row types
-        TEXT = 0
-        PARENT = 1
-        TOGGLE = 2
-        RADIO = 3
+class Row:
+    # Row types
+    HOLDER = 0
+    TEXT = 1
+    PARENT = 2
+    TOGGLE = 3
+    RADIO = 4
 
-        def __init__(self, text: str, _type):
-            self.__type = _type
-            self.__text = text
+    def __init__(self, text: str = "", _type=HOLDER):
+        self.__type = _type
+        self.__text = text
 
-            self.__subrows: List[self.__class__] = []
-            self.__callback_fn = None
+        self.__subrows: List[self.__class__] = []
+        self.__callback_fn = None
 
-            self.__expanded = False
+        self.__expanded = False
 
-            self.__toggle: Toggle = None
-            self.__radio: Radio = None
+        self.__toggle: Toggle = None
+        self.__radio: Radio = None
 
-        def __str__(self):
-            """Render a textual representation of this row."""
-            if self.__type == RowHolder.Row.TEXT:
-                return self.__text
-            if self.__type == RowHolder.Row.PARENT:
-                return f" {'v' if self.__expanded else '>'} " + self.__text
-            elif self.__type == RowHolder.Row.TOGGLE:
-                return f"[{'x' if self.__toggle.is_toggled() else ' '}] " + self.__text
-            elif self.__type == RowHolder.Row.RADIO:
-                return f"({'x' if self.__radio.is_toggled(self.__text) else ' '}) " + self.__text
+    def __str__(self):
+        """Render a textual representation of this row."""
+        if self.__type == Row.TEXT:
+            return self.__text
+        if self.__type == Row.PARENT:
+            return f" {'v' if self.__expanded else '>'} " + self.__text
+        elif self.__type == Row.TOGGLE:
+            return f"[{'x' if self.__toggle.is_toggled() else ' '}] " + self.__text
+        elif self.__type == Row.RADIO:
+            return f"({'x' if self.__radio.is_toggled(self.__text) else ' '}) " + self.__text
 
-        def __add_row(self, text: str, _type=TEXT):
-            row = RowHolder.Row(text, _type)
-            self.__subrows.append(row)
-            return row
-
-        def add_row_text(self, text: str, callback_fn):
-            self.__add_row(text)
-            self.set_callback_fn(callback_fn)
-
-        def add_row_parent(self, text: str):
-            return self.__add_row(text, RowHolder.Row.PARENT)
-
-        def add_row_toggle(self, text: str, toggle: Toggle):
-            row = self.__add_row(text, RowHolder.Row.TOGGLE)
-            row.set_toggle_ob(toggle)
-
-        def add_row_radio(self, text: str, radio: Radio):
-            row = self.__add_row(text, RowHolder.Row.RADIO)
-            row.set_radio_ob(radio)
-
-        def get_type(self):
-            return self.__type
-
-        def get_subrows(self):
-            return self.__subrows
-
-        def is_expanded(self):
-            return self.__expanded
-
-        def set_callback_fn(self, callback_fn):
-            self.__callback_fn = callback_fn
-
-        def set_toggle_ob(self, toggle: Toggle):
-            self.__toggle = toggle
-
-        def set_radio_ob(self, radio: Radio):
-            self.__radio = radio
-
-        def do_action(self):
-            if self.__type == RowHolder.Row.TEXT:
-                self.__callback_fn()
-            if self.__type == RowHolder.Row.PARENT:
-                if self.__subrows:
-                    self.__expanded = not self.__expanded
-            elif self.__type == RowHolder.Row.TOGGLE:
-                self.__toggle.toggle()
-            elif self.__type == RowHolder.Row.RADIO:
-                self.__radio.set(self.__text)
-
-    def __init__(self):
-        self._rows: List[RowHolder.Row] = []
-
-    def __add_row(self, text: str, _type=Row.TEXT):
-        row = RowHolder.Row(text, _type)
-        self._rows.append(row)
+    def __add_row(self, text: str, _type=TEXT):
+        row = Row(text, _type)
+        self.__subrows.append(row)
         return row
 
     def add_row_text(self, text: str, callback_fn):
         row = self.__add_row(text)
         row.set_callback_fn(callback_fn)
 
-    def add_row_parent(self, text: str) -> Row:
-        return self.__add_row(text, RowHolder.Row.PARENT)
+    def add_row_parent(self, text: str):
+        return self.__add_row(text, Row.PARENT)
 
     def add_row_toggle(self, text: str, toggle: Toggle):
-        row = self.__add_row(text, RowHolder.Row.TOGGLE)
+        row = self.__add_row(text, Row.TOGGLE)
         row.set_toggle_ob(toggle)
 
     def add_row_radio(self, text: str, radio: Radio):
-        row = self.__add_row(text, RowHolder.Row.RADIO)
+        row = self.__add_row(text, Row.RADIO)
         row.set_radio_ob(radio)
+
+    def get_type(self):
+        return self.__type
+
+    def get_subrows(self):
+        return self.__subrows
+
+    def is_expanded(self):
+        return self.__expanded
+
+    def set_callback_fn(self, callback_fn):
+        self.__callback_fn = callback_fn
+
+    def set_toggle_ob(self, toggle: Toggle):
+        self.__toggle = toggle
+
+    def set_radio_ob(self, radio: Radio):
+        self.__radio = radio
+
+    def do_action(self):
+        if self.__type == Row.TEXT:
+            self.__callback_fn()
+        if self.__type == Row.PARENT:
+            if self.__subrows:
+                self.__expanded = not self.__expanded
+        elif self.__type == Row.TOGGLE:
+            self.__toggle.toggle()
+        elif self.__type == Row.RADIO:
+            self.__radio.set(self.__text)
+
+    def __row_iter(self, rows):
+        for row in rows:
+            yield row
+            if row.is_expanded():
+                yield from self.__row_iter(row.get_subrows())
 
     def __subrow_iter(self, row, index, start):
         for i, row in enumerate(row.get_subrows(), start):
@@ -348,24 +331,20 @@ class RowHolder:
 
     def __row_from_index(self, index):
         # This will become more complex as nesting is introduced
-        for i, row in enumerate(self._rows):
+        for i, row in enumerate(self.__row_iter(self.__subrows)):
             if i == index:
                 return row
-            if row.is_expanded():
-                row = self.__subrow_iter(row, index, i + 1)
-                if row:
-                    return row
 
     def select_row(self, index):
         row = self.__row_from_index(index)
         row.do_action()
 
 
-class ListLayer(ComponentLayer, RowHolder):
+class ListLayer(ComponentLayer, Row):
     """A reusable list that supports searching the options."""
     def __init__(self):
         ComponentLayer.__init__(self)
-        RowHolder.__init__(self)
+        Row.__init__(self)
 
         win = window.Window.get_window()
         self.component = components.FilteredList(1, 0, win.rows - 1, win.cols)
@@ -373,8 +352,8 @@ class ListLayer(ComponentLayer, RowHolder):
     def build(self):
         # TODO: This could be moved to the RowHolder
         text_rows = []
-        for row in self._rows:
-            if row.get_type() == RowHolder.Row.PARENT and row.is_expanded():
+        for row in self.get_subrows():
+            if row.get_type() == Row.PARENT and row.is_expanded():
                 for sub in row.get_subrows():
                     text_rows.append(str(sub))
             text_rows.append(str(row))
@@ -425,10 +404,10 @@ class ListLayer(ComponentLayer, RowHolder):
             #     break
 
 
-class ListPopup(ComponentLayer, RowHolder):
+class ListPopup(ComponentLayer, Row):
     def __init__(self, title):
         ComponentLayer.__init__(self)
-        RowHolder.__init__(self)
+        Row.__init__(self)
 
         win = window.Window.get_window()
         self.component = components.ListPopup(win.rows, win.cols, title,
@@ -437,9 +416,9 @@ class ListPopup(ComponentLayer, RowHolder):
     def build(self):
         # TODO: This could be moved to the RowHolder
         text_rows = []
-        for row in self._rows:
+        for row in self.get_subrows():
             text_rows.append(str(row))
-            if row.get_type() == RowHolder.Row.PARENT and row.is_expanded():
+            if row.get_type() == Row.PARENT and row.is_expanded():
                 for sub in row.get_subrows():
                     text_rows.append("    " + str(sub))
         self.component.set_lines(text_rows)
