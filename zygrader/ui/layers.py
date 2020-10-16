@@ -198,7 +198,20 @@ class TextInputLayer(ComponentLayer):
 
 
 class Radio:
-    pass
+    def __init__(self, name, get_fn, set_fn):
+        self.__values = []
+        self.__name = name
+        self.__get_fn = get_fn
+        self.__set_fn = set_fn
+
+    def add_value(self, value):
+        self.__values.append(value)
+
+    def is_toggled(self, value):
+        return self.__get_fn(self.__name) == value
+
+    def set(self, value):
+        self.__set_fn(self.__name, value)
 
 
 class Toggle:
@@ -239,6 +252,7 @@ class RowHolder:
             self.__expanded = False
 
             self.__toggle: Toggle = None
+            self.__radio: Radio = None
 
         def __str__(self):
             """Render a textual representation of this row."""
@@ -249,15 +263,16 @@ class RowHolder:
             elif self.__type == RowHolder.Row.TOGGLE:
                 return f"[{'x' if self.__toggle.is_toggled() else ' '}] " + self.__text
             elif self.__type == RowHolder.Row.RADIO:
-                return "( ) " + self.__text
+                return f"({'x' if self.__radio.is_toggled(self.__text) else ' '}) " + self.__text
 
         def __add_row(self, text: str, _type=TEXT):
             row = RowHolder.Row(text, _type)
             self.__subrows.append(row)
             return row
 
-        def add_row_text(self, text: str):
+        def add_row_text(self, text: str, callback_fn):
             self.__add_row(text)
+            self.set_callback_fn(callback_fn)
 
         def add_row_parent(self, text: str):
             return self.__add_row(text, RowHolder.Row.PARENT)
@@ -266,8 +281,9 @@ class RowHolder:
             row = self.__add_row(text, RowHolder.Row.TOGGLE)
             row.set_toggle_ob(toggle)
 
-        def add_row_radio(self, text: str):
-            self.__add_row(text, RowHolder.Row.RADIO)
+        def add_row_radio(self, text: str, radio: Radio):
+            row = self.__add_row(text, RowHolder.Row.RADIO)
+            row.set_radio_ob(radio)
 
         def get_type(self):
             return self.__type
@@ -284,6 +300,9 @@ class RowHolder:
         def set_toggle_ob(self, toggle: Toggle):
             self.__toggle = toggle
 
+        def set_radio_ob(self, radio: Radio):
+            self.__radio = radio
+
         def do_action(self):
             if self.__type == RowHolder.Row.TEXT:
                 self.__callback_fn()
@@ -293,7 +312,7 @@ class RowHolder:
             elif self.__type == RowHolder.Row.TOGGLE:
                 self.__toggle.toggle()
             elif self.__type == RowHolder.Row.RADIO:
-                pass
+                self.__radio.set(self.__text)
 
     def __init__(self):
         self._rows: List[RowHolder.Row] = []
@@ -314,12 +333,28 @@ class RowHolder:
         row = self.__add_row(text, RowHolder.Row.TOGGLE)
         row.set_toggle_ob(toggle)
 
-    def add_row_radio(self, text: str):
-        self.__add_row(text, RowHolder.Row.RADIO)
+    def add_row_radio(self, text: str, radio: Radio):
+        row = self.__add_row(text, RowHolder.Row.RADIO)
+        row.set_radio_ob(radio)
+
+    def __subrow_iter(self, row, index, start):
+        for i, row in enumerate(row.get_subrows(), start):
+            if i == index:
+                return row
+            if row.is_expanded():
+                row = self.__subrow_iter(row, index, i)
+                if row:
+                    return row
 
     def __row_from_index(self, index):
         # This will become more complex as nesting is introduced
-        return self._rows[index]
+        for i, row in enumerate(self._rows):
+            if i == index:
+                return row
+            if row.is_expanded():
+                row = self.__subrow_iter(row, index, i + 1)
+                if row:
+                    return row
 
     def select_row(self, index):
         row = self.__row_from_index(index)
