@@ -146,26 +146,33 @@ def prep_lab_score_calc():
     window.set_header("Prep Lab Calculator")
 
     try:
-        old_score = float(
-            window.create_text_input("Original Score",
-                                     "What was the student's original score?"))
-        if old_score == ui.Window.CANCEL:
-            return
-        current_completion = float(
-            window.create_text_input(
-                "zyBooks completion",
-                "What is the student's current "
-                "completion % in zyBooks",
-                "100",
-            ))
-        if current_completion == ui.Window.CANCEL:
+        text_input = ui.layers.TextInputLayer("Original Score")
+        text_input.set_prompt("What was the student's original score?")
+        window.run_layer(text_input)
+        if text_input.was_canceled():
             return
 
+        old_score = float(text_input.get_text())
+
+        text_input = ui.layers.TextInputLayer("zyBooks Completion")
+        text_input.set_prompt(
+            "What is the student's current completion % in zyBooks")
+        text_input.set_text("100")
+        window.run_layer(text_input)
+        if text_input.was_canceled():
+            return
+
+        # Calculate the new score
+        current_completion = float(text_input.get_text())
         new_score = old_score + ((current_completion - old_score) * 0.6)
-        window.create_popup("New Score",
-                            [f"The student's new score is: {new_score}"])
+
+        popup = ui.layers.Popup("New Score")
+        popup.set_message([f"The student's new score is: {new_score}"])
+        window.run_layer(popup)
     except ValueError:
-        window.create_popup("Error", ["Invalid input"])
+        popup = ui.layers.Popup("Error")
+        popup.set_message(["Invalid input"])
+        window.run_layer(popup)
 
 
 def view_students_callback(context):
