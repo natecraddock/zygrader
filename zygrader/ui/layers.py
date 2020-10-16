@@ -236,6 +236,8 @@ class RowHolder:
             self.__subrows: List[self.__class__] = []
             self.__callback_fn = None
 
+            self.__expanded = False
+
             self.__toggle: Toggle = None
 
         def __str__(self):
@@ -243,7 +245,7 @@ class RowHolder:
             if self.__type == RowHolder.Row.TEXT:
                 return self.__text
             if self.__type == RowHolder.Row.PARENT:
-                return self.__text
+                return f" {'v' if self.__expanded else '>'} " + self.__text
             elif self.__type == RowHolder.Row.TOGGLE:
                 return f"[{'x' if self.__toggle.is_toggled() else ' '}] " + self.__text
             elif self.__type == RowHolder.Row.RADIO:
@@ -262,10 +264,19 @@ class RowHolder:
 
         def add_row_toggle(self, text: str, toggle: Toggle):
             row = self.__add_row(text, RowHolder.Row.TOGGLE)
-            self.set_toggle_ob(toggle)
+            row.set_toggle_ob(toggle)
 
         def add_row_radio(self, text: str):
             self.__add_row(text, RowHolder.Row.RADIO)
+
+        def get_type(self):
+            return self.__type
+
+        def get_subrows(self):
+            return self.__subrows
+
+        def is_expanded(self):
+            return self.__expanded
 
         def set_callback_fn(self, callback_fn):
             self.__callback_fn = callback_fn
@@ -277,7 +288,8 @@ class RowHolder:
             if self.__type == RowHolder.Row.TEXT:
                 self.__callback_fn()
             if self.__type == RowHolder.Row.PARENT:
-                pass
+                if self.__subrows:
+                    self.__expanded = not self.__expanded
             elif self.__type == RowHolder.Row.TOGGLE:
                 self.__toggle.toggle()
             elif self.__type == RowHolder.Row.RADIO:
@@ -327,6 +339,9 @@ class ListLayer(ComponentLayer, RowHolder):
         # TODO: This could be moved to the RowHolder
         text_rows = []
         for row in self._rows:
+            if row.get_type() == RowHolder.Row.PARENT and row.is_expanded():
+                for sub in row.get_subrows():
+                    text_rows.append(str(sub))
             text_rows.append(str(row))
         self.component.set_lines(text_rows)
 
@@ -389,6 +404,9 @@ class ListPopup(ComponentLayer, RowHolder):
         text_rows = []
         for row in self._rows:
             text_rows.append(str(row))
+            if row.get_type() == RowHolder.Row.PARENT and row.is_expanded():
+                for sub in row.get_subrows():
+                    text_rows.append("    " + str(sub))
         self.component.set_lines(text_rows)
 
     def event_handler(self, event: Event, event_manager: EventManager):
