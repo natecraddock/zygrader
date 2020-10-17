@@ -147,11 +147,11 @@ def mainloop_callback(context: ui.WinContext):
         utils.view_students()
 
 
-def mainloop(admin_mode):
+def mainloop(args):
     """Create the main menu that runs until zygrader is exited"""
     window = ui.get_window()
 
-    if admin_mode:
+    if args.admin:
         MAIN_MENU_OPTIONS.append("Admin")
 
     window.set_header(SharedData.get_current_class_code)
@@ -160,14 +160,8 @@ def mainloop(admin_mode):
                                 callback=mainloop_callback)
 
 
-def main(window: ui.Window):
+def main(window: ui.Window, args):
     """Curses has been initialized, now setup various modules before showing the menu"""
-    # Read args to set admin mode
-    if "-a" in sys.argv:
-        admin_mode = True
-    else:
-        admin_mode = False
-
     # Notify the user of changes
     versioning.show_versioning_message(window)
 
@@ -179,7 +173,7 @@ def main(window: ui.Window):
 
     logger.log("zygrader started")
 
-    mainloop(admin_mode)
+    mainloop(args)
 
 
 def start():
@@ -231,7 +225,7 @@ def start():
     data.get_labs()
 
     # Create a zygrader window, callback to main function
-    ui.Window(main, f"zygrader {SharedData.VERSION}")
+    ui.Window(main, f"zygrader {SharedData.VERSION}", args)
 
     logger.log("zygrader exited normally")
 

@@ -226,7 +226,7 @@ class Window:
         event = Event(Event.REFRESH, None)
         self.event_queue.put_nowait(event)
 
-    def __init__(self, callback, window_name):
+    def __init__(self, callback, window_name, args):
         Window.instance = self
         """Initialize screen and run callback function"""
         self.name = window_name
@@ -249,7 +249,7 @@ class Window:
         # Set user preference variables
         self.update_preferences()
 
-        curses.wrapper(self.__init_curses, callback)
+        curses.wrapper(self.__init_curses, callback, args)
 
         # Cleanup when finished accepting input
         self.stop_input = True
@@ -257,7 +257,7 @@ class Window:
         self.stdscr.refresh()
         curses.endwin()
 
-    def __init_curses(self, stdscr, callback):
+    def __init_curses(self, stdscr, callback, args):
         """Configure basic curses settings"""
         self.stdscr = stdscr
 
@@ -286,7 +286,7 @@ class Window:
         self.input_thread.start()
 
         # Execute callback with a reference to the window object
-        callback(self)
+        callback(self, args)
 
     def __get_window_dimensions(self):
         self.rows, self.cols = self.stdscr.getmaxyx()
