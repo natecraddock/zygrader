@@ -9,8 +9,7 @@ from .utils import add_str, resize_window
 
 class Component:
     def __init__(self):
-        # This determines if a component blocks layers beneath it completely
-        self.blocking = True
+        pass
 
     def resize(self, rows, cols):
         raise NotImplementedError
@@ -32,9 +31,6 @@ class Popup(Component):
     ALIGN_CENTER = 1
 
     def __init__(self, height, width, title, message, align):
-        # Popups only obscure the screen partially
-        self.blocking = False
-
         self.available_rows = height
         self.available_cols = width
 
@@ -1019,8 +1015,6 @@ class Logger(Component):
     PADDING = 2
 
     def __init__(self, y, x, height, width):
-        self.blocking = True
-
         self.height = height
         self.width = width
 
