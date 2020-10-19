@@ -2,8 +2,7 @@
 
 import queue
 import threading
-import typing
-from typing import Callable, List
+from typing import List
 
 from .events import Event, EventManager
 from . import window, components
@@ -49,10 +48,18 @@ class ComponentLayer:
         self.returns_result = False
         self._canceled = False
 
+        # Flags to control rebuilding and redrawing in the event loop.
+        # Always build on first creation.
+        self.rebuild = True
+        self.redraw = False
+
     def build(self):
         """An optional function to finalize construction of a Layer upon registration."""
+        self.rebuild = False
+        self.redraw = True
 
     def draw(self):
+        self.redraw = False
         self.component.draw()
 
     def event_handler(self, event: Event, event_manager: EventManager):
@@ -271,6 +278,13 @@ class Row:
         elif self.__type == Row.RADIO:
             return f"({'x' if self.__radio.is_toggled(self.__text) else ' '}) " + self.__text
 
+    def build_string_lines(self, lines, start, depth=0):
+        OFFSET = " " * (4 * depth)
+        for row in start.get_subrows():
+            lines.append(OFFSET + str(row))
+            if row.get_type() == Row.PARENT and row.is_expanded():
+                self.build_string_lines(lines, row, depth + 1)
+
     def __add_row(self, text: str, _type=TEXT):
         row = Row(text, _type)
         self.__subrows.append(row)
@@ -326,15 +340,6 @@ class Row:
             if row.is_expanded():
                 yield from self.__row_iter(row.get_subrows())
 
-    def __subrow_iter(self, row, index, start):
-        for i, row in enumerate(row.get_subrows(), start):
-            if i == index:
-                return row
-            if row.is_expanded():
-                row = self.__subrow_iter(row, index, i)
-                if row:
-                    return row
-
     def __row_from_index(self, index):
         # This will become more complex as nesting is introduced
         for i, row in enumerate(self.__row_iter(self.__subrows)):
@@ -356,13 +361,10 @@ class ListLayer(ComponentLayer, Row):
         self.component = components.FilteredList(1, 0, win.rows - 1, win.cols)
 
     def build(self):
-        # TODO: This could be moved to the RowHolder
+        super().build()
+
         text_rows = []
-        for row in self.get_subrows():
-            if row.get_type() == Row.PARENT and row.is_expanded():
-                for sub in row.get_subrows():
-                    text_rows.append(str(sub))
-            text_rows.append(str(row))
+        self.build_string_lines(text_rows, self)
         self.component.set_lines(text_rows)
 
     # TODO: move somewhere else?
@@ -385,13 +387,13 @@ class ListLayer(ComponentLayer, Row):
             event_manager.push_layer_close_event()
         elif event.type == Event.BACKSPACE:
             self.component.delchar()
-            self.build()
+            self.rebuild = True
         elif event.type == Event.ESC and event_manager.use_esc_back:
             # TODO: Handle this event by the window manager?
             event_manager.push_layer_close_event()
         elif event.type == Event.CHAR_INPUT:
             self.component.addchar(event.value)
-            self.build()
+            self.rebuild = True
         elif (
             (event.type == Event.ENTER) or
             (event.type == Event.RIGHT and event_manager.left_right_menu_nav)):
@@ -409,6 +411,8 @@ class ListLayer(ComponentLayer, Row):
             # else:
             #     break
 
+        self.redraw = True
+
 
 class ListPopup(ComponentLayer, Row):
     def __init__(self, title):
@@ -420,13 +424,9 @@ class ListPopup(ComponentLayer, Row):
                                               components.Popup.ALIGN_CENTER)
 
     def build(self):
-        # TODO: This could be moved to the RowHolder
+        super().build()
         text_rows = []
-        for row in self.get_subrows():
-            text_rows.append(str(row))
-            if row.get_type() == Row.PARENT and row.is_expanded():
-                for sub in row.get_subrows():
-                    text_rows.append("    " + str(sub))
+        self.build_string_lines(text_rows, self)
         self.component.set_lines(text_rows)
 
     def event_handler(self, event: Event, event_manager: EventManager):
@@ -449,7 +449,7 @@ class ListPopup(ComponentLayer, Row):
                                   and event_manager.left_right_menu_nav):
 
             self.select_row(self.component.get_selected_index())
-            self.build()
+            self.rebuild = True
             # if self.component.selected() is GO_BACK:
             #     break
             # elif callback:
@@ -458,3 +458,5 @@ class ListPopup(ComponentLayer, Row):
             #                    self.component.selected()))
             # else:
             #     break
+
+        self.redraw = True

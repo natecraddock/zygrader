@@ -199,10 +199,15 @@ class Window:
         """Handle events in a loop until the program is exited."""
         # When there are no more layers, exit the main loop
         while self.layers:
+            self.build()
             self.handle_events()
-
             # Recalculate windows and redraw
             self.draw()
+
+    def build(self):
+        for layer in self.layers:
+            if layer.rebuild:
+                layer.build()
 
     def handle_events(self):
         # Get the event on the front of the queue
@@ -218,8 +223,17 @@ class Window:
         else:
             self.active_layer.event_handler(event, self.event_manager)
 
+    def __any_layer_needs_redraw(self):
+        for layer in self.layers:
+            if layer.redraw:
+                return True
+        return False
+
     def draw(self):
         """Draw each component in the stack"""
+        if not self.__any_layer_needs_redraw():
+            return
+
         self.update_window()
         self.stdscr.erase()
         self.stdscr.noutrefresh()
@@ -227,6 +241,7 @@ class Window:
         self.draw_header()
 
         for layer in self.layers:
+            # if layer.redraw:
             layer.draw()
 
         # All windows have been tagged for redraw with noutrefresh,
