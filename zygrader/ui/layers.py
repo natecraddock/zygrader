@@ -216,27 +216,28 @@ class Radio:
 
 
 class Toggle:
-    def __init__(self, name, get_fn, set_fn, extra_fn=None):
-        self.__toggled = False
-        self.__name = name
+    def __init__(self, name, get_fn=None, set_fn=None, extra_fn=None):
+        self._toggled = False
+        self._name = name
         self.__get_fn = get_fn
         self.__set_fn = set_fn
         self.__extra_fn = extra_fn
 
-        self.get()
+        if self.__get_fn:
+            self.get()
 
     def get(self):
-        self.__toggled = self.__get_fn(self.__name)
+        self._toggled = self.__get_fn(self._name)
 
     def toggle(self):
-        self.__set_fn(self.__name, not self.__toggled)
+        self.__set_fn(self._name, not self._toggled)
         self.get()
 
         if self.__extra_fn:
             self.__extra_fn()
 
     def is_toggled(self):
-        return self.__toggled
+        return self._toggled
 
 
 class Row:

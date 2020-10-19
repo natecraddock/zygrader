@@ -97,8 +97,10 @@ def submission_search(lab, search_string, output_path):
         window.remove_logger()
 
 
-def submission_search_init(window, labs):
+def submission_search_init():
     """Get lab part and string from the user for searching"""
+    window = ui.get_window()
+    labs = data.get_labs()
     window.set_header("Submissions Search")
 
     # Choose lab
@@ -134,40 +136,46 @@ def submission_search_init(window, labs):
     submission_search(part, search_string, output_path)
 
 
-ADMIN_MENU_OPTIONS = [
-    "Submissions Search",
-    "Grade Puller",
-    "Find Unmatched Students",
-    "Remove Locks",
-    "Class Management",
-]
+class LockToggle(ui.layers.Toggle):
+    def __init__(self, name, list):
+        super().__init__(name)
+        self._list = list
+        self.get()
+
+    def toggle(self):
+        self._list[self._name] = not self._list[self._name]
+        self.get()
+
+    def get(self):
+        self._toggled = self._list[self._name]
 
 
-def admin_menu_callback(context: ui.WinContext):
-    """Run the chosen option on the admin menu"""
-    menu_index = context.data
+def remove_locks():
+    window = ui.get_window()
+    all_locks = {lock: False for lock in data.lock.get_lock_files()}
 
-    option = ADMIN_MENU_OPTIONS[menu_index]
+    popup = ui.layers.ListPopup("Select Locks to Remove")
+    for lock in all_locks:
+        popup.add_row_toggle(lock, LockToggle(lock, all_locks))
+    window.run_layer(popup)
 
-    if option == "Submissions Search":
-        labs = data.get_labs()
+    selected_locks = [lock for lock in all_locks if all_locks[lock]]
 
-        submission_search_init(context.window, labs)
-    elif option == "Grade Puller":
-        grade_puller.GradePuller().pull()
-    elif option == "Find Unmatched Students":
-        grade_puller.GradePuller().find_unmatched_students()
-    elif option == "Remove Locks":
-        while True:
-            all_locks = data.lock.get_lock_files()
-            lock_index = context.window.create_filtered_list(
-                "Choose a lock file", input_data=all_locks)
-            if lock_index != ui.GO_BACK:
-                data.lock.remove_lock_file(all_locks[lock_index])
-            else:
-                break
-    elif option == "Class Management":
-        class_manager.start()
+    if not selected_locks or popup.was_canceled():
+        return
+
+    # Confirm
+    popup = ui.layers.BoolPopup("Confirm Removal")
+    popup.set_message(
+        [f"Are you sure you want to remove {len(selected_locks)} lock(s)?"])
+    window.run_layer(popup)
+    if not popup.get_result() or popup.was_canceled():
+        return
+
+    # Remove selected locked content
+    for lock in selected_locks:
+        if lock:
+            data.lock.remove_lock_file(lock)
 
 
 def admin_menu():
@@ -175,6 +183,12 @@ def admin_menu():
     window = ui.get_window()
     window.set_header("Admin")
 
-    window.create_filtered_list("Option",
-                                input_data=ADMIN_MENU_OPTIONS,
-                                callback=admin_menu_callback)
+    menu = ui.layers.ListLayer()
+    menu.add_row_text("Submissions Search", submission_search_init)
+    menu.add_row_text("Grade Puller", grade_puller.GradePuller().pull)
+    menu.add_row_text("Find Unmatched Students",
+                      grade_puller.GradePuller().find_unmatched_students)
+    menu.add_row_text("Remove Locks", remove_locks)
+    menu.add_row_text("Class Management", class_manager.start)
+
+    window.register_layer(menu)
