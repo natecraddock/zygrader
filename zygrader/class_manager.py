@@ -387,80 +387,25 @@ def change_class():
                             [f"Class changed to {class_codes[code_index]}"])
 
 
-LAB_MANAGE_OPTIONS = ["Add Lab", "Edit Current Labs"]
-
-
-def lab_manager_callback(context: ui.WinContext):
-    option_index = context.data
-    option = LAB_MANAGE_OPTIONS[option_index]
-
-    if option == "Add Lab":
-        add_lab()
-    elif option == "Edit Current Labs":
-        edit_labs()
-
-
 def lab_manager():
     window = ui.get_window()
     window.set_header("Lab Manager")
 
-    window.create_filtered_list("Option",
-                                input_data=LAB_MANAGE_OPTIONS,
-                                callback=lab_manager_callback)
-
-
-CLASS_SECTION_MANAGE_OPTIONS = [
-    "Add Section",
-    "Edit Current Sections",
-    "Sort Current Sections",
-]
-
-
-def class_section_manager_callback(context: ui.WinContext):
-    option_index = context.data
-    option = CLASS_SECTION_MANAGE_OPTIONS[option_index]
-
-    if option == "Add Section":
-        add_class_section()
-    elif option == "Edit Current Sections":
-        edit_class_sections()
-    elif option == "Sort Current Sections":
-        sort_class_sections()
+    menu = ui.layers.ListLayer()
+    menu.add_row_text("Add Lab", add_lab)
+    menu.add_row_text("Edit Current Labs", edit_labs)
+    window.register_layer(menu)
 
 
 def class_section_manager():
     window = ui.get_window()
     window.set_header("Class Section Manager")
 
-    window.create_filtered_list("Option",
-                                input_data=CLASS_SECTION_MANAGE_OPTIONS,
-                                callback=class_section_manager_callback)
-
-
-CLASS_MANAGE_OPTIONS = [
-    "Setup New Class",
-    "Lab Manager",
-    "Class Section Manager",
-    "Download Student Roster",
-    "Change Class",
-]
-
-
-def class_manager_callback(context: ui.WinContext):
-    """Run the function for each option in CLASS_MANAGE_OPTIONS"""
-    option_index = context.data
-    option = CLASS_MANAGE_OPTIONS[option_index]
-
-    if option == "Setup New Class":
-        setup_new_class()
-    elif option == "Lab Manager":
-        lab_manager()
-    elif option == "Class Section Manager":
-        class_section_manager()
-    elif option == "Change Class":
-        change_class()
-    elif option == "Download Student Roster":
-        download_roster()
+    menu = ui.layers.ListLayer()
+    menu.add_row_text("Add Section", add_class_section)
+    menu.add_row_text("Edit Current Sections", edit_class_sections)
+    menu.add_row_text("Sort Current Sections", sort_class_sections)
+    window.register_layer(menu)
 
 
 def start():
@@ -468,6 +413,10 @@ def start():
     window = ui.get_window()
     window.set_header("Class Manager")
 
-    window.create_filtered_list("Option",
-                                input_data=CLASS_MANAGE_OPTIONS,
-                                callback=class_manager_callback)
+    menu = ui.layers.ListLayer()
+    menu.add_row_text("Setup New Class", setup_new_class)
+    menu.add_row_text("Lab Manager", lab_manager)
+    menu.add_row_text("Class Section Manager", class_section_manager)
+    menu.add_row_text("Download Student Roster", change_class)
+    menu.add_row_text("Change Class", download_roster)
+    window.register_layer(menu)
