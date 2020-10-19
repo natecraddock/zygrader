@@ -129,7 +129,6 @@ def mainloop(admin_mode):
 
     # Create the main menu
     menu = ui.layers.ListLayer()
-    menu.set_searchable(prompt="Option")
     menu.add_row_text("Grade", grader.grade)
     menu.add_row_text("Emails", email_manager.email_menu)
     menu.add_row_text("Prep Lab Score Calculator", utils.prep_lab_score_calc)
