@@ -356,6 +356,7 @@ class ListLayer(ComponentLayer, Row):
     def __init__(self):
         ComponentLayer.__init__(self)
         Row.__init__(self)
+        self.blocking = True
 
         win = window.Window.get_window()
         self.component = components.FilteredList(1, 0, win.rows - 1, win.cols)

@@ -229,6 +229,13 @@ class Window:
                 return True
         return False
 
+    def __tag_visible_layers(self):
+        """If any layer needs drawing then tag all visible layers below it for redraw."""
+        for layer in reversed(self.layers):
+            layer.redraw = True
+            if layer.blocking:
+                break
+
     def draw(self):
         """Draw each component in the stack"""
         if not self.__any_layer_needs_redraw():
@@ -240,9 +247,10 @@ class Window:
 
         self.draw_header()
 
+        self.__tag_visible_layers()
         for layer in self.layers:
-            # if layer.redraw:
-            layer.draw()
+            if layer.redraw:
+                layer.draw()
 
         # All windows have been tagged for redraw with noutrefresh,
         # now do a single draw pass with doupdate.
