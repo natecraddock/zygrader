@@ -397,8 +397,10 @@ class ListLayer(ComponentLayer, Row):
         elif (
             (event.type == Event.ENTER) or
             (event.type == Event.RIGHT and event_manager.left_right_menu_nav)):
-
-            self.select_row(self.component.get_selected_index())
+            if self.component.is_close_selected():
+                event_manager.push_layer_close_event()
+            else:
+                self.select_row(self.component.get_selected_index())
 
             # if callback and self.component.selected() != GO_BACK:
             #     self.component.dirty = True
@@ -447,8 +449,10 @@ class ListPopup(ComponentLayer, Row):
         elif (event.type
               == Event.ENTER) or (event.type == Event.RIGHT
                                   and event_manager.left_right_menu_nav):
-
-            self.select_row(self.component.get_selected_index())
+            if self.component.is_close_selected():
+                event_manager.push_layer_close_event()
+            else:
+                self.select_row(self.component.get_selected_index())
             self.rebuild = True
             # if self.component.selected() is GO_BACK:
             #     break

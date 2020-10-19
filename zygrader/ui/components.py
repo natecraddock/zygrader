@@ -657,7 +657,8 @@ class ScrollableList(Component):
 
     def set_lines(self, lines):
         self._lines = [
-            ScrollableList.create_line(i, line) for i, line in enumerate(lines)
+            ScrollableList.create_line(i, line)
+            for i, line in enumerate(lines, 1)
         ]
         self.__create_display_lines()
 
@@ -748,9 +749,12 @@ class ScrollableList(Component):
         self.set_scroll()
         self._selected_index = 1
 
+    def is_close_selected(self):
+        return self._selected_index == 0
+
     def get_selected_index(self):
         """Get the original index of the selected line."""
-        return self._display_lines[self._selected_index].index
+        return self._display_lines[self._selected_index].index - 1
 
 
 class FilteredList(ScrollableList):
