@@ -223,12 +223,6 @@ class Window:
         else:
             self.active_layer.event_handler(event, self.event_manager)
 
-    def __any_layer_needs_redraw(self):
-        for layer in self.layers:
-            if layer.redraw:
-                return True
-        return False
-
     def __tag_visible_layers(self):
         """If any layer needs drawing then tag all visible layers below it for redraw."""
         for layer in reversed(self.layers):
@@ -238,7 +232,7 @@ class Window:
 
     def draw(self):
         """Draw each component in the stack"""
-        if not self.__any_layer_needs_redraw():
+        if not any(layer.redraw for layer in self.layers):
             return
 
         self.update_window()
