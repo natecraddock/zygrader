@@ -359,10 +359,11 @@ class Window:
         elif self.mark_mode:
             display_text += f" {separator} VISUAL"
 
-        # Centered header
-        row = self.cols // 2 - len(display_text) // 2
         if self.spooky_mode:
             display_text = f"👻 {display_text} 👻"
+
+        # Centered header
+        row = self.cols // 2 - len(display_text) // 2
         add_str(self.header, 0, row, display_text)
 
         # Christmas theme
