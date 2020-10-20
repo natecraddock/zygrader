@@ -1,5 +1,6 @@
 """Layers: The components and handlers that make up the user interface."""
 
+import os
 import queue
 import threading
 from typing import List
@@ -108,12 +109,51 @@ class BoolPopup(ComponentLayer):
             self.component.next()
         elif event.type == Event.ENTER:
             event_manager.push_layer_close_event()
+        self.redraw = True
 
     def get_result(self) -> bool:
         return self.component.selected() == BoolPopup.__OPTIONS[0]
 
     def set_message(self, message):
         self.component.set_message(message)
+
+
+class OptionsPopup(ComponentLayer):
+    def __init__(self, title):
+        super().__init__()
+
+        win = window.Window.get_window()
+        # TODO: Cleanup constructor
+        self.component = components.OptionsPopup(win.rows, win.cols, title, [],
+                                                 [], False,
+                                                 components.Popup.ALIGN_LEFT)
+
+    def set_message(self, message):
+        self.component.set_message(message)
+
+    def event_handler(self, event: Event, event_manager: EventManager):
+        if event.type in {Event.LEFT, Event.UP, Event.BTAB}:
+            self.component.previous()
+        elif event.type in {Event.RIGHT, Event.DOWN, Event.TAB}:
+            self.component.next()
+        elif event.type == Event.HOME:
+            self.component.first()
+        elif event.type == Event.END:
+            self.component.last()
+        elif event.type == Event.ESC and self.use_esc_back:
+            event_manager.push_layer_close_event()
+        elif event.type == Event.ENTER:
+            pass
+            # if use_dict:
+            #     callback_fn = self.component.selected()
+            #     if not callback_fn:
+            #         break
+            #     ret = callback_fn(WinContext(self, event, self.component, None))
+            #     if ret:
+            #         break
+            # else:
+            #     break
+        self.redraw = True
 
 
 class WaitPopup(ComponentLayer):
@@ -165,15 +205,19 @@ class TextInputLayer(ComponentLayer):
         if win.event_manager.vim_mode:
             win.event_manager.insert_mode = True
 
-    def event_handler(self, event: Event, event_manager: EventManager):
-        if event.type == Event.ENTER:
-            event_manager.push_layer_close_event()
-        elif event.type == Event.BACKSPACE:
+    def _handle_text_events(self, event: Event):
+        if event.type == Event.BACKSPACE:
             self.component.delchar()
         elif event.type == Event.DELETE:
             self.component.delcharforward()
         elif event.type == Event.CHAR_INPUT:
             self.component.addchar(event.value)
+
+    def event_handler(self, event: Event, event_manager: EventManager):
+        self._handle_text_events(event)
+
+        if event.type == Event.ENTER:
+            event_manager.push_layer_close_event()
         elif event.type == Event.LEFT:
             self.component.left()
         elif event.type == Event.RIGHT:
@@ -193,9 +237,10 @@ class TextInputLayer(ComponentLayer):
             self.component.cursor_to_beginning(shift_pressed=True)
         elif event.type == Event.SEND:
             self.component.cursor_to_end(shift_pressed=True)
+        self.redraw = True
 
-    def set_prompt(self, prompt: str):
-        self.component.set_message([prompt])
+    def set_prompt(self, prompt: List[str]):
+        self.component.set_message(prompt)
 
     def set_text(self, text: str):
         self.component.text = text
@@ -203,6 +248,56 @@ class TextInputLayer(ComponentLayer):
 
     def get_text(self):
         return self.component.text
+
+
+class PathInputLayer(TextInputLayer):
+    def __init__(self, title, directory=False):
+        super().__init__(title)
+        self._directory = directory
+        self._prompt = []
+        self._valid = False
+
+    def __is_path_valid(self):
+        path = os.path.expanduser(self.component.text)
+        if not self._directory:
+            if os.path.isdir(path):
+                self._valid = False
+                return self._valid
+            directory, name = os.path.split(path)
+            self._valid = os.path.isdir(directory) and name
+        else:
+            self.valid = os.path.isdir(path)
+        return self._valid
+
+    def build(self):
+        super().build()
+        TYPE_STR = "Directory" if self._directory else "File"
+        prompt = self._prompt[:]
+        if self.__is_path_valid():
+            prompt += [f"[Valid {TYPE_STR}]"]
+        else:
+            prompt += [f"[Invalid {TYPE_STR}]"]
+        # super().set_prompt(prompt)
+        self.component.set_message(prompt)
+
+    def event_handler(self, event: Event, event_manager: EventManager):
+        # Validate input on text changes
+        if event.type in {Event.CHAR_INPUT, Event.BACKSPACE, Event.DELETE}:
+            self._handle_text_events(event)
+            self.rebuild = True
+        # Invalid text cannot be used; nullify event
+        elif event.type == Event.ENTER and not self._valid:
+            event.type = Event.NONE
+        else:
+            # Handle all other events similar to text input
+            super().event_handler(event, event_manager)
+
+    def set_prompt(self, prompt: List[str]):
+        super().set_prompt(prompt)
+        self._prompt = prompt
+
+    def get_path(self):
+        return os.path.expanduser(super().get_text())
 
 
 class Radio:
@@ -326,6 +421,9 @@ class Row:
     def do_action(self):
         if self.__type == Row.TEXT and self.__callback_fn:
             self.__callback_fn()
+        elif self.__type == Row.TEXT:
+            event_manager = window.Window.get_window().event_manager
+            event_manager.push_layer_close_event()
         if self.__type == Row.PARENT:
             if self.__subrows:
                 self.__expanded = not self.__expanded
@@ -341,7 +439,6 @@ class Row:
                 yield from self.__row_iter(row.get_subrows())
 
     def __row_from_index(self, index):
-        # This will become more complex as nesting is introduced
         for i, row in enumerate(self.__row_iter(self.__subrows)):
             if i == index:
                 return row
@@ -392,6 +489,7 @@ class ListLayer(ComponentLayer, Row):
         elif event.type == Event.ESC and event_manager.use_esc_back:
             # TODO: Handle this event by the window manager?
             event_manager.push_layer_close_event()
+            self._canceled = True
         elif event.type == Event.CHAR_INPUT:
             self.component.addchar(event.value)
             self.rebuild = True
@@ -400,6 +498,7 @@ class ListLayer(ComponentLayer, Row):
             (event.type == Event.RIGHT and event_manager.left_right_menu_nav)):
             if self.component.is_close_selected():
                 event_manager.push_layer_close_event()
+                self._canceled = True
             else:
                 self.select_row(self.component.get_selected_index())
 
@@ -415,6 +514,9 @@ class ListLayer(ComponentLayer, Row):
             #     break
 
         self.redraw = True
+
+    def selected_index(self):
+        return self.component.get_selected_index()
 
 
 class ListPopup(ComponentLayer, Row):
@@ -465,3 +567,6 @@ class ListPopup(ComponentLayer, Row):
             #     break
 
         self.redraw = True
+
+    def selected_index(self):
+        return self.component.get_selected_index()

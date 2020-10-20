@@ -103,37 +103,46 @@ def submission_search_init():
     labs = data.get_labs()
     window.set_header("Submissions Search")
 
-    # Choose lab
-    assignment_index = window.create_filtered_list(
-        "Assignment", input_data=labs, filter_function=data.Lab.find)
-    if assignment_index is ui.GO_BACK:
+    menu = ui.layers.ListLayer()
+    menu.set_searchable("Assignment")
+    for lab in labs:
+        menu.add_row_text(str(lab))
+    window.run_layer(menu)
+    if menu.was_canceled():
         return
 
-    assignment = labs[assignment_index]
+    assignment = labs[menu.selected_index()]
 
     # Select the lab part if needed
     if len(assignment.parts) > 1:
-        part_index = window.create_list_popup(
-            "Select Part",
-            input_data=[name["name"] for name in assignment.parts])
-        if part_index is ui.GO_BACK:
+        popup = ui.layers.ListPopup("Select Part")
+        for part in assignment.parts:
+            popup.add_row_text(part["name"])
+        window.run_layer(popup)
+        if popup.was_canceled():
             return
-        part = assignment.parts[part_index]
+
+        part = assignment.parts[popup.selected_index()]
     else:
         part = assignment.parts[0]
 
-    search_string = window.create_text_input("Search String",
-                                             "Enter a search string")
-    if search_string == ui.Window.CANCEL:
+    text_input = ui.layers.TextInputLayer("Search String")
+    text_input.set_prompt(["Enter a search string"])
+    window.run_layer(text_input)
+    if text_input.was_canceled():
         return
 
+    search_string = text_input.get_text()
+
     # Get a valid output path
-    output_path = filename_input(purpose="the output")
-    if output_path is None:
+    filename_input = ui.layers.PathInputLayer("Output File")
+    filename_input.set_prompt(["Enter the filename to save the search results"])
+    window.run_layer(filename_input)
+    if filename_input.was_canceled():
         return
 
     # Run the submission search
-    submission_search(part, search_string, output_path)
+    submission_search(part, search_string, filename_input.get_path())
 
 
 class LockToggle(ui.layers.Toggle):

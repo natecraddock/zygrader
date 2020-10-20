@@ -53,7 +53,7 @@ def get_password(window: ui.Window):
 
     text_input = ui.layers.TextInputLayer(
         "Enter Password", mask=ui.components.TextInput.TEXT_MASKED)
-    text_input.set_prompt("Enter your zyBooks password")
+    text_input.set_prompt(["Enter your zyBooks password"])
     window.run_layer(text_input)
 
     if text_input.was_canceled():
@@ -70,7 +70,7 @@ def create_account(window: ui.Window, zy_api):
     while True:
         # Get user account information
         text_input = ui.layers.TextInputLayer("Enter Email")
-        text_input.set_prompt("Enter your zyBooks email")
+        text_input.set_prompt(["Enter your zyBooks email"])
         window.run_layer(text_input)
 
         if text_input.was_canceled():

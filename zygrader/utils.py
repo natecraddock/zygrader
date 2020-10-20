@@ -147,7 +147,7 @@ def prep_lab_score_calc():
 
     try:
         text_input = ui.layers.TextInputLayer("Original Score")
-        text_input.set_prompt("What was the student's original score?")
+        text_input.set_prompt(["What was the student's original score?"])
         window.run_layer(text_input)
         if text_input.was_canceled():
             return
@@ -156,7 +156,7 @@ def prep_lab_score_calc():
 
         text_input = ui.layers.TextInputLayer("zyBooks Completion")
         text_input.set_prompt(
-            "What is the student's current completion % in zyBooks")
+            ["What is the student's current completion % in zyBooks"])
         text_input.set_text("100")
         window.run_layer(text_input)
         if text_input.was_canceled():

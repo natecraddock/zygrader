@@ -191,6 +191,7 @@ class Window:
         self.register_layer(layer)
 
         while layer in self.layers:
+            self.build()
             layer.update(self.event_manager)
             self.handle_events()
             self.draw()
