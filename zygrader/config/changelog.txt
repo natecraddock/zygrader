@@ -1,5 +1,9 @@
 # Try to keep lines shorter than 70 characters
 
+4.9.0
+* Added spooky Halloween theme to preferences.
+  Requires emoji support in terminal.
+
 4.8.0
 * Refactor user preferences.
 * Code cleanup.

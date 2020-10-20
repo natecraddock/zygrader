@@ -92,7 +92,7 @@ def do_versioning():
             config["editor"] = "Pluma"
         if not "data_dir" in config:
             config["data_dir"] = ""
-            
+
     version = "4.9.0"
     if compare_versions(version, user_version):
         config["spooky_mode"] = False
@@ -129,6 +129,12 @@ def show_versioning_message(window: ui.Window):
                             ui.components.Popup.ALIGN_LEFT)
 
     version = "4.8.0"
+    if compare_versions(version, user_version):
+        msg = get_version_message(version)
+        window.create_popup(f"Version {version}", msg,
+                            ui.components.Popup.ALIGN_LEFT)
+
+    version = "4.9.0"
     if compare_versions(version, user_version):
         msg = get_version_message(version)
         window.create_popup(f"Version {version}", msg,
