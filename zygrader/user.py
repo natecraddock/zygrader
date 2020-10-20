@@ -251,6 +251,7 @@ PREFERENCES = [
     Preference("vim_mode", "Vim Mode", toggle_preference),
     Preference("dark_mode", "Dark Mode", toggle_preference),
     Preference("christmas_mode", "Christmas Theme", toggle_preference),
+    Preference("spooky_mode", "Spooky Theme", toggle_preference),
     Preference("browser_diff", "Open Diffs in Browser", toggle_preference),
     Preference("save_password", "Remember Password", save_password_toggle),
     Preference(
