@@ -74,6 +74,7 @@ class Window:
     def update_preferences(self):
         self.dark_mode = preferences.get("dark_mode")
         self.christmas_mode = preferences.get("christmas_mode")
+        self.spooky_mode = preferences.get("spooky_mode")
         self.vim_mode = preferences.get("vim_mode")
         self.left_right_menu_nav = preferences.get("left_right_arrow_nav")
         self.clear_filter = preferences.get("clear_filter")
@@ -330,6 +331,9 @@ class Window:
 
     def draw_header(self):
         """Set the header text"""
+        separator = "|"
+        if self.spooky_mode:
+            separator = "🎃"
         self.header.erase()
         resize_window(self.header, 1, self.cols)
 
@@ -341,22 +345,24 @@ class Window:
 
         if self.__header_title:
             if callable(self.__header_title):
-                display_text = f"{self.name} | {self.__header_title()}"
+                display_text = f"{self.name} {separator} {self.__header_title()}"
             else:
-                display_text = f"{self.name} | {self.__header_title}"
+                display_text = f"{self.name} {separator} {self.__header_title}"
         else:
             display_text = self.name
 
         if self.__email_text:
-            display_text += f" | {self.__email_text}"
+            display_text += f" {separator} {self.__email_text}"
 
         if self.insert_mode:
-            display_text += " | INSERT"
+            display_text += f" {separator} INSERT"
         elif self.mark_mode:
-            display_text += " | VISUAL"
+            display_text += f" {separator} VISUAL"
 
         # Centered header
         row = self.cols // 2 - len(display_text) // 2
+        if self.spooky_mode:
+            display_text = f"👻 {display_text} 👻"
         add_str(self.header, 0, row, display_text)
 
         # Christmas theme
