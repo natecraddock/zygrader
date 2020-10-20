@@ -658,6 +658,10 @@ class ScrollableList(Component):
         ]
         self.__create_display_lines()
 
+        # If all content is filtered then select the exit row
+        if len(self._display_lines) == 1:
+            self._selected_index = 0
+
     def set_searchable(self, prompt: str, search_fn: Callable):
         self._searchable = True
         self._search_prompt = prompt
