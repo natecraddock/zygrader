@@ -50,15 +50,20 @@ class GradePuller:
                                               due_times)
 
                 msg = ["Add another assignment to the report?"]
-                more_assignments = self.window.create_bool_popup(
-                    "More Assignments", msg)
+                popup = ui.layers.BoolPopup("More Assignments")
+                popup.set_message(msg)
+                self.window.run_layer(popup)
+                more_assignments = popup.get_result()
 
             self.write_upload_file()
         except GradePuller.StoppingException:
-            self.window.create_popup("Grade Puller", ["Grade Puller stopped"])
+            popup = ui.layers.Popup("Grade Puller")
+            popup.set_message(["Grade Puller stopped"])
+            self.window.run_layer(popup)
 
     def read_canvas_csv(self):
         path = SharedData.get_canvas_master()
+        popup = ui.layers.Popup("Error in Reading Master CSV")
         try:
             self.canvas_students = dict()
             bad_id_count = 0
@@ -79,24 +84,30 @@ class GradePuller:
                 f"Could not find {path}",
                 "Please download the gradebook from Canvas and put it in the place noted above",
             ]
-            self.window.create_popup("Error in Reading Master CSV", msg)
+            popup.set_message(msg)
+            self.window.run_layer(popup)
             raise GradePuller.StoppingException()
         except PermissionError:
             msg = [
                 f"Could not open {path} for reading",
                 "Please have the owner of the file grand read permissions",
             ]
-            self.window.create_popup("Error in Reading Master CSV", msg)
+            popup.set_message(msg)
+            self.window.run_layer(popup)
             raise GradePuller.StoppingException()
 
     def select_canvas_assignment(self):
         num_id_columns = GradePuller.NUM_CANVAS_ID_COLUMNS
         real_assignments = self.canvas_header[num_id_columns:]
-        index = self.window.create_filtered_list("Assignment",
-                                                 input_data=real_assignments)
-        if index is ui.GO_BACK:
+        assignment_list = ui.layers.ListLayer()
+        # TODO: Cleanup setting rows from lists
+        for assignment in real_assignments:
+            assignment_list.add_row_text(assignment)
+        self.window.run_layer(assignment_list)
+
+        if assignment_list.was_canceled():
             raise GradePuller.StoppingException()
-        return real_assignments[index]
+        return real_assignments[assignment_list.selected_index()]
 
     def select_zybook_sections(self, text):
         selector = ZybookSectionSelector()
@@ -105,6 +116,21 @@ class GradePuller:
             raise GradePuller.StoppingException()
         return res
 
+    class _SectionToggle(ui.layers.Toggle):
+        def __init__(self, index, data):
+            self._toggled = False
+            self.index = index
+            self.data = data
+
+            self.get()
+
+        def get(self):
+            self._toggled = self.data[self.index]
+
+        def toggle(self):
+            self.data[self.index] = not self.data[self.index]
+            self.get()
+
     def select_class_sections(self):
         sections_list = [
             section.section_number for section in data.get_class_sections()
@@ -112,20 +138,12 @@ class GradePuller:
 
         selected = [True] * len(sections_list)
 
-        def toggle_selected(index):
-            selected[index] = not selected[index]
-
-        draw_sections = lambda: [
-            f"[{'X' if selected else ' '}] {el}"
-            for el, selected in zip(sections_list, selected)
-        ]
-        section_callback = lambda context: toggle_selected(context.data)
-
-        self.window.create_list_popup(
-            "Select Class Sections (use Back to finish)",
-            callback=section_callback,
-            list_fill=draw_sections,
-        )
+        popup = ui.layers.ListPopup(
+            "Select Class Sections (use Back to finish)")
+        for i, section in enumerate(sections_list):
+            popup.add_row_toggle(str(section),
+                                 GradePuller._SectionToggle(i, selected))
+        self.window.run_layer(popup)
 
         if not any(selected):
             raise GradePuller.StoppingException()
@@ -152,13 +170,8 @@ class GradePuller:
             section: default_due_times[section]
             for section in class_sections
         }
-        draw = lambda: [(f"Section {section:>{section_padding}}"
-                         f": {time.strftime('%b %d, %Y at %I:%M:%S%p')}")
-                        for section, time in due_times.items()]
 
-        def select_due_times_callback(context: ui.WinContext):
-            selected_index = context.data
-
+        def select_due_times_fn(selected_index):
             section = class_sections[selected_index]
 
             new_datetime = self.window.create_datetime_spinner(
@@ -172,25 +185,33 @@ class GradePuller:
                 return
 
             msg = DisplayStr("Set all sections to this due date [u:and time]?")
-            do_carry_datetime = self.window.create_bool_popup(
-                "Set Due Time", [msg])
-            if do_carry_datetime:
+            popup = ui.layers.BoolPopup("Set Due Time")
+            popup.set_message(msg)
+            self.window.run_layer(popup)
+
+            if popup.get_result():
                 for section in due_times:
                     due_times[section] = new_datetime
                 return
 
-            do_carry_date = self.window.create_bool_popup(
-                "Set Due Time",
+            popup = ui.layers.BoolPopup("Set Due Time")
+            popup.set_message(
                 ["Set all sections to this due date (but retain time)?"])
-            if do_carry_date:
+            self.window.run_layer(popup)
+
+            if popup.get_result():
                 for section in due_times:
                     old_datetime = due_times[section]
                     due_times[section] = datetime.datetime.combine(
                         date=new_datetime, time=old_datetime.time())
 
-        self.window.create_list_popup("Set Due Times (use Back to finish)",
-                                      callback=select_due_times_callback,
-                                      list_fill=draw)
+        popup = ui.layers.ListPopup("Set Due Times (use Back to finish)")
+        index = 0
+        for section, time in due_times.items():
+            row = f"Section {section:>{section_padding}}: {time.strftime('%b %d, %Y at %I:%M:%S%p')}"
+            popup.add_row_text(row, lambda: select_due_times_fn(index))
+            index += 1
+        self.window.run_layer(popup)
 
         return due_times
 
@@ -377,7 +398,7 @@ class GradePuller:
 
         zybooks_students = dict()
 
-        def fetch_reports_fn(self):
+        def fetch_reports_fn(queue):
             num_completed = 0
             for due_time, class_section_list in due_time_to_sections.items():
                 report, _ = self.fetch_completion_report(
@@ -426,12 +447,16 @@ class GradePuller:
             zybooks_toc = fetch_zybooks_toc()
 
             zybook_section_1_1 = zybooks_toc[0]["sections"][0]
-            wait_msg = ["Fetching a completion report from zyBooks"]
-            wait_controller = self.window.create_waiting_popup(
-                "Fetch Reports", wait_msg)
-            zybooks_students, zybooks_header = self.fetch_completion_report(
+
+            fetch_report_fn = lambda _: self.fetch_completion_report(
                 create_last_night(), [zybook_section_1_1])
-            wait_controller.close()
+
+            popup = ui.layers.WaitPopup("Fetch Reports")
+            popup.set_message(["Fetching a completion report from zyBooks"])
+            popup.set_wait_fn(fetch_report_fn)
+            self.window.run_layer(popup)
+
+            zybooks_students, zybooks_header = popup.get_result()
 
             mapping = GradePuller.StudentMapping(self.canvas_students,
                                                  zybooks_students)
@@ -463,11 +488,15 @@ class GradePuller:
 
         except GradePuller.StoppingException:
             msg = ["Finding Bad Zybooks Student ID#s stopped"]
-            self.window.create_popup("Grade Puller", msg)
+            popup = ui.layers.Popup("Grade Puller")
+            popup.set_message(msg)
+            self.window.run_layer(popup)
 
     def report_list(self, data, headers, name, default_path=""):
         if not data:
-            self.window.create_popup("No Data", [f"There are no {name}"])
+            popup = ui.layers.Popup("No Data")
+            popup.set_message([f"There are no {name}"])
+            self.window.run_layer(popup)
             return
 
         path = filename_input(purpose=f"the {name}", text=default_path)

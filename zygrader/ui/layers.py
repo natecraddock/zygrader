@@ -178,6 +178,7 @@ class WaitPopup(ComponentLayer):
 
     def set_message(self, message):
         self.component.set_message(message)
+        self.rebuild = True
 
     def set_wait_fn(self, wait_fn):
         self.has_fn = True

@@ -1,6 +1,7 @@
 """UI Templates: For reusable ui pieces built from components."""
 
 import os
+from os import path
 
 from zygrader.zybooks import Zybooks
 from zygrader import ui
@@ -16,44 +17,18 @@ class ZybookSectionSelector:
         return self.allow_optional_and_hidden or (not (section["hidden"]
                                                        or section["optional"]))
 
-    def draw_zybook_sections(self, chapters_expanded, selected_sections):
-        res = []
-        items = []
-        chapter_pad_width = len(str(len(self.zybooks_toc)))
-        section_pad_width = max([
-            len(str(len(chapter["sections"]))) for chapter in self.zybooks_toc
-        ])
-        for chapter in self.zybooks_toc:
-            res.append(f"{str(chapter['number']):>{chapter_pad_width}}"
-                       f" - {chapter['title']}")
-            items.append(chapter["number"])
-            if chapters_expanded[chapter["number"]]:
-                for section in chapter["sections"]:
-                    section_string = (
-                        f"{chapter['number']}"
-                        f".{section['number']:<{section_pad_width}}"
-                        f" - {section['title']}")
-                    is_selected = selected_sections[(chapter["number"],
-                                                     section["number"])]
-                    if self.is_allowed(section):
-                        res.append(f"  [{'X' if is_selected else ' '}]"
-                                   f" {section_string}")
-                    else:
-                        res.append(f"  -{'X' if is_selected else '-'}-"
-                                   f" {section_string} (hidden/optional)")
-                    items.append((chapter["number"], section["number"]))
-        self.drawn_zybook_items = items
-        return res
+    class _SectionToggle(ui.layers.Toggle):
+        def __init__(self, index, data):
+            self._toggled = False
+            self.index = index
+            self.data = data
 
-    def select_zybook_sections_callback(self, chapters_expanded,
-                                        selected_sections, selected_index):
-        item = self.drawn_zybook_items[selected_index]
-        if isinstance(item, tuple):  # is a section
-            section = self.zybooks_sections[item]
-            if self.is_allowed(section):
-                selected_sections[item] = not selected_sections[item]
-        else:  # is a chapter
-            chapters_expanded[item] = not chapters_expanded[item]
+        def get(self):
+            self._toggled = self.data[self.index]
+
+        def toggle(self):
+            self.data[self.index] = not self.data[self.index]
+            self.get()
 
     def select_zybook_sections(self, return_just_numbers=False, title_extra=""):
         self.zybooks_toc = self.zy_api.get_table_of_contents()
@@ -63,24 +38,31 @@ class ZybookSectionSelector:
                                  for chapter in self.zybooks_toc
                                  for section in chapter["sections"]}
 
-        chapters_expanded = {
-            chapter["number"]: False
-            for chapter in self.zybooks_toc
-        }
         selected_sections = {(chapter["number"], section["number"]): False
                              for chapter in self.zybooks_toc
                              for section in chapter["sections"]}
-        draw_sections = lambda: self.draw_zybook_sections(
-            chapters_expanded, selected_sections)
-        draw_sections()
-        section_callback = lambda context: self.select_zybook_sections_callback(
-            chapters_expanded, selected_sections, context.data)
 
         title = ("Select zyBook Sections (use Back to finish)"
                  if not title_extra else f"{title_extra} - Select Sections")
-        self.window.create_list_popup(title,
-                                      callback=section_callback,
-                                      list_fill=draw_sections)
+        chapter_pad_width = len(str(len(self.zybooks_toc)))
+        section_pad_width = max([
+            len(str(len(chapter["sections"]))) for chapter in self.zybooks_toc
+        ])
+        popup = ui.layers.ListPopup(title)
+        for i, chapter in enumerate(self.zybooks_toc, 1):
+            row = popup.add_row_parent(
+                f"{str(chapter['number']):>{chapter_pad_width}} - {chapter['title']}"
+            )
+            for j, section in enumerate(chapter["sections"], 1):
+                section_string = (f"{chapter['number']}"
+                                  f".{section['number']:<{section_pad_width}}"
+                                  f" - {section['title']}")
+                row.add_row_toggle(
+                    section_string,
+                    ZybookSectionSelector._SectionToggle((i, j),
+                                                         selected_sections))
+        self.window.run_layer(popup)
+
         res = []
         for section_numbers, selected in selected_sections.items():
             if selected:
@@ -94,18 +76,13 @@ class ZybookSectionSelector:
 def filename_input(purpose, text=""):
     """Get a valid filename from the user"""
     window = ui.get_window()
-    full_prompt = f"Enter the path and filename for {purpose} [~ is supported]"
 
-    while True:
-        path = window.create_text_input("Filepath Entry",
-                                        full_prompt,
-                                        text=text)
-        if path == ui.Window.CANCEL:
-            return None
+    path_input = ui.layers.PathInputLayer("Filepath Entry")
+    path_input.set_prompt(
+        [f"Enter the path and filename for {purpose} [~ is supported]"])
+    path_input.set_text(text)
+    window.run_layer(path_input)
+    if path_input.was_canceled():
+        return None
 
-        path = os.path.expanduser(path)
-        if os.path.exists(os.path.dirname(path)):
-            return path
-
-        msg = [f"Path {os.path.dirname(path)} does not exist!"]
-        window.create_popup("Invalid Path", msg)
+    return path_input.get_path()
