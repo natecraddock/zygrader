@@ -371,29 +371,36 @@ class GradePuller:
             "(one per unique due time)",
             f"Completed 0/{len(unique_due_times)}",
         ]
-        wait_controller = self.window.create_waiting_popup(
-            "Fetch Reports", wait_msg)
-        num_completed = 0
+
+        popup = ui.layers.WaitPopup("Fetch Reports")
+        popup.set_message(wait_msg)
 
         zybooks_students = dict()
-        for due_time, class_section_list in due_time_to_sections.items():
-            report, _ = self.fetch_completion_report(due_time, zybook_sections)
 
-            bad_section_count = 0
-            for id, row in report.items():
-                try:
-                    if (int(row["Class section"])) in class_section_list:
-                        zybooks_students[id] = row
-                except ValueError:
-                    bad_section_count += 1
-                    key = f"bad_zy_class_section_{bad_section_count}"
-                    zybooks_students[key] = row
+        def fetch_reports_fn(self):
+            num_completed = 0
+            for due_time, class_section_list in due_time_to_sections.items():
+                report, _ = self.fetch_completion_report(
+                    due_time, zybook_sections)
 
-            num_completed += 1
-            wait_msg[-1] = f"Completed {num_completed}/{len(unique_due_times)}"
-            wait_controller.update()
+                bad_section_count = 0
+                for id, row in report.items():
+                    try:
+                        if (int(row["Class section"])) in class_section_list:
+                            zybooks_students[id] = row
+                    except ValueError:
+                        bad_section_count += 1
+                        key = f"bad_zy_class_section_{bad_section_count}"
+                        zybooks_students[key] = row
 
-        wait_controller.close()
+                num_completed += 1
+                wait_msg[
+                    -1] = f"Completed {num_completed}/{len(unique_due_times)}"
+                popup.set_message(wait_msg)
+
+        popup.set_wait_fn(fetch_reports_fn)
+        self.window.run_layer(popup)
+
         return zybooks_students
 
     def write_upload_file(self):
