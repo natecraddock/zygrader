@@ -301,6 +301,55 @@ class PathInputLayer(TextInputLayer):
         return os.path.expanduser(super().get_text())
 
 
+class DatetimeSpinner(ComponentLayer):
+    def __init__(self, title):
+        super().__init__()
+
+        win = window.Window.get_window()
+        self.component = components.DatetimeSpinner(win.rows, win.cols, title)
+
+    def set_initial_time(self, time):
+        self.component.set_time(time)
+
+    def set_optional(self, optional: bool):
+        self.component.set_optional(optional)
+
+    def set_include_date(self, include_date: bool):
+        self.component.set_include_date(include_date)
+
+    def set_quickpicks(self, quickpicks):
+        self.component.set_quickpicks(quickpicks)
+
+    def event_handler(self, event: Event, event_manager: EventManager):
+        if event.type in {Event.LEFT, Event.BTAB}:
+            self.component.previous_field()
+        elif event.type in {Event.RIGHT, Event.TAB}:
+            self.component.next_field()
+        elif event.type == Event.HOME:
+            self.component.first_field()
+        elif event.type == Event.END:
+            self.component.last_field()
+        elif event.type == Event.UP:
+            self.component.increment_field()
+        elif event.type == Event.DOWN:
+            self.component.decrement_field()
+        elif event.type == Event.SUP:
+            self.component.alt_increment_field()
+        elif event.type == Event.SDOWN:
+            self.component.alt_decrement_field()
+        elif event.type == Event.CHAR_INPUT:
+            self.component.addchar(event.value)
+        elif event.type == Event.ESC and self.use_esc_back:
+            event_manager.push_layer_close_event()
+            self._canceled = True
+        elif event.type == Event.ENTER and self.component.is_confirmed():
+            event_manager.push_layer_close_event()
+        self.redraw = True
+
+    def get_time(self):
+        return self.component.get_time()
+
+
 class Radio:
     def __init__(self, name, get_fn, set_fn):
         self.__values = []

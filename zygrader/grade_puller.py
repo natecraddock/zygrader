@@ -174,9 +174,12 @@ class GradePuller:
         def select_due_times_fn(selected_index):
             section = class_sections[selected_index]
 
-            new_datetime = self.window.create_datetime_spinner(
-                "Due Date", due_times[section], [(50, 0), (59, 59), (0, 0)])
-            due_times[section] = new_datetime
+            date_spinner = ui.layers.DatetimeSpinner("Due Date")
+            date_spinner.set_initial_time(due_times[section])
+            date_spinner.set_quickpicks([(50, 0), (59, 59), (0, 0)])
+            self.window.run_layer(date_spinner)
+
+            due_times[section] = date_spinner.get_time()
 
             # For convenience, allow the day or datetime to be carried across
             # all sections so that selecting due times is easier
@@ -206,7 +209,7 @@ class GradePuller:
                         date=new_datetime, time=old_datetime.time())
 
         popup = ui.layers.ListPopup("Set Due Times (use Back to finish)")
-        index = 0
+        index = 1
         for section, time in due_times.items():
             row = f"Section {section:>{section_padding}}: {time.strftime('%b %d, %Y at %I:%M:%S%p')}"
             popup.add_row_text(row, select_due_times_fn, index)

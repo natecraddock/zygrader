@@ -214,26 +214,31 @@ class OptionsPopup(Popup):
 class DatetimeSpinner(Popup):
     NO_DATE = "datetime_no_date"
 
-    def __init__(self, height, width, title, time, quickpicks, optional,
-                 include_date):
+    def __init__(self, height, width, title):
         super().__init__(height, width, title, [], Popup.ALIGN_CENTER)
 
-        if time is None:
-            time = datetime.datetime.now()
-        self.time = time
-
-        if quickpicks:
-            quickpicks = sorted(quickpicks)
-        self.quickpicks = quickpicks
-
-        self.optional = optional
-        self.include_date = include_date
+        self.time = datetime.datetime.now()
+        self.quickpicks = None
+        self.optional = False
+        self.include_date = True
 
         self.__init_fields()
         self.__init_format_str()
         self.__init_input_str()
 
         curses.curs_set(0)
+
+    def set_quickpicks(self, quickpicks):
+        self.quickpicks = quickpicks
+
+    def set_time(self, time):
+        self.time = time
+
+    def set_optional(self, optional):
+        self.optional = optional
+
+    def set_include_date(self, include_date):
+        self.include_date = include_date
 
     def __resolve_date(self, date, year, month, day) -> datetime.datetime:
         """Find the closest valid date to an invalid date"""

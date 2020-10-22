@@ -1,4 +1,5 @@
 """Class Manager: Functions to manage zybooks classes"""
+from datetime import date
 import json
 
 from zygrader.ui.templates import ZybookSectionSelector
@@ -113,10 +114,15 @@ def set_due_date(lab):
     if "due" in lab.options:
         old_date = lab.options["due"]
 
-    due_date = window.create_datetime_spinner(
-        "Due Date", time=old_date if old_date else None, optional=True)
-    if due_date == ui.GO_BACK:
+    date_spinner = ui.layers.DatetimeSpinner("Due Date")
+    date_spinner.set_optional(True)
+    if old_date:
+        date_spinner.set_initial_time(old_date)
+    window.run_layer(date_spinner)
+    if date_spinner.was_canceled():
         return
+
+    due_date = date_spinner.get_time()
 
     # Clearing the due date
     if due_date == ui.components.DatetimeSpinner.NO_DATE:
@@ -288,11 +294,12 @@ def get_class_section(old_section: data.model.ClassSection = None):
 
     section_num = int(section_num_str)
 
-    default_due_time = window.create_datetime_spinner(
-        "Section Default Due Time",
-        quickpicks=[(50, 0), (59, 59), (0, 0)],
-        include_date=False)
+    date_spinner = ui.layers.DatetimeSpinner("Section Default Due Time")
+    date_spinner.set_quickpicks([(50, 0), (59, 59), (0, 0)])
+    date_spinner.set_include_date(False)
+    window.run_layer(date_spinner)
 
+    default_due_time = date_spinner.get_time()
     if default_due_time == ui.GO_BACK:
         return None
 
