@@ -282,11 +282,10 @@ def diff_parts_fn(window, submission):
         window.create_popup("Error", [error])
 
 
-def student_callback(context: ui.WinContext, lab, use_locks=True):
+def student_select_fn(selected_index, lab, use_locks):
     """Show the submission for the selected lab and student"""
-    window = context.window
-    student_list = context.component
-    student = data.get_students()[context.data]
+    window = ui.get_window()
+    student = data.get_students()[selected_index]
 
     # Wait for student's assignment to be available
     if not can_get_through_locks(use_locks, student, lab):
@@ -300,31 +299,23 @@ def student_callback(context: ui.WinContext, lab, use_locks=True):
         if submission is None:
             return
 
-        update_student_list(window, student_list)
-
-        options = {
-            "Flag":
-            lambda _: flag_submission(lab, student),
-            "Pick Submission":
-            lambda _: pick_submission(lab, student, submission),
-            "Pair Programming":
-            lambda _: grade_pair_programming(student_list, submission, use_locks
-                                             ),
-            "Diff Parts":
-            lambda _: diff_parts_fn(window, submission),
-            "Run":
-            lambda context: run_code_fn(window, context, submission),
-            "View":
-            lambda _: submission.show_files(),
-        }
-
-        # Add option to diff parts if this lab requires it
-        if not (use_locks
-                and submission.flag & data.model.SubmissionFlag.DIFF_PARTS):
-            del options["Diff Parts"]
-
-        window.create_options_popup("Submission", submission, options,
-                                    ui.components.Popup.ALIGN_LEFT)
+        popup = ui.layers.OptionsPopup("Submission")
+        popup.set_message(
+            ["TODO: Fill in the submission text here... needs to update"])
+        popup.add_option("Flag", lambda _: flag_submission(lab, student))
+        popup.add_option("Pick Submission",
+                         lambda _: pick_submission(lab, student, submission))
+        # TODO: Pass student_list (component..) to grade_pair_programming
+        popup.add_option(
+            "Pair Programming",
+            lambda _: grade_pair_programming(None, submission, use_locks))
+        if submission.flag & data.model.SubmissionFlag.DIFF_PARTS:
+            popup.add_option("Diff Parts",
+                             lambda _: diff_parts_fn(window, submission))
+        popup.add_option(
+            "Run", lambda context: run_code_fn(window, context, submission))
+        popup.add_option("View", lambda _: submission.show_files())
+        window.run_layer(popup)
 
         SharedData.running_process = None
 
@@ -342,26 +333,30 @@ def watch_students(window: ui.Window, student_list: ui.components.FilteredList):
     data.fs_watch.fs_watch_register(paths, "student_list_watch", update_list)
 
 
-def lab_callback(context: ui.WinContext, use_locks=True):
+def lab_select_fn(selected_index, use_locks):
     """Create the list of labs to pick a student to grade"""
-    window = context.window
-
-    lab = data.get_labs()[context.data]
-    window.set_header(lab.name)
-
+    window = ui.get_window()
+    lab = data.get_labs()[selected_index]
     students = data.get_students()
 
-    student_select_fn = lambda context: student_callback(
-        context, lab, use_locks)
+    # student_select_fn = lambda context: student_callback(
+    #     context, lab, use_locks)
 
-    # Get student
-    window.create_filtered_list(
-        "Student",
-        list_fill=lambda: fill_student_list(lab, students),
-        callback=student_select_fn,
-        filter_function=data.Student.find,
-        create_fn=lambda student_list: watch_students(window, student_list),
-    )
+    # # Get student
+    # window.create_filtered_list(
+    #     "Student",
+    #     list_fill=lambda: fill_student_list(lab, students),
+    #     callback=student_select_fn,
+    #     filter_function=data.Student.find,
+    #     create_fn=lambda student_list: watch_students(window, student_list),
+    # )
+
+    student_list = ui.layers.ListLayer()
+    student_list.set_searchable("Student")
+    for index, student in enumerate(students):
+        student_list.add_row_text(str(student), student_select_fn, index, lab,
+                                  use_locks)
+    window.register_layer(student_list, lab.name)
 
     # Remove the file watch handler when done choosing students
     data.fs_watch.fs_watch_unregister("student_list_watch")
@@ -372,17 +367,18 @@ def grade(use_locks=True):
     window = ui.get_window()
     labs = data.get_labs()
 
-    if use_locks:
-        window.set_header("Grader")
-    else:
-        window.set_header("Run for Fun")
     if not labs:
-        window.create_popup("Error", ["No labs have been created yet"])
+        popup = ui.layers.Popup("Error")
+        popup.set_message(["No labs have been created yet"])
+        window.run_layer(popup)
         return
 
-    # Pick a lab
-    lab_select_fn = lambda context: lab_callback(context, use_locks)
-    window.create_filtered_list("Assignment",
-                                input_data=labs,
-                                callback=lab_select_fn,
-                                filter_function=data.Lab.find)
+    title = "Grader"
+    if not use_locks:
+        title = "Run for Fun"
+
+    lab_list = ui.layers.ListLayer()
+    lab_list.set_searchable("Lab")
+    for index, lab in enumerate(labs):
+        lab_list.add_row_text(str(lab), lab_select_fn, index, use_locks)
+    window.register_layer(lab_list, title)

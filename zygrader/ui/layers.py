@@ -121,6 +121,7 @@ class BoolPopup(ComponentLayer):
 class OptionsPopup(ComponentLayer):
     def __init__(self, title):
         super().__init__()
+        self.options = {}
 
         win = window.Window.get_window()
         # TODO: Cleanup constructor
@@ -128,8 +129,15 @@ class OptionsPopup(ComponentLayer):
                                                  [], False,
                                                  components.Popup.ALIGN_LEFT)
 
+    def build(self):
+        self.component.set_options(list(self.options))
+
     def set_message(self, message):
         self.component.set_message(message)
+
+    def add_option(self, option, callback):
+        self.options[option] = callback
+        self.rebuild = True
 
     def event_handler(self, event: Event, event_manager: EventManager):
         if event.type in {Event.LEFT, Event.UP, Event.BTAB}:
@@ -140,19 +148,11 @@ class OptionsPopup(ComponentLayer):
             self.component.first()
         elif event.type == Event.END:
             self.component.last()
-        elif event.type == Event.ESC and self.use_esc_back:
+        elif event.type == Event.ESC and event_manager.use_esc_back:
             event_manager.push_layer_close_event()
+            self._canceled = True
         elif event.type == Event.ENTER:
-            pass
-            # if use_dict:
-            #     callback_fn = self.component.selected()
-            #     if not callback_fn:
-            #         break
-            #     ret = callback_fn(WinContext(self, event, self.component, None))
-            #     if ret:
-            #         break
-            # else:
-            #     break
+            event_manager.push_layer_close_event()
         self.redraw = True
 
 
@@ -336,7 +336,7 @@ class DatetimeSpinner(ComponentLayer):
             self.component.alt_decrement_field()
         elif event.type == Event.CHAR_INPUT:
             self.component.addchar(event.value)
-        elif event.type == Event.ESC and self.use_esc_back:
+        elif event.type == Event.ESC and event_manager.use_esc_back:
             event_manager.push_layer_close_event()
             self._canceled = True
         elif event.type == Event.ENTER and self.component.is_confirmed():
@@ -532,6 +532,9 @@ class ListLayer(ComponentLayer, Row):
 
     def set_searchable(self, prompt: str, search_fn=__string_search_fn):
         self.component.set_searchable(prompt, search_fn)
+
+    def set_sortable(self):
+        self.component.set_sortable()
 
     def event_handler(self, event: Event, event_manager: EventManager):
         if event.type == Event.DOWN:

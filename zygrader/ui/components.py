@@ -192,6 +192,10 @@ class OptionsPopup(Popup):
 
         self.window.noutrefresh()
 
+    def set_options(self, options):
+        self.options = options
+        self.options_length = sum([len(o) for o in options]) + len(options) + 2
+
     def next(self):
         self.index = (self.index + 1) % len(self.options)
 
