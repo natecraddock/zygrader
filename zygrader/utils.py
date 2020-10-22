@@ -143,12 +143,11 @@ def get_source_file_paths(directory):
 def prep_lab_score_calc():
     """A simple calculator for determining the score for a late prep lab"""
     window = ui.get_window()
-    window.set_header("Prep Lab Calculator")
 
     try:
         text_input = ui.layers.TextInputLayer("Original Score")
         text_input.set_prompt(["What was the student's original score?"])
-        window.run_layer(text_input)
+        window.run_layer(text_input, "Prep Lab Calculator")
         if text_input.was_canceled():
             return
 
@@ -158,7 +157,7 @@ def prep_lab_score_calc():
         text_input.set_prompt(
             ["What is the student's current completion % in zyBooks"])
         text_input.set_text("100")
-        window.run_layer(text_input)
+        window.run_layer(text_input, "Prep Lab Calculator")
         if text_input.was_canceled():
             return
 
@@ -168,11 +167,11 @@ def prep_lab_score_calc():
 
         popup = ui.layers.Popup("New Score")
         popup.set_message([f"The student's new score is: {new_score}"])
-        window.run_layer(popup)
+        window.run_layer(popup, "Prep Lab Calculator")
     except ValueError:
         popup = ui.layers.Popup("Error")
         popup.set_message(["Invalid input"])
-        window.run_layer(popup)
+        window.run_layer(popup, "Prep Lab Calculator")
 
 
 def view_students_callback(context):

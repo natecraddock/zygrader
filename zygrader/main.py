@@ -120,7 +120,7 @@ def view_changelog():
     popup = ui.layers.ListPopup("Changelog")
     for line in lines:
         popup.add_row_text(line)
-    window.run_layer(popup)
+    window.run_layer(popup, "Changelog")
 
 
 def mainloop(admin_mode):

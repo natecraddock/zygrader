@@ -99,7 +99,6 @@ def login(window: ui.Window):
     if email and password:
         password = decode_password(password)
         authenticated = authenticate(window, zy_api, email, password)
-        window.set_email(email)
         return authenticated
 
     # User does not have account created
@@ -120,8 +119,6 @@ def login(window: ui.Window):
             preferences.set("save_password", True)
             password = encode_password(password)
             preferences.set("password", password)
-
-        window.set_email(email)
 
     # User has account (email), but has not saved their password.
     # Ask user for their password.

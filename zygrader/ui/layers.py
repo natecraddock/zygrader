@@ -42,6 +42,7 @@ class WorkerThread:
 
 class ComponentLayer:
     def __init__(self):
+        # Title is used to set the header text when this component layer is active
         self.title: str = ""
         self.component = None
 

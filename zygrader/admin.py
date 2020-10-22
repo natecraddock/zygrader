@@ -89,28 +89,16 @@ def submission_search_fn(logger, lab, search_string, output_path):
             student_num += 1
 
 
-def submission_search(lab, search_string, output_path):
-    """Search through student submissions for a given string
-
-    This is used mainly to look for suspicious code (cheaters)"""
-    window = ui.get_window()
-    logger = ui.layers.LoggerLayer()
-    logger.set_log_fn(
-        lambda _: submission_search_fn(logger, lab, search_string, output_path))
-    window.run_layer(logger)
-
-
 def submission_search_init():
     """Get lab part and string from the user for searching"""
     window = ui.get_window()
     labs = data.get_labs()
-    window.set_header("Submissions Search")
 
     menu = ui.layers.ListLayer()
     menu.set_searchable("Assignment")
     for lab in labs:
         menu.add_row_text(str(lab))
-    window.run_layer(menu)
+    window.run_layer(menu, "Submissions Search")
     if menu.was_canceled():
         return
 
@@ -121,7 +109,7 @@ def submission_search_init():
         popup = ui.layers.ListPopup("Select Part")
         for part in assignment.parts:
             popup.add_row_text(part["name"])
-        window.run_layer(popup)
+        window.run_layer(popup, "Submissions Search")
         if popup.was_canceled():
             return
 
@@ -131,7 +119,7 @@ def submission_search_init():
 
     text_input = ui.layers.TextInputLayer("Search String")
     text_input.set_prompt(["Enter a search string"])
-    window.run_layer(text_input)
+    window.run_layer(text_input, "Submissions Search")
     if text_input.was_canceled():
         return
 
@@ -140,12 +128,14 @@ def submission_search_init():
     # Get a valid output path
     filename_input = ui.layers.PathInputLayer("Output File")
     filename_input.set_prompt(["Enter the filename to save the search results"])
-    window.run_layer(filename_input)
+    window.run_layer(filename_input, "Submissions Search")
     if filename_input.was_canceled():
         return
 
-    # Run the submission search
-    submission_search(part, search_string, filename_input.get_path())
+    logger = ui.layers.LoggerLayer()
+    logger.set_log_fn(lambda _: submission_search_fn(logger, lab, search_string,
+                                                     filename_input.get_path()))
+    window.run_layer(logger, "Submission Search")
 
 
 class LockToggle(ui.layers.Toggle):
@@ -193,7 +183,6 @@ def remove_locks():
 def admin_menu():
     """Create the admin menu"""
     window = ui.get_window()
-    window.set_header("Admin")
 
     menu = ui.layers.ListLayer()
     menu.add_row_text("Submissions Search", submission_search_init)
@@ -203,4 +192,4 @@ def admin_menu():
     menu.add_row_text("Remove Locks", remove_locks)
     menu.add_row_text("Class Management", class_manager.start)
 
-    window.register_layer(menu)
+    window.register_layer(menu, "Admin")

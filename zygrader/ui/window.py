@@ -69,15 +69,8 @@ class Window:
         # Create header
         self.header = curses.newwin(1, self.cols, 0, 0)
         self.header.bkgd(" ", curses.color_pair(1))
-
-        # Stacks for Components and header titles
-        self.header_titles = [""]
-
-        # Used for animated themes
-        self.header_offset = 0
         self.__header_title = ""
-        self.__header_title_load = ""
-        self.__email_text = ""
+        self.header_offset = 0
 
         # All user input handling is done inside the EventManager class.
         self.event_manager = events.EventManager()
@@ -118,12 +111,11 @@ class Window:
             return curses.color_pair(5), curses.color_pair(6)
         return curses.color_pair(3), curses.color_pair(4)
 
-    def set_email(self, email):
-        self.__email_text = email
-
-    def set_header(self, text):
-        """Load a string to be used for the next component"""
-        self.__header_title_load = text
+    def __get_email_text(self):
+        email = preferences.get("email")
+        if not email:
+            email = "Logged Out"
+        return email
 
     def draw_header(self):
         """Set the header text"""
@@ -133,19 +125,7 @@ class Window:
         # Store the cursor location
         loc = curses.getsyx()
 
-        if self.header_titles[-1]:
-            self.__header_title = self.header_titles[-1]
-
-        if self.__header_title:
-            if callable(self.__header_title):
-                display_text = f"{self.name} | {self.__header_title()}"
-            else:
-                display_text = f"{self.name} | {self.__header_title}"
-        else:
-            display_text = self.name
-
-        if self.__email_text:
-            display_text += f" | {self.__email_text}"
+        display_text = f"{self.name} | {self.__header_title} | {self.__get_email_text()}"
 
         if self.event_manager.insert_mode:
             display_text += " | INSERT"
@@ -170,10 +150,28 @@ class Window:
 
         curses.setsyx(*loc)
 
-    def register_layer(self, layer: ComponentLayer):
+    def __update_header_title(self):
+        """Set the text to be drawn centered in the header"""
+        if self.active_layer and self.active_layer.title:
+            self.__header_title = self.active_layer.title
+            return
+        elif self.active_layer:
+            # Find a lower layer with a title
+            for layer in reversed(self.layers):
+                if layer.title:
+                    self.__header_title = layer.title
+                    return
+
+        # Use default text
+        self.__header_title = "Main Menu"
+
+    def register_layer(self, layer: ComponentLayer, header_title=""):
         """Register a layer in the event loop."""
         self.layers.append(layer)
         self.active_layer = layer
+        layer.title = header_title
+
+        self.__update_header_title()
 
         # Run any finalizing actions this layer needs
         layer.build()
@@ -183,8 +181,10 @@ class Window:
         self.layers.pop()
         self.active_layer = self.layers[-1] if self.layers else None
 
-    def run_layer(self, layer: ComponentLayer):
-        self.register_layer(layer)
+        self.__update_header_title()
+
+    def run_layer(self, layer: ComponentLayer, title=""):
+        self.register_layer(layer, title)
 
         while layer in self.layers:
             self.build()

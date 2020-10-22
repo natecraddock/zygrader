@@ -396,29 +396,26 @@ def change_class():
 
 def lab_manager():
     window = ui.get_window()
-    window.set_header("Lab Manager")
 
     menu = ui.layers.ListLayer()
     menu.add_row_text("Add Lab", add_lab)
     menu.add_row_text("Edit Current Labs", edit_labs)
-    window.register_layer(menu)
+    window.register_layer(menu, "Lab Manager")
 
 
 def class_section_manager():
     window = ui.get_window()
-    window.set_header("Class Section Manager")
 
     menu = ui.layers.ListLayer()
     menu.add_row_text("Add Section", add_class_section)
     menu.add_row_text("Edit Current Sections", edit_class_sections)
     menu.add_row_text("Sort Current Sections", sort_class_sections)
-    window.register_layer(menu)
+    window.register_layer(menu, "Class Section Manager")
 
 
 def start():
     """Create the main class manager menu"""
     window = ui.get_window()
-    window.set_header("Class Manager")
 
     menu = ui.layers.ListLayer()
     menu.add_row_text("Setup New Class", setup_new_class)
@@ -426,4 +423,4 @@ def start():
     menu.add_row_text("Class Section Manager", class_section_manager)
     menu.add_row_text("Download Student Roster", change_class)
     menu.add_row_text("Change Class", download_roster)
-    window.register_layer(menu)
+    window.register_layer(menu, "Class Manager")
