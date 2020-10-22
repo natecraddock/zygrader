@@ -19,15 +19,12 @@ class WinContext:
 
 
 class Window:
-    # TODO: remove
-    CANCEL = -1
-
-    instance = None
+    INSTANCE = None
 
     @staticmethod
     def get_window() -> "Window":
-        if Window.instance:
-            return Window.instance
+        if Window.INSTANCE:
+            return Window.INSTANCE
         return None
 
     def update_preferences(self):
@@ -38,7 +35,7 @@ class Window:
         self.update_window()
 
     def __init__(self, callback, window_name):
-        Window.instance = self
+        Window.INSTANCE = self
         """Initialize screen and run callback function"""
         self.name = window_name
 
