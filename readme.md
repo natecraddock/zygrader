@@ -170,6 +170,15 @@ VSCode can debug zygrader by including something similar to the following in `la
     ]
 ```
 
+## Style Guide
+We use yapf for indentation and spacing, but we have a few other conventions
+that can't be enforced by yapf.
+
+### Naming
+* Variables and functions are in `snake_case`
+* Classes are in `UpperCamelCase`
+
+
 # Code Documentation
 This is an overview of the files in the `zygrader` directory:
 ```
