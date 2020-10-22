@@ -133,8 +133,8 @@ def submission_search_init():
         return
 
     logger = ui.layers.LoggerLayer()
-    logger.set_log_fn(lambda _: submission_search_fn(logger, lab, search_string,
-                                                     filename_input.get_path()))
+    logger.set_log_fn(lambda _: submission_search_fn(
+        logger, part, search_string, filename_input.get_path()))
     window.run_layer(logger, "Submission Search")
 
 
