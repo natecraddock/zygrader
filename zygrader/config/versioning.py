@@ -94,41 +94,25 @@ def do_versioning():
             config["data_dir"] = ""
 
 
+def find_versioning_message(window, version, user_version):
+    """Find and display a versioning message for the given version number."""
+    if compare_versions(version, user_version):
+        popup = ui.layers.Popup(f"Version {version}")
+        popup.set_message(get_version_message(version))
+        window.run_layer(popup)
+
+
 def show_versioning_message(window: ui.Window):
     """Notify the user of new changes in the changelog."""
 
-    # To modify the config with more flexibility, we need access to the raw json.
     user_version = preferences.get("version")
 
-    version = "4.0.0"
-    if compare_versions(version, user_version):
-        msg = get_version_message(version)
-        window.create_popup(f"Version {version}", msg,
-                            ui.components.Popup.ALIGN_LEFT)
+    # Add a version string for this array for each version that will
+    # Show an update popup
+    update_versions = ["4.0.0", "4.1.0", "4.2.0", "4.7.1", "4.8.8"]
 
-    version = "4.1.0"
-    if compare_versions(version, user_version):
-        msg = get_version_message(version)
-        window.create_popup(f"Version {version}", msg,
-                            ui.components.Popup.ALIGN_LEFT)
-
-    version = "4.2.0"
-    if compare_versions(version, user_version):
-        msg = get_version_message(version)
-        window.create_popup(f"Version {version}", msg,
-                            ui.components.Popup.ALIGN_LEFT)
-
-    version = "4.7.1"
-    if compare_versions(version, user_version):
-        msg = get_version_message(version)
-        window.create_popup(f"Version {version}", msg,
-                            ui.components.Popup.ALIGN_LEFT)
-
-    version = "4.8.0"
-    if compare_versions(version, user_version):
-        msg = get_version_message(version)
-        window.create_popup(f"Version {version}", msg,
-                            ui.components.Popup.ALIGN_LEFT)
+    for version in update_versions:
+        find_versioning_message(window, version, user_version)
 
     # Write the current version to the user's config file.
     # It is important to not update the number in do_versioning,
