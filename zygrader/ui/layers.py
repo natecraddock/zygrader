@@ -4,6 +4,7 @@ import os
 import queue
 import threading
 from typing import List
+from zygrader.logger import log
 
 from .events import Event, EventManager
 from . import window, components
@@ -45,8 +46,6 @@ class ComponentLayer:
         self.component = None
 
         self.blocking = False
-        self.has_fn = False
-        self.returns_result = False
         self._canceled = False
 
         # Flags to control rebuilding and redrawing in the event loop.
@@ -167,7 +166,6 @@ class WaitPopup(ComponentLayer):
         self.component = components.OptionsPopup(win.rows, win.cols, title,
                                                  ["hey"], ["Cancel"], False,
                                                  components.Popup.ALIGN_LEFT)
-        self.wait_fn = None
         self.worker_thread = None
 
     def event_handler(self, event: Event, event_manager: EventManager):
@@ -181,8 +179,6 @@ class WaitPopup(ComponentLayer):
         self.rebuild = True
 
     def set_wait_fn(self, wait_fn):
-        self.has_fn = True
-        self.wait_fn = wait_fn
         self.worker_thread = WorkerThread(wait_fn, "Wait Popup")
         self.worker_thread.start()
 
@@ -583,6 +579,7 @@ class ListLayer(ComponentLayer, Row):
         return self.component.get_selected_index()
 
 
+# TODO: Make ListPopup and ListLayer a single class with a bool arg to set popup.
 class ListPopup(ComponentLayer, Row):
     def __init__(self, title):
         ComponentLayer.__init__(self)
@@ -634,3 +631,31 @@ class ListPopup(ComponentLayer, Row):
 
     def selected_index(self):
         return self.component.get_selected_index()
+
+
+class LoggerLayer(ComponentLayer):
+    def __init__(self):
+        super().__init__()
+
+        win = window.Window.get_window()
+        self.component = components.Logger(win.rows - 1, win.cols, 1, 0)
+
+        self.worker_thread = None
+
+    def event_handler(self, event: Event, event_manager: EventManager):
+        self.redraw = True
+
+    def update(self, event_manager: EventManager):
+        if self.worker_thread.is_finished():
+            event_manager.push_layer_close_event()
+
+    def set_log_fn(self, log_fn):
+        self.worker_thread = WorkerThread(log_fn)
+        self.worker_thread.start()
+
+    def log(self, entry):
+        self.component.log(entry)
+        self.rebuild = True
+
+    def append(self, entry):
+        self.component.append(entry)

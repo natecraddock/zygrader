@@ -1023,11 +1023,13 @@ class TextInput(Popup):
 class Logger(Component):
     PADDING = 2
 
-    def __init__(self, y, x, height, width):
+    def __init__(self, height, width, y, x):
         self.height = height
         self.width = width
 
         self.window = curses.newwin(height, width, y, x)
+        self.window.bkgd(" ", curses.color_pair(1))
+        curses.curs_set(0)
 
         # Maintain a log (list) of data to display
         self.__log = []
@@ -1051,8 +1053,7 @@ class Logger(Component):
             add_str(self.window, liney, 0, line)
             liney += 1
 
-        # Loggers take control of event loop, refresh always
-        self.window.refresh()
+        self.window.noutrefresh()
 
     def log(self, entry):
         self.__log.append(entry)
@@ -1061,5 +1062,4 @@ class Logger(Component):
 
     def append(self, entry):
         self.__log[-1] += entry
-
         self.draw()

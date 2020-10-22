@@ -49,15 +49,9 @@ def check_student_submissions(zy_api, student_id, lab, search_string):
     return response
 
 
-def submission_search(lab, search_string, output_path):
-    """Search through student submissions for a given string
-
-    This is used mainly to look for suspicious code (cheaters)"""
-    window = ui.get_window()
+def submission_search_fn(logger, lab, search_string, output_path):
     students = data.get_students()
     zy_api = Zybooks()
-
-    logger = window.new_logger()
 
     with open(output_path, "w") as log_file:
         student_num = 1
@@ -94,7 +88,16 @@ def submission_search(lab, search_string, output_path):
 
             student_num += 1
 
-        window.remove_logger()
+
+def submission_search(lab, search_string, output_path):
+    """Search through student submissions for a given string
+
+    This is used mainly to look for suspicious code (cheaters)"""
+    window = ui.get_window()
+    logger = ui.layers.LoggerLayer()
+    logger.set_log_fn(
+        lambda _: submission_search_fn(logger, lab, search_string, output_path))
+    window.run_layer(logger)
 
 
 def submission_search_init():
