@@ -209,7 +209,7 @@ class GradePuller:
         index = 0
         for section, time in due_times.items():
             row = f"Section {section:>{section_padding}}: {time.strftime('%b %d, %Y at %I:%M:%S%p')}"
-            popup.add_row_text(row, lambda: select_due_times_fn(index))
+            popup.add_row_text(row, select_due_times_fn, index)
             index += 1
         self.window.run_layer(popup)
 

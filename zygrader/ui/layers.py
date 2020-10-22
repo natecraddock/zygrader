@@ -357,6 +357,7 @@ class Row:
 
         self.__subrows: List[self.__class__] = []
         self.__callback_fn = None
+        self._callback_args = None
 
         self.__expanded = False
 
@@ -386,8 +387,9 @@ class Row:
         self.__subrows.append(row)
         return row
 
-    def add_row_text(self, text: str, callback_fn=None):
+    def add_row_text(self, text: str, callback_fn=None, *args):
         row = self.__add_row(text)
+        row._callback_args = args
         row.set_callback_fn(callback_fn)
 
     def add_row_parent(self, text: str):
@@ -421,7 +423,10 @@ class Row:
 
     def do_action(self):
         if self.__type == Row.TEXT and self.__callback_fn:
-            self.__callback_fn()
+            if self._callback_args:
+                self.__callback_fn(*self._callback_args)
+            else:
+                self.__callback_fn()
         elif self.__type == Row.TEXT:
             event_manager = window.Window.get_window().event_manager
             event_manager.push_layer_close_event()
