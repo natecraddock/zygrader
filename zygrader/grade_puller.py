@@ -171,15 +171,24 @@ class GradePuller:
             for section in class_sections
         }
 
-        def select_due_times_fn(selected_index):
+        def select_due_times_fn(selected_index,
+                                due_time_popup: ui.layers.ListPopup):
+            update_row_text = lambda time, index: due_time_popup.set_subrow_text(
+                f"Section {section:>{section_padding}}: {time.strftime('%b %d, %Y at %I:%M:%S%p')}",
+                index)
+
             section = class_sections[selected_index]
 
             date_spinner = ui.layers.DatetimeSpinner("Due Date")
             date_spinner.set_initial_time(due_times[section])
             date_spinner.set_quickpicks([(50, 0), (59, 59), (0, 0)])
             self.window.run_layer(date_spinner)
+            new_datetime = date_spinner.get_time()
 
-            due_times[section] = date_spinner.get_time()
+            due_times[section] = new_datetime
+
+            # Reset row text for the selected row
+            update_row_text(new_datetime, selected_index)
 
             # For convenience, allow the day or datetime to be carried across
             # all sections so that selecting due times is easier
@@ -189,30 +198,32 @@ class GradePuller:
 
             msg = DisplayStr("Set all sections to this due date [u:and time]?")
             popup = ui.layers.BoolPopup("Set Due Time")
-            popup.set_message(msg)
+            popup.set_message([msg])
             self.window.run_layer(popup)
 
             if popup.get_result():
-                for section in due_times:
+                for i, section in enumerate(due_times):
                     due_times[section] = new_datetime
+                    update_row_text(new_datetime, i)
                 return
 
-            popup = ui.layers.BoolPopup("Set Due Time")
+            popup = ui.layers.BoolPopup("Set Due Date")
             popup.set_message(
                 ["Set all sections to this due date (but retain time)?"])
             self.window.run_layer(popup)
 
             if popup.get_result():
-                for section in due_times:
+                for i, section in enumerate(due_times):
                     old_datetime = due_times[section]
                     due_times[section] = datetime.datetime.combine(
                         date=new_datetime, time=old_datetime.time())
+                    update_row_text(due_times[section], i)
 
         popup = ui.layers.ListPopup("Set Due Times (use Back to finish)")
-        index = 1
+        index = 0
         for section, time in due_times.items():
-            row = f"Section {section:>{section_padding}}: {time.strftime('%b %d, %Y at %I:%M:%S%p')}"
-            popup.add_row_text(row, select_due_times_fn, index)
+            row_text = f"Section {section:>{section_padding}}: {time.strftime('%b %d, %Y at %I:%M:%S%p')}"
+            popup.add_row_text(row_text, select_due_times_fn, index, popup)
             index += 1
         self.window.run_layer(popup)
 

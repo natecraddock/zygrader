@@ -438,8 +438,8 @@ class Row:
 
     def add_row_text(self, text: str, callback_fn=None, *args):
         row = self.__add_row(text)
-        row._callback_args = args
-        row.set_callback_fn(callback_fn)
+        row.set_callback_fn(callback_fn, *args)
+        return row
 
     def add_row_parent(self, text: str):
         return self.__add_row(text, Row.PARENT)
@@ -447,10 +447,12 @@ class Row:
     def add_row_toggle(self, text: str, toggle: Toggle):
         row = self.__add_row(text, Row.TOGGLE)
         row.set_toggle_ob(toggle)
+        return row
 
     def add_row_radio(self, text: str, radio: Radio):
         row = self.__add_row(text, Row.RADIO)
         row.set_radio_ob(radio)
+        return row
 
     def get_type(self):
         return self.__type
@@ -461,14 +463,21 @@ class Row:
     def is_expanded(self):
         return self.__expanded
 
-    def set_callback_fn(self, callback_fn):
+    def set_callback_fn(self, callback_fn, *args):
         self.__callback_fn = callback_fn
+        self._callback_args = args
 
     def set_toggle_ob(self, toggle: Toggle):
         self.__toggle = toggle
 
     def set_radio_ob(self, radio: Radio):
         self.__radio = radio
+
+    def set_row_text(self, text):
+        self.__text = text
+
+    def set_subrow_text(self, text, index):
+        self.__subrows[index].set_row_text(text)
 
     def do_action(self):
         if self.__type == Row.TEXT and self.__callback_fn:
