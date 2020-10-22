@@ -174,12 +174,9 @@ def prep_lab_score_calc():
         window.run_layer(popup, "Prep Lab Calculator")
 
 
-def view_students_callback(context):
+def view_students_fn(student):
     """Create a popup to show info for the selected student"""
     window = ui.get_window()
-    students = data.get_students()
-
-    student = students[context.data]
 
     msg = [
         f"Name: {student.full_name}",
@@ -187,23 +184,27 @@ def view_students_callback(context):
         f"Section: {student.section}",
         f"ID: {student.id}",
     ]
-    window.create_popup("Student Info", msg, ui.components.Popup.ALIGN_LEFT)
+
+    popup = ui.layers.Popup("Student Info")
+    popup.set_message(msg)
+    window.run_layer(popup)
 
 
 def view_students():
     """Create the view students filtered list"""
     window = ui.get_window()
     students = data.get_students()
-    window.set_header("View Students")
 
     if not students:
-        window.create_popup("No Students",
-                            ["There are no students in the class to show."])
+        popup = ui.layers.Popup("No Students")
+        popup.set_message(["There are no students in the class to show."])
+        window.run_layer(popup)
         return
 
-    window.create_filtered_list("Student Name",
-                                input_data=students,
-                                callback=view_students_callback)
+    popup = ui.layers.ListPopup("Students")
+    for student in students:
+        popup.add_row_text(str(student), view_students_fn, student)
+    window.register_layer(popup, "View Students")
 
 
 def fetch_zybooks_toc():
