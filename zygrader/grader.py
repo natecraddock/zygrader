@@ -255,7 +255,7 @@ def flag_submission(lab, student):
     window = ui.get_window()
 
     text_input = ui.layers.TextInputLayer("Flag Note")
-    text_input.set_prompt("Enter a flag note")
+    text_input.set_prompt(["Enter a flag note"])
     window.run_layer(text_input)
     if text_input.was_canceled():
         return
