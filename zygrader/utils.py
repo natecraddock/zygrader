@@ -201,7 +201,7 @@ def view_students():
         window.run_layer(popup)
         return
 
-    popup = ui.layers.ListPopup("Students")
+    popup = ui.layers.ListLayer("Students", popup=True)
     for student in students:
         popup.add_row_text(str(student), view_students_fn, student)
     window.register_layer(popup, "View Students")

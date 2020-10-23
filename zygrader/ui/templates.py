@@ -48,7 +48,7 @@ class ZybookSectionSelector:
         section_pad_width = max([
             len(str(len(chapter["sections"]))) for chapter in self.zybooks_toc
         ])
-        popup = ui.layers.ListPopup(title)
+        popup = ui.layers.ListLayer(title, popup=True)
         for i, chapter in enumerate(self.zybooks_toc, 1):
             row = popup.add_row_parent(
                 f"{str(chapter['number']):>{chapter_pad_width}} - {chapter['title']}"

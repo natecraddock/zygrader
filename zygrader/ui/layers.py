@@ -516,13 +516,20 @@ class Row:
 
 class ListLayer(ComponentLayer, Row):
     """A reusable list that supports searching the options."""
-    def __init__(self):
+    def __init__(self, title="", popup=False):
         ComponentLayer.__init__(self)
         Row.__init__(self)
-        self.blocking = True
 
-        win = window.Window.get_window()
-        self.component = components.FilteredList(1, 0, win.rows - 1, win.cols)
+        if popup:
+            win = window.Window.get_window()
+            self.component = components.ListPopup(win.rows, win.cols, title,
+                                                  components.Popup.ALIGN_CENTER)
+        else:
+            self.blocking = True
+
+            win = window.Window.get_window()
+            self.component = components.FilteredList(1, 0, win.rows - 1,
+                                                     win.cols)
 
     def build(self):
         super().build()
@@ -579,60 +586,6 @@ class ListLayer(ComponentLayer, Row):
             #     if self.clear_filter:
             #         self.component.clear_filter()
             #     self.component.refresh()
-            # else:
-            #     break
-
-        self.redraw = True
-
-    def selected_index(self):
-        return self.component.get_selected_index()
-
-
-# TODO: Make ListPopup and ListLayer a single class with a bool arg to set popup.
-class ListPopup(ComponentLayer, Row):
-    def __init__(self, title):
-        ComponentLayer.__init__(self)
-        Row.__init__(self)
-
-        win = window.Window.get_window()
-        self.component = components.ListPopup(win.rows, win.cols, title,
-                                              components.Popup.ALIGN_CENTER)
-
-    def build(self):
-        super().build()
-        text_rows = []
-        self.build_string_lines(text_rows, self)
-        self.component.set_lines(text_rows)
-
-    def event_handler(self, event: Event, event_manager: EventManager):
-        if event.type == Event.DOWN:
-            self.component.down()
-        elif event.type == Event.UP:
-            self.component.up()
-        elif event.type == Event.HOME:
-            self.component.to_top()
-        elif event.type == Event.END:
-            self.component.to_bottom()
-        elif event.type == Event.LEFT and event_manager.left_right_menu_nav:
-            event_manager.push_layer_close_event()
-        elif event.type == Event.ESC and event_manager.use_esc_back:
-            # TODO: Use the wm for this?
-            event_manager.push_layer_close_event()
-            # retval = GO_BACK
-        elif (event.type
-              == Event.ENTER) or (event.type == Event.RIGHT
-                                  and event_manager.left_right_menu_nav):
-            if self.component.is_close_selected():
-                event_manager.push_layer_close_event()
-            else:
-                self.select_row(self.component.get_selected_index())
-            self.rebuild = True
-            # if self.component.selected() is GO_BACK:
-            #     break
-            # elif callback:
-            #     callback(
-            #         WinContext(self, event, self.component,
-            #                    self.component.selected()))
             # else:
             #     break
 

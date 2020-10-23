@@ -117,7 +117,7 @@ def view_changelog():
     window = ui.get_window()
     lines = config.versioning.load_changelog()
 
-    popup = ui.layers.ListPopup("Changelog")
+    popup = ui.layers.ListLayer("Changelog", popup=True)
     for line in lines:
         popup.add_row_text(line)
     window.run_layer(popup, "Changelog")

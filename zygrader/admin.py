@@ -106,7 +106,7 @@ def submission_search_init():
 
     # Select the lab part if needed
     if len(assignment.parts) > 1:
-        popup = ui.layers.ListPopup("Select Part")
+        popup = ui.layers.ListLayer("Select Part", popup=True)
         for part in assignment.parts:
             popup.add_row_text(part["name"])
         window.run_layer(popup, "Submissions Search")
@@ -156,7 +156,7 @@ def remove_locks():
     window = ui.get_window()
     all_locks = {lock: False for lock in data.lock.get_lock_files()}
 
-    popup = ui.layers.ListPopup("Select Locks to Remove")
+    popup = ui.layers.ListLayer("Select Locks to Remove", popup=True)
     for lock in all_locks:
         popup.add_row_toggle(lock, LockToggle(lock, all_locks))
     window.run_layer(popup)
