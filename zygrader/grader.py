@@ -74,10 +74,7 @@ def pick_submission(lab: data.model.Lab, student: data.model.Student,
     # If the lab has multiple parts, prompt to pick a part
     part_index = 0
     if len(lab.parts) > 1:
-        part_index = window.create_list_popup(
-            "Select Part", input_data=[name["name"] for name in lab.parts])
-        if part_index is ui.GO_BACK:
-            return
+        part_index = submission.pick_part()
 
     # Get list of all submissions for that part
     part = lab.parts[part_index]
@@ -91,10 +88,12 @@ def pick_submission(lab: data.model.Lab, student: data.model.Student,
     # Reverse to display most recent submission first
     all_submissions.reverse()
 
-    submission_index = window.create_list_popup("Select Submission",
-                                                all_submissions)
-    if submission_index is ui.GO_BACK:
-        return
+    popup = ui.layers.ListLayer("Select Submission", popup=True)
+    for submission in all_submissions:
+        popup.add_row_text(submission)
+    window.run_layer(popup)
+
+    submission_index = popup.selected_index()
 
     # Modify submission index to un-reverse the index
     submission_index = abs(submission_index - (len(all_submissions) - 1))
@@ -102,7 +101,7 @@ def pick_submission(lab: data.model.Lab, student: data.model.Student,
     # Fetch that submission
     part_response = zy_api.download_assignment_part(lab, student.id, part,
                                                     submission_index)
-    submission.update_part(part_response, part_index)
+    submission.update_part(part_response, lab.parts.index(part))
 
 
 def view_diff(first: model.Submission, second: model.Submission):
@@ -129,7 +128,7 @@ def view_diff(first: model.Submission, second: model.Submission):
     utils.view_string(diff, "submissions.diff", use_browser)
 
 
-def run_code_fn(window, context: ui.WinContext, submission):
+def run_code_fn(window, submission):
     """Callback to compile and run a submission's code"""
     use_gdb = False
 
@@ -142,17 +141,15 @@ def pair_programming_submission_callback(lab, submission):
     """Show both pair programming students for viewing a diff"""
     window = ui.get_window()
 
-    options = {
-        "Pick Submission":
-        lambda _: pick_submission(lab, submission.student, submission),
-        "Run":
-        lambda context: run_code_fn(window, context, submission),
-        "View":
-        lambda _: submission.show_files(),
-    }
+    popup = ui.layers.OptionsPopup("Pair Programming Submission")
+    popup.set_message(submission)
+    popup.add_option(
+        "Pick Submission",
+        lambda: pick_submission(lab, submission.student, submission))
+    popup.add_option("Run", lambda: run_code_fn(window, submission))
+    popup.add_option("View", lambda: submission.show_files())
+    window.run_layer(popup)
 
-    window.create_options_popup("Pair Programming Submission", submission,
-                                options, ui.components.Popup.ALIGN_LEFT)
     SharedData.running_process = None
 
 
@@ -201,7 +198,7 @@ def pair_programming_message(first, second) -> list:
     ]
 
 
-def grade_pair_programming(student_list, first_submission, use_locks):
+def grade_pair_programming(first_submission, use_locks):
     """Pick a second student to grade pair programming with"""
     # Get second student
     window = ui.get_window()
@@ -209,15 +206,17 @@ def grade_pair_programming(student_list, first_submission, use_locks):
 
     lab = first_submission.lab
 
-    # Get student
-    student_index = window.create_filtered_list(
-        "Student",
-        list_fill=lambda: fill_student_list(lab, students),
-        filter_function=data.Student.find,
-    )
-    if student_index is ui.GO_BACK:
+    student_list = ui.layers.ListLayer()
+    student_list.set_searchable("Student")
+    student_list.set_sortable()
+    fill_student_list(student_list, students, lab, use_locks)
+    window.run_layer(student_list)
+
+    if student_list.was_canceled():
         return
 
+    # Get student
+    student_index = student_list.selected_index()
     student = students[student_index]
 
     if not can_get_through_locks(use_locks, student, lab):
@@ -229,23 +228,22 @@ def grade_pair_programming(student_list, first_submission, use_locks):
         if second_submission is None:
             return
 
-        # Redraw the original list
-        update_student_list(window, student_list)
-
-        first_submission_fn = lambda _: pair_programming_submission_callback(
+        first_submission_fn = lambda: pair_programming_submission_callback(
             lab, first_submission)
-        second_submission_fn = lambda _: pair_programming_submission_callback(
+        second_submission_fn = lambda: pair_programming_submission_callback(
             lab, second_submission)
-        options = {
-            first_submission.student.full_name: first_submission_fn,
-            second_submission.student.full_name: second_submission_fn,
-            "View Diff":
-            lambda _: view_diff(first_submission, second_submission),
-        }
 
         msg = lambda: pair_programming_message(first_submission,
                                                second_submission)
-        window.create_options_popup("Pair Programming", msg, options)
+        popup = ui.layers.OptionsPopup("Pair Programming")
+        popup.set_message(msg)
+        popup.add_option(first_submission.student.full_name,
+                         first_submission_fn)
+        popup.add_option(second_submission.student.full_name,
+                         second_submission_fn)
+        popup.add_option("View Diff",
+                         lambda: view_diff(first_submission, second_submission))
+        window.run_layer(popup)
 
     finally:
         if use_locks:
@@ -293,19 +291,17 @@ def student_select_fn(selected_index, lab, use_locks):
         popup = ui.layers.OptionsPopup("Submission")
         popup.set_message(
             ["TODO: Fill in the submission text here... needs to update"])
-        popup.add_option("Flag", lambda _: flag_submission(lab, student))
+        popup.add_option("Flag", lambda: flag_submission(lab, student))
         popup.add_option("Pick Submission",
-                         lambda _: pick_submission(lab, student, submission))
-        # TODO: Pass student_list (component..) to grade_pair_programming
-        popup.add_option(
-            "Pair Programming",
-            lambda _: grade_pair_programming(None, submission, use_locks))
+                         lambda: pick_submission(lab, student, submission))
+        popup.add_option("Pair Programming",
+                         lambda: grade_pair_programming(submission, use_locks))
         if submission.flag & data.model.SubmissionFlag.DIFF_PARTS:
             popup.add_option("Diff Parts",
-                             lambda _: diff_parts_fn(window, submission))
+                             lambda: diff_parts_fn(window, submission))
         popup.add_option(
             "Run", lambda context: run_code_fn(window, context, submission))
-        popup.add_option("View", lambda _: submission.show_files())
+        popup.add_option("View", lambda: submission.show_files())
         window.run_layer(popup)
 
         SharedData.running_process = None

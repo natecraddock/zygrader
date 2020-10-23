@@ -369,8 +369,12 @@ class Submission(Iterable):
         window = ui.get_window()
         part_names = [self.get_part_identifier(x) for x in self.lab.parts]
 
-        picked = window.create_list_popup(title, part_names)
-        return picked
+        popup = ui.layers.ListLayer(title, popup=True)
+        for part in part_names:
+            popup.add_row_text(part)
+        window.run_layer(popup)
+
+        return popup.selected_index()
 
     def compile_code(self):
         # Use a separate tmp dir to avoid opening the binary in a text editor

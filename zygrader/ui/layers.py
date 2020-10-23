@@ -68,6 +68,8 @@ class ComponentLayer:
 
     def resize_component(self, rows, cols):
         self.component.resize(rows, cols)
+        self.rebuild = True
+        self.redraw = True
 
     def event_handler(self, event: Event, event_manager: EventManager):
         pass
@@ -144,6 +146,7 @@ class OptionsPopup(ComponentLayer):
                                                  components.Popup.ALIGN_LEFT)
 
     def build(self):
+        super().build()
         self.component.set_options(list(self.options))
 
     def set_message(self, message):
@@ -166,7 +169,8 @@ class OptionsPopup(ComponentLayer):
             event_manager.push_layer_close_event()
             self._canceled = True
         elif event.type == Event.ENTER:
-            event_manager.push_layer_close_event()
+            key = self.component.selected()
+            self.options[key]()
         self.redraw = True
 
 

@@ -194,6 +194,7 @@ class OptionsPopup(Popup):
 
     def set_options(self, options):
         self.options = options
+        self.index = len(options) - 1
         self.options_length = sum([len(o) for o in options]) + len(options) + 2
 
     def next(self):
@@ -240,6 +241,7 @@ class DatetimeSpinner(Popup):
 
     def set_optional(self, optional):
         self.optional = optional
+        self.__init_fields()
 
     def set_include_date(self, include_date):
         self.include_date = include_date
