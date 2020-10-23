@@ -40,8 +40,7 @@ def check_student_submissions(zy_api, student_id, lab, search_string):
         # Check each file for the matched string
         for source_file in extracted_zip_files.keys():
             pattern = re.compile(fr'{search_string}')
-            matches = pattern.finditer(extracted_zip_files[source_file])
-            if matches:
+            if re.match(pattern, extracted_zip_files[source_file]):
 
                 # Get the date and time of the submission and return it
                 response["time"] = zy_api.get_time_string(submission)
