@@ -2,6 +2,7 @@
 the class, scan through student submissions, and access to other menus"""
 import time
 import requests
+import re
 
 from zygrader.ui.templates import filename_input
 from zygrader.zybooks import Zybooks
@@ -38,7 +39,9 @@ def check_student_submissions(zy_api, student_id, lab, search_string):
 
         # Check each file for the matched string
         for source_file in extracted_zip_files.keys():
-            if extracted_zip_files[source_file].find(search_string) != -1:
+            pattern = re.compile(fr'{search_string}')
+            matches = pattern.finditer(extracted_zip_files[source_file])
+            if matches:
 
                 # Get the date and time of the submission and return it
                 response["time"] = zy_api.get_time_string(submission)
