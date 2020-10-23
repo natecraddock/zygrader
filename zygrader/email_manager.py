@@ -61,4 +61,6 @@ def email_menu():
     student_list.set_sortable()
     fill_student_list(student_list, students)
     watch_students(student_list, students)
+    student_list.set_destroy_fn(
+        lambda: data.fs_watch.fs_watch_unregister("student_email_list_watch"))
     window.register_layer(student_list, "Email Manager")

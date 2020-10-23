@@ -334,13 +334,14 @@ def lab_select_fn(selected_index, use_locks):
     student_list.set_searchable("Student")
     student_list.set_sortable()
     fill_student_list(student_list, students, lab, use_locks)
-    window.register_layer(student_list, lab.name)
 
     # Register a watch function to watch the students
     watch_students(student_list, students, lab, use_locks)
 
     # # Remove the file watch handler when done choosing students
-    # data.fs_watch.fs_watch_unregister("student_list_watch")
+    student_list.set_destroy_fn(
+        lambda: data.fs_watch.fs_watch_unregister("student_list_watch"))
+    window.register_layer(student_list, lab.name)
 
 
 def grade(use_locks=True):

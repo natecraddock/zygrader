@@ -176,8 +176,10 @@ class Window:
 
     def unregister_layer(self):
         """Remove the top layer from the stack."""
-        self.layers.pop()
+        layer = self.layers.pop()
         self.active_layer = self.layers[-1] if self.layers else None
+
+        layer.destroy()
 
         self.__update_header_title()
 

@@ -55,6 +55,8 @@ class ComponentLayer:
         self.rebuild = True
         self.redraw = False
 
+        self.on_destroy_fn = None
+
     def build(self):
         """An optional function to finalize construction of a Layer upon registration."""
         self.rebuild = False
@@ -72,6 +74,13 @@ class ComponentLayer:
 
     def update(self, event_manager: EventManager):
         pass
+
+    def destroy(self):
+        if self.on_destroy_fn:
+            self.on_destroy_fn()
+
+    def set_destroy_fn(self, destroy_fn):
+        self.on_destroy_fn = destroy_fn
 
     def was_canceled(self) -> bool:
         return self._canceled
