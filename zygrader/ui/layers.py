@@ -124,7 +124,7 @@ class BoolPopup(ComponentLayer):
 
 
 class OptionsPopup(ComponentLayer):
-    def __init__(self, title, message):
+    def __init__(self, title, message=[]):
         super().__init__()
         self.options = {}
 
