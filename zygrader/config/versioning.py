@@ -101,6 +101,9 @@ def find_versioning_message(window, version, user_version):
         popup.set_message(get_version_message(version))
         window.run_layer(popup)
 
+        return True
+    return False
+
 
 def show_versioning_message(window: ui.Window):
     """Notify the user of new changes in the changelog."""
@@ -111,11 +114,14 @@ def show_versioning_message(window: ui.Window):
     # Show an update popup
     update_versions = ["4.0.0", "4.1.0", "4.2.0", "4.7.1", "4.8.8"]
 
+    updated = False
     for version in update_versions:
-        find_versioning_message(window, version, user_version)
+        if find_versioning_message(window, version, user_version):
+            updated = True
 
     # Write the current version to the user's config file.
     # It is important to not update the number in do_versioning,
     # otherwise the version number here will be updated and popups
     # will not show.
-    update_user_version()
+    if updated:
+        update_user_version()

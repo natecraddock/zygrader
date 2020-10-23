@@ -533,7 +533,6 @@ class ListLayer(ComponentLayer, Row):
 
     def build(self):
         super().build()
-
         text_rows = []
         self.build_string_lines(text_rows, self)
         self.component.set_lines(text_rows)
@@ -577,6 +576,7 @@ class ListLayer(ComponentLayer, Row):
                 self._canceled = True
             else:
                 self.select_row(self.component.get_selected_index())
+            self.rebuild = True
 
             # if callback and self.component.selected() != GO_BACK:
             #     self.component.dirty = True
