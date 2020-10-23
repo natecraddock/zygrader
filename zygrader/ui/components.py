@@ -812,6 +812,19 @@ class FilteredList(ScrollableList):
                     f"{self._search_prompt}: {self._search_text}")
             self.text_input.noutrefresh()
 
+    def resize(self, rows, cols):
+        self.rows = rows - 1
+        self.cols = cols
+
+        try:
+            self.window.mvwin(self.y, self.x)
+            self.text_input.mvwin(self.rows, 0)
+        except:
+            pass
+
+        resize_window(self.window, self.rows - 1, self.cols)
+        resize_window(self.text_input, 1, self.cols)
+
 
 class ListPopup(Popup, ScrollableList):
     V_PADDING = Popup.PADDING * 2

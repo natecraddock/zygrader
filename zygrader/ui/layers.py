@@ -4,6 +4,7 @@ import os
 import queue
 import threading
 from typing import List
+from zygrader.ui.components import Component
 from zygrader.logger import log
 
 from .events import Event, EventManager
@@ -44,7 +45,7 @@ class ComponentLayer:
     def __init__(self):
         # Title is used to set the header text when this component layer is active
         self.title: str = ""
-        self.component = None
+        self.component: Component = None
 
         self.blocking = False
         self._canceled = False
@@ -62,6 +63,9 @@ class ComponentLayer:
     def draw(self):
         self.redraw = False
         self.component.draw()
+
+    def resize_component(self, rows, cols):
+        self.component.resize(rows, cols)
 
     def event_handler(self, event: Event, event_manager: EventManager):
         pass

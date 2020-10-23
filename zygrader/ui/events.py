@@ -43,6 +43,7 @@ class Event:
     HEADER_UPDATE = 20
 
     LAYER_CLOSE = 21
+    RESIZE = 22
 
     def __init__(self, event_type, value, modifier=None):
         self.type = event_type
@@ -133,8 +134,7 @@ class EventManager:
 
         # Cases for each type of input
         if input_code == curses.KEY_RESIZE:
-            #TODO: Send resize event
-            # self.__resize_terminal()
+            event = Event.RESIZE
             curses.flushinp()
         elif input_code in {curses.KEY_ENTER, ord('\n'), ord('\r')}:
             event = Event.ENTER

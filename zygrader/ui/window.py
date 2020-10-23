@@ -101,10 +101,8 @@ class Window:
         self.__get_window_dimensions()
         curses.resize_term(self.rows, self.cols)
 
-        for component in self.components:
-            component.resize(self.rows, self.cols)
-
-        self.draw()
+        for layer in self.layers:
+            layer.resize_component(self.rows, self.cols)
 
     def get_header_colors(self):
         if self.dark_mode:
@@ -217,6 +215,8 @@ class Window:
             pass
         elif event.type == Event.LAYER_CLOSE:
             self.unregister_layer()
+        elif event.type == Event.RESIZE:
+            self.__resize_terminal()
         else:
             self.active_layer.event_handler(event, self.event_manager)
 
