@@ -49,12 +49,11 @@ def authenticate(window: ui.Window, zy_api: Zybooks, email, password):
 
 def get_password(window: ui.Window):
     """Prompt for the user's password"""
-    window.set_header("Sign In")
 
     text_input = ui.layers.TextInputLayer(
         "Enter Password", mask=ui.components.TextInput.TEXT_MASKED)
     text_input.set_prompt(["Enter your zyBooks password"])
-    window.run_layer(text_input)
+    window.run_layer(text_input, "Sign In")
 
     if text_input.was_canceled():
         return False
@@ -65,13 +64,12 @@ def get_password(window: ui.Window):
 # Create a user account
 def create_account(window: ui.Window, zy_api):
     """Create zybooks user account info (email & password) in config"""
-    window.set_header("Sign In")
 
     while True:
         # Get user account information
         text_input = ui.layers.TextInputLayer("Enter Email")
         text_input.set_prompt(["Enter your zyBooks email"])
-        window.run_layer(text_input)
+        window.run_layer(text_input, "Sign In")
 
         if text_input.was_canceled():
             return False
@@ -186,8 +184,6 @@ class PreferenceRadio(ui.layers.Radio):
 def preferences_menu():
     """Create the preferences popup"""
     window = ui.get_window()
-    window.set_header(f"Preferences")
-
     popup = ui.layers.ListLayer("User Preferences", popup=True)
 
     row = popup.add_row_parent("Appearance")
@@ -230,4 +226,4 @@ def preferences_menu():
                        PreferenceToggle("save_password", save_password_toggle))
     row.add_row_text("Log Out", logout)
 
-    window.register_layer(popup)
+    window.register_layer(popup, "Preferences")
