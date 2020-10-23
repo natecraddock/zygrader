@@ -12,42 +12,27 @@ from zygrader import utils
 from zygrader.zybooks import Zybooks
 
 
-def color_student_lines(lab, student):
+def get_student_row_color_sort_index(lab, student):
     """Color the student names in the grader based on locked, flagged, or normal status"""
     if data.lock.is_locked(student, lab) and not isinstance(student, str):
-        return curses.color_pair(2)
+        return curses.color_pair(2), 0
     if data.flags.is_submission_flagged(student,
                                         lab) and not isinstance(student, str):
-        return curses.color_pair(7)
-    return curses.color_pair(1)
+        return curses.color_pair(7), 1
+    return curses.color_pair(1), 2
 
 
-def fill_student_list(lab, students):
-    """Given a list of students, fill the list sorting locked and
-    flagged students to the top; also color the lines"""
-    lines = []
-    num_locked = 0
-    for i, student in enumerate(students):
-        line = ui.components.FilteredList.ListLine(i + 1, student)
-        line.color = color_student_lines(lab, student)
+def fill_student_list(student_list: ui.layers.ListLayer, students, lab,
+                      use_locks):
+    student_list.clear_rows()
 
-        if line.color == curses.color_pair(2):
-            lines.insert(0, line)
-            num_locked += 1
-        elif line.color == curses.color_pair(7):
-            lines.insert(num_locked, line)
-        else:
-            lines.append(line)
-
-    return lines
-
-
-def update_student_list(window: ui.Window,
-                        student_list: ui.components.FilteredList):
-    """Update the student list when the locks or flags change"""
-    student_list.refresh()
-    events = ui.get_events()
-    events.push_refresh_event()
+    for index, student in enumerate(students):
+        row = student_list.add_row_text(str(student), student_select_fn, index,
+                                        lab, use_locks)
+        color, sort_index = get_student_row_color_sort_index(lab, student)
+        row.set_row_color(color)
+        row.set_row_sort_index(sort_index)
+    student_list.rebuild = True
 
 
 def get_submission(lab, student, use_locks=True):
@@ -331,12 +316,12 @@ def student_select_fn(selected_index, lab, use_locks):
             data.lock.unlock(student, lab)
 
 
-def watch_students(window: ui.Window, student_list: ui.components.FilteredList):
+def watch_students(student_list, students, lab, use_locks):
     """Register paths when the filtered list is created"""
     paths = [SharedData.get_locks_directory(), SharedData.get_flags_directory()]
-
-    update_list = lambda _: update_student_list(window, student_list)
-    data.fs_watch.fs_watch_register(paths, "student_list_watch", update_list)
+    data.fs_watch.fs_watch_register(paths, "student_list_watch",
+                                    fill_student_list, student_list, students,
+                                    lab, use_locks)
 
 
 def lab_select_fn(selected_index, use_locks):
@@ -345,27 +330,17 @@ def lab_select_fn(selected_index, use_locks):
     lab = data.get_labs()[selected_index]
     students = data.get_students()
 
-    # student_select_fn = lambda context: student_callback(
-    #     context, lab, use_locks)
-
-    # # Get student
-    # window.create_filtered_list(
-    #     "Student",
-    #     list_fill=lambda: fill_student_list(lab, students),
-    #     callback=student_select_fn,
-    #     filter_function=data.Student.find,
-    #     create_fn=lambda student_list: watch_students(window, student_list),
-    # )
-
     student_list = ui.layers.ListLayer()
     student_list.set_searchable("Student")
-    for index, student in enumerate(students):
-        student_list.add_row_text(str(student), student_select_fn, index, lab,
-                                  use_locks)
+    student_list.set_sortable()
+    fill_student_list(student_list, students, lab, use_locks)
     window.register_layer(student_list, lab.name)
 
-    # Remove the file watch handler when done choosing students
-    data.fs_watch.fs_watch_unregister("student_list_watch")
+    # Register a watch function to watch the students
+    watch_students(student_list, students, lab, use_locks)
+
+    # # Remove the file watch handler when done choosing students
+    # data.fs_watch.fs_watch_unregister("student_list_watch")
 
 
 def grade(use_locks=True):

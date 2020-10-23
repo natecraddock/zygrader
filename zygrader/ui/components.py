@@ -639,8 +639,8 @@ class ScrollableList(Component):
             self.sort_index = sort_index
 
     @staticmethod
-    def create_line(text, color=0, sort_index=0):
-        return ScrollableList.Line(text, color, sort_index)
+    def create_line(index, text, color=0, sort_index=0):
+        return ScrollableList.Line(index, text, color, sort_index)
 
     def __init__(self):
         self._rows = 0
@@ -662,7 +662,7 @@ class ScrollableList(Component):
 
     def set_lines(self, lines):
         self._lines = [
-            ScrollableList.create_line(i, line)
+            ScrollableList.create_line(i, line[0], line[1], line[2])
             for i, line in enumerate(lines, 1)
         ]
         self.__create_display_lines()
@@ -798,11 +798,11 @@ class FilteredList(ScrollableList):
             if line_number + self._scroll == self._selected_index:
                 add_str(self.window, line_number, 0,
                         f"{ScrollableList.SELECTED_PREFIX}{line.text}",
-                        curses.A_BOLD)
+                        curses.A_BOLD | line.color)
             else:
                 add_str(self.window, line_number, 0,
                         f"{ScrollableList.UNSELECTED_PREFIX}{line.text}",
-                        curses.A_DIM)
+                        curses.A_DIM | line.color)
         self.window.noutrefresh()
 
         # Draw the optional search field

@@ -405,6 +405,8 @@ class Row:
     def __init__(self, text: str = "", _type=HOLDER):
         self.__type = _type
         self.__text = text
+        self.sort_index = 0
+        self.color = 0
 
         self.__subrows: List[self.__class__] = []
         self.__callback_fn = None
@@ -429,7 +431,7 @@ class Row:
     def build_string_lines(self, lines, start, depth=0):
         OFFSET = " " * (4 * depth)
         for row in start.get_subrows():
-            lines.append(OFFSET + str(row))
+            lines.append((OFFSET + str(row), row.color, row.sort_index))
             if row.get_type() == Row.PARENT and row.is_expanded():
                 self.build_string_lines(lines, row, depth + 1)
 
@@ -478,8 +480,17 @@ class Row:
     def set_row_text(self, text):
         self.__text = text
 
+    def set_row_sort_index(self, sort_index):
+        self.sort_index = sort_index
+
+    def set_row_color(self, color):
+        self.color = color
+
     def set_subrow_text(self, text, index):
         self.__subrows[index].set_row_text(text)
+
+    def clear_rows(self):
+        self.__subrows.clear()
 
     def do_action(self):
         if self.__type == Row.TEXT and self.__callback_fn:

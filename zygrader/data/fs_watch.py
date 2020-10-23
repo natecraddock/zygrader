@@ -7,7 +7,7 @@ import typing
 
 class WatchData:
     def __init__(self, paths: list, identifier: str,
-                 callback: typing.Callable[[str], None]):
+                 callback: typing.Callable[[str], None], *args):
         self.paths = {}
         for path in paths:
             self.paths[path] = 0
@@ -15,6 +15,7 @@ class WatchData:
 
         self.identifier = identifier
         self.callback = callback
+        self.args = args
 
     def init_paths(self):
         for path in self.paths.keys():
@@ -29,7 +30,7 @@ class WatchData:
                 changed = True
 
         if changed:
-            self.callback(self.identifier)
+            self.callback(*self.args)
 
 
 WATCH_INTEREST = []
@@ -52,9 +53,9 @@ def start_fs_watch():
     watch_thread.start()
 
 
-def fs_watch_register(paths: list, identifier: str, callback: callable):
+def fs_watch_register(paths: list, identifier: str, callback: callable, *args):
     """Register paths with a callback function"""
-    WATCH_INTEREST.append(WatchData(paths, identifier, callback))
+    WATCH_INTEREST.append(WatchData(paths, identifier, callback, *args))
 
 
 def fs_watch_unregister(identifier: str):

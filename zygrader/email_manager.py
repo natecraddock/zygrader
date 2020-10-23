@@ -3,7 +3,6 @@
 import curses
 import getpass
 
-from zygrader.grader import update_student_list
 from zygrader import data
 from zygrader import ui
 
