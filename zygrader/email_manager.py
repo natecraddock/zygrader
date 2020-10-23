@@ -16,13 +16,15 @@ def lock_student_callback(context: ui.WinContext):
         netid = data.lock.get_locked_netid(student)
         if netid != getpass.getuser():
             msg = [f"{netid} is replying to {student.first_name}'s email"]
-            window.create_popup("Student Locked", msg)
+            popup = ui.layers.Popup("Student Locked", msg)
+            window.run_layer(popup)
             return
 
     try:
         data.lock.lock(student)
         msg = [f"You have locked {student.full_name} for emailing."]
-        window.create_popup("Student Locked", msg)
+        popup = ui.layers.Popup("Student Locked", msg)
+        window.run_layer(popup)
     finally:
         data.lock.unlock(student)
 

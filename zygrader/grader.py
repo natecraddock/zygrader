@@ -69,7 +69,8 @@ def get_submission(lab, student, use_locks=True):
             "Some files could not be downloaded. Please",
             "View the most recent submission on zyBooks.",
         ]
-        window.create_popup("Warning", msg)
+        popup = ui.layers("Warning", msg)
+        window.run_layer(popup)
 
     # A student may have submissions beyond the due date, and an exception
     # In case that happens, always allow a normal grade, but show a message
@@ -97,8 +98,9 @@ def pick_submission(lab: data.model.Lab, student: data.model.Student,
     part = lab.parts[part_index]
     all_submissions = zy_api.get_submissions_list(part["id"], student.id)
     if not all_submissions:
-        window.create_popup("No Submissions",
-                            ["The student did not submit this part"])
+        popup = ui.layers.Popup("No Submissions",
+                                ["The student did not submit this part"])
+        window.run_layer(popup)
         return
 
     # Reverse to display most recent submission first
@@ -123,12 +125,10 @@ def view_diff(first: model.Submission, second: model.Submission):
     if (first.flag & model.SubmissionFlag.NO_SUBMISSION
             or second.flag & model.SubmissionFlag.NO_SUBMISSION):
         window = ui.get_window()
-        window.create_popup(
-            "No Submission",
-            [
-                "Cannot diff submissions because at least one student has not submitted."
-            ],
-        )
+        popup = ui.layers.Popup("No Submissions", [
+            "Cannot diff submissions because at least one student has not submitted."
+        ])
+        window.run_layer(popup)
         return
 
     use_browser = preferences.get("browser_diff")
@@ -149,7 +149,8 @@ def run_code_fn(window, context: ui.WinContext, submission):
     use_gdb = False
 
     if not submission.compile_and_run_code(use_gdb):
-        window.create_popup("Error", ["Could not compile and run code"])
+        popup = ui.layers.Popup("Error", ["Could not compile and run code"])
+        window.run_layer(popup)
 
 
 def pair_programming_submission_callback(lab, submission):
@@ -182,7 +183,8 @@ def can_get_through_locks(use_locks, student, lab):
         # If being graded by the user who locked it, allow grading
         if netid != getpass.getuser():
             msg = [f"This student is already being graded by {netid}"]
-            window.create_popup("Student Locked", msg)
+            popup = ui.layers.Popup("Student Locked", msg)
+            window.run_layer(popup)
             return False
 
     if data.flags.is_submission_flagged(student, lab):
@@ -193,9 +195,10 @@ def can_get_through_locks(use_locks, student, lab):
             "",
             "Would you like to unflag it?",
         ]
-        remove = window.create_bool_popup("Submission Flagged", msg)
+        popup = ui.layers.BoolPopup("Submission Flagged", msg)
+        window.run_layer(popup)
 
-        if remove:
+        if popup.get_result():
             data.flags.unflag_submission(student, lab)
         else:
             return False
@@ -268,18 +271,21 @@ def flag_submission(lab, student):
     """Flag a submission with a note"""
     window = ui.get_window()
 
-    note = window.create_text_input("Flag Note", "Enter a flag note")
-    if note == ui.GO_BACK:
+    text_input = ui.layers.TextInputLayer("Flag Note")
+    text_input.set_prompt("Enter a flag note")
+    window.run_layer(text_input)
+    if text_input.was_canceled():
         return
 
-    data.flags.flag_submission(student, lab, note)
+    data.flags.flag_submission(student, lab, text_input.get_text())
 
 
 def diff_parts_fn(window, submission):
     """Callback for text diffing parts of a submission"""
     error = submission.diff_parts()
     if error:
-        window.create_popup("Error", [error])
+        popup = ui.layer.Popup("Error", [error])
+        window.run_layer(popup)
 
 
 def student_select_fn(selected_index, lab, use_locks):

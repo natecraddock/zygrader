@@ -40,16 +40,21 @@ def setup_new_class():
     window = ui.get_window()
     zy_api = Zybooks()
 
-    code = window.create_text_input("Class Code", "Enter class code")
-    if code == ui.Window.CANCEL:
+    text_input = ui.layers.TextInputLayer("Class Code")
+    text_input.set_prompt("Enter class code")
+    window.run_layer(text_input)
+    if text_input.was_canceled():
         return
 
     # Check if class code is valid
+    code = text_input.get_text()
     valid = zy_api.check_valid_class(code)
     if valid:
-        window.create_popup("Valid", [f"{code} is valid"])
+        popup = ui.layers.Popup("Valid", [f"{code} is valid"])
+        window.run_layer(popup)
     else:
-        window.create_popup("Invalid", [f"{code} is invalid"])
+        popup = ui.layers.Popup("Invalid", [f"{code} is invalid"])
+        window.run_layer(popup)
         return
 
     # If code is valid, add it to the shared configuration
@@ -59,8 +64,9 @@ def setup_new_class():
     roster = zy_api.get_roster()
 
     save_roster(roster)
-    window.create_popup("Finished", ["Successfully downloaded student roster"])
-
+    popup = ui.layers.Popup("Finished",
+                            ["Successfully downloaded student roster"])
+    window.run_layer(popup)
     class_section_manager()
 
 
@@ -69,9 +75,13 @@ def add_lab():
     window = ui.get_window()
     zy_api = Zybooks()
 
-    lab_name = window.create_text_input("Lab Name", "Enter the Lab Name")
-    if lab_name == ui.Window.CANCEL:
+    text_input = ui.layers.TextInputLayer("Lab Name")
+    text_input.set_prompt("Enter the Lab Name")
+    window.run_layer(text_input)
+    if text_input.was_canceled():
         return
+
+    lab_name = text_input.get_text()
 
     # Get lab part(s)
     parts = []
@@ -84,7 +94,8 @@ def add_lab():
         part = {}
         response = zy_api.get_zybook_section(chapter, section)
         if not response.success:
-            window.create_popup("Error", ["Invalid URL"])
+            popup = ui.layers.Popup("Error", ["Invalid URL"])
+            window.run_layer(popup)
         part["name"] = response.name
         part["id"] = response.id
         parts.append(part)
@@ -149,14 +160,14 @@ def toggle_lab_option(lab, option):
 def rename_lab(filtered_list, lab):
     """Rename a lab"""
     window = ui.get_window()
-
     labs = data.get_labs()
 
-    name = window.create_text_input("Rename Lab",
-                                    "Enter Lab's new name",
-                                    text=lab.name)
-    if name != ui.Window.CANCEL:
-        lab.name = name
+    text_input = ui.layers.TextInputLayer("Rename Lab")
+    text_input.set_prompt("Enter Lab's new name")
+    text_input.set_text(lab.name)
+    window.run_layer(text_input)
+    if not text_input.was_canceled():
+        lab.name = text_input.get_text()
         data.write_labs(labs)
         filtered_list.refresh()
 
@@ -231,7 +242,9 @@ def move_lab(filtered_list, lab, step):
 def remove_fn(filtered_list, window, lab) -> bool:
     """Remove a lab from the list"""
     msg = [f"Are you sure you want to remove {lab.name}?"]
-    remove = window.create_bool_popup("Confirm", msg)
+    popup = ui.layers.BoolPopup("Confirm", msg)
+    window.run_layer(popup)
+    remove = popup.get_result()
 
     if remove:
         labs = data.get_labs()
@@ -284,15 +297,16 @@ def get_class_section(old_section: data.model.ClassSection = None):
     init_text = ""
     if old_section:
         init_text = str(old_section.section_number)
-    section_num_str = window.create_text_input(
-        "Section Number",
-        "Enter the new section number for this section",
-        text=init_text)
 
-    if section_num_str == ui.Window.CANCEL:
+    text_input = ui.layers.TextInputLayer("Section Number")
+    text_input.set_prompt("Enter the new section number for this section")
+    text_input.set_text(init_text)
+    window.run_layer(text_input)
+    if text_input.was_canceled():
         return None
 
-    section_num = int(section_num_str)
+    # FIXME: This assumes the int parses correctly
+    section_num = int(text_input.get_text())
 
     date_spinner = ui.layers.DatetimeSpinner("Section Default Due Time")
     date_spinner.set_quickpicks([(50, 0), (59, 59), (0, 0)])
@@ -356,9 +370,9 @@ def sort_class_sections():
     data.write_class_sections(class_sections)
 
     window = ui.get_window()
-
-    msg = ["The Class Sections are now sorted by section number"]
-    window.create_popup("Finished", msg)
+    popup = ui.layers.Popup(
+        "Finished", ["The Class Sections are now sorted by section number"])
+    window.run_layer(popup)
 
 
 def download_roster(silent=False):
@@ -369,13 +383,15 @@ def download_roster(silent=False):
     roster = zy_api.get_roster()
 
     if not silent and not roster:
-        window.create_popup("Failed", ["Failed to download student roster"])
+        popup = ui.layers.Popup("Failed", ["Failed to download student roster"])
+        window.run_layer(popup)
         return
     if roster:
         save_roster(roster)
     if not silent:
-        window.create_popup("Finished",
-                            ["Successfully downloaded student roster"])
+        popup = ui.layers.Popup("Finished",
+                                ["Successfully downloaded student roster"])
+        window.run_layer(popup)
 
 
 def change_class():
@@ -389,9 +405,9 @@ def change_class():
     code_index = window.create_filtered_list("Class", input_data=class_codes)
     if code_index != ui.GO_BACK:
         SharedData.set_current_class_code(class_codes[code_index])
-
-        window.create_popup("Changed Class",
-                            [f"Class changed to {class_codes[code_index]}"])
+        popup = ui.layers.Popup("Changed Class",
+                                [f"Class changed to {class_codes[code_index]}"])
+        window.run_layer(popup)
 
 
 def lab_manager():

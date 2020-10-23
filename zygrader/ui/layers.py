@@ -75,11 +75,11 @@ class ComponentLayer:
 
 class Popup(ComponentLayer):
     """A popup that shows a message until the user presses Enter."""
-    def __init__(self, title):
+    def __init__(self, title, message=[]):
         super().__init__()
 
         win = window.Window.get_window()
-        self.component = components.Popup(win.rows, win.cols, title, [],
+        self.component = components.Popup(win.rows, win.cols, title, message,
                                           components.Popup.ALIGN_LEFT)
 
     def event_handler(self, event: Event, event_manager: EventManager):
@@ -94,12 +94,13 @@ class BoolPopup(ComponentLayer):
     """A popup that asks for a Yes/No response."""
     __OPTIONS = ["Yes", "No"]
 
-    def __init__(self, title):
+    def __init__(self, title, message=[]):
         super().__init__()
 
         win = window.Window.get_window()
-        self.component = components.OptionsPopup(win.rows, win.cols, title, [],
-                                                 BoolPopup.__OPTIONS, False,
+        self.component = components.OptionsPopup(win.rows, win.cols, title,
+                                                 message, BoolPopup.__OPTIONS,
+                                                 False,
                                                  components.Popup.ALIGN_LEFT)
 
     def event_handler(self, event: Event, event_manager: EventManager):
@@ -119,14 +120,14 @@ class BoolPopup(ComponentLayer):
 
 
 class OptionsPopup(ComponentLayer):
-    def __init__(self, title):
+    def __init__(self, title, message):
         super().__init__()
         self.options = {}
 
         win = window.Window.get_window()
         # TODO: Cleanup constructor
-        self.component = components.OptionsPopup(win.rows, win.cols, title, [],
-                                                 [], False,
+        self.component = components.OptionsPopup(win.rows, win.cols, title,
+                                                 message, [], False,
                                                  components.Popup.ALIGN_LEFT)
 
     def build(self):
