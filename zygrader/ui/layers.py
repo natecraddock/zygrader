@@ -578,17 +578,6 @@ class ListLayer(ComponentLayer, Row):
                 self.select_row(self.component.get_selected_index())
             self.rebuild = True
 
-            # if callback and self.component.selected() != GO_BACK:
-            #     self.component.dirty = True
-            #     callback(
-            #         WinContext(self, event, self.component,
-            #                    self.component.selected()))
-            #     if self.clear_filter:
-            #         self.component.clear_filter()
-            #     self.component.refresh()
-            # else:
-            #     break
-
         self.redraw = True
 
     def selected_index(self):
