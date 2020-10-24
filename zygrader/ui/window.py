@@ -293,6 +293,11 @@ class Window:
         self.rows, self.cols = self.stdscr.getmaxyx()
 
     def __init_colors(self):
+        CURSES_ORANGE = 202
+        CURSES_GREY = 240
+        CURSES_GREEN = 34
+        CURSES_PURPLE = 93
+
         curses.init_pair(1, curses.COLOR_WHITE, curses.COLOR_BLACK)
         curses.init_pair(2, curses.COLOR_RED, curses.COLOR_BLACK)
 
@@ -307,6 +312,14 @@ class Window:
         # Flagged lines
         curses.init_pair(7, curses.COLOR_CYAN, curses.COLOR_BLACK)
 
+        # Holiday and Spooky variant DARK
+        curses.init_pair(8, CURSES_ORANGE, curses.COLOR_BLACK)
+        curses.init_pair(9, CURSES_GREY, curses.COLOR_BLACK)
+
+        #holiday and Spooky variant LIGHT
+        curses.init_pair(10, CURSES_GREEN, curses.COLOR_WHITE)
+        curses.init_pair(11, CURSES_PURPLE, curses.COLOR_WHITE)
+
     def __resize_terminal(self):
         """Function to run after resize events in the terminal"""
         self.__get_window_dimensions()
@@ -319,7 +332,11 @@ class Window:
 
     def get_header_colors(self):
         if self.dark_mode:
+            if self.spooky_mode:
+                return curses.color_pair(8), curses.color_pair(9)
             return curses.color_pair(5), curses.color_pair(6)
+        if self.spooky_mode:
+            return curses.color_pair(10), curses.color_pair(11)
         return curses.color_pair(3), curses.color_pair(4)
 
     def set_email(self, email):
