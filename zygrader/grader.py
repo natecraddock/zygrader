@@ -22,13 +22,16 @@ def get_student_row_color_sort_index(lab, student):
     return curses.color_pair(1), 2
 
 
-def fill_student_list(student_list: ui.layers.ListLayer, students, lab,
-                      use_locks):
+def fill_student_list(student_list: ui.layers.ListLayer,
+                      students,
+                      lab,
+                      use_locks,
+                      callback_fn=None):
     student_list.clear_rows()
 
-    for index, student in enumerate(students):
-        row = student_list.add_row_text(str(student), student_select_fn, index,
-                                        lab, use_locks)
+    for student in students:
+        row = student_list.add_row_text(str(student), callback_fn, student, lab,
+                                        use_locks)
         color, sort_index = get_student_row_color_sort_index(lab, student)
         row.set_row_color(color)
         row.set_row_sort_index(sort_index)
@@ -278,10 +281,9 @@ def diff_parts_fn(window, submission):
         window.run_layer(popup)
 
 
-def student_select_fn(selected_index, lab, use_locks):
+def student_select_fn(student, lab, use_locks):
     """Show the submission for the selected lab and student"""
     window = ui.get_window()
-    student = data.get_students()[selected_index]
 
     # Wait for student's assignment to be available
     if not can_get_through_locks(use_locks, student, lab):
@@ -323,7 +325,7 @@ def watch_students(student_list, students, lab, use_locks):
     paths = [SharedData.get_locks_directory(), SharedData.get_flags_directory()]
     data.fs_watch.fs_watch_register(paths, "student_list_watch",
                                     fill_student_list, student_list, students,
-                                    lab, use_locks)
+                                    lab, use_locks, student_select_fn)
 
 
 def lab_select_fn(selected_index, use_locks):
@@ -335,7 +337,7 @@ def lab_select_fn(selected_index, use_locks):
     student_list = ui.layers.ListLayer()
     student_list.set_searchable("Student")
     student_list.set_sortable()
-    fill_student_list(student_list, students, lab, use_locks)
+    fill_student_list(student_list, students, lab, use_locks, student_select_fn)
 
     # Register a watch function to watch the students
     watch_students(student_list, students, lab, use_locks)
