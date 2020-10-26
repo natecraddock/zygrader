@@ -27,6 +27,9 @@ class Lab:
             self.options["due"] = datetime.datetime.strptime(
                 self.options["due"], "%m.%d.%Y:%H.%M.%S").astimezone(tz=None)
 
+    def __eq__(self, other):
+        return self.name == other.name
+
     def __str__(self):
         return f"{self.name}"
 
@@ -64,6 +67,9 @@ class Student:
         self.email = email
         self.section = section
         self.id = id
+
+    def __eq__(self, other):
+        return self.full_name == other.full_name and self.email == other.email and self.id == other.id
 
     def __str__(self):
         return f"{self.full_name} - {self.email} - Section {self.section}"
@@ -154,6 +160,9 @@ class Submission(Iterable):
             return line
         else:
             raise StopIteration
+
+    def __eq__(self, other):
+        return self.student == other.student and self.lab == other.lab
 
     def get_part_identifier(self, part):
         """Some parts are not named, use ID in that case"""

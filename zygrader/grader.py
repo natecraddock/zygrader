@@ -155,7 +155,7 @@ def pair_programming_submission_callback(lab, submission):
     popup.set_message(submission)
     popup.add_option(
         "Pick Submission",
-        lambda: pick_submission(lab, submission.student, submission))
+        lambda: pick_submission(popup, lab, submission.student, submission))
     popup.add_option("Run", lambda: run_code_fn(window, submission))
     popup.add_option("View", lambda: submission.show_files())
     window.run_layer(popup)
@@ -236,6 +236,13 @@ def grade_pair_programming(first_submission, use_locks):
         second_submission = get_submission(lab, student, use_locks)
 
         if second_submission is None:
+            return
+
+        if second_submission == first_submission:
+            popup = ui.layers.Popup(
+                "Invalid Student",
+                ["The first and second students are the same"])
+            window.run_layer(popup)
             return
 
         first_submission_fn = lambda: pair_programming_submission_callback(
