@@ -35,6 +35,11 @@ def fill_student_list(student_list: ui.layers.ListLayer, students, lab,
     student_list.rebuild = True
 
 
+def set_submission_message(popup: ui.layers.OptionsPopup,
+                           submission: data.model.Submission):
+    popup.set_message(list(submission))
+
+
 def get_submission(lab, student, use_locks=True):
     """Get a submission from zyBooks given the lab and student"""
     window = ui.get_window()
@@ -65,7 +70,8 @@ def get_submission(lab, student, use_locks=True):
     return submission
 
 
-def pick_submission(lab: data.model.Lab, student: data.model.Student,
+def pick_submission(submission_popup: ui.layers.OptionsPopup,
+                    lab: data.model.Lab, student: data.model.Student,
                     submission: data.model.Submission):
     """Allow the user to pick a submission to view"""
     window = ui.get_window()
@@ -102,6 +108,7 @@ def pick_submission(lab: data.model.Lab, student: data.model.Student,
     part_response = zy_api.download_assignment_part(lab, student.id, part,
                                                     submission_index)
     submission.update_part(part_response, lab.parts.index(part))
+    set_submission_message(submission_popup, submission)
 
 
 def view_diff(first: model.Submission, second: model.Submission):
@@ -289,11 +296,11 @@ def student_select_fn(selected_index, lab, use_locks):
             return
 
         popup = ui.layers.OptionsPopup("Submission")
-        popup.set_message(
-            ["TODO: Fill in the submission text here... needs to update"])
+        set_submission_message(popup, submission)
         popup.add_option("Flag", lambda: flag_submission(lab, student))
-        popup.add_option("Pick Submission",
-                         lambda: pick_submission(lab, student, submission))
+        popup.add_option(
+            "Pick Submission",
+            lambda: pick_submission(popup, lab, student, submission))
         popup.add_option("Pair Programming",
                          lambda: grade_pair_programming(submission, use_locks))
         if submission.flag & data.model.SubmissionFlag.DIFF_PARTS:
