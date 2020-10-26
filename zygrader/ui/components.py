@@ -30,13 +30,13 @@ class Popup(Component):
     ALIGN_LEFT = 0
     ALIGN_CENTER = 1
 
-    def __init__(self, height, width, title, message, align):
+    def __init__(self, height, width, title, message):
         self.available_rows = height
         self.available_cols = width
 
         self.title = title
         self.message = message
-        self.align = align
+        self.align = Popup.ALIGN_LEFT
 
         self.__calculate_size()
 
@@ -159,23 +159,19 @@ class Popup(Component):
     def set_message(self, message):
         self.message = message
 
+    def set_align(self, align):
+        self.align = align
+
 
 class OptionsPopup(Popup):
-    def __init__(self, height, width, title, message, options, use_dict, align):
-        super().__init__(height, width, title, message, align)
+    def __init__(self, height, width, title, message, options=[]):
+        super().__init__(height, width, title, message)
         self.options = options
-        self.use_dict = use_dict
-
-        # Always add close as an option to dicts
-        if self.use_dict:
-            self.options["Close"] = None
-
         self.index = len(options) - 1
         self.options_length = sum([len(o) for o in options]) + len(options) + 2
 
     def draw(self):
         super().draw_text()
-
         y = self.rows - 2
 
         previous_length = 0
@@ -210,9 +206,6 @@ class OptionsPopup(Popup):
         self.index = len(self.options) - 1
 
     def selected(self):
-        if self.use_dict:
-            key = list(self.options)[self.index]
-            return self.options[key]
         return self.options[self.index]
 
 
@@ -220,7 +213,8 @@ class DatetimeSpinner(Popup):
     NO_DATE = "datetime_no_date"
 
     def __init__(self, height, width, title):
-        super().__init__(height, width, title, [], Popup.ALIGN_CENTER)
+        super().__init__(height, width, title, [])
+        super().set_align(Popup.ALIGN_CENTER)
 
         self.time = datetime.datetime.now()
         self.quickpicks = None
@@ -701,7 +695,6 @@ class ScrollableList(Component):
         # The search function should take a list and return a
         # subset of the original list.
 
-        # TODO: Take into account the first entry which is usually
         # A special action (back, quit, etc.)
         filtered = []
         for line in self._lines:
@@ -831,8 +824,8 @@ class FilteredList(ScrollableList):
 class ListPopup(Popup, ScrollableList):
     V_PADDING = Popup.PADDING * 2
 
-    def __init__(self, rows, cols, title, align):
-        Popup.__init__(self, rows, cols, title, [], align)
+    def __init__(self, rows, cols, title):
+        Popup.__init__(self, rows, cols, title, [])
         ScrollableList.__init__(self)
 
         self._rows = self.rows - ListPopup.V_PADDING + 1
@@ -870,7 +863,7 @@ class TextInput(Popup):
     TEXT_HEIGHT = 5
 
     def __init__(self, height, width, title, prompt, text, mask=TEXT_NORMAL):
-        super().__init__(height, width, title, [prompt], Popup.ALIGN_CENTER)
+        super().__init__(height, width, title, [prompt])
 
         self.prompt = prompt
         self.masked = mask is TextInput.TEXT_MASKED

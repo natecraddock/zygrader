@@ -413,7 +413,7 @@ class GradePuller:
 
         zybooks_students = dict()
 
-        def fetch_reports_fn(queue):
+        def fetch_reports_fn():
             num_completed = 0
             for due_time, class_section_list in due_time_to_sections.items():
                 report, _ = self.fetch_completion_report(
@@ -463,7 +463,7 @@ class GradePuller:
 
             zybook_section_1_1 = zybooks_toc[0]["sections"][0]
 
-            fetch_report_fn = lambda _: self.fetch_completion_report(
+            fetch_report_fn = lambda: self.fetch_completion_report(
                 create_last_night(), [zybook_section_1_1])
 
             popup = ui.layers.WaitPopup("Fetch Reports")

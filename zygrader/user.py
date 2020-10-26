@@ -1,6 +1,5 @@
 """User: User preference window management"""
 import base64
-from queue import Queue
 import sys
 
 from zygrader.zybooks import Zybooks
@@ -25,7 +24,7 @@ def encode_password(password):
 
 def authenticate(window: ui.Window, zy_api: Zybooks, email, password):
     """Authenticate to the zyBooks api with the email and password."""
-    def wait_fn(queue: Queue):
+    def wait_fn():
         success = zy_api.authenticate(email, password)
         if success:
             download_roster(silent=True)

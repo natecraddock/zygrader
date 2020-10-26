@@ -5,7 +5,6 @@ import queue
 import threading
 from typing import List
 from zygrader.ui.components import Component
-from zygrader.logger import log
 
 from .events import Event, EventManager
 from . import window, components
@@ -18,16 +17,14 @@ class WorkerThread:
     The worker_fn should accept a single argument which is the queue.
     """
     def __init__(self, thread_fn, name="Worker Thread"):
-        self.data_queue = queue.Queue()
         self.thread_fn = thread_fn
         self.__result = None
-
         self.__thread = threading.Thread(target=self.thread_wrap,
                                          name=name,
                                          daemon=True)
 
     def thread_wrap(self):
-        self.__result = self.thread_fn(self.data_queue)
+        self.__result = self.thread_fn()
 
     def start(self):
         self.__thread.start()
@@ -88,14 +85,18 @@ class ComponentLayer:
         return self._canceled
 
 
-class Popup(ComponentLayer):
+class PopupLayer:
+    def set_align(self, align):
+        self.component.set_align(align)
+
+
+class Popup(ComponentLayer, PopupLayer):
     """A popup that shows a message until the user presses Enter."""
     def __init__(self, title, message=[]):
         super().__init__()
 
         win = window.Window.get_window()
-        self.component = components.Popup(win.rows, win.cols, title, message,
-                                          components.Popup.ALIGN_LEFT)
+        self.component = components.Popup(win.rows, win.cols, title, message)
 
     def event_handler(self, event: Event, event_manager: EventManager):
         if event.type == Event.ENTER:
@@ -105,7 +106,7 @@ class Popup(ComponentLayer):
         self.component.set_message(message)
 
 
-class BoolPopup(ComponentLayer):
+class BoolPopup(ComponentLayer, PopupLayer):
     """A popup that asks for a Yes/No response."""
     __OPTIONS = ["Yes", "No"]
 
@@ -114,9 +115,7 @@ class BoolPopup(ComponentLayer):
 
         win = window.Window.get_window()
         self.component = components.OptionsPopup(win.rows, win.cols, title,
-                                                 message, BoolPopup.__OPTIONS,
-                                                 False,
-                                                 components.Popup.ALIGN_LEFT)
+                                                 message, BoolPopup.__OPTIONS)
 
     def event_handler(self, event: Event, event_manager: EventManager):
         if event.type in {Event.LEFT, Event.UP, Event.BTAB}:
@@ -134,16 +133,14 @@ class BoolPopup(ComponentLayer):
         self.component.set_message(message)
 
 
-class OptionsPopup(ComponentLayer):
+class OptionsPopup(ComponentLayer, PopupLayer):
     def __init__(self, title, message=[]):
         super().__init__()
         self.options = {}
 
         win = window.Window.get_window()
-        # TODO: Cleanup constructor
         self.component = components.OptionsPopup(win.rows, win.cols, title,
-                                                 message, [], False,
-                                                 components.Popup.ALIGN_LEFT)
+                                                 message)
 
     def build(self):
         super().build()
@@ -174,17 +171,15 @@ class OptionsPopup(ComponentLayer):
         self.redraw = True
 
 
-class WaitPopup(ComponentLayer):
+class WaitPopup(ComponentLayer, PopupLayer):
     """A popup that stays visibile until a process completes."""
-    def __init__(self, title):
+    def __init__(self, title, message=[]):
         super().__init__()
         self.__result = None
 
         win = window.Window.get_window()
-        # TODO: Cleanup constructor
         self.component = components.OptionsPopup(win.rows, win.cols, title,
-                                                 ["hey"], ["Cancel"], False,
-                                                 components.Popup.ALIGN_LEFT)
+                                                 message, ["Cancel"])
         self.worker_thread = None
 
     def event_handler(self, event: Event, event_manager: EventManager):
@@ -210,7 +205,7 @@ class WaitPopup(ComponentLayer):
         return self.__result
 
 
-class TextInputLayer(ComponentLayer):
+class TextInputLayer(ComponentLayer, PopupLayer):
     """A popup that prompts the user for a string."""
     def __init__(self, title, mask=components.TextInput.TEXT_NORMAL):
         super().__init__()
@@ -538,7 +533,7 @@ class Row:
         row.do_action()
 
 
-class ListLayer(ComponentLayer, Row):
+class ListLayer(ComponentLayer, Row, PopupLayer):
     """A reusable list that supports searching the options."""
     def __init__(self, title="", popup=False):
         ComponentLayer.__init__(self)
@@ -546,8 +541,7 @@ class ListLayer(ComponentLayer, Row):
 
         if popup:
             win = window.Window.get_window()
-            self.component = components.ListPopup(win.rows, win.cols, title,
-                                                  components.Popup.ALIGN_CENTER)
+            self.component = components.ListPopup(win.rows, win.cols, title)
         else:
             self.blocking = True
 
