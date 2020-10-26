@@ -89,8 +89,8 @@ def pick_submission(lab: data.model.Lab, student: data.model.Student,
     all_submissions.reverse()
 
     popup = ui.layers.ListLayer("Select Submission", popup=True)
-    for submission in all_submissions:
-        popup.add_row_text(submission)
+    for sub in all_submissions:
+        popup.add_row_text(sub)
     window.run_layer(popup)
 
     submission_index = popup.selected_index()
@@ -299,8 +299,7 @@ def student_select_fn(selected_index, lab, use_locks):
         if submission.flag & data.model.SubmissionFlag.DIFF_PARTS:
             popup.add_option("Diff Parts",
                              lambda: diff_parts_fn(window, submission))
-        popup.add_option(
-            "Run", lambda context: run_code_fn(window, context, submission))
+        popup.add_option("Run", lambda: run_code_fn(window, submission))
         popup.add_option("View", lambda: submission.show_files())
         window.run_layer(popup)
 
