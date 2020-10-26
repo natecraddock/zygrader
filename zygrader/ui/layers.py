@@ -144,7 +144,7 @@ class OptionsPopup(ComponentLayer, PopupLayer):
 
     def build(self):
         super().build()
-        self.component.set_options(list(self.options))
+        self.component.set_options(list(self.options) + ["Close"])
 
     def set_message(self, message):
         self.component.set_message(message)
@@ -167,7 +167,11 @@ class OptionsPopup(ComponentLayer, PopupLayer):
             self._canceled = True
         elif event.type == Event.ENTER:
             key = self.component.selected()
-            self.options[key]()
+            if key == "Close":
+                self._canceled = True
+                event_manager.push_layer_close_event()
+            else:
+                self.options[key]()
         self.redraw = True
 
 
