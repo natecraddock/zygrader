@@ -84,11 +84,6 @@ class EventManager:
         """Clear all events from the queue"""
         self.event_queue = []
 
-    def push_refresh_event(self):
-        """Force the ui to refresh even when it is in an input loop"""
-        event = Event(Event.REFRESH, None)
-        self.event_queue.put_nowait(event)
-
     def push_layer_close_event(self):
         event = Event(Event.LAYER_CLOSE, None)
         self.__queue_push(event)
