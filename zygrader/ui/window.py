@@ -36,8 +36,8 @@ class Window:
         self.update_window()
 
     def __init__(self, callback, window_name):
-        Window.INSTANCE = self
         """Initialize screen and run callback function"""
+        Window.INSTANCE = self
         self.name = window_name
 
         self.layers: typing.List[ComponentLayer] = []

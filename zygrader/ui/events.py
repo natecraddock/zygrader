@@ -8,10 +8,6 @@ from zygrader.config import preferences
 # And lists return their (index - 1) to handle that offset
 GO_BACK = -1
 
-UI_LEFT = 0
-UI_RIGHT = 1
-UI_CENTERED = 2
-
 MODE_NORMAL = 0
 MODE_INSERT = 1
 MODE_MARK = 2
@@ -45,10 +41,9 @@ class Event:
     LAYER_CLOSE = 21
     RESIZE = 22
 
-    def __init__(self, event_type, value, modifier=None):
+    def __init__(self, event_type, value):
         self.type = event_type
         self.value = value
-        self.modifier = modifier
 
 
 class EventManager:
@@ -62,13 +57,10 @@ class EventManager:
         self.event_queue = []
 
         # Vim mode settings
-        self.vim_mode = False
         self.insert_mode = False
         self.mark_mode = False
 
-        # Input preferences
-        self.left_right_menu_nav = False
-        self.use_esc_back = False
+        self.update_preferences()
 
     def update_preferences(self):
         """Update the input settings from user preferences"""
@@ -126,7 +118,6 @@ class EventManager:
         """Get input and handle resize events"""
         event = Event.NONE
         event_value = Event.NONE
-        event_mod = None
 
         input_code = self.input_win.getch()
         if input_code == -1:
@@ -180,7 +171,7 @@ class EventManager:
 
         # TODO: Move back to window
         # self.header_offset += 1
-        return Event(event, event_value, event_mod)
+        return Event(event, event_value)
 
     def get_keyboard_input_vim(self, input_code):
         event = Event.NONE

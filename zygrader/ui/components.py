@@ -8,9 +8,6 @@ from .utils import add_str, resize_window
 
 
 class Component:
-    def __init__(self):
-        pass
-
     def resize(self, rows, cols):
         raise NotImplementedError
 
@@ -166,9 +163,7 @@ class Popup(Component):
 class OptionsPopup(Popup):
     def __init__(self, height, width, title, message, options=[]):
         super().__init__(height, width, title, message)
-        self.options = options
-        self.index = len(options) - 1
-        self.options_length = sum([len(o) for o in options]) + len(options) + 2
+        self.set_options(options)
 
     def draw(self):
         super().draw_text()
@@ -239,6 +234,8 @@ class DatetimeSpinner(Popup):
 
     def set_include_date(self, include_date):
         self.include_date = include_date
+        self.__init_fields()
+        self.__init_format_str()
 
     def __resolve_date(self, date, year, month, day) -> datetime.datetime:
         """Find the closest valid date to an invalid date"""
@@ -634,10 +631,6 @@ class ScrollableList(Component):
             self.color = color
             self.sort_index = sort_index
 
-    @staticmethod
-    def create_line(index, text, color=0, sort_index=0):
-        return ScrollableList.Line(index, text, color, sort_index)
-
     def __init__(self):
         self._rows = 0
 
@@ -658,7 +651,7 @@ class ScrollableList(Component):
 
     def set_lines(self, lines):
         self._lines = [
-            ScrollableList.create_line(i, line[0], line[1], line[2])
+            ScrollableList.Line(i, line[0], line[1], line[2])
             for i, line in enumerate(lines, 1)
         ]
         self.__create_display_lines()
@@ -676,7 +669,8 @@ class ScrollableList(Component):
         self._sortable = True
 
     def set_exit_text(self, text: str):
-        self._exit_text = text
+        self._exit_line = ScrollableList.Line(0, text)
+        self.__create_display_lines()
 
     def __create_display_lines(self):
         """Filter then sort the input lines."""
@@ -691,11 +685,6 @@ class ScrollableList(Component):
             self._display_lines.extend(filtered)
 
     def _filter(self):
-        # Use the filtered lines from the input search function.
-        # The search function should take a list and return a
-        # subset of the original list.
-
-        # A special action (back, quit, etc.)
         filtered = []
         for line in self._lines:
             if self._search_fn(line.text, self._search_text):

@@ -11,11 +11,7 @@ from .events import Event, EventManager
 
 
 class WorkerThread:
-    """Execute a function in a separate thread and send data back to the owner ComponentLayer.
-
-    The data queue is for sending data from the worker thread function to the component.
-    The worker_fn should accept a single argument which is the queue.
-    """
+    """Execute a function in a separate thread and return the result to the owner ComponentLayer."""
     def __init__(self, thread_fn, name="Worker Thread"):
         self.thread_fn = thread_fn
         self.__result = None
@@ -69,7 +65,7 @@ class ComponentLayer:
         self.redraw = True
 
     def event_handler(self, event: Event, event_manager: EventManager):
-        pass
+        raise NotImplementedError
 
     def update(self, event_manager: EventManager):
         pass
@@ -292,7 +288,6 @@ class PathInputLayer(TextInputLayer):
             prompt += [f"[Valid {TYPE_STR}]"]
         else:
             prompt += [f"[Invalid {TYPE_STR}]"]
-        # super().set_prompt(prompt)
         self.component.set_message(prompt)
 
     def event_handler(self, event: Event, event_manager: EventManager):
@@ -422,7 +417,7 @@ class Row:
 
         self.__subrows: List[self.__class__] = []
         self.__callback_fn = None
-        self._callback_args = None
+        self._callback_args = ()
 
         self.__expanded = False
 
@@ -506,10 +501,7 @@ class Row:
 
     def do_action(self):
         if self.__type == Row.TEXT and self.__callback_fn:
-            if self._callback_args:
-                self.__callback_fn(*self._callback_args)
-            else:
-                self.__callback_fn()
+            self.__callback_fn(*self._callback_args)
         elif self.__type == Row.TEXT:
             event_manager = window.Window.get_window().event_manager
             event_manager.push_layer_close_event()
@@ -584,7 +576,6 @@ class ListLayer(ComponentLayer, Row, PopupLayer):
             self.component.delchar()
             self.rebuild = True
         elif event.type == Event.ESC and event_manager.use_esc_back:
-            # TODO: Handle this event by the window manager?
             event_manager.push_layer_close_event()
             self._canceled = True
         elif event.type == Event.CHAR_INPUT:

@@ -89,7 +89,7 @@ class GradePuller:
         except PermissionError:
             msg = [
                 f"Could not open {path} for reading",
-                "Please have the owner of the file grand read permissions",
+                "Please have the owner of the file grant read permissions",
             ]
             popup.set_message(msg)
             self.window.run_layer(popup)
