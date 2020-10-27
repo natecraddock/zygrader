@@ -207,9 +207,12 @@ def view_students():
 
 
 def fetch_zybooks_toc():
-    wait_controller = ui.get_window().create_waiting_popup(
-        "TOC", ["Fetching TOC from zyBooks"])
+    window = ui.get_window()
     zy_api = Zybooks()
-    toc = zy_api.get_table_of_contents()
-    wait_controller.close()
-    return toc
+
+    popup = ui.layers.WaitPopup("Table of Contents",
+                                ["Fetching TOC from zyBooks"])
+    popup.set_wait_fn(zy_api.get_table_of_contents)
+    window.run_layer(popup)
+
+    return popup.get_result()
