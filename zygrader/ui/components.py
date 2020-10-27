@@ -794,6 +794,9 @@ class FilteredList(ScrollableList):
             add_str(self.text_input, 0, 0,
                     f"{self._search_prompt}: {self._search_text}")
             self.text_input.noutrefresh()
+            curses.curs_set(1)
+        else:
+            curses.curs_set(0)
 
     def resize(self, rows, cols):
         self.rows = rows - 1
@@ -847,7 +850,10 @@ class ListPopup(Popup, ScrollableList):
             self.text_input.erase()
             add_str(self.text_input, 0, 0,
                     f"{self._search_prompt}: {self._search_text}")
+            curses.curs_set(1)
             self.text_input.noutrefresh()
+        else:
+            curses.curs_set(0)
 
     def resize(self, rows, cols):
         Popup.resize(self, rows, cols)
@@ -954,9 +960,6 @@ class TextInput(Popup):
 
         self.window.noutrefresh()
         self.text_input.noutrefresh()
-
-    def close(self):
-        curses.curs_set(0)
 
     def addchar(self, c):
         before_index = self.cursor_index
