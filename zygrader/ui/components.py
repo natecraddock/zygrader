@@ -857,11 +857,8 @@ class TextInput(Popup):
         self.prompt = prompt
         self.masked = mask is TextInput.TEXT_MASKED
 
-        self.text = text
+        self.set_text(text)
         self.text_width = self.cols - (TextInput.PADDING * 2)
-
-        # Set cursor to the location of text
-        self.cursor_index = len(self.text)
 
         # Set selection marks
         self.reset_marks()
@@ -875,6 +872,10 @@ class TextInput(Popup):
         )
         self.text_input.bkgd(" ", curses.color_pair(1))
         curses.curs_set(1)
+
+    def set_text(self, text: str):
+        self.text = text
+        self.cursor_index = len(text)
 
     def resize(self, rows, cols):
         super().resize(rows, cols)

@@ -254,8 +254,7 @@ class TextInputLayer(ComponentLayer, PopupLayer):
         self.component.set_message(prompt)
 
     def set_text(self, text: str):
-        self.component.text = text
-        self.component.cursor_index = len(text)
+        self.component.set_text(text)
 
     def get_text(self):
         return self.component.text
