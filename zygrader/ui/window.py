@@ -351,6 +351,8 @@ class Window:
         separator = "|"
         if self.spooky_mode:
             separator = "🎃"
+        elif self.christmas_mode:
+            separator = "🎄"
         self.header.erase()
         resize_window(self.header, 1, self.cols)
 
@@ -378,13 +380,15 @@ class Window:
 
         if self.spooky_mode:
             display_text = f"👻 {display_text} 👻"
+        elif self.christmas_mode:
+            display_text = f'☃️ {display_text} ☃️'
 
         # Centered header
         row = self.cols // 2 - len(display_text) // 2
         add_str(self.header, 0, row, display_text)
 
         # Christmas theme
-        if self.christmas_mode:
+        if self.christmas_mode or self.spooky_mode:
             red, green = self.get_header_colors()
 
             for row in range(self.cols):

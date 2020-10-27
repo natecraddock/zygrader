@@ -650,6 +650,8 @@ class FilteredList(Component):
                 display_text = f"> {line.text}"
                 if preferences.get("spooky_mode"):
                     display_text = f"🦇 {line.text}"
+                elif preferences.get("christmas_mode"):
+                    display_text = f"❄️ {line.text}"
                 add_str(self.window, line_number, 0, display_text,
                         curses.A_BOLD | line.color)
             else:
@@ -1068,6 +1070,8 @@ class ListPopup(FilteredList, Popup):
                 display_text = f"> {str(l)}"
                 if preferences.get("spooky_mode"):
                     display_text = f"🦇 {str(l)}"
+                elif preferences.get("christmas_mode"):
+                    display_text = f"❄️ {str(l)}"
                 add_str(self.window, Popup.PADDING + line, Popup.PADDING,
                         display_text, curses.A_DIM)
             else:

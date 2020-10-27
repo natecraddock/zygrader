@@ -284,6 +284,18 @@ def preferences_callback(context: ui.WinContext):
     """Callback to run when a preference is selected"""
     selected_index = context.data
     pref = PREFERENCES[selected_index]
+    CHRISTMAS_MODE_INDEX = 5
+    SPOOKY_MODE_INDEX = 6
+    spooky_pref = PREFERENCES[SPOOKY_MODE_INDEX]
+    christmas_pref = PREFERENCES[CHRISTMAS_MODE_INDEX]
+
+    if pref.name is "christmas_mode" and preferences.get(spooky_pref.name):
+        spooky_pref.select_fn(spooky_pref.name)
+        context.window.update_preferences()
+
+    elif pref.name is "spooky_mode" and preferences.get(christmas_pref.name):
+        christmas_pref.select_fn(christmas_pref.name)
+        context.window.update_preferences()
 
     if pref.type in {PREFERENCE_MENU, PREFERENCE_TOGGLE}:
         pref.select_fn(pref.name)
