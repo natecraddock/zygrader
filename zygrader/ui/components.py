@@ -695,6 +695,11 @@ class ScrollableList(Component):
         lines.sort(key=lambda line: line.sort_index)
         return lines
 
+    def __scroll_to_top(self):
+        self._selected_index = 0
+        self.set_scroll()
+        self._selected_index = 1
+
     def set_scroll(self):
         # Cursor set below view
         if (self._selected_index + 1) > self._scroll + self._rows - 1:
@@ -724,23 +729,15 @@ class ScrollableList(Component):
 
     def delchar(self):
         self._search_text = self._search_text[:-1]
-
-        self._selected_index = 0
-        self.set_scroll()
-        self._selected_index = 1
+        self.__scroll_to_top()
 
     def addchar(self, c):
         self._search_text += c
-
-        self._selected_index = 0
-        self.set_scroll()
-        self._selected_index = 1
+        self.__scroll_to_top()
 
     def clear_search_text(self):
         self._search_text = ""
-        self._selected_index = 0
-        self.set_scroll()
-        self._selected_index = 1
+        self.__scroll_to_top()
 
     def is_close_selected(self):
         return self._selected_index == 0
