@@ -166,6 +166,9 @@ class Window:
 
     def register_layer(self, layer: ComponentLayer, header_title=""):
         """Register a layer in the event loop."""
+        # Always disable insert or visual mode from previous layers
+        self.event_manager.disable_modes()
+
         self.layers.append(layer)
         self.active_layer = layer
         layer.title = header_title
@@ -175,6 +178,9 @@ class Window:
         # Run any finalizing actions this layer needs
         layer.build()
 
+        if layer.is_text_input:
+            self.event_manager.insert_mode = True
+
     def unregister_layer(self):
         """Remove the top layer from the stack."""
         layer = self.layers.pop()
@@ -183,6 +189,9 @@ class Window:
         layer.destroy()
 
         self.__update_header_title()
+
+        # Always disable insert or visual mode
+        self.event_manager.disable_modes()
 
     def run_layer(self, layer: ComponentLayer, title=""):
         self.register_layer(layer, title)

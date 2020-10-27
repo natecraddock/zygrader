@@ -41,6 +41,7 @@ class ComponentLayer:
         self.component: Component = None
 
         self.blocking = False
+        self.is_text_input = False
         self._canceled = False
 
         # Flags to control rebuilding and redrawing in the event loop.
@@ -209,12 +210,11 @@ class TextInputLayer(ComponentLayer, PopupLayer):
     """A popup that prompts the user for a string."""
     def __init__(self, title, mask=components.TextInput.TEXT_NORMAL):
         super().__init__()
+        self.is_text_input = True
 
         win = window.Window.get_window()
         self.component = components.TextInput(win.rows, win.cols, title, "", "",
                                               mask)
-        if win.event_manager.vim_mode:
-            win.event_manager.insert_mode = True
 
     def _handle_text_events(self, event: Event):
         if event.type == Event.BACKSPACE:
