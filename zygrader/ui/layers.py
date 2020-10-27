@@ -550,7 +550,6 @@ class ListLayer(ComponentLayer, Row, PopupLayer):
         self.build_string_lines(text_rows, self)
         self.component.set_lines(text_rows)
 
-    # TODO: move somewhere else?
     def __string_search_fn(text: str, search_str: str):
         return text.lower().find(search_str.lower()) != -1
 
