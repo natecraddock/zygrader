@@ -114,6 +114,8 @@ def login(window: ui.Window):
             preferences.set("save_password", True)
             password = encode_password(password)
             preferences.set("password", password)
+        else:
+            preferences.set("save_password", False)
 
     # User has account (email), but has not saved their password.
     # Ask user for their password.
