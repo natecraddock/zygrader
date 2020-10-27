@@ -153,7 +153,8 @@ def logout():
         login(window)
     else:
         # TODO: Use the event manager to handle this case!
-        sys.exit()
+        event_manager = ui.get_events()
+        event_manager.push_zygrader_quit_event()
 
 
 def save_password_toggle():

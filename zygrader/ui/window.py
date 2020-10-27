@@ -213,7 +213,9 @@ class Window:
 
         # Events are either handled directly by the window manager or
         # are passed to the active component layer.
-        if event.type == Event.HEADER_UPDATE:
+        if event.type == Event.QUIT:
+            self.layers.clear()
+        elif event.type == Event.HEADER_UPDATE:
             # self.update_header()
             pass
         elif event.type == Event.LAYER_CLOSE:

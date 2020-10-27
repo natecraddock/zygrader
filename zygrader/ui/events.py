@@ -40,6 +40,7 @@ class Event:
 
     LAYER_CLOSE = 21
     RESIZE = 22
+    QUIT = 23
 
     def __init__(self, event_type, value):
         self.type = event_type
@@ -90,6 +91,11 @@ class EventManager:
 
     def push_layer_close_event(self):
         event = Event(Event.LAYER_CLOSE, None)
+        self.__queue_push(event)
+
+    def push_zygrader_quit_event(self):
+        """Quit zygrader by removing all layers from the stack."""
+        event = Event(Event.QUIT, None)
         self.__queue_push(event)
 
     def set_mode(self, mode: int):
