@@ -760,7 +760,6 @@ class FilteredList(ScrollableList):
         self.cols = cols
 
         # List box
-        # TODO: Handle vertical sizing dependant on _searchable
         self.window = curses.newwin(self._rows - 1, self.cols, y, x)
         self.window.bkgd(" ", curses.color_pair(1))
 
@@ -819,6 +818,12 @@ class ListPopup(Popup, ScrollableList):
 
         self._rows = self.rows - ListPopup.V_PADDING + 1
 
+        # Text input area
+        self.text_input = curses.newwin(1, self.cols - Popup.PADDING * 2,
+                                        self.y + self.rows - Popup.PADDING + 1,
+                                        self.x + Popup.PADDING)
+        self.text_input.bkgd(" ", curses.color_pair(1))
+
     def draw(self):
         self.window.erase()
         self.window.border()
@@ -831,16 +836,29 @@ class ListPopup(Popup, ScrollableList):
             if line_number + self._scroll == self._selected_index:
                 add_str(self.window, Popup.PADDING + line_number, Popup.PADDING,
                         f"{ScrollableList.SELECTED_PREFIX}{line.text}",
-                        curses.A_BOLD)
+                        curses.A_BOLD | line.color)
             else:
                 add_str(self.window, Popup.PADDING + line_number, Popup.PADDING,
                         f"{ScrollableList.UNSELECTED_PREFIX}{line.text}",
-                        curses.A_DIM)
-
+                        curses.A_DIM | line.color)
         self.window.noutrefresh()
+
+        if self._searchable:
+            self.text_input.erase()
+            add_str(self.text_input, 0, 0,
+                    f"{self._search_prompt}: {self._search_text}")
+            self.text_input.noutrefresh()
 
     def resize(self, rows, cols):
         Popup.resize(self, rows, cols)
+
+        try:
+            self.text_input.mvwin(self.y + self.rows - Popup.PADDING + 1,
+                                  self.x + Popup.PADDING)
+        except:
+            pass
+
+        resize_window(self.text_input, 1, self.cols - Popup.PADDING * 2)
 
 
 class TextInput(Popup):
