@@ -1,13 +1,12 @@
 import csv
 import datetime
 
-from zygrader import data
-from zygrader import ui
-from zygrader.ui.templates import ZybookSectionSelector, filename_input
-from zygrader.ui.displaystring import DisplayStr
+from zygrader import data, ui
 from zygrader.config.shared import SharedData
-from zygrader.zybooks import Zybooks
+from zygrader.ui.displaystring import DisplayStr
+from zygrader.ui.templates import ZybookSectionSelector, filename_input
 from zygrader.utils import fetch_zybooks_toc
+from zygrader.zybooks import Zybooks
 
 
 def create_last_night():

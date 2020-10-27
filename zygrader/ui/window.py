@@ -3,10 +3,11 @@ import curses
 import typing
 
 from zygrader.config import preferences
+
 from . import events
 from .events import Event
-from .utils import add_str, resize_window
 from .layers import ComponentLayer
+from .utils import add_str, resize_window
 
 
 class WinContext:

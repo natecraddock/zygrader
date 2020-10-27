@@ -1,6 +1,6 @@
 """Preferences: Functions for managing user preferences"""
-import os
 import json
+import os
 import typing
 
 from .shared import SharedData

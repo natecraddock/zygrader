@@ -1,14 +1,11 @@
 """Grader: Menus and popups for grading and pair programming"""
 import curses
 import getpass
-from zygrader.data import model
 
+from zygrader import data, ui, utils
 from zygrader.config import preferences
 from zygrader.config.shared import SharedData
-from zygrader import data
-from zygrader import ui
-from zygrader import utils
-
+from zygrader.data import model
 from zygrader.zybooks import Zybooks
 
 

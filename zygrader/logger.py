@@ -2,8 +2,8 @@
 
 These allow basic logging of data to a log.txt file in the logs directory
 """
-import getpass
 import datetime
+import getpass
 import os
 
 from zygrader.config.shared import SharedData

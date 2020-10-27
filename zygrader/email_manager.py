@@ -3,8 +3,7 @@
 import curses
 import getpass
 
-from zygrader import data
-from zygrader import ui
+from zygrader import data, ui
 
 
 def lock_student_callback(student):

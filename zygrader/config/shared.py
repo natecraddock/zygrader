@@ -1,6 +1,6 @@
 """Shared Data: Data shared between all users of zygrader"""
-import os
 import json
+import os
 from distutils.version import LooseVersion
 
 from . import preferences

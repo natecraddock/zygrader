@@ -1,10 +1,10 @@
 import os
-
 from distutils.version import LooseVersion
+
+from zygrader import ui
 
 from . import preferences
 from .shared import SharedData
-from zygrader import ui
 
 
 def load_changelog():

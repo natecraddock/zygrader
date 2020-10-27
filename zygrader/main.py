@@ -6,19 +6,9 @@ import signal
 import sys
 import time
 
-from zygrader import admin
-from zygrader import config
-from zygrader import data
-from zygrader import email_manager
-from zygrader import grader
-from zygrader import logger
-from zygrader import ui
-from zygrader import updater
-from zygrader import user
-from zygrader import utils
-
-from zygrader.config import preferences
-from zygrader.config import versioning
+from zygrader import (admin, config, data, email_manager, grader, logger, ui,
+                      updater, user, utils)
+from zygrader.config import preferences, versioning
 from zygrader.config.shared import SharedData
 
 

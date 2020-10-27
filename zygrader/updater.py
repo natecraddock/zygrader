@@ -1,8 +1,9 @@
 """Updater: To auto-update zygrader during runtime"""
-import requests
 import subprocess
 import sys
 from distutils.version import LooseVersion
+
+import requests
 
 from zygrader.config.shared import SharedData
 

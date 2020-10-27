@@ -8,11 +8,10 @@ import curses
 import difflib
 import os
 import subprocess
-from subprocess import PIPE, DEVNULL
 import tempfile
+from subprocess import DEVNULL, PIPE
 
-from zygrader import data
-from zygrader import ui
+from zygrader import data, ui
 from zygrader.zybooks import Zybooks
 
 

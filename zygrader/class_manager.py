@@ -1,12 +1,10 @@
 """Class Manager: Functions to manage zybooks classes"""
-from datetime import date
 import json
 
+from zygrader import data, ui
+from zygrader.config.shared import SharedData
 from zygrader.ui.templates import ZybookSectionSelector
 from zygrader.zybooks import Zybooks
-from zygrader import data
-from zygrader import ui
-from zygrader.config.shared import SharedData
 
 
 def save_roster(roster):

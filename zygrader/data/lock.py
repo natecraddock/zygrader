@@ -4,11 +4,10 @@ import datetime
 import getpass
 import os
 
-from zygrader.config.shared import SharedData
 from zygrader import logger
+from zygrader.config.shared import SharedData
 
-from .model import Student
-from .model import Lab
+from .model import Lab, Student
 
 
 def get_lock_files():

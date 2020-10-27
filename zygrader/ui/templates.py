@@ -1,10 +1,7 @@
 """UI Templates: For reusable ui pieces built from components."""
 
-import os
-from os import path
-
-from zygrader.zybooks import Zybooks
 from zygrader import ui
+from zygrader.zybooks import Zybooks
 
 
 class ZybookSectionSelector:

@@ -1,13 +1,13 @@
 """Layers: The components and handlers that make up the user interface."""
 
 import os
-import queue
 import threading
 from typing import List
+
 from zygrader.ui.components import Component
 
+from . import components, window
 from .events import Event, EventManager
-from . import window, components
 
 
 class WorkerThread:

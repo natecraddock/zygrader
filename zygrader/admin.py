@@ -1,15 +1,11 @@
 """Admin: Functions for more "administrator" users of zygrader to manage
 the class, scan through student submissions, and access to other menus"""
 import time
+
 import requests
 
-from zygrader.ui.templates import filename_input
+from zygrader import class_manager, data, grade_puller, ui, utils
 from zygrader.zybooks import Zybooks
-from zygrader import ui
-from zygrader import data
-from zygrader import class_manager
-from zygrader import grade_puller
-from zygrader import utils
 
 
 def check_student_submissions(zy_api, student_id, lab, search_string):

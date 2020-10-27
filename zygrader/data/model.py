@@ -7,12 +7,10 @@ import subprocess
 import tempfile
 import time
 from collections import Iterable
-from zygrader.ui.events import EventManager
 
+from zygrader import ui, utils
 from zygrader.config import preferences
 from zygrader.config.shared import SharedData
-from zygrader import utils
-from zygrader import ui
 from zygrader.zybooks import Zybooks
 
 

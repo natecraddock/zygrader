@@ -2,13 +2,11 @@
 import base64
 import sys
 
-from zygrader.zybooks import Zybooks
-from zygrader.config.shared import SharedData
-from zygrader import zybooks
-
+from zygrader import ui, zybooks
 from zygrader.class_manager import download_roster
 from zygrader.config import preferences
-from zygrader import ui
+from zygrader.config.shared import SharedData
+from zygrader.zybooks import Zybooks
 
 
 def decode_password(password):
