@@ -47,7 +47,7 @@ def update_user_version():
     preferences.set("version", SharedData.VERSION.vstring)
 
 
-def do_versioning():
+def versioning_update_preferences():
     """Compare the user's current version in the config and make necessary adjustments."""
 
     # To modify the config with more flexibility, we need access to the raw json.
@@ -95,7 +95,7 @@ def do_versioning():
 
 
 def find_versioning_message(window, version, user_version):
-    """Find and display a versioning message for the given version number."""
+    """Display a versioning message for the given version number if one exists."""
     if compare_versions(version, user_version):
         popup = ui.layers.Popup(f"Version {version}")
         popup.set_message(get_version_message(version))
@@ -106,12 +106,11 @@ def find_versioning_message(window, version, user_version):
 
 
 def show_versioning_message(window: ui.Window):
-    """Notify the user of new changes in the changelog."""
+    """Notify the user of all logged changes since their last update."""
 
     user_version = preferences.get("version")
 
-    # Add a version string for this array for each version that will
-    # Show an update popup
+    # Add a version string for this array for each version that will show an update popup
     update_versions = ["4.0.0", "4.1.0", "4.2.0", "4.7.1", "4.8.8"]
 
     updated = False

@@ -197,8 +197,7 @@ def start():
     # Setup user configuration
     preferences.initialize()
 
-    # Apply versioning changes to preferences
-    versioning.do_versioning()
+    versioning.versioning_update_preferences()
 
     # Handle configuration based args after config has been initialized
     handle_args(args)
