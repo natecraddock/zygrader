@@ -152,7 +152,6 @@ def logout():
     if sign_in:
         login(window)
     else:
-        # TODO: Use the event manager to handle this case!
         event_manager = ui.get_events()
         event_manager.push_zygrader_quit_event()
 
