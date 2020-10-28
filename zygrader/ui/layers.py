@@ -523,11 +523,12 @@ class Row:
         row.do_action()
 
 
-class ListLayer(ComponentLayer, Row, PopupLayer):
+class ListLayer(ComponentLayer, PopupLayer):
     """A reusable list that supports searching the options."""
     def __init__(self, title="", popup=False):
         ComponentLayer.__init__(self)
-        Row.__init__(self)
+
+        self.__rows = Row(_type=Row.HOLDER)
 
         if popup:
             win = window.Window.get_window()
@@ -539,10 +540,25 @@ class ListLayer(ComponentLayer, Row, PopupLayer):
             self.component = components.FilteredList(1, 0, win.rows - 1,
                                                      win.cols)
 
+    def add_row_text(self, text: str, callback_fn=None, *args):
+        return self.__rows.add_row_text(text, callback_fn, *args)
+
+    def add_row_parent(self, text: str):
+        return self.__rows.add_row_parent(text)
+
+    def add_row_toggle(self, text: str, toggle: Toggle):
+        return self.__rows.add_row_toggle(text, toggle)
+
+    def add_row_radio(self, text: str, radio: Radio):
+        return self.__rows.add_row_radio(text, radio)
+
+    def select_row(self, index):
+        self.__rows.select_row(index)
+
     def build(self):
         super().build()
         text_rows = []
-        self.build_string_lines(text_rows, self)
+        self.__rows.build_string_lines(text_rows, self.__rows)
         self.component.set_lines(text_rows)
 
     def __string_search_fn(text: str, search_str: str):
