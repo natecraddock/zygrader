@@ -71,8 +71,8 @@ class Window:
         # Create header
         self.header = curses.newwin(1, self.cols, 0, 0)
         self.header.bkgd(" ", curses.color_pair(1))
-        self.__header_title = ""
-        self.header_offset = 0
+        self.__header_title = "Main Menu"
+        self.__header_dirty = True
 
         # All user input handling is done inside the EventManager class.
         self.event_manager = events.EventManager()
@@ -103,6 +103,7 @@ class Window:
         self.__get_window_dimensions()
         curses.resize_term(self.rows, self.cols)
 
+        resize_window(self.header, 1, self.cols)
         for layer in self.layers:
             layer.resize_component(self.rows, self.cols)
 
@@ -123,7 +124,6 @@ class Window:
         if self.spooky_mode:
             separator = "🎃"
         self.header.erase()
-        resize_window(self.header, 1, self.cols)
 
         # Store the cursor location
         loc = curses.getsyx()
@@ -147,12 +147,13 @@ class Window:
             red, green = self.get_header_colors()
 
             for row in range(self.cols):
-                if ((row // 2) + self.header_offset) % 2 is 0:
+                if (row // 2) % 2 is 0:
                     self.header.chgat(0, row, red | curses.A_BOLD)
                 else:
                     self.header.chgat(0, row, green | curses.A_BOLD)
 
         self.header.noutrefresh()
+        self.__header_dirty = False
 
         curses.setsyx(*loc)
 
@@ -160,16 +161,16 @@ class Window:
         """Set the text to be drawn centered in the header"""
         if self.active_layer and self.active_layer.title:
             self.__header_title = self.active_layer.title
-            return
         elif self.active_layer:
             # Find a lower layer with a title
             for layer in reversed(self.layers):
                 if layer.title:
                     self.__header_title = layer.title
-                    return
+        else:
+            # Use default text
+            self.__header_title = "Main Menu"
 
-        # Use default text
-        self.__header_title = "Main Menu"
+        self.__header_dirty = True
 
     def register_layer(self, layer: ComponentLayer, header_title=""):
         """Register a layer in the event loop."""
@@ -192,6 +193,8 @@ class Window:
         """Remove the top layer from the stack."""
         layer = self.layers.pop()
         self.active_layer = self.layers[-1] if self.layers else None
+        if self.active_layer:
+            self.active_layer.redraw = True
 
         layer.destroy()
 
@@ -232,8 +235,7 @@ class Window:
         if event.type == Event.QUIT:
             self.layers.clear()
         elif event.type == Event.HEADER_UPDATE:
-            # self.update_header()
-            pass
+            self.__header_dirty = True
         elif event.type == Event.LAYER_CLOSE:
             self.unregister_layer()
         elif event.type == Event.RESIZE:
@@ -250,7 +252,8 @@ class Window:
 
     def draw(self):
         """Draw each component in the stack"""
-        if not any(layer.redraw for layer in self.layers):
+        if not any(layer.redraw
+                   for layer in self.layers) and not self.__header_dirty:
             return
 
         self.update_window()
@@ -277,4 +280,3 @@ class Window:
             curses.init_pair(1, curses.COLOR_BLACK, curses.COLOR_WHITE)
             curses.init_pair(7, curses.COLOR_CYAN, curses.COLOR_WHITE)
             curses.init_pair(2, curses.COLOR_RED, curses.COLOR_WHITE)
-        self.stdscr.bkgd(" ", curses.color_pair(1))

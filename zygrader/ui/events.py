@@ -105,9 +105,6 @@ class EventManager:
             self.insert_mode = False
             self.mark_mode = True
 
-        # TODO: Handle header update event
-        # self.window.draw_header()
-        # curses.doupdate()
         return Event.HEADER_UPDATE
 
     def disable_modes(self):
@@ -170,8 +167,6 @@ class EventManager:
             event = Event.CHAR_INPUT
             event_value = chr(input_code)
 
-        # TODO: Move back to window
-        # self.header_offset += 1
         return Event(event, event_value)
 
     def get_keyboard_input_vim(self, input_code):

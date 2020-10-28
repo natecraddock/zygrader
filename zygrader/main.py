@@ -128,7 +128,7 @@ def mainloop(args):
     menu.add_row_text("Changelog", view_changelog)
     if args.admin:
         menu.add_row_text("Admin", admin.admin_menu)
-    window.register_layer(menu)
+    window.register_layer(menu, "Main Menu")
 
     # Begin the event loop
     window.loop()

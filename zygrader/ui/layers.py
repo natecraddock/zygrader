@@ -589,7 +589,8 @@ class ListLayer(ComponentLayer, Row, PopupLayer):
                 self.select_row(self.component.get_selected_index())
             self.rebuild = True
 
-        self.redraw = True
+        if event.type != Event.NONE:
+            self.redraw = True
 
     def selected_index(self):
         return self.component.get_selected_index()
