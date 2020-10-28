@@ -416,7 +416,7 @@ class Row:
 
         self.__subrows: List[self.__class__] = []
         self.__callback_fn = None
-        self._callback_args = ()
+        self.__callback_args = ()
 
         self.__expanded = False
 
@@ -475,7 +475,7 @@ class Row:
 
     def set_callback_fn(self, callback_fn, *args):
         self.__callback_fn = callback_fn
-        self._callback_args = args
+        self.__callback_args = args
 
     def set_toggle_ob(self, toggle: Toggle):
         self.__toggle = toggle
@@ -500,7 +500,7 @@ class Row:
 
     def do_action(self):
         if self.__type == Row.TEXT and self.__callback_fn:
-            self.__callback_fn(*self._callback_args)
+            self.__callback_fn(*self.__callback_args)
         elif self.__type == Row.TEXT:
             event_manager = window.Window.get_window().event_manager
             event_manager.push_layer_close_event()
