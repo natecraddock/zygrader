@@ -188,6 +188,7 @@ def preferences_menu():
     row = popup.add_row_parent("Appearance")
     row.add_row_toggle("Dark Mode", PreferenceToggle("dark_mode"))
     row.add_row_toggle("Christmas Theme", PreferenceToggle("christmas_mode"))
+    row.add_row_toggle("Spooky Theme", PreferenceToggle("spooky_mode"))
 
     row = popup.add_row_parent("Navigation")
     row.add_row_toggle("Vim Mode", PreferenceToggle("vim_mode"))

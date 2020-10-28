@@ -93,6 +93,10 @@ def versioning_update_preferences():
         if not "data_dir" in config:
             config["data_dir"] = ""
 
+    version = "4.9.0"
+    if compare_versions(version, user_version):
+        config["spooky_mode"] = False
+
 
 def find_versioning_message(window, version, user_version):
     """Display a versioning message for the given version number if one exists."""
@@ -117,6 +121,12 @@ def show_versioning_message(window: ui.Window):
     for version in update_versions:
         if find_versioning_message(window, version, user_version):
             updated = True
+
+    version = "4.9.0"
+    if compare_versions(version, user_version):
+        msg = get_version_message(version)
+        window.create_popup(f"Version {version}", msg,
+                            ui.components.Popup.ALIGN_LEFT)
 
     # Write the current version to the user's config file.
     # It is important to not update the number in do_versioning,

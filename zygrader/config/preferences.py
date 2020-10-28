@@ -29,6 +29,7 @@ DEFAULT_PREFERENCES = {
     "vim_mode": False,
     "dark_mode": True,
     "christmas_mode": False,
+    "spooky_mode": False,
     "browser_diff": False,
     "save_password": False,
     "class_code": "No Override",

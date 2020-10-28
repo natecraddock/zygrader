@@ -31,11 +31,12 @@ class Window:
     def update_preferences(self):
         self.dark_mode = preferences.get("dark_mode")
         self.christmas_mode = preferences.get("christmas_mode")
+        self.spooky_mode = preferences.get("spooky_mode")
         self.clear_filter = preferences.get("clear_filter")
 
         self.update_window()
 
-    def __init__(self, callback, window_name):
+    def __init__(self, callback, window_name, args):
         """Initialize screen and run callback function"""
         Window.INSTANCE = self
         self.name = window_name
@@ -43,14 +44,14 @@ class Window:
         self.layers: typing.List[ComponentLayer] = []
         self.active_layer: ComponentLayer = None
 
-        curses.wrapper(self.__init_curses, callback)
+        curses.wrapper(self.__init_curses, callback, args)
 
         # Cleanup when finished accepting input
         self.stdscr.clear()
         self.stdscr.refresh()
         curses.endwin()
 
-    def __init_curses(self, stdscr, callback):
+    def __init_curses(self, stdscr, callback, args):
         """Configure basic curses settings"""
         self.stdscr = stdscr
 
@@ -77,7 +78,7 @@ class Window:
         self.event_manager = events.EventManager()
 
         # Execute callback with a reference to the window object
-        callback(self)
+        callback(self, args)
 
     def __get_window_dimensions(self):
         self.rows, self.cols = self.stdscr.getmaxyx()
@@ -118,18 +119,24 @@ class Window:
 
     def draw_header(self):
         """Set the header text"""
+        separator = "|"
+        if self.spooky_mode:
+            separator = "🎃"
         self.header.erase()
         resize_window(self.header, 1, self.cols)
 
         # Store the cursor location
         loc = curses.getsyx()
 
-        display_text = f"{self.name} | {self.__header_title} | {self.__get_email_text()}"
+        display_text = f"{self.name} {separator} {self.__header_title} {separator} {self.__get_email_text()}"
 
         if self.event_manager.insert_mode:
-            display_text += " | INSERT"
+            display_text += f" {separator} INSERT"
         elif self.event_manager.mark_mode:
-            display_text += " | VISUAL"
+            display_text += f" {separator} VISUAL"
+
+        if self.spooky_mode:
+            display_text = f"👻 {display_text} 👻"
 
         # Centered header
         row = self.cols // 2 - len(display_text) // 2

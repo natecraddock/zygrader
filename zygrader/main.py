@@ -113,7 +113,7 @@ def view_changelog():
     window.run_layer(popup, "Changelog")
 
 
-def mainloop(admin_mode):
+def mainloop(args):
     """Create the main menu that runs until zygrader is exited"""
     window = ui.get_window()
 
@@ -126,7 +126,7 @@ def mainloop(admin_mode):
     menu.add_row_text("View Students", utils.view_students)
     menu.add_row_text("Preferences", user.preferences_menu)
     menu.add_row_text("Changelog", view_changelog)
-    if admin_mode:
+    if args.admin:
         menu.add_row_text("Admin", admin.admin_menu)
     window.register_layer(menu)
 
@@ -143,14 +143,8 @@ def preference_update_fn():
     events.update_preferences()
 
 
-def main(window: ui.Window):
+def main(window: ui.Window, args):
     """Curses has been initialized, now setup various modules before showing the menu"""
-    # Read args to set admin mode
-    if "-a" in sys.argv:
-        admin_mode = True
-    else:
-        admin_mode = False
-
     # Register preference update callback
     preferences.add_observer(preference_update_fn)
     preferences.update_observers()
@@ -165,9 +159,9 @@ def main(window: ui.Window):
     if not user.login(window):
         return
 
-    # logger.log("zygrader started")
+    logger.log("zygrader started")
 
-    mainloop(admin_mode)
+    mainloop(args)
 
 
 def start():
@@ -218,7 +212,7 @@ def start():
     data.get_labs()
 
     # Create a zygrader window, callback to main function
-    ui.Window(main, f"zygrader {SharedData.VERSION}")
+    ui.Window(main, f"zygrader {SharedData.VERSION}", args)
 
     logger.log("zygrader exited normally")
 

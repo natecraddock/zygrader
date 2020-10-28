@@ -5,6 +5,7 @@ from collections import Iterable
 from typing import Callable, List
 
 from .utils import add_str, resize_window
+from zygrader.config import preferences
 
 
 class Component:

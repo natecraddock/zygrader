@@ -93,8 +93,8 @@ $ source ~/.virtualenvs/zygrader/bin/activate
 
 You must first install zygrader in _develop mode_ before running from source. Run the following from the zygrader repository (installing needed deps).
 ```
-$ pip install requests yapf
-$ pip install -e .
+$ pip3 install requests yapf
+$ pip3 install -e .
 ```
 
 zygrader can be run directly from the main file, or as a module during development (supports alias)
@@ -169,6 +169,15 @@ VSCode can debug zygrader by including something similar to the following in `la
         }
     ]
 ```
+
+## Style Guide
+We use yapf for indentation and spacing, but we have a few other conventions
+that can't be enforced by yapf.
+
+### Naming
+* Variables and functions are in `snake_case`
+* Classes are in `UpperCamelCase`
+
 
 # Code Documentation
 This is an overview of the files in the `zygrader` directory:

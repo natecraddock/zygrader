@@ -3,13 +3,16 @@ the class, scan through student submissions, and access to other menus"""
 import time
 
 import requests
+import re
 
 from zygrader import class_manager, data, grade_puller, ui, utils
 from zygrader.zybooks import Zybooks
 
 
 def check_student_submissions(zy_api, student_id, lab, search_string):
-    """Search for a substring in all of a student's submissions for a given lab"""
+    """Search for a substring in all of a student's submissions for a given lab.
+    Supports regular expressions.
+    """
     response = {"code": Zybooks.NO_SUBMISSION}
 
     all_submissions = zy_api.get_all_submissions(lab["id"], student_id)
@@ -33,8 +36,9 @@ def check_student_submissions(zy_api, student_id, lab, search_string):
         extracted_zip_files = utils.extract_zip(zip_file)
 
         # Check each file for the matched string
+        pattern = re.compile(fr'{search_string}')
         for source_file in extracted_zip_files.keys():
-            if extracted_zip_files[source_file].find(search_string) != -1:
+            if pattern.search(extracted_zip_files[source_file]):
 
                 # Get the date and time of the submission and return it
                 response["time"] = zy_api.get_time_string(submission)
