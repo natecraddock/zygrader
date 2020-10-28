@@ -121,7 +121,9 @@ class BoolPopup(ComponentLayer, PopupLayer):
             self.component.next()
         elif event.type == Event.ENTER:
             event_manager.push_layer_close_event()
-        self.redraw = True
+
+        if event.type != Event.NONE:
+            self.redraw = True
 
     def get_result(self) -> bool:
         return self.component.selected() == BoolPopup.__OPTIONS[0]
@@ -169,7 +171,9 @@ class OptionsPopup(ComponentLayer, PopupLayer):
                 event_manager.push_layer_close_event()
             else:
                 self.options[key]()
-        self.redraw = True
+
+        if event.type != Event.NONE:
+            self.redraw = True
 
 
 class WaitPopup(ComponentLayer, PopupLayer):
@@ -248,7 +252,9 @@ class TextInputLayer(ComponentLayer, PopupLayer):
             self.component.cursor_to_beginning(shift_pressed=True)
         elif event.type == Event.SEND:
             self.component.cursor_to_end(shift_pressed=True)
-        self.redraw = True
+
+        if event.type != Event.NONE:
+            self.redraw = True
 
     def set_prompt(self, prompt: List[str]):
         self.component.set_message(prompt)
@@ -352,7 +358,9 @@ class DatetimeSpinner(ComponentLayer):
             self._canceled = True
         elif event.type == Event.ENTER and self.component.is_confirmed():
             event_manager.push_layer_close_event()
-        self.redraw = True
+
+        if event.type != Event.NONE:
+            self.redraw = True
 
     def get_time(self):
         return self.component.get_time()
