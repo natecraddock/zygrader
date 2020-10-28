@@ -140,16 +140,17 @@ def submission_search_init():
 
 class LockToggle(ui.layers.Toggle):
     def __init__(self, name, list):
-        super().__init__(name)
-        self._list = list
+        super().__init__()
+        self.__name = name
+        self.__list = list
         self.get()
 
     def toggle(self):
-        self._list[self._name] = not self._list[self._name]
+        self.__list[self.__name] = not self.__list[self.__name]
         self.get()
 
     def get(self):
-        self._toggled = self._list[self._name]
+        self._toggled = self.__list[self.__name]
 
 
 def remove_locks():

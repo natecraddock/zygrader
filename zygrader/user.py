@@ -172,7 +172,20 @@ def save_password_toggle():
 
 class PreferenceToggle(ui.layers.Toggle):
     def __init__(self, name, extra_fn=None):
-        super().__init__(name, preferences.get, preferences.set, extra_fn)
+        super().__init__()
+        self.__name = name
+        self.__extra_fn = extra_fn
+        self.get()
+
+    def get(self):
+        self._toggled = preferences.get(self.__name)
+
+    def toggle(self):
+        preferences.set(self.__name, not self._toggled)
+        self.get()
+
+        if self.__extra_fn:
+            self.__extra_fn()
 
 
 class PreferenceRadio(ui.layers.Radio):

@@ -16,15 +16,16 @@ class ZybookSectionSelector:
 
     class _SectionToggle(ui.layers.Toggle):
         def __init__(self, index, data):
-            self._toggled = False
-            self.index = index
-            self.data = data
+            super().__init__()
+            self.__index = index
+            self.__data = data
+            self.get()
 
         def get(self):
-            self._toggled = self.data[self.index]
+            self._toggled = self.__data[self.__index]
 
         def toggle(self):
-            self.data[self.index] = not self.data[self.index]
+            self.__data[self.__index] = not self.__data[self.__index]
             self.get()
 
     def select_zybook_sections(self, return_just_numbers=False, title_extra=""):

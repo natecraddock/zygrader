@@ -189,18 +189,17 @@ def toggle_lab_option(lab, option):
 
 class LabOptionToggle(ui.layers.Toggle):
     def __init__(self, lab, option):
-        super().__init__(option)
-        self.lab = lab
-        self.option = option
-
+        super().__init__()
+        self.__lab = lab
+        self.__option = option
         self.get()
 
     def toggle(self):
-        toggle_lab_option(self.lab, self.option)
+        toggle_lab_option(self.__lab, self.__option)
         self.get()
 
     def get(self):
-        self._toggled = self.option in self.lab.options
+        self._toggled = self.__option in self.__lab.options
 
 
 def edit_lab_options(lab):

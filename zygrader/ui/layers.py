@@ -384,25 +384,12 @@ class Radio:
 
 
 class Toggle:
-    def __init__(self, name, get_fn=None, set_fn=None, extra_fn=None):
+    """Abstract base class for a toggle"""
+    def __init__(self):
         self._toggled = False
-        self._name = name
-        self.__get_fn = get_fn
-        self.__set_fn = set_fn
-        self.__extra_fn = extra_fn
-
-        if self.__get_fn:
-            self.get()
-
-    def get(self):
-        self._toggled = self.__get_fn(self._name)
 
     def toggle(self):
-        self.__set_fn(self._name, not self._toggled)
-        self.get()
-
-        if self.__extra_fn:
-            self.__extra_fn()
+        raise NotImplementedError
 
     def is_toggled(self):
         return self._toggled
