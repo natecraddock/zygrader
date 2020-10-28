@@ -318,8 +318,7 @@ def student_callback(context: ui.WinContext, lab, use_locks=True):
         }
 
         # Add option to diff parts if this lab requires it
-        if not (use_locks
-                and submission.flag & data.model.SubmissionFlag.DIFF_PARTS):
+        if not (submission.flag & data.model.SubmissionFlag.DIFF_PARTS):
             del options["Diff Parts"]
 
         window.create_options_popup("Submission", submission, options,
