@@ -758,7 +758,7 @@ class FilteredList(ScrollableList):
         self.cols = cols
 
         # List box
-        self.window = curses.newwin(self._rows - 1, self.cols, y, x)
+        self.window = curses.newwin(self._rows, self.cols, y, x)
         self.window.bkgd(" ", curses.color_pair(1))
 
         # Text input area

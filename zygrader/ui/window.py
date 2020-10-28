@@ -280,3 +280,4 @@ class Window:
             curses.init_pair(1, curses.COLOR_BLACK, curses.COLOR_WHITE)
             curses.init_pair(7, curses.COLOR_CYAN, curses.COLOR_WHITE)
             curses.init_pair(2, curses.COLOR_RED, curses.COLOR_WHITE)
+        self.stdscr.bkgd(" ", curses.color_pair(1))
