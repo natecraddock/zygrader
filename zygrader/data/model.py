@@ -8,10 +8,9 @@ import tempfile
 import time
 from collections import Iterable
 
+from zygrader import ui, utils
 from zygrader.config import preferences
 from zygrader.config.shared import SharedData
-from zygrader import utils
-from zygrader import ui
 from zygrader.zybooks import Zybooks
 
 
@@ -25,6 +24,9 @@ class Lab:
         if "due" in self.options:
             self.options["due"] = datetime.datetime.strptime(
                 self.options["due"], "%m.%d.%Y:%H.%M.%S").astimezone(tz=None)
+
+    def __eq__(self, other):
+        return self.name == other.name
 
     def __str__(self):
         return f"{self.name}"
@@ -63,6 +65,9 @@ class Student:
         self.email = email
         self.section = section
         self.id = id
+
+    def __eq__(self, other):
+        return self.full_name == other.full_name and self.email == other.email and self.id == other.id
 
     def __str__(self):
         return f"{self.full_name} - {self.email} - Section {self.section}"
@@ -153,6 +158,9 @@ class Submission(Iterable):
             return line
         else:
             raise StopIteration
+
+    def __eq__(self, other):
+        return self.student == other.student and self.lab == other.lab
 
     def get_part_identifier(self, part):
         """Some parts are not named, use ID in that case"""
@@ -319,8 +327,6 @@ class Submission(Iterable):
 
     def do_resume_code(self, process):
         if process:
-            window = ui.get_window()
-            window.take_input.clear()
             curses.endwin()
             SharedData.RUNNING_CODE = True
             process.send_signal(signal.SIGCONT)
@@ -331,7 +337,8 @@ class Submission(Iterable):
         return False
 
     def compile_and_run_code(self, use_gdb):
-        window = ui.get_window()
+        events = ui.get_events()
+
         if self.do_resume_code(SharedData.running_process):
             stopped = self.wait_on_child(SharedData.running_process)
         else:
@@ -361,8 +368,7 @@ class Submission(Iterable):
 
         curses.initscr()
         curses.flushinp()
-        window.take_input.set()
-        window.clear_event_queue()
+        events.clear_event_queue()
         curses.doupdate()
         return True
 
@@ -370,8 +376,12 @@ class Submission(Iterable):
         window = ui.get_window()
         part_names = [self.get_part_identifier(x) for x in self.lab.parts]
 
-        picked = window.create_list_popup(title, part_names)
-        return picked
+        popup = ui.layers.ListLayer(title, popup=True)
+        for part in part_names:
+            popup.add_row_text(part)
+        window.run_layer(popup)
+
+        return popup.selected_index()
 
     def compile_code(self):
         # Use a separate tmp dir to avoid opening the binary in a text editor
@@ -417,9 +427,8 @@ class Submission(Iterable):
         return False
 
     def run_code(self, executable, use_gdb):
-        window = ui.get_window()
-        window.clear_event_queue()
-        window.take_input.clear()
+        events = ui.get_events()
+        events.clear_event_queue()
         curses.endwin()
 
         print(chr(27) + "[2J", end="")  # Clear the terminal

@@ -1,6 +1,6 @@
 """Preferences: Functions for managing user preferences"""
-import os
 import json
+import os
 import typing
 
 from .shared import SharedData
@@ -47,6 +47,11 @@ PREFERENCES = {}
 OBSERVERS = []
 
 
+def update_observers():
+    for observer_fn in OBSERVERS:
+        observer_fn()
+
+
 def write_config(config):
     """Write the user's config to disk"""
     config_path = os.path.join(CONFIG_PATH, CONFIG_FILE)
@@ -86,6 +91,14 @@ def set(key: str, value: typing.Union[str, bool]):
 
     # Write preferences every time they are set
     write_config(PREFERENCES)
+
+    # Notify observers
+    update_observers()
+
+
+def add_observer(observer_fn):
+    """Register a function to be called when the preferences are saved"""
+    OBSERVERS.append(observer_fn)
 
 
 def install(config_dir):

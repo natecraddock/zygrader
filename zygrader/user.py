@@ -2,13 +2,11 @@
 import base64
 import sys
 
-from zygrader.config.shared import SharedData
-from zygrader import zybooks
-
+from zygrader import ui, zybooks
 from zygrader.class_manager import download_roster
 from zygrader.config import preferences
-from zygrader import data
-from zygrader import ui
+from zygrader.config.shared import SharedData
+from zygrader.zybooks import Zybooks
 
 
 def decode_password(password):
@@ -22,53 +20,61 @@ def encode_password(password):
     return str(base64.b64encode(password.encode("ascii")), "utf-8")
 
 
-def authenticate(window: ui.Window, zy_api, email, password):
-    """Authenticate to the zyBooks api with the email and password"""
-    wait_popup = window.create_waiting_popup(
-        "Signing in", [f"Signing into zyBooks as {email}..."])
+def authenticate(window: ui.Window, zy_api: Zybooks, email, password):
+    """Authenticate to the zyBooks api with the email and password."""
+    def wait_fn():
+        success = zy_api.authenticate(email, password)
+        if success:
+            download_roster(silent=True)
+        return success
 
-    success = zy_api.authenticate(email, password)
+    popup = ui.layers.WaitPopup("Signing in")
+    popup.set_message([f"Signing into zyBooks as {email}..."])
+    popup.set_wait_fn(wait_fn)
+    window.run_layer(popup)
 
-    # Always fetch the latest roster when starting zygrader
-    if success:
-        download_roster(silent=True)
-
-    wait_popup.close()
-
-    if not success:
-        window.create_popup("Error", ["Invalid Credentials"])
+    if popup.was_canceled():
         return False
-    return True
+
+    authenticated = popup.get_result()
+    if not authenticated:
+        popup = ui.layers.Popup("Error")
+        popup.set_message(["Invalid Credentials"])
+        window.run_layer(popup)
+    return authenticated
 
 
 def get_password(window: ui.Window):
     """Prompt for the user's password"""
-    window.set_header("Sign In")
 
-    password = window.create_text_input(
-        "Enter Password",
-        "Enter your zyBooks password",
-        mask=ui.components.TextInput.TEXT_MASKED,
-    )
-    if password == ui.Window.CANCEL:
-        password = ""
+    text_input = ui.layers.TextInputLayer(
+        "Enter Password", mask=ui.components.TextInput.TEXT_MASKED)
+    text_input.set_prompt(["Enter your zyBooks password"])
+    window.run_layer(text_input, "Sign In")
 
-    return password
+    if text_input.was_canceled():
+        return False
+
+    return text_input.get_text()
 
 
 # Create a user account
 def create_account(window: ui.Window, zy_api):
     """Create zybooks user account info (email & password) in config"""
-    window.set_header("Sign In")
 
     while True:
         # Get user account information
-        email = window.create_text_input("Enter Email",
-                                         "Enter your zyBooks email",
-                                         mask=None)
-        if email == ui.Window.CANCEL:
-            email = ""
+        text_input = ui.layers.TextInputLayer("Enter Email")
+        text_input.set_prompt(["Enter your zyBooks email"])
+        window.run_layer(text_input, "Sign In")
+
+        if text_input.was_canceled():
+            return False
+
+        email = text_input.get_text()
         password = get_password(window)
+        if not password:
+            return False
 
         if authenticate(window, zy_api, email, password):
             break
@@ -84,33 +90,40 @@ def login(window: ui.Window):
     email = preferences.get("email")
     password = preferences.get("password")
 
-    # If user email and password exists, authenticate and return
+    # If user email and password exist, authenticate and return
     if email and password:
         password = decode_password(password)
-        authenticate(window, zy_api, email, password)
-        window.set_email(email)
-        return
+        authenticated = authenticate(window, zy_api, email, password)
+        return authenticated
 
     # User does not have account created
     if not email:
-        email, password = create_account(window, zy_api)
+        credentials = create_account(window, zy_api)
+        if not credentials:
+            return False
 
-        save_password = window.create_bool_popup(
-            "Save Password", ["Would you like to save your password?"])
-
+        email, password = credentials
         preferences.set("email", email)
+
+        popup = ui.layers.BoolPopup("Save Password")
+        popup.set_message(["Would you like to save your password?"])
+        window.run_layer(popup)
+
+        save_password = popup.get_result()
         if save_password:
             preferences.set("save_password", True)
             password = encode_password(password)
             preferences.set("password", password)
-
-        window.set_email(email)
+        else:
+            preferences.set("save_password", False)
 
     # User has account (email), but has not saved their password.
     # Ask user for their password.
     elif not password:
         while True:
             password = get_password(window)
+            if not password:
+                return False
 
             if authenticate(window, zy_api, email, password):
                 if preferences.get("save_password"):
@@ -118,185 +131,112 @@ def login(window: ui.Window):
                     preferences.set("password", password)
                 break
 
+    return True
+
 
 def logout():
     """Log a user out by erasing their email and password from config"""
+    window = ui.get_window()
+
+    # Clear account information
     preferences.set("email", "")
     preferences.set("password", "")
 
-    window = ui.get_window()
     msg = [
         "You have been logged out. Would you like to sign in with different credentials?",
         "",
         "Answering `No` will quit zygrader.",
     ]
-    sign_in = window.create_bool_popup("Sign in?", msg)
+    popup = ui.layers.BoolPopup("Sign in?")
+    popup.set_message(msg)
 
+    sign_in = window.run_layer(popup)
     if sign_in:
         login(window)
     else:
-        sys.exit()
+        event_manager = ui.get_events()
+        event_manager.push_zygrader_quit_event()
 
 
-def draw_text_editors():
-    """Draw the list of text editors"""
-    options = []
-    current_editor = preferences.get("editor")
-
-    for name in preferences.EDITORS:
-        if current_editor == name:
-            options.append(f"[X] {name}")
-        else:
-            options.append(f"[ ] {name}")
-
-    return options
-
-
-def set_editor(editor_index, pref_name):
-    """Set the user's default editor to the selected editor"""
-    editor = list(preferences.EDITORS.keys())[editor_index]
-    preferences.set(pref_name, editor)
-
-
-def set_editor_menu(name):
-    """Open the set editor popup"""
-    window = ui.get_window()
-    edit_fn = lambda context: set_editor(context.data, name)
-    window.create_list_popup("Set Editor",
-                             callback=edit_fn,
-                             list_fill=draw_text_editors)
-
-
-def draw_class_codes():
-    """Draw the list of class codes"""
-    class_codes = SharedData.get_class_codes()
-    class_codes.insert(0, "No Override")
-    current_code = preferences.get("class_code")
-
-    options = []
-    for code in class_codes:
-        if current_code == code:
-            options.append(f"[X] {code}")
-        else:
-            options.append(f"[ ] {code}")
-    return options
-
-
-def set_class_code_override(code_index: int, pref_name: str):
-    """Set the current class code to the user's overridden code"""
-    class_codes = SharedData.get_class_codes()
-    class_codes.insert(0, "No Override")
-
-    preferences.set(pref_name, class_codes[code_index])
-
-    # Update all data to use the new class code
-    SharedData.initialize_shared_data(SharedData.ZYGRADER_DATA_DIRECTORY)
-    data.load_students()
-    data.load_labs()
-    data.load_class_sections()
-
-
-def set_class_code_override_menu(pref_name: str):
-    """Open the set class code override popup"""
-    window = ui.get_window()
-    set_fn = lambda context: set_class_code_override(context.data, pref_name)
-    window.create_list_popup("Override Class Code",
-                             callback=set_fn,
-                             list_fill=draw_class_codes)
-
-
-def toggle_preference(pref):
-    """Toggle a boolean preference"""
-    current_value = preferences.get(pref)
-    preferences.set(pref, not current_value)
-
-
-def save_password_toggle(preference_name):
+def save_password_toggle():
     """Toggle saving the user's password in their config file (encoded)"""
-    toggle_preference(preference_name)
-
-    if not preferences.get(preference_name):
+    if not preferences.get("save_password"):
         preferences.set("password", "")
     else:
         window = ui.get_window()
-        window.create_popup(
-            "Remember Password",
-            ["Next time you start zygrader your password will be saved."],
-        )
+        popup = ui.layers.Popup("Remember Password")
+        popup.set_message(
+            ["Next time you start zygrader your password will be saved."])
+        window.run_layer(popup)
 
 
-# Preference types
-# Toggle for booleans
-# Menu for submenus
-# Action for 1 time actions
-PREFERENCE_TOGGLE = 1
-PREFERENCE_MENU = 2
-PREFERENCE_ACTION = 3
+class PreferenceToggle(ui.layers.Toggle):
+    def __init__(self, name, extra_fn=None):
+        super().__init__()
+        self.__name = name
+        self.__extra_fn = extra_fn
+        self.get()
+
+    def get(self):
+        self._toggled = preferences.get(self.__name)
+
+    def toggle(self):
+        preferences.set(self.__name, not self._toggled)
+        self.get()
+
+        if self.__extra_fn:
+            self.__extra_fn()
 
 
-class Preference:
-    """Holds information for a user preference item"""
-    def __init__(self, name, description, select_fn, _type=PREFERENCE_TOGGLE):
-        self.name = name
-        self.description = description
-        self.select_fn = select_fn
-        self.type = _type
-
-
-PREFERENCES = [
-    Preference("left_right_arrow_nav", "Left/Right Arrow Navigation",
-               toggle_preference),
-    Preference("use_esc_back", "Use Esc key to exit menus", toggle_preference),
-    Preference("clear_filter", "Auto Clear List Filters", toggle_preference),
-    Preference("vim_mode", "Vim Mode", toggle_preference),
-    Preference("dark_mode", "Dark Mode", toggle_preference),
-    Preference("christmas_mode", "Christmas Theme", toggle_preference),
-    Preference("spooky_mode", "Spooky Theme", toggle_preference),
-    Preference("browser_diff", "Open Diffs in Browser", toggle_preference),
-    Preference("save_password", "Remember Password", save_password_toggle),
-    Preference(
-        "class_code",
-        "Override Class Code",
-        set_class_code_override_menu,
-        PREFERENCE_MENU,
-    ),
-    Preference("editor", "Set Editor", set_editor_menu, PREFERENCE_MENU),
-    Preference("log_out", "Log Out", logout, PREFERENCE_ACTION),
-]
-
-
-def draw_preferences():
-    """Create the list of user preferences"""
-    options = []
-    for pref in PREFERENCES:
-        if pref.type in {PREFERENCE_MENU, PREFERENCE_ACTION}:
-            options.append(f"    {pref.description}")
-        else:
-            if preferences.get(pref.name):
-                options.append(f"[X] {pref.description}")
-            else:
-                options.append(f"[ ] {pref.description}")
-
-    return options
-
-
-def preferences_callback(context: ui.WinContext):
-    """Callback to run when a preference is selected"""
-    selected_index = context.data
-    pref = PREFERENCES[selected_index]
-
-    if pref.type in {PREFERENCE_MENU, PREFERENCE_TOGGLE}:
-        pref.select_fn(pref.name)
-        context.window.update_preferences()
-    else:
-        pref.select_fn()
+class PreferenceRadio(ui.layers.Radio):
+    def __init__(self, name):
+        super().__init__(name, preferences.get, preferences.set)
 
 
 def preferences_menu():
     """Create the preferences popup"""
     window = ui.get_window()
-    window.set_header(f"Preferences")
+    popup = ui.layers.ListLayer("User Preferences", popup=True)
 
-    window.create_list_popup("User Preferences",
-                             callback=preferences_callback,
-                             list_fill=draw_preferences)
+    row = popup.add_row_parent("Appearance")
+    row.add_row_toggle("Dark Mode", PreferenceToggle("dark_mode"))
+    row.add_row_toggle("Christmas Theme", PreferenceToggle("christmas_mode"))
+    row.add_row_toggle("Spooky Theme", PreferenceToggle("spooky_mode"))
+
+    row = popup.add_row_parent("Navigation")
+    row.add_row_toggle("Vim Mode", PreferenceToggle("vim_mode"))
+    row.add_row_toggle("Left/Right Arrow Navigation",
+                       PreferenceToggle("left_right_arrow_nav"))
+    row.add_row_toggle("Use Esc key to exit menus",
+                       PreferenceToggle("use_esc_back"))
+
+    # Editor selection submenu
+    row = popup.add_row_parent("Text Editor")
+    radio = PreferenceRadio("editor")
+    for editor_name in preferences.EDITORS:
+        radio.add_value(editor_name)
+    for editor_name in preferences.EDITORS:
+        row.add_row_radio(editor_name, radio)
+
+    row = popup.add_row_parent("Other")
+    row.add_row_toggle("Auto Clear List Filters",
+                       PreferenceToggle("clear_filter"))
+    row.add_row_toggle("Open Diffs in Browser",
+                       PreferenceToggle("browser_diff"))
+
+    # Class code selector
+    row = popup.add_row_parent("Class Code")
+    radio = PreferenceRadio("class_code")
+    class_codes = SharedData.get_class_codes()
+    class_codes.insert(0, "No Override")
+    for code in class_codes:
+        radio.add_value(code)
+    for code in class_codes:
+        row.add_row_radio(code, radio)
+
+    row = popup.add_row_parent("Account")
+    row.add_row_toggle("Remember Password",
+                       PreferenceToggle("save_password", save_password_toggle))
+    row.add_row_text("Log Out", logout)
+
+    window.register_layer(popup, "Preferences")

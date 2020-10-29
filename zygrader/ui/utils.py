@@ -1,4 +1,5 @@
 import curses
+
 from zygrader.ui.displaystring import DisplayStr
 
 

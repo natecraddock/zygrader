@@ -8,31 +8,26 @@ import curses
 import difflib
 import os
 import subprocess
-from subprocess import PIPE, DEVNULL
 import tempfile
+from subprocess import DEVNULL, PIPE
 
-from zygrader import data
-from zygrader import ui
+from zygrader import data, ui
 from zygrader.zybooks import Zybooks
 
 
 def suspend_curses(callback_fn):
     """A decorator for any subprocess that must suspend access to curses (zygrader)"""
     def wrapper(*args, **kwargs):
-        window = ui.get_window()
+        events = ui.get_events()
         # Clear remaining events in event queue
-        window.clear_event_queue()
-
-        # Pause user input thread
-        window.take_input.clear()
+        events.clear_event_queue()
         curses.endwin()
 
         callback_fn(*args, **kwargs)
 
         curses.flushinp()
         curses.initscr()
-        window.take_input.set()
-        window.clear_event_queue()
+        events.clear_event_queue()
         curses.doupdate()
 
     return wrapper
@@ -147,37 +142,40 @@ def get_source_file_paths(directory):
 def prep_lab_score_calc():
     """A simple calculator for determining the score for a late prep lab"""
     window = ui.get_window()
-    window.set_header("Prep Lab Calculator")
 
     try:
-        old_score = float(
-            window.create_text_input("Original Score",
-                                     "What was the student's original score?"))
-        if old_score == ui.Window.CANCEL:
-            return
-        current_completion = float(
-            window.create_text_input(
-                "zyBooks completion",
-                "What is the student's current "
-                "completion % in zyBooks",
-                "100",
-            ))
-        if current_completion == ui.Window.CANCEL:
+        text_input = ui.layers.TextInputLayer("Original Score")
+        text_input.set_prompt(["What was the student's original score?"])
+        window.run_layer(text_input, "Prep Lab Calculator")
+        if text_input.was_canceled():
             return
 
+        old_score = float(text_input.get_text())
+
+        text_input = ui.layers.TextInputLayer("zyBooks Completion")
+        text_input.set_prompt(
+            ["What is the student's current completion % in zyBooks"])
+        text_input.set_text("100")
+        window.run_layer(text_input, "Prep Lab Calculator")
+        if text_input.was_canceled():
+            return
+
+        # Calculate the new score
+        current_completion = float(text_input.get_text())
         new_score = old_score + ((current_completion - old_score) * 0.6)
-        window.create_popup("New Score",
-                            [f"The student's new score is: {new_score}"])
+
+        popup = ui.layers.Popup("New Score")
+        popup.set_message([f"The student's new score is: {new_score}"])
+        window.run_layer(popup, "Prep Lab Calculator")
     except ValueError:
-        window.create_popup("Error", ["Invalid input"])
+        popup = ui.layers.Popup("Error")
+        popup.set_message(["Invalid input"])
+        window.run_layer(popup, "Prep Lab Calculator")
 
 
-def view_students_callback(context):
+def view_students_fn(student):
     """Create a popup to show info for the selected student"""
     window = ui.get_window()
-    students = data.get_students()
-
-    student = students[context.data]
 
     msg = [
         f"Name: {student.full_name}",
@@ -185,29 +183,37 @@ def view_students_callback(context):
         f"Section: {student.section}",
         f"ID: {student.id}",
     ]
-    window.create_popup("Student Info", msg, ui.components.Popup.ALIGN_LEFT)
+
+    popup = ui.layers.Popup("Student Info")
+    popup.set_message(msg)
+    window.run_layer(popup)
 
 
 def view_students():
     """Create the view students filtered list"""
     window = ui.get_window()
     students = data.get_students()
-    window.set_header("View Students")
 
     if not students:
-        window.create_popup("No Students",
-                            ["There are no students in the class to show."])
+        popup = ui.layers.Popup("No Students")
+        popup.set_message(["There are no students in the class to show."])
+        window.run_layer(popup)
         return
 
-    window.create_filtered_list("Student Name",
-                                input_data=students,
-                                callback=view_students_callback)
+    popup = ui.layers.ListLayer("Students", popup=True)
+    popup.set_searchable("Student Name")
+    for student in students:
+        popup.add_row_text(str(student), view_students_fn, student)
+    window.register_layer(popup, "View Students")
 
 
 def fetch_zybooks_toc():
-    wait_controller = ui.get_window().create_waiting_popup(
-        "TOC", ["Fetching TOC from zyBooks"])
+    window = ui.get_window()
     zy_api = Zybooks()
-    toc = zy_api.get_table_of_contents()
-    wait_controller.close()
-    return toc
+
+    popup = ui.layers.WaitPopup("Table of Contents",
+                                ["Fetching TOC from zyBooks"])
+    popup.set_wait_fn(zy_api.get_table_of_contents)
+    window.run_layer(popup)
+
+    return popup.get_result()

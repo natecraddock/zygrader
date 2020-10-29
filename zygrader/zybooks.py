@@ -1,8 +1,9 @@
 """ A wrapper around the zyBooks API """
-from datetime import datetime, timezone, timedelta
 import os
-import requests
 import zipfile
+from datetime import datetime, timedelta, timezone
+
+import requests
 
 from zygrader.config.shared import SharedData
 

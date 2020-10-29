@@ -6,19 +6,9 @@ import signal
 import sys
 import time
 
-from zygrader import admin
-from zygrader import config
-from zygrader import data
-from zygrader import email_manager
-from zygrader import grader
-from zygrader import logger
-from zygrader import ui
-from zygrader import updater
-from zygrader import user
-from zygrader import utils
-
-from zygrader.config import preferences
-from zygrader.config import versioning
+from zygrader import (admin, config, data, email_manager, grader, logger, ui,
+                      updater, user, utils)
+from zygrader.config import preferences, versioning
 from zygrader.config.shared import SharedData
 
 
@@ -113,63 +103,61 @@ def handle_args(args):
         sys.exit()
 
 
-MAIN_MENU_OPTIONS = [
-    "Grade",
-    "Emails",
-    "Prep Lab Score Calculator",
-    "Run For Fun",
-    "View Students",
-    "Preferences",
-    "Changelog",
-]
+def view_changelog():
+    window = ui.get_window()
+    lines = config.versioning.load_changelog()
 
-
-def mainloop_callback(context: ui.WinContext):
-    """Run the chosen option from the main menu"""
-    option = MAIN_MENU_OPTIONS[context.data]
-
-    if option == "Grade":
-        grader.grade()
-    elif option == "Run For Fun":
-        grader.grade(use_locks=False)
-    elif option == "Preferences":
-        user.preferences_menu()
-    elif option == "Emails":
-        email_manager.email_menu()
-    elif option == "Prep Lab Score Calculator":
-        utils.prep_lab_score_calc()
-    elif option == "Admin":
-        admin.admin_menu()
-    elif option == "Changelog":
-        lines = config.versioning.load_changelog()
-        context.window.create_list_popup("Changelog", lines)
-    elif option == "View Students":
-        utils.view_students()
+    popup = ui.layers.ListLayer("Changelog", popup=True)
+    for line in lines:
+        popup.add_row_text(line)
+    window.run_layer(popup, "Changelog")
 
 
 def mainloop(args):
     """Create the main menu that runs until zygrader is exited"""
     window = ui.get_window()
 
+    # Create the main menu
+    menu = ui.layers.ListLayer()
+    menu.add_row_text("Grade", grader.grade)
+    menu.add_row_text("Emails", email_manager.email_menu)
+    menu.add_row_text("Prep Lab Score Calculator", utils.prep_lab_score_calc)
+    menu.add_row_text("Run For Fun", lambda: grader.grade(use_locks=False))
+    menu.add_row_text("View Students", utils.view_students)
+    menu.add_row_text("Preferences", user.preferences_menu)
+    menu.add_row_text("Changelog", view_changelog)
     if args.admin:
-        MAIN_MENU_OPTIONS.append("Admin")
+        menu.add_row_text("Admin", admin.admin_menu)
+    window.register_layer(menu, "Main Menu")
 
-    window.set_header(SharedData.get_current_class_code)
-    window.create_filtered_list("Option",
-                                input_data=MAIN_MENU_OPTIONS,
-                                callback=mainloop_callback)
+    # Begin the event loop
+    window.loop()
+
+
+def preference_update_fn():
+    """Callback that is run when preferences are updated"""
+    window = ui.get_window()
+    window.update_preferences()
+
+    events = ui.get_events()
+    events.update_preferences()
 
 
 def main(window: ui.Window, args):
     """Curses has been initialized, now setup various modules before showing the menu"""
+    # Register preference update callback
+    preferences.add_observer(preference_update_fn)
+    preferences.update_observers()
+
     # Notify the user of changes
     versioning.show_versioning_message(window)
 
-    # Log in user
-    user.login(window)
-
     # Start file watch thread
     data.fs_watch.start_fs_watch()
+
+    # Authenticate the user
+    if not user.login(window):
+        return
 
     logger.log("zygrader started")
 
@@ -203,8 +191,7 @@ def start():
     # Setup user configuration
     preferences.initialize()
 
-    # Apply versioning changes to preferences
-    versioning.do_versioning()
+    versioning.versioning_update_preferences()
 
     # Handle configuration based args after config has been initialized
     handle_args(args)
