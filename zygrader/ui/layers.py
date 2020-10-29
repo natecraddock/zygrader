@@ -98,6 +98,9 @@ class Popup(ComponentLayer, PopupLayer):
     def event_handler(self, event: Event, event_manager: EventManager):
         if event.type == Event.ENTER:
             event_manager.push_layer_close_event()
+        elif event.type == Event.ESC and event_manager.use_esc_back:
+            self._canceled = True
+            event_manager.push_layer_close_event()
 
     def set_message(self, message):
         self.component.set_message(message)

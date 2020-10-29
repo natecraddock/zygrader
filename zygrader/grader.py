@@ -81,6 +81,8 @@ def pick_submission(submission_popup: ui.layers.OptionsPopup,
     part_index = 0
     if len(lab.parts) > 1:
         part_index = submission.pick_part()
+        if part_index is None:
+            return
 
     # Get list of all submissions for that part
     part = lab.parts[part_index]
@@ -98,6 +100,8 @@ def pick_submission(submission_popup: ui.layers.OptionsPopup,
     for sub in all_submissions:
         popup.add_row_text(sub)
     window.run_layer(popup)
+    if popup.was_canceled():
+        return
 
     submission_index = popup.selected_index()
 
