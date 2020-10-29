@@ -108,6 +108,7 @@ def view_changelog():
     lines = config.versioning.load_changelog()
 
     popup = ui.layers.ListLayer("Changelog", popup=True)
+    popup.set_exit_text("Close")
     for line in lines:
         popup.add_row_text(line)
     window.run_layer(popup, "Changelog")
@@ -119,6 +120,7 @@ def mainloop(args):
 
     # Create the main menu
     menu = ui.layers.ListLayer()
+    menu.set_exit_text("Quit")
     menu.add_row_text("Grade", grader.grade)
     menu.add_row_text("Emails", email_manager.email_menu)
     menu.add_row_text("Prep Lab Score Calculator", utils.prep_lab_score_calc)

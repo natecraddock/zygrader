@@ -561,6 +561,9 @@ class ListLayer(ComponentLayer, PopupLayer):
     def set_subrow_text(self, text, index):
         self.__rows.set_subrow_text(text, index)
 
+    def set_exit_text(self, text: str):
+        self.component.set_exit_text(text)
+
     def build(self):
         super().build()
         text_rows = []

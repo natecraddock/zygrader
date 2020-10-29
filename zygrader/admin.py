@@ -158,6 +158,7 @@ def remove_locks():
     all_locks = {lock: False for lock in data.lock.get_lock_files()}
 
     popup = ui.layers.ListLayer("Select Locks to Remove", popup=True)
+    popup.set_exit_text("Confirm")
     for lock in all_locks:
         popup.add_row_toggle(lock, LockToggle(lock, all_locks))
     window.run_layer(popup)

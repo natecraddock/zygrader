@@ -136,8 +136,8 @@ class GradePuller:
 
         selected = [True] * len(sections_list)
 
-        popup = ui.layers.ListLayer(
-            "Select Class Sections (use Back to finish)", popup=True)
+        popup = ui.layers.ListLayer("Select Class Sections", popup=True)
+        popup.set_exit_text("Done")
         for i, section in enumerate(sections_list):
             popup.add_row_toggle(str(section),
                                  GradePuller._SectionToggle(i, selected))
@@ -217,8 +217,8 @@ class GradePuller:
                         date=new_datetime, time=old_datetime.time())
                     update_row_text(due_times[section], i)
 
-        popup = ui.layers.ListLayer("Set Due Times (use Back to finish)",
-                                    popup=True)
+        popup = ui.layers.ListLayer("Set Due Times", popup=True)
+        popup.set_exit_text("Done")
         index = 0
         for section, time in due_times.items():
             row_text = f"Section {section:>{section_padding}}: {time.strftime('%b %d, %Y at %I:%M:%S%p')}"

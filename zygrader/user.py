@@ -212,6 +212,7 @@ def preferences_menu():
     """Create the preferences popup"""
     window = ui.get_window()
     popup = ui.layers.ListLayer("User Preferences", popup=True)
+    popup.set_exit_text("Close")
 
     row = popup.add_row_parent("Appearance")
     row.add_row_toggle("Dark Mode", PreferenceToggle("dark_mode"))

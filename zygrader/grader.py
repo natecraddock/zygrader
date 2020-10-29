@@ -97,6 +97,7 @@ def pick_submission(submission_popup: ui.layers.OptionsPopup,
     all_submissions.reverse()
 
     popup = ui.layers.ListLayer("Select Submission", popup=True)
+    popup.set_exit_text("Cancel")
     for sub in all_submissions:
         popup.add_row_text(sub)
     window.run_layer(popup)
