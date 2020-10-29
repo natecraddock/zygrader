@@ -188,9 +188,15 @@ class PreferenceToggle(ui.layers.Toggle):
             self.__extra_fn()
 
 
-class PreferenceRadio(ui.layers.Radio):
-    def __init__(self, name):
-        super().__init__(name, preferences.get, preferences.set)
+class StringRadioGroup(ui.layers.RadioGroup):
+    def __init__(self, preference: str):
+        self.__preference = preference
+
+    def toggle(self, _id: str):
+        preferences.set(self.__preference, _id)
+
+    def is_toggled(self, _id: str):
+        return preferences.get(self.__preference) == _id
 
 
 def preferences_menu():
@@ -212,11 +218,9 @@ def preferences_menu():
 
     # Editor selection submenu
     row = popup.add_row_parent("Text Editor")
-    radio = PreferenceRadio("editor")
+    radio = StringRadioGroup("editor")
     for editor_name in preferences.EDITORS:
-        radio.add_value(editor_name)
-    for editor_name in preferences.EDITORS:
-        row.add_row_radio(editor_name, radio)
+        row.add_row_radio(editor_name, radio, editor_name)
 
     row = popup.add_row_parent("Other")
     row.add_row_toggle("Auto Clear List Filters",
@@ -226,13 +230,11 @@ def preferences_menu():
 
     # Class code selector
     row = popup.add_row_parent("Class Code")
-    radio = PreferenceRadio("class_code")
+    radio = StringRadioGroup("class_code")
     class_codes = SharedData.get_class_codes()
     class_codes.insert(0, "No Override")
     for code in class_codes:
-        radio.add_value(code)
-    for code in class_codes:
-        row.add_row_radio(code, radio)
+        row.add_row_radio(code, radio, code)
 
     row = popup.add_row_parent("Account")
     row.add_row_toggle("Remember Password",

@@ -366,21 +366,13 @@ class DatetimeSpinner(ComponentLayer):
         return self.component.get_time()
 
 
-class Radio:
-    def __init__(self, name, get_fn, set_fn):
-        self.__values = []
-        self.__name = name
-        self.__get_fn = get_fn
-        self.__set_fn = set_fn
+class RadioGroup:
+    """Abstract base class for radio buttons"""
+    def is_toggled(self, _id: str):
+        raise NotImplementedError
 
-    def add_value(self, value):
-        self.__values.append(value)
-
-    def is_toggled(self, value):
-        return self.__get_fn(self.__name) == value
-
-    def set(self, value):
-        self.__set_fn(self.__name, value)
+    def toggle(self, _id: str):
+        raise NotImplementedError
 
 
 class Toggle:
@@ -417,6 +409,7 @@ class Row:
 
         self.__toggle: Toggle = None
         self.__radio: Radio = None
+        self.__radio_id = ""
 
     def __str__(self):
         """Render a textual representation of this row."""
@@ -427,7 +420,7 @@ class Row:
         elif self.__type == Row.TOGGLE:
             return f"[{'x' if self.__toggle.is_toggled() else ' '}] " + self.__text
         elif self.__type == Row.RADIO:
-            return f"({'x' if self.__radio.is_toggled(self.__text) else ' '}) " + self.__text
+            return f"({'x' if self.__radio.is_toggled(self.__radio_id) else ' '}) " + self.__text
 
     def build_string_lines(self, lines, start, depth=0):
         OFFSET = " " * (4 * depth)
@@ -454,10 +447,14 @@ class Row:
         row.set_toggle_ob(toggle)
         return row
 
-    def add_row_radio(self, text: str, radio: Radio):
+    def add_row_radio(self, text: str, radio: RadioGroup, radio_id: str):
         row = self.__add_row(text, Row.RADIO)
+        row.set_radio_id(radio_id)
         row.set_radio_ob(radio)
         return row
+
+    def set_radio_id(self, _id: str):
+        self.__radio_id = _id
 
     def get_type(self):
         return self.__type
@@ -475,7 +472,7 @@ class Row:
     def set_toggle_ob(self, toggle: Toggle):
         self.__toggle = toggle
 
-    def set_radio_ob(self, radio: Radio):
+    def set_radio_ob(self, radio: RadioGroup):
         self.__radio = radio
 
     def set_row_text(self, text):
@@ -505,7 +502,7 @@ class Row:
         elif self.__type == Row.TOGGLE:
             self.__toggle.toggle()
         elif self.__type == Row.RADIO:
-            self.__radio.set(self.__text)
+            self.__radio.toggle(self.__text)
 
     def __row_iter(self, rows):
         for row in rows:
@@ -549,7 +546,7 @@ class ListLayer(ComponentLayer, PopupLayer):
     def add_row_toggle(self, text: str, toggle: Toggle):
         return self.__rows.add_row_toggle(text, toggle)
 
-    def add_row_radio(self, text: str, radio: Radio):
+    def add_row_radio(self, text: str, radio: RadioGroup):
         return self.__rows.add_row_radio(text, radio)
 
     def select_row(self, index):
