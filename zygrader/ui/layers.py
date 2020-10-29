@@ -408,7 +408,7 @@ class Row:
         self.__expanded = False
 
         self.__toggle: Toggle = None
-        self.__radio: Radio = None
+        self.__radio: RadioGroup = None
         self.__radio_id = ""
 
     def __str__(self):
@@ -502,7 +502,7 @@ class Row:
         elif self.__type == Row.TOGGLE:
             self.__toggle.toggle()
         elif self.__type == Row.RADIO:
-            self.__radio.toggle(self.__text)
+            self.__radio.toggle(self.__radio_id)
 
     def __row_iter(self, rows):
         for row in rows:
