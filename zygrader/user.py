@@ -1,8 +1,7 @@
 """User: User preference window management"""
 import base64
-import sys
 
-from zygrader import ui, zybooks
+from zygrader import data, ui, zybooks
 from zygrader.class_manager import download_roster
 from zygrader.config import preferences
 from zygrader.config.shared import SharedData
@@ -158,6 +157,13 @@ def logout():
         event_manager.push_zygrader_quit_event()
 
 
+def update_course_data():
+    SharedData.initialize_shared_data(SharedData.ZYGRADER_DATA_DIRECTORY)
+    data.load_students()
+    data.load_labs()
+    data.load_class_sections()
+
+
 def save_password_toggle():
     """Toggle saving the user's password in their config file (encoded)"""
     if not preferences.get("save_password"):
@@ -189,11 +195,14 @@ class PreferenceToggle(ui.layers.Toggle):
 
 
 class StringRadioGroup(ui.layers.RadioGroup):
-    def __init__(self, preference: str):
+    def __init__(self, preference: str, after_fn=None):
         self.__preference = preference
+        self.__after_fn = after_fn
 
     def toggle(self, _id: str):
         preferences.set(self.__preference, _id)
+        if self.__after_fn:
+            self.__after_fn()
 
     def is_toggled(self, _id: str):
         return preferences.get(self.__preference) == _id
@@ -230,7 +239,7 @@ def preferences_menu():
 
     # Class code selector
     row = popup.add_row_parent("Class Code")
-    radio = StringRadioGroup("class_code")
+    radio = StringRadioGroup("class_code", update_course_data)
     class_codes = SharedData.get_class_codes()
     class_codes.insert(0, "No Override")
     for code in class_codes:
