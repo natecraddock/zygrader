@@ -97,6 +97,10 @@ def versioning_update_preferences():
     if compare_versions(version, user_version):
         config["spooky_mode"] = False
 
+    version = "5.0.0"
+    if compare_versions(version, user_version):
+        config["unicode_mode"] = False
+
 
 def find_versioning_message(window, version, user_version):
     """Display a versioning message for the given version number if one exists."""

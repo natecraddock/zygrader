@@ -32,6 +32,7 @@ class Window:
         self.dark_mode = preferences.get("dark_mode")
         self.christmas_mode = preferences.get("christmas_mode")
         self.spooky_mode = preferences.get("spooky_mode")
+        self.unicode_mode = preferences.get("unicode_mode")
         self.clear_filter = preferences.get("clear_filter")
 
         self.update_window()
@@ -84,6 +85,11 @@ class Window:
         self.rows, self.cols = self.stdscr.getmaxyx()
 
     def __init_colors(self):
+        CURSES_ORANGE = 202
+        CURSES_GREY = 240
+        CURSES_GREEN = 34
+        CURSES_PURPLE = 93
+
         curses.init_pair(1, curses.COLOR_WHITE, curses.COLOR_BLACK)
         curses.init_pair(2, curses.COLOR_RED, curses.COLOR_BLACK)
 
@@ -98,6 +104,14 @@ class Window:
         # Flagged lines
         curses.init_pair(7, curses.COLOR_CYAN, curses.COLOR_BLACK)
 
+        # Holiday and Spooky variant DARK
+        curses.init_pair(8, CURSES_ORANGE, curses.COLOR_BLACK)
+        curses.init_pair(9, CURSES_GREY, curses.COLOR_BLACK)
+
+        #holiday and Spooky variant LIGHT
+        curses.init_pair(10, CURSES_GREEN, curses.COLOR_WHITE)
+        curses.init_pair(11, CURSES_PURPLE, curses.COLOR_WHITE)
+
     def __resize_terminal(self):
         """Function to run after resize events in the terminal"""
         self.__get_window_dimensions()
@@ -109,7 +123,11 @@ class Window:
 
     def get_header_colors(self):
         if self.dark_mode:
+            if self.spooky_mode:
+                return curses.color_pair(8), curses.color_pair(9)
             return curses.color_pair(5), curses.color_pair(6)
+        if self.spooky_mode:
+            return curses.color_pair(10), curses.color_pair(11)
         return curses.color_pair(3), curses.color_pair(4)
 
     def __get_email_text(self):
@@ -121,8 +139,11 @@ class Window:
     def draw_header(self):
         """Set the header text"""
         separator = "|"
-        if self.spooky_mode:
-            separator = "🎃"
+        if self.unicode_mode:
+            if self.spooky_mode:
+                separator = "🎃"
+            elif self.christmas_mode:
+                separator = "❄️"
         self.header.erase()
 
         # Store the cursor location
@@ -135,15 +156,18 @@ class Window:
         elif self.event_manager.mark_mode:
             display_text += f" {separator} VISUAL"
 
-        if self.spooky_mode:
-            display_text = f"👻 {display_text} 👻"
+        if self.unicode_mode:
+            if self.spooky_mode:
+                display_text = f"👻 {display_text} 👻"
+            elif self.christmas_mode:
+                display_text = f"🎄 {display_text} 🎄"
 
         # Centered header
         row = self.cols // 2 - len(display_text) // 2
         add_str(self.header, 0, row, display_text)
 
         # Christmas theme
-        if self.christmas_mode:
+        if self.christmas_mode or self.spooky_mode:
             red, green = self.get_header_colors()
 
             for row in range(self.cols):
