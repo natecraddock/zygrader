@@ -199,6 +199,19 @@ class StringRadioGroup(ui.layers.RadioGroup):
         return preferences.get(self.__preference) == _id
 
 
+class ThemeRadioGroup(ui.layers.RadioGroup):
+    def __init__(self, preferences: list):
+        self.__preferences = {pref: False for pref in preferences}
+
+    def toggle(self, _id: str):
+        for pref in self.__preferences:
+            self.__preferences[pref] = False
+        self.__preferences[_id] = True
+
+    def is_toggled(self, _id: str):
+        return self.__preferences[_id]
+
+
 def preferences_menu():
     """Create the preferences popup"""
     window = ui.get_window()
@@ -206,8 +219,9 @@ def preferences_menu():
 
     row = popup.add_row_parent("Appearance")
     row.add_row_toggle("Dark Mode", PreferenceToggle("dark_mode"))
-    row.add_row_toggle("Christmas Theme", PreferenceToggle("christmas_mode"))
-    row.add_row_toggle("Spooky Theme", PreferenceToggle("spooky_mode"))
+    theme_radio = ThemeRadioGroup(["christmas_mode", "spooky_mode"])
+    row.add_row_radio("Christmas Theme", theme_radio, "christmas_mode")
+    row.add_row_radio("Spooky Theme", theme_radio, "spooky_mode")
     row.add_row_toggle("Unicode Mode", PreferenceToggle("unicode_mode"))
 
     row = popup.add_row_parent("Navigation")
