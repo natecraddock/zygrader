@@ -30,6 +30,7 @@ DEFAULT_PREFERENCES = {
     "dark_mode": True,
     "christmas_mode": False,
     "spooky_mode": False,
+    "unicode_mode": False,
     "browser_diff": False,
     "save_password": False,
     "class_code": "No Override",
