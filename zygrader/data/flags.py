@@ -6,10 +6,9 @@
 
 import os
 
-from .model import Student
-from .model import Lab
-
 from zygrader.config.shared import SharedData
+
+from .model import Lab, Student
 
 
 def get_flag_files():

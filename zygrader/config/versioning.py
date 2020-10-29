@@ -1,10 +1,10 @@
 import os
-
 from distutils.version import LooseVersion
+
+from zygrader import ui
 
 from . import preferences
 from .shared import SharedData
-from zygrader import ui
 
 
 def load_changelog():
@@ -47,7 +47,7 @@ def update_user_version():
     preferences.set("version", SharedData.VERSION.vstring)
 
 
-def do_versioning():
+def versioning_update_preferences():
     """Compare the user's current version in the config and make necessary adjustments."""
 
     # To modify the config with more flexibility, we need access to the raw json.
@@ -98,50 +98,33 @@ def do_versioning():
         config["spooky_mode"] = False
 
 
-def show_versioning_message(window: ui.Window):
-    """Notify the user of new changes in the changelog."""
+def find_versioning_message(window, version, user_version):
+    """Display a versioning message for the given version number if one exists."""
+    if compare_versions(version, user_version):
+        popup = ui.layers.Popup(f"Version {version}")
+        popup.set_message(get_version_message(version))
+        window.run_layer(popup)
 
-    # To modify the config with more flexibility, we need access to the raw json.
+        return True
+    return False
+
+
+def show_versioning_message(window: ui.Window):
+    """Notify the user of all logged changes since their last update."""
+
     user_version = preferences.get("version")
 
-    version = "4.0.0"
-    if compare_versions(version, user_version):
-        msg = get_version_message(version)
-        window.create_popup(f"Version {version}", msg,
-                            ui.components.Popup.ALIGN_LEFT)
+    # Add a version string for this array for each version that will show an update popup
+    update_versions = ["4.0.0", "4.1.0", "4.2.0", "4.7.1", "4.8.8", "4.9.0"]
 
-    version = "4.1.0"
-    if compare_versions(version, user_version):
-        msg = get_version_message(version)
-        window.create_popup(f"Version {version}", msg,
-                            ui.components.Popup.ALIGN_LEFT)
-
-    version = "4.2.0"
-    if compare_versions(version, user_version):
-        msg = get_version_message(version)
-        window.create_popup(f"Version {version}", msg,
-                            ui.components.Popup.ALIGN_LEFT)
-
-    version = "4.7.1"
-    if compare_versions(version, user_version):
-        msg = get_version_message(version)
-        window.create_popup(f"Version {version}", msg,
-                            ui.components.Popup.ALIGN_LEFT)
-
-    version = "4.8.0"
-    if compare_versions(version, user_version):
-        msg = get_version_message(version)
-        window.create_popup(f"Version {version}", msg,
-                            ui.components.Popup.ALIGN_LEFT)
-
-    version = "4.9.0"
-    if compare_versions(version, user_version):
-        msg = get_version_message(version)
-        window.create_popup(f"Version {version}", msg,
-                            ui.components.Popup.ALIGN_LEFT)
+    updated = False
+    for version in update_versions:
+        if find_versioning_message(window, version, user_version):
+            updated = True
 
     # Write the current version to the user's config file.
     # It is important to not update the number in do_versioning,
     # otherwise the version number here will be updated and popups
     # will not show.
-    update_user_version()
+    if updated:
+        update_user_version()

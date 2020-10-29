@@ -7,7 +7,7 @@ Contents:
 - [Installation](#installation)
 - [User Manual](#user-manual)
 - [Development](#development)
-- [Code Documentation](#code-documentation)
+- [Code Notes](#code-notes)
 
 # Installation
 
@@ -179,92 +179,7 @@ that can't be enforced by yapf.
 * Classes are in `UpperCamelCase`
 
 
-# Code Documentation
-This is an overview of the files in the `zygrader` directory:
-```
-├── LICENSE
-├── push_update.sh            - Script to help push release updates to users
-├── readme.md
-├── setup.py                  - Configuration for pip installation
-├── readme.md
-└── zygrader
-    ├── admin.py              - The base admin submenu and basic commands
-    ├── class_manager.py      - The menus to add classes and edit labs
-    ├── config
-    │   ├── changelog.txt     - Used to show version updates in the UI
-    │   ├── shared.py         - Shared configuration data
-    │   ├── __init__.py
-    │   ├── user.py           - User configuration data
-    │   └── versioning.py     - For making changes on new versions
-    ├── data
-    │   ├── flags.py          - For flagging labs
-    │   ├── fs_watch.py       - A module that creates a file watcher thread
-    │   ├── __init__.py
-    │   ├── lock.py           - For locking labs
-    │   ├── model.py          - Student, Lab, and Submission classes
-    ├── grade_puller.py       - To pull grades from canvas into csv files
-    ├── grader.py             - Grading menus and functions
-    ├── __init__.py
-    ├── logger.py             - A basic logger for debugging
-    ├── ui
-    │   ├── components.py     - Classes for various reusable UI components that are shown in the window
-    │   ├── __init__.py
-    │   ├── utils.py          - Shared windowing utility functions
-    │   └── window.py         - A threaded window manager for event and component management
-    ├── utils.py              - Shared functions (diffing, thread blocking)
-    ├── zybooks.py            - zyBooks API wrapper
-    └── main.py               - Creates the main menu & starts zygrader, argument parsing, signals
-```
-
-An overview of the more complex modules follows.
-
----
-
-## Window Manager - `window.py`
-The Window manager provides a simple event-driven user interface, with a separate thread for reading events from the keyboard. It uses the Python [ncurses](https://docs.python.org/3/library/curses.html#module-curses) wrapper.
-
-### **`class Event`**
-The Event class is a pure data structure to associate an event type, value, and modifier. It also contains constants for event types (NONE, BACKSPACE, ENTER, UP, ...).
-
-### **`class WinContext`**
-Another pure data structure to store the Window, Event, active component, and any custom data when executing a callback. This keeps callback arguments to a minimum.
-
-### **`class Window`**
-This class drives most of the behavior of zygrader. The file is relatively well-documented, a high level overview is given here.
-
-The Window class is split between two threads (messy!), the main drawing thread and the input thread. The input thread runs a loop using the ncurses `window.getch()` in nodelay mode where input does not block. Any caught events are packaged into an `Event` object and placed into the `self.event_queue` which is a thread-safe shared queue structure. The draw thread waits (blocks) until an event is found in the queue.
-
-The draw thread is managed by the `create_*` functions, which create the various components of the interface that accept user input.
-
-#### `get_window()`
-The `Window` class is a singleton, so this may be used anywhere in the code to access the current Window.
-
-You may also use ui.get_window() for easier access.
-
-#### `input_thread_fn()`
-The callback for the input thread. An empty curses window is created for reading input. Input is read in a loop calling `get_input()`, and any captured events are placed in the queue.
-
-#### `get_input() / get_input_vim()`
-This reads the input. If no input is read an Event of type NONE is returned. Otherwise the input code is read and the corresponding Event object is returned. If Vim keybindings are enabled, the `get_input_vim()` function will be called to handle that special case.
-
-#### `consume_event()`
-Called from the draw thread. Blocks when no events are in the queue.
-
-#### `push_refresh_event()`
-To be used from the draw thread to force a UI redraw
-
-#### `__init_curses()`
-The `curses.wrapper` function is used here to automatically handle cleanup of curses when zygrader exits. This calls the callback (which is `zygrader.py main()`) after initializing some basic window/curses settings.
-
-#### `draw()`
-This is called to draw the components. The active components are stored in a stack and drawn bottom to top. The entire screen is erased, then each component's `draw()` function is called. Finally we use `curses.doupdate()` which paints the final screen to the terminal. This is better than using `window.refresh()` in each component which causes jitter and flickering.
-
-#### `create_*()` functions
-Each component has at least one `create_*()` function which instantiates an instance, and begins an event loop for the component. Each calls `component_init()` and `component_deinit()` to add and remove it from the stack. For example, `create_bool_popup` creates an OptionsPopup with the fixed options of "Yes" and "No". A loop is run waiting for specific events. These events call functions on the popup. The loop runs until an option is selected, after which the function returns the True/False chosen value.
-
-These vary in complexity, but all follow the same general design.
-
----
+# Code Notes
 
 ## zyBooks API - `zybooks.py`
 The zyBooks API is a small wrapper around some zyBooks webpage-building requests. The [zyBooks website](https://learn.zybooks.com/) is created with the Ember.js framework, which builds the page locally with JSON responses. If anything breaks in zygrader in the future, it will be the wrapper around their API (which isn't publicly documented).
@@ -274,15 +189,3 @@ To find the API urls, open zyBooks in a browser with the network traffic inspect
 If anything in zyBooks breaks regarding the zyBooks integration (downloading submissions, logging in), the first thing I would do is check if their API urls have changed.
 
 ZyBooks submission responses contain links to zip files stored on Amazon's AWS.
-
-### **`class Zybooks`**
-The Zybooks class has a static field `session` that stores the `requests` session. Each instantiated object has access to this session which stores the auth token and allows subsequent requests access.
-
-#### `authenticate()`
-Accepts a username and password string to authenticate the user. It is run automatically when zygrader is executed.
-
-#### `download_assignment()`
-Assignments (created with the Class Manager) can have multiple "parts" within them. This is to allow multi-section assignments like midterms. This iterates through each part in the assignment and downloads the submission JSON from zyBooks.
-
-#### `get_submission_zip()`
-Download the submission at the given URL, or from the local cache if available. Zygrader automatically caches each downloaded submission (.zip), so this function will check there first.

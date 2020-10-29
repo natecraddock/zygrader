@@ -2,16 +2,13 @@ import calendar
 import curses
 import datetime
 from collections import Iterable
+from typing import Callable, List
 
 from .utils import add_str, resize_window
 from zygrader.config import preferences
 
 
 class Component:
-    def __init__(self):
-        # This determines if a component blocks layers beneath it completely
-        self.blocking = True
-
     def resize(self, rows, cols):
         raise NotImplementedError
 
@@ -31,16 +28,13 @@ class Popup(Component):
     ALIGN_LEFT = 0
     ALIGN_CENTER = 1
 
-    def __init__(self, height, width, title, message, align):
-        # Popups only obscure the screen partially
-        self.blocking = False
-
+    def __init__(self, height, width, title, message):
         self.available_rows = height
         self.available_cols = width
 
         self.title = title
         self.message = message
-        self.align = align
+        self.align = Popup.ALIGN_LEFT
 
         self.__calculate_size()
 
@@ -160,23 +154,20 @@ class Popup(Component):
 
         resize_window(self.window, self.rows, self.cols)
 
+    def set_message(self, message):
+        self.message = message
+
+    def set_align(self, align):
+        self.align = align
+
 
 class OptionsPopup(Popup):
-    def __init__(self, height, width, title, message, options, use_dict, align):
-        super().__init__(height, width, title, message, align)
-        self.options = options
-        self.use_dict = use_dict
-
-        # Always add close as an option to dicts
-        if self.use_dict:
-            self.options["Close"] = None
-
-        self.index = len(options) - 1
-        self.options_length = sum([len(o) for o in options]) + len(options) + 2
+    def __init__(self, height, width, title, message, options=[]):
+        super().__init__(height, width, title, message)
+        self.set_options(options)
 
     def draw(self):
         super().draw_text()
-
         y = self.rows - 2
 
         previous_length = 0
@@ -193,6 +184,11 @@ class OptionsPopup(Popup):
 
         self.window.noutrefresh()
 
+    def set_options(self, options):
+        self.options = options
+        self.index = len(options) - 1
+        self.options_length = sum([len(o) for o in options]) + len(options) + 2
+
     def next(self):
         self.index = (self.index + 1) % len(self.options)
 
@@ -206,35 +202,41 @@ class OptionsPopup(Popup):
         self.index = len(self.options) - 1
 
     def selected(self):
-        if self.use_dict:
-            key = list(self.options)[self.index]
-            return self.options[key]
         return self.options[self.index]
 
 
 class DatetimeSpinner(Popup):
     NO_DATE = "datetime_no_date"
 
-    def __init__(self, height, width, title, time, quickpicks, optional,
-                 include_date):
-        super().__init__(height, width, title, [], Popup.ALIGN_CENTER)
+    def __init__(self, height, width, title):
+        super().__init__(height, width, title, [])
+        super().set_align(Popup.ALIGN_CENTER)
 
-        if time is None:
-            time = datetime.datetime.now()
-        self.time = time
-
-        if quickpicks:
-            quickpicks = sorted(quickpicks)
-        self.quickpicks = quickpicks
-
-        self.optional = optional
-        self.include_date = include_date
+        self.time = datetime.datetime.now()
+        self.quickpicks = None
+        self.optional = False
+        self.include_date = True
 
         self.__init_fields()
         self.__init_format_str()
         self.__init_input_str()
 
         curses.curs_set(0)
+
+    def set_quickpicks(self, quickpicks):
+        self.quickpicks = quickpicks
+
+    def set_time(self, time):
+        self.time = time
+
+    def set_optional(self, optional):
+        self.optional = optional
+        self.__init_fields()
+
+    def set_include_date(self, include_date):
+        self.include_date = include_date
+        self.__init_fields()
+        self.__init_format_str()
 
     def __resolve_date(self, date, year, month, day) -> datetime.datetime:
         """Find the closest valid date to an invalid date"""
@@ -617,102 +619,186 @@ class DatetimeSpinner(Popup):
             return self._set_month_from_chars(newchar, recursed=True)
 
 
-class FilteredList(Component):
-    class ListLine:
-        """Represents a single line of the list"""
-        def __init__(self, index, data):
+class ScrollableList(Component):
+    """Base class for scrollable, sortable, searchable lists."""
+
+    SELECTED_PREFIX = "| "
+    UNSELECTED_PREFIX = " " * len(SELECTED_PREFIX)
+
+    class Line:
+        def __init__(self, index, text, color=0, sort_index=0):
             self.index = index
-            self.data = data
-            self.text = str(data)
-            self.color = curses.color_pair(1)
+            self.text = text
+            self.color = color
+            self.sort_index = sort_index
 
-    def filter_string(self, line, filter):
-        return line.text.lower().find(filter.lower()) is not -1
+    def __init__(self):
+        self._rows = 0
 
-    def __filter_data(self, input_data, filter_function, filter_text):
-        # Apply filter (via function)
-        data = input_data[:1]
+        self._lines: List[ScrollableList.Line] = []
+        self._display_lines: List[ScrollableList.Line] = []
 
-        for line in input_data[1:]:
-            if filter_text == "" or filter_function(line, filter_text):
-                data.append(line)
+        self._searchable = False
+        self._search_fn = None
+        self._search_prompt = ""
+        self._search_text = ""
 
-        self.dirty = False
-        return data
+        self._sortable = False
 
-    def __fill_text(self, lines):
-        line_number = 0
+        self._scroll = 0
+        self._selected_index = 1
 
-        draw_lines = lines[self.scroll:self.scroll + self.rows - 1]
+        self._exit_line = ScrollableList.Line(0, "Back")
 
-        for line in draw_lines:
-            if (line_number + self.scroll) == self.selected_index:
-                display_text = f"> {line.text}"
-                if preferences.get("spooky_mode"):
-                    display_text = f"🦇 {line.text}"
-                add_str(self.window, line_number, 0, display_text,
-                        curses.A_BOLD | line.color)
-            else:
-                display_text = f"  {line.text}"
-                add_str(self.window, line_number, 0, display_text,
-                        curses.A_DIM | line.color)
+    def set_lines(self, lines):
+        self._lines = [
+            ScrollableList.Line(i, line[0], line[1], line[2])
+            for i, line in enumerate(lines, 1)
+        ]
+        self.__create_display_lines()
 
-            line_number += 1
+        # If all content is filtered then select the exit row
+        if len(self._display_lines) == 1:
+            self._selected_index = 0
 
-    def create_lines(self, options):
-        lines = [FilteredList.ListLine(0, "Back")]
+    def set_searchable(self, prompt: str, search_fn: Callable):
+        self._searchable = True
+        self._search_prompt = prompt
+        self._search_fn = search_fn
 
-        if self.list_fill:
-            lines += self.list_fill()
+    def set_sortable(self):
+        self._sortable = True
+
+    def set_exit_text(self, text: str):
+        self._exit_line = ScrollableList.Line(0, text)
+        self.__create_display_lines()
+
+    def __create_display_lines(self):
+        """Filter then sort the input lines."""
+        # The top line is never filtered or sorted
+        self._display_lines = [self._exit_line]
+
+        filtered = self._filter() if self._searchable else self._lines
+
+        if self._sortable:
+            self._display_lines.extend(self._sort(filtered))
         else:
-            for i, option in enumerate(options):
-                lines.append(FilteredList.ListLine(i + 1, option))
-        self.options = lines
-        self.dirty = True
+            self._display_lines.extend(filtered)
 
-    def __init__(self, y, x, rows, cols, options, list_fill, prompt,
-                 filter_function):
-        self.blocking = True
+    def _filter(self):
+        filtered = []
+        for line in self._lines:
+            if self._search_fn(line.text, self._search_text):
+                filtered.append(line)
+        return filtered
 
-        # Flag to determine if the list needs to be updated.
-        # Only scrolling the list does not require an update of the list items,
-        # but after filtering the list should be regenerated.
-        self.dirty = True
+    def _sort(self, lines):
+        lines.sort(key=lambda line: line.sort_index)
+        return lines
 
-        self.y = y
+    def __scroll_to_top(self):
+        self._selected_index = 0
+        self.set_scroll()
+        self._selected_index = 1
+
+    def set_scroll(self):
+        # Cursor set below view
+        if (self._selected_index + 1) > self._scroll + self._rows - 1:
+            self._scroll = self._selected_index + 2 - self._rows
+
+        # Cursor set above view
+        elif self._selected_index < self._scroll:
+            self._scroll = self._selected_index
+
+    def down(self):
+        self._selected_index = (self._selected_index + 1) % len(
+            self._display_lines)
+        self.set_scroll()
+
+    def up(self):
+        self._selected_index = (self._selected_index - 1) % len(
+            self._display_lines)
+        self.set_scroll()
+
+    def to_top(self):
+        self._selected_index = 0
+        self.set_scroll()
+
+    def to_bottom(self):
+        self._selected_index = len(self._display_lines) - 1
+        self.set_scroll()
+
+    def delchar(self):
+        self._search_text = self._search_text[:-1]
+        self.__scroll_to_top()
+
+    def addchar(self, c):
+        self._search_text += c
+        self.__scroll_to_top()
+
+    def clear_search_text(self):
+        self._search_text = ""
+        self.__scroll_to_top()
+
+    def is_close_selected(self):
+        return self._selected_index == 0
+
+    def get_selected_index(self):
+        """Get the original index of the selected line."""
+        return self._display_lines[self._selected_index].index - 1
+
+
+class FilteredList(ScrollableList):
+    def __init__(self, y, x, rows, cols):
+        super().__init__()
+
         self.x = x
-
-        self.rows = rows
+        self.y = y
+        self._rows = rows
         self.cols = cols
 
-        self.list_fill = list_fill
-        self.create_lines(options)
-
-        if filter_function:
-            self.filter_function = filter_function
-        else:
-            self.filter_function = self.filter_string
-
-        self.scroll = 0
-        self.selected_index = 1
-        self.selected_index = self.selected_index
-        self.filter_text = ""
-
-        self.prompt = prompt
-
         # List box
-        self.window = curses.newwin(self.rows - 1, self.cols, y, x)
+        self.window = curses.newwin(self._rows, self.cols, y, x)
         self.window.bkgd(" ", curses.color_pair(1))
 
-        # Text input
-        self.text_input = curses.newwin(1, cols, self.rows, 0)
+        # Text input area
+        self.text_input = curses.newwin(1, self.cols, self._rows, 0)
         self.text_input.bkgd(" ", curses.color_pair(1))
 
-        curses.curs_set(1)
+    def draw(self):
+        self.window.erase()
 
-    def resize(self, rows, width):
+        if len(self._display_lines) == 1:
+            self._selected_index = 1
+
+        # Draw the list lines
+        # TODO: Can we avoid slicing here?
+        visible_lines = self._display_lines[self._scroll:self._scroll +
+                                            self._rows - 1]
+        for line_number, line in enumerate(visible_lines):
+            if line_number + self._scroll == self._selected_index:
+                add_str(self.window, line_number, 0,
+                        f"{ScrollableList.SELECTED_PREFIX}{line.text}",
+                        curses.A_BOLD | line.color)
+            else:
+                add_str(self.window, line_number, 0,
+                        f"{ScrollableList.UNSELECTED_PREFIX}{line.text}",
+                        curses.A_DIM | line.color)
+        self.window.noutrefresh()
+
+        # Draw the optional search field
+        if self._searchable:
+            self.text_input.erase()
+            add_str(self.text_input, 0, 0,
+                    f"{self._search_prompt}: {self._search_text}")
+            self.text_input.noutrefresh()
+            curses.curs_set(1)
+        else:
+            curses.curs_set(0)
+
+    def resize(self, rows, cols):
         self.rows = rows - 1
-        self.cols = width
+        self.cols = cols
 
         try:
             self.window.mvwin(self.y, self.x)
@@ -723,89 +809,60 @@ class FilteredList(Component):
         resize_window(self.window, self.rows - 1, self.cols)
         resize_window(self.text_input, 1, self.cols)
 
-    def refresh(self):
-        if self.list_fill:
-            self.create_lines(None)
-        self.flag_dirty()
+
+class ListPopup(Popup, ScrollableList):
+    V_PADDING = Popup.PADDING * 2
+
+    def __init__(self, rows, cols, title):
+        Popup.__init__(self, rows, cols, title, [])
+        ScrollableList.__init__(self)
+
+        self._rows = self.rows - ListPopup.V_PADDING + 1
+
+        # Text input area
+        self.text_input = curses.newwin(1, self.cols - Popup.PADDING * 2,
+                                        self.y + self.rows - Popup.PADDING + 1,
+                                        self.x + Popup.PADDING)
+        self.text_input.bkgd(" ", curses.color_pair(1))
 
     def draw(self):
         self.window.erase()
-        self.text_input.erase()
+        self.window.border()
 
-        if self.dirty:
-            self.data = self.__filter_data(self.options, self.filter_function,
-                                           self.filter_text)
+        self.draw_title()
 
-        # If no matches, set selected index to 0
-        if len(self.data) is 1:
-            self.selected_index = 0
-
-        self.__fill_text(self.data)
+        visible_lines = self._display_lines[self._scroll:self._scroll +
+                                            self.rows - ListPopup.V_PADDING]
+        for line_number, line in enumerate(visible_lines):
+            if line_number + self._scroll == self._selected_index:
+                add_str(self.window, Popup.PADDING + line_number, Popup.PADDING,
+                        f"{ScrollableList.SELECTED_PREFIX}{line.text}",
+                        curses.A_BOLD | line.color)
+            else:
+                add_str(self.window, Popup.PADDING + line_number, Popup.PADDING,
+                        f"{ScrollableList.UNSELECTED_PREFIX}{line.text}",
+                        curses.A_DIM | line.color)
         self.window.noutrefresh()
 
-        add_str(self.text_input, 0, 0, f"{self.prompt}: {self.filter_text}")
-        self.text_input.noutrefresh()
+        if self._searchable:
+            self.text_input.erase()
+            add_str(self.text_input, 0, 0,
+                    f"{self._search_prompt}: {self._search_text}")
+            curses.curs_set(1)
+            self.text_input.noutrefresh()
+        else:
+            curses.curs_set(0)
 
-    def clear(self):
-        curses.curs_set(0)
+    def resize(self, rows, cols):
+        Popup.resize(self, rows, cols)
 
-    def set_scroll(self):
-        # Cursor set below view
-        if (self.selected_index + 1) > self.scroll + self.rows - 1:
-            self.scroll = self.selected_index + 2 - self.rows
+        try:
+            self.text_input.mvwin(self.y + self.rows - Popup.PADDING + 1,
+                                  self.x + Popup.PADDING)
+        except:
+            pass
 
-        # Cursor set above view
-        elif self.selected_index < self.scroll:
-            self.scroll = self.selected_index
-
-    def down(self):
-        self.selected_index = (self.selected_index + 1) % len(self.data)
-        self.set_scroll()
-
-    def up(self):
-        self.selected_index = (self.selected_index - 1) % len(self.data)
-        self.set_scroll()
-
-    def to_top(self):
-        self.selected_index = 0
-        self.set_scroll()
-
-    def to_bottom(self):
-        self.selected_index = len(self.data) - 1
-        self.set_scroll()
-
-    def delchar(self):
-        self.filter_text = self.filter_text[:-1]
-
-        self.selected_index = 0
-        self.set_scroll()
-        self.selected_index = 1
-
-        self.dirty = True
-
-    def addchar(self, c):
-        self.filter_text += c
-        self.selected_index = 0
-
-        self.set_scroll()
-        self.selected_index = 1
-
-        self.dirty = True
-
-    def selected(self):
-        if self.selected_index < 0 or self.selected_index > len(self.data) - 1:
-            self.selected_index = len(self.data) - 1
-
-        return self.data[self.selected_index].index - 1
-
-    def clear_filter(self):
-        self.filter_text = ""
-        self.selected_index = 0
-        self.set_scroll()
-        self.selected_index = 1
-
-    def flag_dirty(self):
-        self.dirty = True
+        resize_window(self.text_input, 1, self.cols - Popup.PADDING * 2)
 
 
 class TextInput(Popup):
@@ -817,16 +874,13 @@ class TextInput(Popup):
     TEXT_HEIGHT = 5
 
     def __init__(self, height, width, title, prompt, text, mask=TEXT_NORMAL):
-        super().__init__(height, width, title, [prompt], Popup.ALIGN_CENTER)
+        super().__init__(height, width, title, [prompt])
 
         self.prompt = prompt
         self.masked = mask is TextInput.TEXT_MASKED
 
-        self.text = text
+        self.set_text(text)
         self.text_width = self.cols - (TextInput.PADDING * 2)
-
-        # Set cursor to the location of text
-        self.cursor_index = len(self.text)
 
         # Set selection marks
         self.reset_marks()
@@ -840,6 +894,10 @@ class TextInput(Popup):
         )
         self.text_input.bkgd(" ", curses.color_pair(1))
         curses.curs_set(1)
+
+    def set_text(self, text: str):
+        self.text = text
+        self.cursor_index = len(text)
 
     def resize(self, rows, cols):
         super().resize(rows, cols)
@@ -900,9 +958,6 @@ class TextInput(Popup):
 
         self.window.noutrefresh()
         self.text_input.noutrefresh()
-
-    def close(self):
-        curses.curs_set(0)
 
     def addchar(self, c):
         before_index = self.cursor_index
@@ -989,13 +1044,13 @@ class TextInput(Popup):
 class Logger(Component):
     PADDING = 2
 
-    def __init__(self, y, x, height, width):
-        self.blocking = True
-
+    def __init__(self, height, width, y, x):
         self.height = height
         self.width = width
 
         self.window = curses.newwin(height, width, y, x)
+        self.window.bkgd(" ", curses.color_pair(1))
+        curses.curs_set(0)
 
         # Maintain a log (list) of data to display
         self.__log = []
@@ -1019,8 +1074,7 @@ class Logger(Component):
             add_str(self.window, liney, 0, line)
             liney += 1
 
-        # Loggers take control of event loop, refresh always
-        self.window.refresh()
+        self.window.noutrefresh()
 
     def log(self, entry):
         self.__log.append(entry)
@@ -1029,68 +1083,4 @@ class Logger(Component):
 
     def append(self, entry):
         self.__log[-1] += entry
-
         self.draw()
-
-
-class ListPopup(FilteredList, Popup):
-    """A list in a popup view"""
-
-    V_PADDING = Popup.PADDING * 2
-
-    def __init__(self, rows, cols, title, input_data, list_fill):
-        self.blocking = False
-        Popup.__init__(self, rows, cols, title, None, None)
-
-        if input_data:
-            self.data = ["Back"] + input_data[:]
-        else:
-            self.data = []
-        self.list_fill = list_fill
-
-        self.scroll = 0
-        self.selected_index = 1
-
-    def set_scroll(self):
-        if (self.selected_index +
-                1) > self.scroll + self.rows - ListPopup.V_PADDING:
-            self.scroll = self.selected_index + ListPopup.V_PADDING - self.rows + 1
-        # Cursor set above view
-        elif self.selected_index < self.scroll:
-            self.scroll = self.selected_index
-
-    def draw_list(self):
-        line = 0
-
-        for l in self.data[self.scroll:self.scroll + self.rows -
-                           ListPopup.V_PADDING]:
-            if (line + self.scroll) == self.selected_index:
-                display_text = f"> {str(l)}"
-                if preferences.get("spooky_mode"):
-                    display_text = f"🦇 {str(l)}"
-                add_str(self.window, Popup.PADDING + line, Popup.PADDING,
-                        display_text, curses.A_DIM)
-            else:
-                display_text = f"  {str(l)}"
-                add_str(self.window, Popup.PADDING + line, Popup.PADDING,
-                        display_text, curses.A_BOLD)
-            line += 1
-
-    def draw(self):
-        self.window.erase()
-        self.window.border()
-
-        self.draw_title()
-
-        if self.list_fill:
-            self.data = ["Back"] + self.list_fill()
-
-        self.draw_list()
-
-        self.window.noutrefresh()
-
-    def resize(self, rows, cols):
-        Popup.resize(self, rows, cols)
-
-    def selected(self):
-        return self.selected_index - 1
