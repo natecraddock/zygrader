@@ -648,6 +648,8 @@ class ScrollableList(Component):
         self._scroll = 0
         self._selected_index = 1
 
+        self._paged = False
+
         self._exit_line = ScrollableList.Line(0, "Back")
 
     def set_lines(self, lines):
@@ -668,6 +670,9 @@ class ScrollableList(Component):
 
     def set_sortable(self):
         self._sortable = True
+
+    def set_paged(self):
+        self._paged = True
 
     def set_exit_text(self, text: str):
         self._exit_line = ScrollableList.Line(0, text)
@@ -698,14 +703,14 @@ class ScrollableList(Component):
 
     def _draw_list_lines(self, window, lines, y_start, x_start):
         for line_number, line in enumerate(lines):
-            if line_number + self._scroll == self._selected_index:
-                add_str(window, y_start + line_number, x_start,
-                        f"{ScrollableList.SELECTED_PREFIX}{line.text}",
-                        curses.A_BOLD | line.color)
-            else:
-                add_str(window, y_start + line_number, x_start,
-                        f"{ScrollableList.UNSELECTED_PREFIX}{line.text}",
-                        curses.A_DIM | line.color)
+            prefix = ScrollableList.UNSELECTED_PREFIX
+            attributes = 0
+            if line_number + self._scroll == self._selected_index and not self._paged:
+                prefix = ScrollableList.SELECTED_PREFIX
+                attributes = curses.A_BOLD
+
+            add_str(window, y_start + line_number, x_start,
+                    f"{prefix}{line.text}", attributes | line.color)
         window.noutrefresh()
 
     def __scroll_to_top(self):
@@ -723,14 +728,21 @@ class ScrollableList(Component):
             self._scroll = self._selected_index
 
     def down(self):
-        self._selected_index = (self._selected_index + 1) % len(
-            self._display_lines)
-        self.set_scroll()
+        if self._paged:
+            self._scroll = min(self._scroll + 1,
+                               len(self._display_lines) - self._rows + 1)
+        else:
+            self._selected_index = (self._selected_index + 1) % len(
+                self._display_lines)
+            self.set_scroll()
 
     def up(self):
-        self._selected_index = (self._selected_index - 1) % len(
-            self._display_lines)
-        self.set_scroll()
+        if self._paged:
+            self._scroll = max(0, self._scroll - 1)
+        else:
+            self._selected_index = (self._selected_index - 1) % len(
+                self._display_lines)
+            self.set_scroll()
 
     def to_top(self):
         self._selected_index = 0
