@@ -39,7 +39,7 @@ def setup_new_class():
     zy_api = Zybooks()
 
     text_input = ui.layers.TextInputLayer("Class Code")
-    text_input.set_prompt("Enter class code")
+    text_input.set_prompt(["Enter class code"])
     window.run_layer(text_input)
     if text_input.was_canceled():
         return
@@ -423,6 +423,6 @@ def start():
     menu.add_row_text("Setup New Class", setup_new_class)
     menu.add_row_text("Lab Manager", lab_manager)
     menu.add_row_text("Class Section Manager", class_section_manager)
-    menu.add_row_text("Download Student Roster", change_class)
-    menu.add_row_text("Change Class", download_roster)
+    menu.add_row_text("Download Student Roster", download_roster)
+    menu.add_row_text("Change Class", change_class)
     window.register_layer(menu, "Class Manager")

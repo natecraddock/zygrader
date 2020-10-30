@@ -40,7 +40,7 @@ class ZybookSectionSelector:
                              for chapter in self.zybooks_toc
                              for section in chapter["sections"]}
 
-        title = ("Select zyBook Sections (use Back to finish)"
+        title = ("Select zyBooks Sections"
                  if not title_extra else f"{title_extra} - Select Sections")
         chapter_pad_width = len(str(len(self.zybooks_toc)))
         section_pad_width = max([
