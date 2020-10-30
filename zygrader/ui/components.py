@@ -701,11 +701,14 @@ class ScrollableList(Component):
         lines.sort(key=lambda line: line.sort_index)
         return lines
 
+    def __should_show_selected(self, number):
+        return number + self._scroll == self._selected_index and not self._paged
+
     def _draw_list_lines(self, window, lines, y_start, x_start):
         for line_number, line in enumerate(lines):
             prefix = ScrollableList.UNSELECTED_PREFIX
             attributes = 0
-            if line_number + self._scroll == self._selected_index and not self._paged:
+            if self.__should_show_selected(line_number):
                 prefix = ScrollableList.SELECTED_PREFIX
                 attributes = curses.A_BOLD
 
