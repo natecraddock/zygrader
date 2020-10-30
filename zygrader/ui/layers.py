@@ -151,7 +151,7 @@ class OptionsPopup(ComponentLayer, PopupLayer):
     def set_message(self, message):
         self.component.set_message(message)
 
-    def add_option(self, option, callback):
+    def add_option(self, option, callback=None):
         self.options[option] = callback
         self.rebuild = True
 
@@ -177,6 +177,9 @@ class OptionsPopup(ComponentLayer, PopupLayer):
 
         if event.type != Event.NONE:
             self.redraw = True
+
+    def get_selected(self):
+        return self.component.selected()
 
 
 class WaitPopup(ComponentLayer, PopupLayer):

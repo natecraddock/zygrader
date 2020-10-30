@@ -186,14 +186,18 @@ def can_get_through_locks(use_locks, student, lab):
             "This submission has been flagged",
             "",
             f"Note: {data.flags.get_flag_message(student, lab)}",
-            "",
-            "Would you like to unflag it?",
         ]
-        popup = ui.layers.BoolPopup("Submission Flagged", msg)
+        popup = ui.layers.OptionsPopup("Submission Flagged", msg)
+        popup.add_option("Unflag")
+        popup.add_option("View")
+        popup.add_option("Close")
         window.run_layer(popup)
 
-        if popup.get_result():
+        key = popup.get_selected()
+        if key == "Unflag":
             data.flags.unflag_submission(student, lab)
+        elif key == "View":
+            return True
         else:
             return False
 
