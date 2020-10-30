@@ -529,6 +529,7 @@ class ListLayer(ComponentLayer, PopupLayer):
         ComponentLayer.__init__(self)
 
         self.__rows = Row(_type=Row.HOLDER)
+        self._paged = False
 
         if popup:
             win = window.Window.get_window()
@@ -579,7 +580,15 @@ class ListLayer(ComponentLayer, PopupLayer):
     def set_sortable(self):
         self.component.set_sortable()
 
+    def set_paged(self):
+        self.component.set_paged()
+        self._paged = True
+
     def event_handler(self, event: Event, event_manager: EventManager):
+        if self._paged and event.type == Event.ENTER:
+            event_manager.push_layer_close_event()
+            return
+
         if event.type == Event.DOWN:
             self.component.down()
         elif event.type == Event.UP:

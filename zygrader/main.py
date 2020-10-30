@@ -108,7 +108,8 @@ def view_changelog():
     lines = config.versioning.load_changelog()
 
     popup = ui.layers.ListLayer("Changelog", popup=True)
-    popup.set_exit_text("Close")
+    popup.set_exit_text("Press enter to close")
+    popup.set_paged()
     for line in lines:
         popup.add_row_text(line)
     window.run_layer(popup, "Changelog")
