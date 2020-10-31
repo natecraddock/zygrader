@@ -284,6 +284,8 @@ def flag_submission(lab, student):
         return
 
     data.flags.flag_submission(student, lab, text_input.get_text())
+    events = ui.get_events()
+    events.push_layer_close_event()
 
 
 def diff_parts_fn(window, submission):

@@ -247,6 +247,8 @@ def remove_fn(lab_list, window, lab) -> bool:
 
     labs = data.get_labs()
     fill_lab_list(lab_list, labs)
+    events = ui.get_events()
+    events.push_layer_close_event()
     return remove
 
 
