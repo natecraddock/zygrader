@@ -190,13 +190,12 @@ def can_get_through_locks(use_locks, student, lab):
         popup = ui.layers.OptionsPopup("Submission Flagged", msg)
         popup.add_option("Unflag")
         popup.add_option("View")
-        popup.add_option("Close")
         window.run_layer(popup)
 
-        key = popup.get_selected()
-        if key == "Unflag":
+        choice = popup.get_selected()
+        if choice == "Unflag":
             data.flags.unflag_submission(student, lab)
-        elif key == "View":
+        elif choice == "View":
             return True
         else:
             return False

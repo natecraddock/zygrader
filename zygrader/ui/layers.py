@@ -172,8 +172,10 @@ class OptionsPopup(ComponentLayer, PopupLayer):
             if key == "Close":
                 self._canceled = True
                 event_manager.push_layer_close_event()
-            else:
+            elif self.options[key] is not None:
                 self.options[key]()
+            else:
+                event_manager.push_layer_close_event()
 
         if event.type != Event.NONE:
             self.redraw = True
