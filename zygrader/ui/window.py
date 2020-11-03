@@ -104,7 +104,7 @@ class Window:
         # Flagged lines
         curses.init_pair(7, curses.COLOR_CYAN, curses.COLOR_BLACK)
 
-        if curses.can_change_color:
+        if curses.can_change_color():
             # Spooky variant DARK
             curses.init_pair(8, CURSES_ORANGE, curses.COLOR_BLACK)
             curses.init_pair(9, CURSES_GREY, curses.COLOR_BLACK)
@@ -124,10 +124,10 @@ class Window:
 
     def get_header_colors(self):
         if self.dark_mode:
-            if self.spooky_mode and curses.can_change_color:
+            if self.spooky_mode and curses.can_change_color():
                 return curses.color_pair(8), curses.color_pair(9)
             return curses.color_pair(5), curses.color_pair(6)
-        if self.spooky_mode and curses.can_change_color:
+        if self.spooky_mode and curses.can_change_color():
             return curses.color_pair(10), curses.color_pair(11)
         return curses.color_pair(3), curses.color_pair(4)
 
