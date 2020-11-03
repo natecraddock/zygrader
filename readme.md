@@ -7,6 +7,7 @@ Contents:
 - [Installation](#installation)
 - [User Manual](#user-manual)
 - [Development](#development)
+- [Style Guide](#style-guide)
 - [Code Notes](#code-notes)
 
 # Installation
@@ -178,6 +179,42 @@ that can't be enforced by yapf.
 * Variables and functions are in `snake_case`
 * Classes are in `UpperCamelCase`
 
+### Typing
+Python is a dynamically-typed language, but it supports type hints. These are only used by text editors and IDEs
+to make code easier to read and improve autocomplete. Hints should be used where reasonable.
+* Function definitions are the most important place for type hints because they define the interface to that unit of code.
+* Members of classes can be given type hints.
+* Variables are rarely (never?) given type hints. It is usually inferred from the first use.
+* Function return values should be given type hints when reasonable. Use the typing module to union types where needed.
+
+For example
+```python
+class A:
+  pass
+
+class Test:
+  # Function parameters should be typed
+  def __init__(self, name: str, ob: A):
+
+    # Types are inferred from parameters here
+    self.name = name
+    self.ob = ob
+
+    # The type is inferred here
+    self.id = 5
+
+    # This type is explicit because we assign the window later
+    self.window: Window = None
+
+    # Use the typing module to specify more advanced types
+    self.args: typing.List[Argument] = []
+
+  def set_window(self, window: Window):
+    self.window = window
+```
+
+The code is not fully hinted, but most new code is. New code is highly encouraged to be hinted where reasonable.
+Cleanup commits that add hints are also welcome.
 
 # Code Notes
 
