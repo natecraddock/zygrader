@@ -182,6 +182,7 @@ class OptionsPopup(Popup):
             previous_length += len(option) + 2
             index += 1
 
+        curses.curs_set(0)
         self.window.noutrefresh()
 
     def set_options(self, options):
