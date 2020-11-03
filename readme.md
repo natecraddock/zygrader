@@ -216,6 +216,11 @@ class Test:
 The code is not fully hinted, but most new code is. New code is highly encouraged to be hinted where reasonable.
 Cleanup commits that add hints are also welcome.
 
+### Docstrings
+* Each file should have a dostring on the first line.
+* We try to use docstrings on general utility functions and methods. Functions used in one place for the purpose of simplifying logic do
+not need docstrings as usually the name and parameters are enough explanation.
+
 # Code Notes
 
 ## zyBooks API - `zybooks.py`
