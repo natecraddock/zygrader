@@ -290,7 +290,7 @@ class PathInputLayer(TextInputLayer):
             directory, name = os.path.split(path)
             self._valid = os.path.isdir(directory) and name
         else:
-            self.valid = os.path.isdir(path)
+            self._valid = os.path.isdir(path)
         return self._valid
 
     def build(self):
