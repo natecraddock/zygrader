@@ -1,5 +1,6 @@
 """User: User preference window management"""
 import base64
+import os
 
 from zygrader import data, ui, zybooks
 from zygrader.class_manager import download_roster
@@ -191,6 +192,10 @@ def set_default_output_directory(row: ui.layers.Row):
     path = directory.get_text()
     preferences.set("output_dir", path)
     row.set_row_text(f"Default Output Directory: {path}")
+
+    # Set the working directory to the new path for output and input files
+    # created by subprocesses (like student code)
+    os.chdir(directory.get_path())
 
 
 class PreferenceToggle(ui.layers.Toggle):
