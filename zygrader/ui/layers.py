@@ -604,6 +604,7 @@ class ListLayer(ComponentLayer, PopupLayer):
             self.component.to_bottom()
         elif event.type == Event.LEFT and event_manager.left_right_menu_nav:
             event_manager.push_layer_close_event()
+            self._canceled = True
         elif event.type == Event.BACKSPACE:
             self.component.delchar()
             self.rebuild = True
