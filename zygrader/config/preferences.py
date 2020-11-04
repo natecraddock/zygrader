@@ -35,6 +35,7 @@ DEFAULT_PREFERENCES = {
     "class_code": "No Override",
     "editor": "Pluma",
     "data_dir": "",
+    "output_dir": "~/",
 }
 
 CONFIG_PATH = os.path.join(os.path.expanduser("~"), ".config/zygrader")

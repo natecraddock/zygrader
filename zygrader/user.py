@@ -1,5 +1,6 @@
 """User: User preference window management"""
 import base64
+import os
 
 from zygrader import data, ui, zybooks
 from zygrader.class_manager import download_roster
@@ -176,6 +177,27 @@ def save_password_toggle():
         window.run_layer(popup)
 
 
+def set_default_output_directory(row: ui.layers.Row):
+    window = ui.get_window()
+    directory = ui.layers.PathInputLayer("Default Output Directory",
+                                         directory=True)
+    directory.set_prompt(["Specify the default directory for output files."])
+    directory.set_text(preferences.get("output_dir"))
+    window.run_layer(directory)
+    if directory.was_canceled():
+        return
+
+    # Use get_text() instead of get_path() here so we can store ~
+    # in the preferences which is much shorter than the expanded version.
+    path = directory.get_text()
+    preferences.set("output_dir", path)
+    row.set_row_text(f"Default Output Directory: {path}")
+
+    # Set the working directory to the new path for output and input files
+    # created by subprocesses (like student code)
+    os.chdir(directory.get_path())
+
+
 class PreferenceToggle(ui.layers.Toggle):
     def __init__(self, name, extra_fn=None):
         super().__init__()
@@ -237,6 +259,9 @@ def preferences_menu():
                        PreferenceToggle("clear_filter"))
     row.add_row_toggle("Open Diffs in Browser",
                        PreferenceToggle("browser_diff"))
+    output_row = row.add_row_text(
+        f"Default Output Directory: {preferences.get('output_dir')}")
+    output_row.set_callback_fn(set_default_output_directory, output_row)
 
     # Class code selector
     row = popup.add_row_parent("Class Code")

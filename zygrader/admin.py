@@ -1,6 +1,7 @@
 """Admin: Functions for more "administrator" users of zygrader to manage
 the class, scan through student submissions, and access to other menus"""
 import time
+from zygrader.config import preferences
 
 import requests
 import re
@@ -128,6 +129,7 @@ def submission_search_init():
     # Get a valid output path
     filename_input = ui.layers.PathInputLayer("Output File")
     filename_input.set_prompt(["Enter the filename to save the search results"])
+    filename_input.set_text(preferences.get("output_dir"))
     window.run_layer(filename_input, "Submissions Search")
     if filename_input.was_canceled():
         return

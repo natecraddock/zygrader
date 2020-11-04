@@ -214,6 +214,9 @@ def start():
     data.get_students()
     data.get_labs()
 
+    # Change directory to the default output dir
+    os.chdir(os.path.expanduser(preferences.get("output_dir")))
+
     # Create a zygrader window, callback to main function
     ui.Window(main, f"zygrader {SharedData.VERSION}", args)
 
