@@ -2,11 +2,12 @@
 import curses
 import typing
 
+from zygrader.ui import themes
 from zygrader.config import preferences
 
 from . import events
 from .events import Event
-from .layers import ComponentLayer
+from .layers import ComponentLayer, Toggle
 from .utils import add_str, resize_window
 
 
@@ -30,8 +31,7 @@ class Window:
 
     def update_preferences(self):
         self.dark_mode = preferences.get("dark_mode")
-        self.christmas_mode = preferences.get("christmas_mode")
-        self.spooky_mode = preferences.get("spooky_mode")
+        self.theme = preferences.get("theme")
         self.unicode_mode = preferences.get("unicode_mode")
         self.clear_filter = preferences.get("clear_filter")
 
@@ -55,6 +55,7 @@ class Window:
     def __init_curses(self, stdscr, callback, args):
         """Configure basic curses settings"""
         self.stdscr = stdscr
+        self.Window_Theme = themes.Theme()
 
         # We use halfdelay with a delay of 1/10 of a second to prevent
         # using the 100% of a CPU core while checking for input.
@@ -67,7 +68,7 @@ class Window:
         # Hide cursor
         curses.curs_set(0)
 
-        self.__init_colors()
+        #self.__init_colors()
 
         # Create header
         self.header = curses.newwin(1, self.cols, 0, 0)
@@ -84,35 +85,6 @@ class Window:
     def __get_window_dimensions(self):
         self.rows, self.cols = self.stdscr.getmaxyx()
 
-    def __init_colors(self):
-        CURSES_ORANGE = 202
-        CURSES_GREY = 240
-        CURSES_GREEN = 34
-        CURSES_PURPLE = 93
-
-        curses.init_pair(1, curses.COLOR_WHITE, curses.COLOR_BLACK)
-        curses.init_pair(2, curses.COLOR_RED, curses.COLOR_BLACK)
-
-        # Holiday LIGHT variant
-        curses.init_pair(3, curses.COLOR_GREEN, curses.COLOR_WHITE)
-        curses.init_pair(4, curses.COLOR_RED, curses.COLOR_WHITE)
-
-        # Holiday DARK variant
-        curses.init_pair(5, curses.COLOR_GREEN, curses.COLOR_BLACK)
-        curses.init_pair(6, curses.COLOR_RED, curses.COLOR_BLACK)
-
-        # Flagged lines
-        curses.init_pair(7, curses.COLOR_CYAN, curses.COLOR_BLACK)
-
-        if curses.can_change_color():
-            # Spooky variant DARK
-            curses.init_pair(8, CURSES_ORANGE, curses.COLOR_BLACK)
-            curses.init_pair(9, CURSES_GREY, curses.COLOR_BLACK)
-
-            # Spooky variant LIGHT
-            curses.init_pair(10, CURSES_GREEN, curses.COLOR_WHITE)
-            curses.init_pair(11, CURSES_PURPLE, curses.COLOR_WHITE)
-
     def __resize_terminal(self):
         """Function to run after resize events in the terminal"""
         self.__get_window_dimensions()
@@ -123,13 +95,28 @@ class Window:
             layer.resize_component(self.rows, self.cols)
 
     def get_header_colors(self):
+        # this is only for the terminals that don't support all the colors
+        if not curses.can_change_color():
+            if self.theme is "Christmas":
+                if self.dark_mode:
+                    return self.Window_Theme.get_colors("christmas_dark")
+                return self.Window_Theme.get_colors("christmas_light")
+
         if self.dark_mode:
-            if self.spooky_mode and curses.can_change_color():
-                return curses.color_pair(8), curses.color_pair(9)
-            return curses.color_pair(5), curses.color_pair(6)
-        if self.spooky_mode and curses.can_change_color():
-            return curses.color_pair(10), curses.color_pair(11)
-        return curses.color_pair(3), curses.color_pair(4)
+            themeString = self.theme.lower() + "_dark"
+            return self.Window_Theme.get_colors(themeString)
+        themeString = self.theme.lower() + "_light"
+        return self.Window_Theme.get_colors(themeString)
+
+    def get_header_separator(self):
+        if not self.unicode_mode:
+            return self.Window_Theme.get_separator("default")
+        return self.Window_Theme.get_separator(self.theme.lower())
+
+    def get_header_bookends(self):
+        if not self.unicode_mode:
+            return self.Window_Theme.get_bookends("default")
+        return self.Window_Theme.get_bookends(self.theme.lower())
 
     def __get_email_text(self):
         email = preferences.get("email")
@@ -139,13 +126,7 @@ class Window:
 
     def draw_header(self):
         """Set the header text"""
-        separator = "|"
-        if self.unicode_mode:
-            if self.spooky_mode:
-                separator = "🎃"
-            elif self.christmas_mode:
-                separator = "❄️"
-        self.header.erase()
+        separator = self.get_header_separator()
 
         # Store the cursor location
         loc = curses.getsyx()
@@ -157,25 +138,21 @@ class Window:
         elif self.event_manager.mark_mode:
             display_text += f" {separator} VISUAL"
 
-        if self.unicode_mode:
-            if self.spooky_mode:
-                display_text = f"👻 {display_text} 👻"
-            elif self.christmas_mode:
-                display_text = f"🎄 {display_text} 🎄"
+        bookend = self.get_header_bookends()
+        display_text = f'{bookend} {display_text} {bookend}'
 
         # Centered header
         row = self.cols // 2 - len(display_text) // 2
         add_str(self.header, 0, row, display_text)
 
-        # Christmas theme
-        if self.christmas_mode or self.spooky_mode:
-            red, green = self.get_header_colors()
-
+        # Non-default theme
+        if self.theme is not "Default":
+            colors = self.get_header_colors()
             for row in range(self.cols):
                 if (row // 2) % 2 is 0:
-                    self.header.chgat(0, row, red | curses.A_BOLD)
+                    self.header.chgat(0, row, colors[0] | curses.A_BOLD)
                 else:
-                    self.header.chgat(0, row, green | curses.A_BOLD)
+                    self.header.chgat(0, row, colors[1] | curses.A_BOLD)
 
         self.header.noutrefresh()
         self.__header_dirty = False

@@ -28,14 +28,20 @@ DEFAULT_PREFERENCES = {
     "clear_filter": True,
     "vim_mode": False,
     "dark_mode": True,
-    "christmas_mode": False,
-    "spooky_mode": False,
+    "theme": "Default",
     "unicode_mode": False,
     "browser_diff": False,
     "save_password": False,
     "class_code": "No Override",
     "editor": "Pluma",
     "data_dir": "",
+}
+
+THEMES = {
+    "Default": True,
+    "Christmas": False,
+    "Spooky": False,
+    "Birthday": False
 }
 
 CONFIG_PATH = os.path.join(os.path.expanduser("~"), ".config/zygrader")
