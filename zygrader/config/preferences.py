@@ -38,13 +38,6 @@ DEFAULT_PREFERENCES = {
     "output_dir": "~/",
 }
 
-THEMES = {
-    "Default": True,
-    "Christmas": False,
-    "Spooky": False,
-    "Birthday": False
-}
-
 CONFIG_PATH = os.path.join(os.path.expanduser("~"), ".config/zygrader")
 CONFIG_FILE = "config.json"
 

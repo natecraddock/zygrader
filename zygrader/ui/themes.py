@@ -4,13 +4,18 @@ To add a new theme, use 'curses.init_pair()' with the 256-colors you would like 
 """
 
 import curses
-from zygrader.config.preferences import THEMES
+THEMES = {
+    "Default": True,
+    "Christmas": False,
+    "Spooky": False,
+    "Birthday": False
+}
 
 
 class Theme:
     def __init__(self):
         self.__init_colors()
-
+        # cannot decalre this outside the function, since it requires curses to be initialized
         self.THEME_COLORS = {
             "default_dark": [curses.color_pair(1),
                              curses.color_pair(1)],
@@ -30,18 +35,18 @@ class Theme:
                                curses.color_pair(15)]
         }
 
-        self.THEME_SEPARATORS = {
-            "default": "|",
-            "spooky": "🎃",
-            "christmas": "❄️",
-            "birthday": "🎂"
-        }
-        self.THEME_BOOKENDS = {
-            "default": "",
-            "spooky": "👻",
-            "christmas": "🎄",
-            "birthday": "🎉"
-        }
+    THEME_SEPARATORS = {
+        "default": "|",
+        "spooky": "🎃",
+        "christmas": "❄️",
+        "birthday": "🎂"
+    }
+    THEME_BOOKENDS = {
+        "default": "",
+        "spooky": "👻",
+        "christmas": "🎄",
+        "birthday": "🎉"
+    }
 
     def __init_colors(self):
         CURSES_ORANGE = 202

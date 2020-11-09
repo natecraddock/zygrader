@@ -234,17 +234,6 @@ class StringRadioGroup(ui.layers.RadioGroup):
         return preferences.get(self.__preference) == _id
 
 
-"""class ThemeRadioGroup(ui.layers.RadioGroup):
-    def __init__(self, preference: str):
-        self.__preference = preference
-
-    def toggle(self, _id: str):
-        preferences.set(self.__preference, _id)
-
-    def is_toggled(self, _id: str):
-        return preferences.get(self.__preference)"""
-
-
 def preferences_menu():
     """Create the preferences popup"""
     window = ui.get_window()
@@ -257,10 +246,10 @@ def preferences_menu():
     row.add_row_toggle("Unicode Mode", PreferenceToggle("unicode_mode"))
 
     # themes sub-sub-menu
-    themes = row.add_row_parent("Themes")
+    theme = row.add_row_parent("Themes")
     theme_radio = StringRadioGroup("theme")
-    for theme_name in preferences.THEMES:
-        themes.add_row_radio(theme_name, theme_radio, theme_name)
+    for theme_name in ui.themes.THEMES:
+        theme.add_row_radio(theme_name, theme_radio, theme_name)
 
     # Navigation sub-meun
     row = popup.add_row_parent("Navigation")

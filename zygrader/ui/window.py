@@ -68,8 +68,6 @@ class Window:
         # Hide cursor
         curses.curs_set(0)
 
-        #self.__init_colors()
-
         # Create header
         self.header = curses.newwin(1, self.cols, 0, 0)
         self.header.bkgd(" ", curses.color_pair(1))
