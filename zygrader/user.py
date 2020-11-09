@@ -149,9 +149,9 @@ def logout():
     ]
     popup = ui.layers.BoolPopup("Sign in?")
     popup.set_message(msg)
+    window.run_layer(popup)
 
-    sign_in = window.run_layer(popup)
-    if sign_in:
+    if popup.get_result():
         login(window)
     else:
         event_manager = ui.get_events()
