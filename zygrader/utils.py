@@ -201,6 +201,7 @@ def view_students():
         return
 
     popup = ui.layers.ListLayer("Students", popup=True)
+    popup.set_exit_text("Close")
     popup.set_searchable("Student Name")
     for student in students:
         popup.add_row_text(str(student), view_students_fn, student)

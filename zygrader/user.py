@@ -1,8 +1,8 @@
 """User: User preference window management"""
 import base64
-import sys
+import os
 
-from zygrader import ui, zybooks
+from zygrader import data, ui, zybooks
 from zygrader.class_manager import download_roster
 from zygrader.config import preferences
 from zygrader.config.shared import SharedData
@@ -158,6 +158,13 @@ def logout():
         event_manager.push_zygrader_quit_event()
 
 
+def update_course_data():
+    SharedData.initialize_shared_data(SharedData.ZYGRADER_DATA_DIRECTORY)
+    data.load_students()
+    data.load_labs()
+    data.load_class_sections()
+
+
 def save_password_toggle():
     """Toggle saving the user's password in their config file (encoded)"""
     if not preferences.get("save_password"):
@@ -168,6 +175,27 @@ def save_password_toggle():
         popup.set_message(
             ["Next time you start zygrader your password will be saved."])
         window.run_layer(popup)
+
+
+def set_default_output_directory(row: ui.layers.Row):
+    window = ui.get_window()
+    directory = ui.layers.PathInputLayer("Default Output Directory",
+                                         directory=True)
+    directory.set_prompt(["Specify the default directory for output files."])
+    directory.set_text(preferences.get("output_dir"))
+    window.run_layer(directory)
+    if directory.was_canceled():
+        return
+
+    # Use get_text() instead of get_path() here so we can store ~
+    # in the preferences which is much shorter than the expanded version.
+    path = directory.get_text()
+    preferences.set("output_dir", path)
+    row.set_row_text(f"Default Output Directory: {path}")
+
+    # Set the working directory to the new path for output and input files
+    # created by subprocesses (like student code)
+    os.chdir(directory.get_path())
 
 
 class PreferenceToggle(ui.layers.Toggle):
@@ -193,11 +221,14 @@ class PreferenceToggle(ui.layers.Toggle):
 
 
 class StringRadioGroup(ui.layers.RadioGroup):
-    def __init__(self, preference: str):
+    def __init__(self, preference: str, after_fn=None):
         self.__preference = preference
+        self.__after_fn = after_fn
 
     def toggle(self, _id: str):
         preferences.set(self.__preference, _id)
+        if self.__after_fn:
+            self.__after_fn()
 
     def is_toggled(self, _id: str):
         return preferences.get(self.__preference) == _id
@@ -218,6 +249,7 @@ def preferences_menu():
     """Create the preferences popup"""
     window = ui.get_window()
     popup = ui.layers.ListLayer("User Preferences", popup=True)
+    popup.set_exit_text("Close")
 
     # Appearance sub-menu
     row = popup.add_row_parent("Appearance")
@@ -249,10 +281,13 @@ def preferences_menu():
                        PreferenceToggle("clear_filter"))
     row.add_row_toggle("Open Diffs in Browser",
                        PreferenceToggle("browser_diff"))
+    output_row = row.add_row_text(
+        f"Default Output Directory: {preferences.get('output_dir')}")
+    output_row.set_callback_fn(set_default_output_directory, output_row)
 
     # Class code selector
     row = popup.add_row_parent("Class Code")
-    radio = StringRadioGroup("class_code")
+    radio = StringRadioGroup("class_code", update_course_data)
     class_codes = SharedData.get_class_codes()
     class_codes.insert(0, "No Override")
     for code in class_codes:

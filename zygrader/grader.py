@@ -81,6 +81,8 @@ def pick_submission(submission_popup: ui.layers.OptionsPopup,
     part_index = 0
     if len(lab.parts) > 1:
         part_index = submission.pick_part()
+        if part_index is None:
+            return
 
     # Get list of all submissions for that part
     part = lab.parts[part_index]
@@ -95,9 +97,12 @@ def pick_submission(submission_popup: ui.layers.OptionsPopup,
     all_submissions.reverse()
 
     popup = ui.layers.ListLayer("Select Submission", popup=True)
+    popup.set_exit_text("Cancel")
     for sub in all_submissions:
         popup.add_row_text(sub)
     window.run_layer(popup)
+    if popup.was_canceled():
+        return
 
     submission_index = popup.selected_index()
 
@@ -181,14 +186,17 @@ def can_get_through_locks(use_locks, student, lab):
             "This submission has been flagged",
             "",
             f"Note: {data.flags.get_flag_message(student, lab)}",
-            "",
-            "Would you like to unflag it?",
         ]
-        popup = ui.layers.BoolPopup("Submission Flagged", msg)
+        popup = ui.layers.OptionsPopup("Submission Flagged", msg)
+        popup.add_option("Unflag")
+        popup.add_option("View")
         window.run_layer(popup)
 
-        if popup.get_result():
+        choice = popup.get_selected()
+        if choice == "Unflag":
             data.flags.unflag_submission(student, lab)
+        elif choice == "View":
+            return True
         else:
             return False
 
@@ -275,6 +283,8 @@ def flag_submission(lab, student):
         return
 
     data.flags.flag_submission(student, lab, text_input.get_text())
+    events = ui.get_events()
+    events.push_layer_close_event()
 
 
 def diff_parts_fn(window, submission):

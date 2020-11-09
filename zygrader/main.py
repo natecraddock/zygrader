@@ -108,6 +108,8 @@ def view_changelog():
     lines = config.versioning.load_changelog()
 
     popup = ui.layers.ListLayer("Changelog", popup=True)
+    popup.set_exit_text("Press enter to close")
+    popup.set_paged()
     for line in lines:
         popup.add_row_text(line)
     window.run_layer(popup, "Changelog")
@@ -119,6 +121,7 @@ def mainloop(args):
 
     # Create the main menu
     menu = ui.layers.ListLayer()
+    menu.set_exit_text("Quit")
     menu.add_row_text("Grade", grader.grade)
     menu.add_row_text("Emails", email_manager.email_menu)
     menu.add_row_text("Prep Lab Score Calculator", utils.prep_lab_score_calc)
@@ -210,6 +213,9 @@ def start():
     # Load data for the current class
     data.get_students()
     data.get_labs()
+
+    # Change directory to the default output dir
+    os.chdir(os.path.expanduser(preferences.get("output_dir")))
 
     # Create a zygrader window, callback to main function
     ui.Window(main, f"zygrader {SharedData.VERSION}", args)

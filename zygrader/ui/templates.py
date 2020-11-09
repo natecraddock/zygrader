@@ -40,13 +40,14 @@ class ZybookSectionSelector:
                              for chapter in self.zybooks_toc
                              for section in chapter["sections"]}
 
-        title = ("Select zyBook Sections (use Back to finish)"
+        title = ("Select zyBooks Sections"
                  if not title_extra else f"{title_extra} - Select Sections")
         chapter_pad_width = len(str(len(self.zybooks_toc)))
         section_pad_width = max([
             len(str(len(chapter["sections"]))) for chapter in self.zybooks_toc
         ])
         popup = ui.layers.ListLayer(title, popup=True)
+        popup.set_exit_text("Done")
         for i, chapter in enumerate(self.zybooks_toc, 1):
             row = popup.add_row_parent(
                 f"{str(chapter['number']):>{chapter_pad_width}} - {chapter['title']}"

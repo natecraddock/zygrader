@@ -1,5 +1,17 @@
 # Try to keep lines shorter than 70 characters
 
+5.0.0
+* Refactored the window manager.
+  Most changes are invisible to users, but there are some
+  noticable implications:
+  * No longer uses 100% CPU
+  * Consistency in menu interactions
+  * Better naming (e.g. "Quit" instead of "Back")
+* Paging support in the changelog viewer.
+* Preferences organization: Nesting and radio buttons.
+* Allow viewing flagged labs without unflagging.
+* Added default output directory user preferences.
+
 4.9.0
 * Added spooky Halloween theme to preferences.
   Requires emoji support in terminal.

@@ -1,5 +1,7 @@
 import csv
 import datetime
+import os
+from zygrader.config import preferences
 
 from zygrader import data, ui
 from zygrader.config.shared import SharedData
@@ -136,8 +138,8 @@ class GradePuller:
 
         selected = [True] * len(sections_list)
 
-        popup = ui.layers.ListLayer(
-            "Select Class Sections (use Back to finish)", popup=True)
+        popup = ui.layers.ListLayer("Select Class Sections", popup=True)
+        popup.set_exit_text("Done")
         for i, section in enumerate(sections_list):
             popup.add_row_toggle(str(section),
                                  GradePuller._SectionToggle(i, selected))
@@ -217,8 +219,8 @@ class GradePuller:
                         date=new_datetime, time=old_datetime.time())
                     update_row_text(due_times[section], i)
 
-        popup = ui.layers.ListLayer("Set Due Times (use Back to finish)",
-                                    popup=True)
+        popup = ui.layers.ListLayer("Set Due Times", popup=True)
+        popup.set_exit_text("Done")
         index = 0
         for section, time in due_times.items():
             row_text = f"Section {section:>{section_padding}}: {time.strftime('%b %d, %Y at %I:%M:%S%p')}"
@@ -438,8 +440,12 @@ class GradePuller:
         return zybooks_students
 
     def write_upload_file(self):
-        default_path_str = "~/" + "&".join(self.selected_assignments) + ".csv"
-        default_path_str = default_path_str.replace(" ", "")
+        selected_assignments = "&".join(self.selected_assignments) + ".csv"
+        selected_assignments.replace(" ", "")
+
+        default_path_str = os.path.join(preferences.get("output_dir"),
+                                        selected_assignments)
+
         path = filename_input(purpose="the upload file", text=default_path_str)
         if path is None:
             raise GradePuller.StoppingException()
@@ -484,11 +490,10 @@ class GradePuller:
             num_id_columns = GradePuller.NUM_CANVAS_ID_COLUMNS
             canvas_report_headers = self.canvas_header[:num_id_columns]
             self.report_list(
-                unmatched_canvas_students,
-                canvas_report_headers,
+                unmatched_canvas_students, canvas_report_headers,
                 "unmatched canvas students",
-                "~/unmatched_canvas.csv",
-            )
+                os.path.join(preferences.get("output_dir"),
+                             "unmatched_canvas.csv"))
 
             num_id_columns = GradePuller.NUM_ZYBOOKS_ID_COLUMNS
             zybooks_report_headers = zybooks_header[:num_id_columns]
@@ -496,7 +501,8 @@ class GradePuller:
                 unmatched_zybook_students,
                 zybooks_report_headers,
                 "unmatched zybooks students",
-                "~/unmatched_zybooks.csv",
+                os.path.join(preferences.get("output_dir"),
+                             "unmatched_zybooks.csv"),
             )
 
         except GradePuller.StoppingException:

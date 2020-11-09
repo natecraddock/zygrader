@@ -1,6 +1,7 @@
 """Admin: Functions for more "administrator" users of zygrader to manage
 the class, scan through student submissions, and access to other menus"""
 import time
+from zygrader.config import preferences
 
 import requests
 import re
@@ -128,12 +129,13 @@ def submission_search_init():
     # Get a valid output path
     filename_input = ui.layers.PathInputLayer("Output File")
     filename_input.set_prompt(["Enter the filename to save the search results"])
+    filename_input.set_text(preferences.get("output_dir"))
     window.run_layer(filename_input, "Submissions Search")
     if filename_input.was_canceled():
         return
 
     logger = ui.layers.LoggerLayer()
-    logger.set_log_fn(lambda _: submission_search_fn(
+    logger.set_log_fn(lambda: submission_search_fn(
         logger, part, search_string, filename_input.get_path()))
     window.run_layer(logger, "Submission Search")
 
@@ -158,6 +160,7 @@ def remove_locks():
     all_locks = {lock: False for lock in data.lock.get_lock_files()}
 
     popup = ui.layers.ListLayer("Select Locks to Remove", popup=True)
+    popup.set_exit_text("Confirm")
     for lock in all_locks:
         popup.add_row_toggle(lock, LockToggle(lock, all_locks))
     window.run_layer(popup)

@@ -47,12 +47,22 @@ def update_user_version():
     preferences.set("version", SharedData.VERSION.vstring)
 
 
+def update_config_with_new_preferences(config: dict):
+    """Ensure new user preferences are stored in existing config files."""
+    for preference in preferences.DEFAULT_PREFERENCES:
+        if preference not in config:
+            preferences.set(preference,
+                            preferences.DEFAULT_PREFERENCES[preference])
+
+
 def versioning_update_preferences():
     """Compare the user's current version in the config and make necessary adjustments."""
 
     # To modify the config with more flexibility, we need access to the raw json.
     config = preferences.get_config()
     user_version = config["version"]
+
+    update_config_with_new_preferences(config)
 
     if isinstance(user_version, float):
         user_version = str(user_version)
@@ -123,7 +133,9 @@ def show_versioning_message(window: ui.Window):
     user_version = preferences.get("version")
 
     # Add a version string for this array for each version that will show an update popup
-    update_versions = ["4.0.0", "4.1.0", "4.2.0", "4.7.1", "4.8.8", "4.9.0"]
+    update_versions = [
+        "4.0.0", "4.1.0", "4.2.0", "4.7.1", "4.8.8", "4.9.0", "5.0.0"
+    ]
 
     updated = False
     for version in update_versions:

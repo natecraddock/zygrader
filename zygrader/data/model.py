@@ -380,6 +380,8 @@ class Submission(Iterable):
         for part in part_names:
             popup.add_row_text(part)
         window.run_layer(popup)
+        if popup.was_canceled():
+            return None
 
         return popup.selected_index()
 

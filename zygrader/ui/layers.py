@@ -98,6 +98,9 @@ class Popup(ComponentLayer, PopupLayer):
     def event_handler(self, event: Event, event_manager: EventManager):
         if event.type == Event.ENTER:
             event_manager.push_layer_close_event()
+        elif event.type == Event.ESC and event_manager.use_esc_back:
+            self._canceled = True
+            event_manager.push_layer_close_event()
 
     def set_message(self, message):
         self.component.set_message(message)
@@ -148,7 +151,7 @@ class OptionsPopup(ComponentLayer, PopupLayer):
     def set_message(self, message):
         self.component.set_message(message)
 
-    def add_option(self, option, callback):
+    def add_option(self, option, callback=None):
         self.options[option] = callback
         self.rebuild = True
 
@@ -169,11 +172,16 @@ class OptionsPopup(ComponentLayer, PopupLayer):
             if key == "Close":
                 self._canceled = True
                 event_manager.push_layer_close_event()
-            else:
+            elif self.options[key] is not None:
                 self.options[key]()
+            else:
+                event_manager.push_layer_close_event()
 
         if event.type != Event.NONE:
             self.redraw = True
+
+    def get_selected(self):
+        return self.component.selected()
 
 
 class WaitPopup(ComponentLayer, PopupLayer):
@@ -282,7 +290,7 @@ class PathInputLayer(TextInputLayer):
             directory, name = os.path.split(path)
             self._valid = os.path.isdir(directory) and name
         else:
-            self.valid = os.path.isdir(path)
+            self._valid = os.path.isdir(path)
         return self._valid
 
     def build(self):
@@ -408,7 +416,7 @@ class Row:
         self.__expanded = False
 
         self.__toggle: Toggle = None
-        self.__radio: Radio = None
+        self.__radio: RadioGroup = None
         self.__radio_id = ""
 
     def __str__(self):
@@ -502,7 +510,7 @@ class Row:
         elif self.__type == Row.TOGGLE:
             self.__toggle.toggle()
         elif self.__type == Row.RADIO:
-            self.__radio.toggle(self.__text)
+            self.__radio.toggle(self.__radio_id)
 
     def __row_iter(self, rows):
         for row in rows:
@@ -526,6 +534,7 @@ class ListLayer(ComponentLayer, PopupLayer):
         ComponentLayer.__init__(self)
 
         self.__rows = Row(_type=Row.HOLDER)
+        self._paged = False
 
         if popup:
             win = window.Window.get_window()
@@ -558,6 +567,9 @@ class ListLayer(ComponentLayer, PopupLayer):
     def set_subrow_text(self, text, index):
         self.__rows.set_subrow_text(text, index)
 
+    def set_exit_text(self, text: str):
+        self.component.set_exit_text(text)
+
     def build(self):
         super().build()
         text_rows = []
@@ -573,7 +585,15 @@ class ListLayer(ComponentLayer, PopupLayer):
     def set_sortable(self):
         self.component.set_sortable()
 
+    def set_paged(self):
+        self.component.set_paged()
+        self._paged = True
+
     def event_handler(self, event: Event, event_manager: EventManager):
+        if self._paged and event.type == Event.ENTER:
+            event_manager.push_layer_close_event()
+            return
+
         if event.type == Event.DOWN:
             self.component.down()
         elif event.type == Event.UP:
@@ -584,6 +604,7 @@ class ListLayer(ComponentLayer, PopupLayer):
             self.component.to_bottom()
         elif event.type == Event.LEFT and event_manager.left_right_menu_nav:
             event_manager.push_layer_close_event()
+            self._canceled = True
         elif event.type == Event.BACKSPACE:
             self.component.delchar()
             self.rebuild = True
