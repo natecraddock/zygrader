@@ -1,5 +1,6 @@
 """Layers: The components and handlers that make up the user interface."""
 
+import curses
 import os
 import threading
 from typing import List
@@ -423,6 +424,7 @@ class Row:
         self.__callback_args = ()
 
         self.__expanded = False
+        self.__disabled = False
 
         self.__toggle: Toggle = None
         self.__radio: RadioGroup = None
@@ -442,7 +444,10 @@ class Row:
     def build_string_lines(self, lines, start, depth=0):
         OFFSET = " " * (4 * depth)
         for row in start.get_subrows():
-            lines.append((OFFSET + str(row), row.color, row.sort_index))
+            attrs = 0
+            if row.is_disabled():
+                attrs = curses.A_DIM
+            lines.append((OFFSET + str(row), row.color, row.sort_index, attrs))
             if row.get_type() == Row.PARENT and row.is_expanded():
                 self.build_string_lines(lines, row, depth + 1)
 
@@ -504,10 +509,19 @@ class Row:
     def set_subrow_text(self, text, index):
         self.__subrows[index].set_row_text(text)
 
+    def set_disabled(self, disabled=True):
+        self.__disabled = disabled
+
+    def is_disabled(self) -> bool:
+        return self.__disabled
+
     def clear_rows(self):
         self.__subrows.clear()
 
     def do_action(self):
+        if self.__disabled:
+            return
+
         if self.__type == Row.TEXT and self.__callback_fn:
             self.__callback_fn(*self.__callback_args)
         elif self.__type == Row.TEXT:

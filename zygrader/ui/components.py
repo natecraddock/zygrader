@@ -627,11 +627,12 @@ class ScrollableList(Component):
     UNSELECTED_PREFIX = " " * len(SELECTED_PREFIX)
 
     class Line:
-        def __init__(self, index, text, color=0, sort_index=0):
+        def __init__(self, index, text, color=0, sort_index=0, attrs=0):
             self.index = index
             self.text = text
             self.color = color
             self.sort_index = sort_index
+            self.attrs = attrs
 
     def __init__(self):
         self._rows = 0
@@ -655,7 +656,7 @@ class ScrollableList(Component):
 
     def set_lines(self, lines):
         self._lines = [
-            ScrollableList.Line(i, line[0], line[1], line[2])
+            ScrollableList.Line(i, line[0], line[1], line[2], line[3])
             for i, line in enumerate(lines, 1)
         ]
         self.__create_display_lines()
@@ -708,10 +709,13 @@ class ScrollableList(Component):
     def _draw_list_lines(self, window, lines, y_start, x_start):
         for line_number, line in enumerate(lines):
             prefix = ScrollableList.UNSELECTED_PREFIX
-            attributes = 0
+            attributes = line.attrs
             if self.__should_show_selected(line_number):
                 prefix = ScrollableList.SELECTED_PREFIX
-                attributes = curses.A_BOLD
+
+                # Don't make the line bold if it is dim (diabled)
+                if not attributes & curses.A_DIM:
+                    attributes = curses.A_BOLD
 
             add_str(window, y_start + line_number, x_start,
                     f"{prefix}{line.text}", attributes | line.color)
