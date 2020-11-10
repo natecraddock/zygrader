@@ -42,6 +42,9 @@ class ComponentLayer:
 
         self.blocking = False
         self.is_text_input = False
+
+        # Does the component take text input that can be cleared on redraw?
+        self._is_clearable = False
         self._canceled = False
 
         # Flags to control rebuilding and redrawing in the event loop.
@@ -80,6 +83,12 @@ class ComponentLayer:
 
     def was_canceled(self) -> bool:
         return self._canceled
+
+    def is_clearable(self) -> bool:
+        return self._is_clearable
+
+    def clear_search_text(self) -> bool:
+        raise NotImplementedError
 
 
 class PopupLayer:
@@ -532,6 +541,7 @@ class ListLayer(ComponentLayer, PopupLayer):
     """A reusable list that supports searching the options."""
     def __init__(self, title="", popup=False):
         ComponentLayer.__init__(self)
+        self._is_clearable = True
 
         self.__rows = Row(_type=Row.HOLDER)
         self._paged = False
@@ -581,6 +591,9 @@ class ListLayer(ComponentLayer, PopupLayer):
 
     def set_searchable(self, prompt: str, search_fn=__string_search_fn):
         self.component.set_searchable(prompt, search_fn)
+
+    def clear_search_text(self) -> bool:
+        self.component.clear_search_text()
 
     def set_sortable(self):
         self.component.set_sortable()

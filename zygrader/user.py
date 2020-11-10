@@ -255,7 +255,7 @@ def preferences_menu():
         row.add_row_radio(editor_name, radio, editor_name)
 
     row = popup.add_row_parent("Other")
-    row.add_row_toggle("Auto Clear List Filters",
+    row.add_row_toggle("Auto Clear Search Text",
                        PreferenceToggle("clear_filter"))
     row.add_row_toggle("Open Diffs in Browser",
                        PreferenceToggle("browser_diff"))

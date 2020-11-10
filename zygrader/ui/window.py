@@ -197,6 +197,11 @@ class Window:
         # Always disable insert or visual mode
         self.event_manager.disable_modes()
 
+        # Clear search fields upon returning to lists
+        if (self.clear_filter and self.active_layer
+                and self.active_layer.is_clearable()):
+            self.active_layer.clear_search_text()
+
     def run_layer(self, layer: ComponentLayer, title=""):
         self.register_layer(layer, title)
 
