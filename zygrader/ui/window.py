@@ -55,7 +55,7 @@ class Window:
     def __init_curses(self, stdscr, callback, args):
         """Configure basic curses settings"""
         self.stdscr = stdscr
-        self.Window_Theme = themes.Theme()
+        self.window_theme = themes.Theme()
 
         # We use halfdelay with a delay of 1/10 of a second to prevent
         # using the 100% of a CPU core while checking for input.
@@ -97,24 +97,24 @@ class Window:
         if not curses.can_change_color():
             if self.theme is "Christmas":
                 if self.dark_mode:
-                    return self.Window_Theme.get_colors("christmas_dark")
-                return self.Window_Theme.get_colors("christmas_light")
+                    return self.window_theme.get_colors("christmas_dark")
+                return self.window_theme.get_colors("christmas_light")
 
         if self.dark_mode:
-            themeString = self.theme.lower() + "_dark"
-            return self.Window_Theme.get_colors(themeString)
-        themeString = self.theme.lower() + "_light"
-        return self.Window_Theme.get_colors(themeString)
+            theme_string = self.theme.lower() + "_dark"
+            return self.window_theme.get_colors(theme_string)
+        theme_string = self.theme.lower() + "_light"
+        return self.window_theme.get_colors(theme_string)
 
     def get_header_separator(self):
         if not self.unicode_mode:
-            return self.Window_Theme.get_separator("default")
-        return self.Window_Theme.get_separator(self.theme.lower())
+            return self.window_theme.get_separator("default")
+        return self.window_theme.get_separator(self.theme.lower())
 
     def get_header_bookends(self):
         if not self.unicode_mode:
-            return self.Window_Theme.get_bookends("default")
-        return self.Window_Theme.get_bookends(self.theme.lower())
+            return self.window_theme.get_bookends("default")
+        return self.window_theme.get_bookends(self.theme.lower())
 
     def __get_email_text(self):
         email = preferences.get("email")
@@ -124,6 +124,7 @@ class Window:
 
     def draw_header(self):
         """Set the header text"""
+        self.header.erase()
         separator = self.get_header_separator()
 
         # Store the cursor location

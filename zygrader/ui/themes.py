@@ -1,22 +1,52 @@
 """Defines all the color pairs and emojis for each theme.
-To add a new theme, use 'curses.init_pair()' with the 256-colors you would like (use constants).
+To add a new theme:
+    1. use 'curses.init_pair()' with the 256-colors you would like (use constants).
+    This needs to be INSIDE of 'if curses.can_change_colors()'
+    Make sure to define four color pairs: two for light and two for dark
+
+    2. Then, add the theme with "{theme_name}_[light|dark]" convention to theme_colors,
+    along with the color pair you specified.
+
+    3. add the separator you want
+
+    4. add the bookend you want
+
+    3. add the theme name to THEMES. This name will appear in the preferences menu,
+    and is used to get the theme colors and emojis
+
+To see what colors are assigned to a specific numeric value, run the following code:
+#####
+import curses
+
+def main(stdscr):
+    curses.start_color()
+    curses.use_default_colors()
+    for i in range(0, curses.COLORS):
+        curses.init_pair(i, i, -1)
+    try:
+        for i in range(0, 255):
+            stdscr.addstr(str(i) + " ", curses.color_pair(i))
+    except curses.ERR:
+        # End of screen reached
+        pass
+    stdscr.getch()
+
+curses.wrapper(main)
+#####
+This will print each color to the screen, colored appreopriately.
+
 
 """
 
 import curses
-THEMES = {
-    "Default": True,
-    "Christmas": False,
-    "Spooky": False,
-    "Birthday": False
-}
+THEMES = ["Default", "Christmas", "Spooky", "Birthday", "Thanksgiving"]
 
 
 class Theme:
     def __init__(self):
         self.__init_colors()
-        # cannot decalre this outside the function, since it requires curses to be initialized
-        self.THEME_COLORS = {
+        # cannot declare this outside the function, since it requires curses to be initialized
+        self.theme_colors = {
             "default_dark": [curses.color_pair(1),
                              curses.color_pair(1)],
             "default_light": [curses.color_pair(2),
@@ -32,20 +62,27 @@ class Theme:
             "birthday_dark": [curses.color_pair(12),
                               curses.color_pair(13)],
             "birthday_light": [curses.color_pair(14),
-                               curses.color_pair(15)]
+                               curses.color_pair(15)],
+            "thanksgiving_dark": [curses.color_pair(16),
+                                  curses.color_pair(17)],
+            "thanksgiving_light":
+            [curses.color_pair(18),
+             curses.color_pair(19)]
         }
 
     THEME_SEPARATORS = {
         "default": "|",
         "spooky": "🎃",
         "christmas": "❄️",
-        "birthday": "🎂"
+        "birthday": "🎂",
+        "thanksgiving": "🦃"
     }
     THEME_BOOKENDS = {
         "default": "",
         "spooky": "👻",
         "christmas": "🎄",
-        "birthday": "🎉"
+        "birthday": "🎉",
+        "thanksgiving": "🍗"
     }
 
     def __init_colors(self):
@@ -53,8 +90,12 @@ class Theme:
         CURSES_GREY = 240
         CURSES_GREEN = 34
         CURSES_PURPLE = 93
-        CURSES_BDAY_BLUE = 4
-        CURSES_BDAY_PINK = 200
+
+        CURSES_BDAY_BLUE = 45
+        CURSES_BDAY_PINK = 207
+
+        CURSES_THXGVNG_BROWN = 130
+        CURSES_THXGVNG_ORANGE = 208
 
         #this line can't change
         curses.init_pair(1, curses.COLOR_WHITE, curses.COLOR_BLACK)
@@ -90,8 +131,16 @@ class Theme:
             curses.init_pair(14, CURSES_BDAY_BLUE, curses.COLOR_WHITE)
             curses.init_pair(15, CURSES_BDAY_PINK, curses.COLOR_WHITE)
 
+            # Thanksgiving DARK
+            curses.init_pair(16, CURSES_THXGVNG_BROWN, curses.COLOR_BLACK)
+            curses.init_pair(17, CURSES_THXGVNG_ORANGE, curses.COLOR_BLACK)
+
+            # THanksgiving LIGHT
+            curses.init_pair(18, CURSES_THXGVNG_BROWN, curses.COLOR_WHITE)
+            curses.init_pair(19, CURSES_THXGVNG_ORANGE, curses.COLOR_WHITE)
+
     def get_colors(self, key: str):
-        if key not in self.THEME_COLORS:
+        if key not in self.theme_colors:
             raise KeyError("Invalid Colors Key")
 
         # curses can change the colors for Christmas theme, even if the terminal doesn't support the other ones.
@@ -101,7 +150,7 @@ class Theme:
             theme = key[:index]
             if theme is not "christmas":
                 key = key.replace(theme, "default")
-        return self.THEME_COLORS[key]
+        return self.theme_colors[key]
 
     def get_separator(self, key: str):
         if key not in self.THEME_SEPARATORS:
