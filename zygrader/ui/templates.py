@@ -56,10 +56,18 @@ class ZybookSectionSelector:
                 section_string = (f"{chapter['number']}"
                                   f".{section['number']:<{section_pad_width}}"
                                   f" - {section['title']}")
-                row.add_row_toggle(
+                if not self.is_allowed(section):
+                    section_string += " (Optional)"
+
+                subrow = row.add_row_toggle(
                     section_string,
                     ZybookSectionSelector._SectionToggle((i, j),
                                                          selected_sections))
+
+                # Disable selection of optional sections
+                if not self.is_allowed(section):
+                    subrow.set_disabled()
+
         self.window.run_layer(popup)
 
         res = []
