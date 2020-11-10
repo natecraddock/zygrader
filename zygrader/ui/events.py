@@ -52,6 +52,12 @@ class EventManager:
         self.input_win = curses.newwin(0, 0, 1, 1)
         self.input_win.keypad(True)
 
+        # Use a 5 millisecond timeout before getch() stops blocking.
+        # Previously used halfdelay(), but the 100ms delay was sometimes
+        # visible to the user. 5ms makes the ui more responsive while
+        # still not using 100% of a CPU.
+        self.input_win.timeout(5)
+
         # A simple list used as a queue of events.
         # Events are either from keyboard input, or from zygrader itself
         # (a component informing the window to update something, etc.)

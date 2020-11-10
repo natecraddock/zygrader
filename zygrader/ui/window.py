@@ -55,12 +55,6 @@ class Window:
         """Configure basic curses settings"""
         self.stdscr = stdscr
 
-        # We use halfdelay with a delay of 1/10 of a second to prevent
-        # using the 100% of a CPU core while checking for input.
-        # Previously we used nodelay(True) which caused excessive CPU cycles.
-        # We must use at least halfdelay to prevent input from blocking.
-        curses.halfdelay(1)
-
         self.__get_window_dimensions()
 
         # Hide cursor
