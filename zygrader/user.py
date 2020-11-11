@@ -199,21 +199,25 @@ def set_default_output_directory(row: ui.layers.Row):
 
 
 class PreferenceToggle(ui.layers.Toggle):
-    def __init__(self, name, extra_fn=None):
+    def __init__(self, name, before_fn=None, after_fn=None):
         super().__init__()
         self.__name = name
-        self.__extra_fn = extra_fn
-        self.get()
-
-    def get(self):
-        self._toggled = preferences.get(self.__name)
+        self.__before_fn = before_fn
+        self.__after_fn = after_fn
 
     def toggle(self):
-        preferences.set(self.__name, not self._toggled)
-        self.get()
+        toggled = preferences.get(self.__name)
 
-        if self.__extra_fn:
-            self.__extra_fn()
+        if self.__before_fn:
+            self.__before_fn()
+
+        preferences.set(self.__name, not toggled)
+
+        if self.__after_fn:
+            self.__after_fn()
+
+    def is_toggled(self):
+        return preferences.get(self.__name)
 
 
 class StringRadioGroup(ui.layers.RadioGroup):
@@ -236,11 +240,18 @@ def preferences_menu():
     popup = ui.layers.ListLayer("User Preferences", popup=True)
     popup.set_exit_text("Close")
 
+    # Appearance sub-menu
     row = popup.add_row_parent("Appearance")
     row.add_row_toggle("Dark Mode", PreferenceToggle("dark_mode"))
-    row.add_row_toggle("Christmas Theme", PreferenceToggle("christmas_mode"))
-    row.add_row_toggle("Spooky Theme", PreferenceToggle("spooky_mode"))
+    row.add_row_toggle("Unicode Mode", PreferenceToggle("unicode_mode"))
 
+    # themes sub-sub-menu
+    theme = row.add_row_parent("Themes")
+    theme_radio = StringRadioGroup("theme")
+    for theme_name in ui.themes.THEMES:
+        theme.add_row_radio(theme_name, theme_radio, theme_name)
+
+    # Navigation sub-meun
     row = popup.add_row_parent("Navigation")
     row.add_row_toggle("Vim Mode", PreferenceToggle("vim_mode"))
     row.add_row_toggle("Left/Right Arrow Navigation",
@@ -272,8 +283,9 @@ def preferences_menu():
         row.add_row_radio(code, radio, code)
 
     row = popup.add_row_parent("Account")
-    row.add_row_toggle("Remember Password",
-                       PreferenceToggle("save_password", save_password_toggle))
+    row.add_row_toggle(
+        "Remember Password",
+        PreferenceToggle("save_password", after_fn=save_password_toggle))
     row.add_row_text("Log Out", logout)
 
     window.register_layer(popup, "Preferences")
