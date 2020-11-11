@@ -146,9 +146,9 @@ class Theme:
         # curses can change the colors for Christmas theme, even if the terminal doesn't support the other ones.
         # hence all this logic...
         if not curses.can_change_color():
-            index = key.find("_")
-            theme = key[:index]
-            if theme is not "christmas":
+            if "christmas" not in key:
+                index = key.find("_")
+                theme = key[:index]
                 key = key.replace(theme, "default")
         return self.theme_colors[key]
 

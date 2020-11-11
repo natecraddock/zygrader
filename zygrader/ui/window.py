@@ -94,12 +94,6 @@ class Window:
 
     def get_header_colors(self):
         # this is only for the terminals that don't support all the colors
-        if not curses.can_change_color():
-            if self.theme is "Christmas":
-                if self.dark_mode:
-                    return self.window_theme.get_colors("christmas_dark")
-                return self.window_theme.get_colors("christmas_light")
-
         if self.dark_mode:
             theme_string = self.theme.lower() + "_dark"
             return self.window_theme.get_colors(theme_string)
