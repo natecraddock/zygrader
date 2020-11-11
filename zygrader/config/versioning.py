@@ -107,6 +107,13 @@ def versioning_update_preferences():
     if compare_versions(version, user_version):
         config["spooky_mode"] = False
 
+    version = "5.0.0"
+    if compare_versions(version, user_version):
+        if preferences.get("spooky_mode"):
+            config["theme"] = "Spooky"
+        elif preferences.get("christmas_mode"):
+            config["theme"] = "Christmas"
+
 
 def find_versioning_message(window, version, user_version):
     """Display a versioning message for the given version number if one exists."""
