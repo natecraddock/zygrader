@@ -366,7 +366,7 @@ class GradePuller:
 
         # Some sections are zero points but we still grade as if it were 100.
         # In these cases, always give the student 100%.
-        is_empty_activity = "0" in total_field_name
+        is_empty_activity = "(0)" in total_field_name
 
         bad_id_count = 0
         report = dict()
