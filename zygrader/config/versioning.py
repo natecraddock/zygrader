@@ -67,13 +67,11 @@ def versioning_update_preferences():
     if isinstance(user_version, float):
         user_version = str(user_version)
 
-    version = "4.1.0"
-    if compare_versions(version, user_version):
+    if compare_versions("4.1.0", user_version):
         # Add new default preference
         config["class_code"] = "No Override"
 
-    version = "4.8.0"
-    if compare_versions(version, user_version):
+    if compare_versions("4.8.0", user_version):
         # Preferences are now stored as true/false json values,
         # rather than relying on the presence of a key. Update existing
         # user's preferences.
@@ -103,8 +101,7 @@ def versioning_update_preferences():
         if not "data_dir" in config:
             config["data_dir"] = ""
 
-    version = "4.9.0"
-    if compare_versions(version, user_version):
+    if compare_versions("4.9.0", user_version):
         config["spooky_mode"] = False
 
 
