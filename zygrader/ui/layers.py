@@ -255,10 +255,18 @@ class TextInputLayer(ComponentLayer, PopupLayer):
             self.component.left()
         elif event.type == Event.RIGHT:
             self.component.right()
+        elif event.type == Event.UP:
+            self.component.up()
+        elif event.type == Event.DOWN:
+            self.component.down()
         elif event.type == Event.SLEFT:
             self.component.left(shift_pressed=True)
         elif event.type == Event.SRIGHT:
             self.component.right(shift_pressed=True)
+        elif event.type == Event.SUP:
+            self.component.up(shift_pressed=True)
+        elif event.type == Event.SDOWN:
+            self.component.down(shift_pressed=True)
         elif event.type == Event.ESC:  # Always allow exiting from text input with ESC
             event_manager.push_layer_close_event()
             self._canceled = True
