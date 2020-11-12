@@ -104,6 +104,15 @@ def versioning_update_preferences():
     if compare_versions("4.9.0", user_version):
         config["spooky_mode"] = False
 
+    ##### Versioning code to run until next version bump ######
+    if True:
+        # Update theme colors
+        if "spooky_mode" in config and config["spooky_mode"]:
+            preferences.set("theme", "Spooky")
+        if "christmas_mode" in config and config["christmas_mode"]:
+            preferences.set("theme", "Christmas")
+    #### Leave this `if True` block after bumping version! ####
+
 
 def find_versioning_message(window, version, user_version):
     """Display a versioning message for the given version number if one exists."""
