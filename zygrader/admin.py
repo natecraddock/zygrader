@@ -6,7 +6,7 @@ from zygrader.config import preferences
 import requests
 import re
 
-from zygrader import class_manager, data, grade_puller, ui, utils
+from zygrader import bobs_shake, class_manager, data, grade_puller, ui, utils
 from zygrader.zybooks import Zybooks
 
 
@@ -195,5 +195,6 @@ def admin_menu():
                       grade_puller.GradePuller().find_unmatched_students)
     menu.add_row_text("Remove Locks", remove_locks)
     menu.add_row_text("Class Management", class_manager.start)
+    menu.add_row_text("Bob's Shake", bobs_shake.start)
 
     window.register_layer(menu, "Admin")
