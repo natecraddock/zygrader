@@ -135,10 +135,7 @@ def set_due_date(lab, row: ui.layers.Row):
 
     labs = data.get_labs()
 
-    old_date = None
-    if "due" in lab.options:
-        old_date = lab.options["due"]
-
+    old_date = lab.options.get("due", None)
     date_spinner = ui.layers.DatetimeSpinner("Due Date")
     date_spinner.set_optional(True)
     if old_date:
