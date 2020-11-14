@@ -703,8 +703,8 @@ class ScrollableList(Component):
 
     def set_lines(self, lines):
         self._lines = [
-            ScrollableList.Line(i, line[0], line[1], line[2], line[3])
-            for i, line in enumerate(lines, 1)
+            ScrollableList.Line(i, line.text, line.color, line.sort_index,
+                                line.attrs) for i, line in enumerate(lines, 1)
         ]
         self.__create_display_lines()
 

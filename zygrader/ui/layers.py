@@ -3,6 +3,7 @@
 import curses
 import os
 import threading
+from collections import namedtuple
 from typing import List
 
 from zygrader.ui.components import Component
@@ -451,11 +452,13 @@ class Row:
 
     def build_string_lines(self, lines, start, depth=0):
         OFFSET = " " * (4 * depth)
+        Line = namedtuple("line", ("text", "color", "sort_index", "attrs"))
         for row in start.get_subrows():
             attrs = 0
             if row.is_disabled():
                 attrs = curses.A_DIM
-            lines.append((OFFSET + str(row), row.color, row.sort_index, attrs))
+            lines.append(
+                Line(OFFSET + str(row), row.color, row.sort_index, attrs))
             if row.get_type() == Row.PARENT and row.is_expanded():
                 self.build_string_lines(lines, row, depth + 1)
 
