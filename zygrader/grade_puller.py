@@ -364,6 +364,10 @@ class GradePuller:
                 total_field_name = field_name
                 break
 
+        # Some sections are zero points but we still grade as if it were 100.
+        # In these cases, always give the student 100%.
+        is_empty_activity = "(0)" in total_field_name
+
         bad_id_count = 0
         report = dict()
         for row in csv_reader:
@@ -383,7 +387,8 @@ class GradePuller:
             while real_id in report:
                 real_id = str(real_id) + "(02)"
             row["id_number"] = real_id
-            row["grade"] = float(row[total_field_name])
+            row["grade"] = float(
+                row[total_field_name]) if not is_empty_activity else 100
             report[real_id] = row
 
         return report, header
