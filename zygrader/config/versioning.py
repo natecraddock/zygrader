@@ -104,17 +104,18 @@ def versioning_update_preferences():
     if compare_versions("4.9.0", user_version):
         config["spooky_mode"] = False
 
-    ##### Versioning code to run until next version bump ######
-    if True:
+    if compare_versions("5.1.0", user_version):
         # Update theme colors & remove old themes
         if "spooky_mode" in config and config["spooky_mode"]:
             preferences.set("theme", "Spooky")
             preferences.remove("spooky_mode")
-
         if "christmas_mode" in config and config["christmas_mode"]:
             preferences.set("theme", "Christmas")
             preferences.remove("christmas_mode")
 
+    ##### Versioning code to run until next version bump ######
+    if True:
+        pass
     #### Leave this `if True` block after bumping version! ####
 
 
@@ -136,7 +137,7 @@ def show_versioning_message(window: ui.Window):
 
     # Add a version string for this array for each version that will show an update popup
     update_versions = [
-        "4.0.0", "4.1.0", "4.2.0", "4.7.1", "4.8.8", "4.9.0", "5.0.0"
+        "4.0.0", "4.1.0", "4.2.0", "4.7.1", "4.8.8", "4.9.0", "5.0.0", "5.1.0"
     ]
 
     updated = False

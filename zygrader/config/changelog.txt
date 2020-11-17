@@ -1,5 +1,16 @@
 # Try to keep lines shorter than 70 characters
 
+5.1.0
+* New Features
+  * More themes! Thanksgiving & Birthday.
+  * Disabled row display. Used in grade puller.
+* Fixes
+  * Switching accounts closes zygrader.
+  * Fix auto clear after grading a student.
+  * Text wrapping.
+  * Datetime pickers.
+  * Grade puller reporting 0% for empty activities
+
 5.0.0
 * Refactored the window manager.
   Most changes are invisible to users, but there are some
