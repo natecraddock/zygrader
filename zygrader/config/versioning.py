@@ -106,11 +106,15 @@ def versioning_update_preferences():
 
     ##### Versioning code to run until next version bump ######
     if True:
-        # Update theme colors
+        # Update theme colors & remove old themes
         if "spooky_mode" in config and config["spooky_mode"]:
             preferences.set("theme", "Spooky")
+            preferences.remove("spooky_mode")
+
         if "christmas_mode" in config and config["christmas_mode"]:
             preferences.set("theme", "Christmas")
+            preferences.remove("christmas_mode")
+
     #### Leave this `if True` block after bumping version! ####
 
 

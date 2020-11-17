@@ -97,6 +97,16 @@ def set(key: str, value: typing.Union[str, bool]):
     update_observers()
 
 
+def remove(key: str):
+    """Remove a preference from the config file (deprecation)."""
+    global PREFERENCES
+
+    if PREFERENCES[key]:
+        del PREFERENCES[key]
+
+    write_config(PREFERENCES)
+
+
 def add_observer(observer_fn):
     """Register a function to be called when the preferences are saved"""
     OBSERVERS.append(observer_fn)
