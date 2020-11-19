@@ -372,17 +372,21 @@ class Submission(Iterable):
         curses.doupdate()
         return True
 
-    def pick_part(self, title="Choose a part"):
+    def pick_part(self, title="Choose a part", pick_all=False):
         window = ui.get_window()
         part_names = [self.get_part_identifier(x) for x in self.lab.parts]
 
         popup = ui.layers.ListLayer(title, popup=True)
+        if pick_all:
+            popup.add_row_text("Pick all latest")
         for part in part_names:
             popup.add_row_text(part)
         window.run_layer(popup)
         if popup.was_canceled():
             return None
 
+        if pick_all:
+            return popup.selected_index() - 1
         return popup.selected_index()
 
     def compile_code(self):

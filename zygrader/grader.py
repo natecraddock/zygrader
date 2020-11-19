@@ -80,8 +80,28 @@ def pick_submission(submission_popup: ui.layers.OptionsPopup,
     # If the lab has multiple parts, prompt to pick a part
     part_index = 0
     if len(lab.parts) > 1:
-        part_index = submission.pick_part()
+        part_index = submission.pick_part(pick_all=True)
         if part_index is None:
+            return
+        if part_index is -1:
+
+            def wait_fn():
+                for i in range(len(lab.parts)):
+                    part = lab.parts[i]
+                    part_submissions = zy_api.get_submissions_list(
+                        part["id"], student.id)
+                    if len(part_submissions) > 0:
+                        part_response = zy_api.download_assignment_part(
+                            lab, student.id, part,
+                            len(part_submissions) - 1)
+                        submission.update_part(part_response,
+                                               lab.parts.index(part))
+                set_submission_message(submission_popup, submission)
+
+            popup = ui.layers.WaitPopup("Downloading")
+            popup.set_message([f"Downloading latest submissions..."])
+            popup.set_wait_fn(wait_fn)
+            window.run_layer(popup)
             return
 
     # Get list of all submissions for that part
