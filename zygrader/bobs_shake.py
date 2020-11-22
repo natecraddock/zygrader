@@ -2,10 +2,14 @@
 #make an event class
 
 import csv
+from zygrader.data.lock import get_lock_log_path
 
 
 def start():
     #call get get_lock_log_path()
+    test = GradingStatsWorker()
+    log_file = get_lock_log_path()
+    #test.read_in_stats(log_file)
     pass
 
 
