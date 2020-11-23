@@ -235,6 +235,8 @@ class Submission(Iterable):
     def create_submission_string(self, response):
         msg = [f"{self.student.full_name} - {self.lab.name}", ""]
 
+        longest_name = max(len(part["name"]) for part in response["parts"])
+
         for part in response["parts"]:
             if part["code"] == Zybooks.NO_SUBMISSION:
                 msg.append(f"{part['name']:4} No Submission")
@@ -242,7 +244,9 @@ class Submission(Iterable):
                 score = f"{part['score']}/{part['max_score']}"
 
                 if part["name"]:
-                    msg.append(f"{part['name']:4} {score:8} {part['date']}")
+                    msg.append(
+                        f"{part['name']:{longest_name}}  {score:7}  {part['date']}"
+                    )
                 else:
                     msg.append(f"{score:8} {part['date']}")
 
