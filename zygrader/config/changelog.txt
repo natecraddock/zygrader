@@ -1,5 +1,12 @@
 # Try to keep lines shorter than 70 characters
 
+5.2.0
+* New Features
+  * Pick all latest submissions option.
+  * Remove class section menu option [Admin].
+* Fixes
+  * Better alignment in submission popup.
+
 5.1.0
 * New Features
   * More themes! Thanksgiving & Birthday.
