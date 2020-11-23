@@ -314,6 +314,32 @@ def add_class_section():
     data.write_class_sections(class_sections)
 
 
+def remove_class_section():
+    window = ui.get_window()
+    class_sections = data.get_class_sections()
+
+    popup = ui.layers.ListLayer("Pick Section", popup=True)
+    for section in class_sections:
+        popup.add_row_text(str(section))
+    window.run_layer(popup)
+    if popup.was_canceled():
+        return
+
+    selected_section = popup.selected_index()
+
+    popup = ui.layers.BoolPopup("Confirm")
+    popup.set_message([
+        f"Are you sure you want to delete {class_sections[selected_section]}?"
+    ])
+    window.run_layer(popup)
+
+    if not popup.get_result():
+        return
+
+    del class_sections[selected_section]
+    data.write_class_sections(class_sections)
+
+
 def fill_class_section_list(section_list: ui.layers.ListLayer):
     section_list.clear_rows()
     class_sections = data.get_class_sections()
@@ -409,6 +435,7 @@ def class_section_manager():
 
     menu = ui.layers.ListLayer()
     menu.add_row_text("Add Section", add_class_section)
+    menu.add_row_text("Remove Section", remove_class_section)
     menu.add_row_text("Edit Current Sections", edit_class_sections)
     menu.add_row_text("Sort Current Sections", sort_class_sections)
     window.register_layer(menu, "Class Section Manager")
