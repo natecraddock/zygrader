@@ -33,6 +33,15 @@ def suspend_curses(callback_fn):
     return wrapper
 
 
+def get_diff_name(path, title_a, title_b) -> str:
+    # The names can be the same between parts (main.cpp) so we should
+    # Also include the part's subfolder in the name
+    path, name = os.path.split(path)
+    path, folder_name = os.path.split(path)
+    file_name = os.path.join(folder_name, name)
+    return f"{file_name} - {title_a} against {title_b}"
+
+
 def diff_files(first, second, title_a, title_b, use_html):
     """Given two lists of equal length containing file paths, return a diff of each pair of files"""
     diffs = {}
@@ -43,9 +52,7 @@ def diff_files(first, second, title_a, title_b, use_html):
         path_a = first[index]
         path_b = second[index]
 
-        file_name = os.path.splitext(os.path.basename(path_a))[0]
-
-        diff_name = f"{file_name} - {title_a} against {title_b}"
+        diff_name = get_diff_name(path_a, title_a, title_b)
 
         diff = ""
         if use_html:
