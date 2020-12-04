@@ -10,7 +10,7 @@ from zygrader import class_manager, data, grade_puller, ui, utils
 from zygrader.zybooks import Zybooks
 
 
-def check_student_submissions(zy_api, student_id, lab, search_string):
+def check_student_submissions(zy_api, student_id, lab, search_string, use_regex):
     """Search for a substring in all of a student's submissions for a given lab.
     Supports regular expressions.
     """
@@ -37,9 +37,11 @@ def check_student_submissions(zy_api, student_id, lab, search_string):
         extracted_zip_files = utils.extract_zip(zip_file)
 
         # Check each file for the matched string
-        pattern = re.compile(fr'{search_string}')
+        if use_regex:
+            pattern = re.compile(fr'{search_string}')
         for source_file in extracted_zip_files.keys():
-            if pattern.search(extracted_zip_files[source_file]):
+            if ((use_regex and pattern.search(extracted_zip_files[source_file]))
+                 or ((not use_regex) and extracted_zip_files[source_file].find(search_string) != -1)):
 
                 # Get the date and time of the submission and return it
                 response["time"] = zy_api.get_time_string(submission)
@@ -50,7 +52,7 @@ def check_student_submissions(zy_api, student_id, lab, search_string):
     return response
 
 
-def submission_search_fn(logger, lab, search_string, output_path):
+def submission_search_fn(logger, lab, search_string, output_path, use_regex):
     students = data.get_students()
     zy_api = Zybooks()
 
@@ -63,7 +65,7 @@ def submission_search_fn(logger, lab, search_string, output_path):
                 logger.log(f"{counter:12} Checking {student.full_name}")
 
                 match_result = check_student_submissions(
-                    zy_api, str(student.id), lab, search_string)
+                    zy_api, str(student.id), lab, search_string, use_regex)
 
                 if match_result["code"] == Zybooks.DOWNLOAD_TIMEOUT:
                     logger.log(
@@ -118,6 +120,13 @@ def submission_search_init():
     else:
         part = assignment.parts[0]
 
+    regex_input = ui.layers.BoolPopup("Use Regex")
+    regex_input.set_message(["Would you like to use regex?"])
+    window.run_layer(regex_input)
+    if regex_input.was_canceled():
+        return
+    use_regex = regex_input.get_result()
+
     text_input = ui.layers.TextInputLayer("Search String")
     text_input.set_prompt(["Enter a search string"])
     window.run_layer(text_input, "Submissions Search")
@@ -136,7 +145,7 @@ def submission_search_init():
 
     logger = ui.layers.LoggerLayer()
     logger.set_log_fn(lambda: submission_search_fn(
-        logger, part, search_string, filename_input.get_path()))
+        logger, part, search_string, filename_input.get_path(), use_regex))
     window.run_layer(logger, "Submission Search")
 
 
