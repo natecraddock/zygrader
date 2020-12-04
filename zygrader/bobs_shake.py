@@ -34,13 +34,13 @@ class GradingStatsWorker:
             """This isn't working for some reason. 
             Maybe has to do with accessing out of range -GK"""
 
-
             """this is me debugging whether it gets these attributs. It successfully gets time_stamp"""
             time_stamp = row[0]
             debug_output = open("bobsOutput.txt", 'a')
             print(time_stamp, file=debug_output)
             debug_output.close()
             event_type = row[1]
+
             '''student_name = row[2]
             lab_name = row[3]
             ta_netid = row[4]
