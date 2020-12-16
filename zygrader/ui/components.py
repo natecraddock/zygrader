@@ -847,9 +847,6 @@ class FilteredList(ScrollableList):
     def draw(self):
         self.window.erase()
 
-        if len(self._display_lines) == 1:
-            self._selected_index = 1
-
         # Draw the list lines
         # TODO: Can we avoid slicing here?
         visible_lines = self._display_lines[self._scroll:self._scroll +
