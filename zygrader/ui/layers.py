@@ -46,8 +46,8 @@ class ComponentLayer:
         self.is_text_input = False
 
         # Does the component take text input that can be cleared on redraw?
-        self._is_clearable = False
-        self._canceled = False
+        self.is_clearable = False
+        self.canceled = False
 
         # Flags to control rebuilding and redrawing in the event loop.
         # Always build on first creation.
@@ -83,12 +83,6 @@ class ComponentLayer:
     def set_destroy_fn(self, destroy_fn):
         self.on_destroy_fn = destroy_fn
 
-    def was_canceled(self) -> bool:
-        return self._canceled
-
-    def is_clearable(self) -> bool:
-        return self._is_clearable
-
     def clear_search_text(self) -> bool:
         raise NotImplementedError
 
@@ -110,7 +104,7 @@ class Popup(ComponentLayer, PopupLayer):
         if event.type == Event.ENTER:
             event_manager.push_layer_close_event()
         elif event.type == Event.ESC and event_manager.use_esc_back:
-            self._canceled = True
+            self.canceled = True
             event_manager.push_layer_close_event()
 
     def set_message(self, message):
@@ -177,11 +171,11 @@ class OptionsPopup(ComponentLayer, PopupLayer):
             self.component.last()
         elif event.type == Event.ESC and event_manager.use_esc_back:
             event_manager.push_layer_close_event()
-            self._canceled = True
+            self.canceled = True
         elif event.type == Event.ENTER:
             key = self.component.selected()
             if key == "Close":
-                self._canceled = True
+                self.canceled = True
                 event_manager.push_layer_close_event()
             elif self.options[key] is not None:
                 self.options[key]()
@@ -210,7 +204,7 @@ class WaitPopup(ComponentLayer, PopupLayer):
         if event.type in {Event.ENTER, Event.ESC}:
             # Cancel was selected
             event_manager.push_layer_close_event()
-            self._canceled = True
+            self.canceled = True
 
     def set_message(self, message):
         self.component.set_message(message)
@@ -270,7 +264,7 @@ class TextInputLayer(ComponentLayer, PopupLayer):
             self.component.down(shift_pressed=True)
         elif event.type == Event.ESC:  # Always allow exiting from text input with ESC
             event_manager.push_layer_close_event()
-            self._canceled = True
+            self.canceled = True
         elif event.type == Event.HOME:
             self.component.cursor_to_beginning()
         elif event.type == Event.END:
@@ -382,7 +376,7 @@ class DatetimeSpinner(ComponentLayer):
             self.component.addchar(event.value)
         elif event.type == Event.ESC and event_manager.use_esc_back:
             event_manager.push_layer_close_event()
-            self._canceled = True
+            self.canceled = True
         elif event.type == Event.ENTER and self.component.is_confirmed():
             event_manager.push_layer_close_event()
 
@@ -566,7 +560,7 @@ class ListLayer(ComponentLayer, PopupLayer):
     """A reusable list that supports searching the options."""
     def __init__(self, title="", popup=False):
         ComponentLayer.__init__(self)
-        self._is_clearable = True
+        self.is_clearable = True
 
         self.__rows = Row(_type=Row.HOLDER)
         self._paged = False
@@ -642,13 +636,13 @@ class ListLayer(ComponentLayer, PopupLayer):
             self.component.to_bottom()
         elif event.type == Event.LEFT and event_manager.left_right_menu_nav:
             event_manager.push_layer_close_event()
-            self._canceled = True
+            self.canceled = True
         elif event.type == Event.BACKSPACE:
             self.component.delchar()
             self.rebuild = True
         elif event.type == Event.ESC and event_manager.use_esc_back:
             event_manager.push_layer_close_event()
-            self._canceled = True
+            self.canceled = True
         elif event.type == Event.CHAR_INPUT:
             self.component.addchar(event.value)
             self.rebuild = True
@@ -657,7 +651,7 @@ class ListLayer(ComponentLayer, PopupLayer):
             (event.type == Event.RIGHT and event_manager.left_right_menu_nav)):
             if self.component.is_close_selected():
                 event_manager.push_layer_close_event()
-                self._canceled = True
+                self.canceled = True
             else:
                 self.select_row(self.component.get_selected_index())
             self.rebuild = True

@@ -121,7 +121,7 @@ def pick_submission(submission_popup: ui.layers.OptionsPopup,
     for sub in all_submissions:
         popup.add_row_text(sub)
     window.run_layer(popup)
-    if popup.was_canceled():
+    if popup.canceled:
         return
 
     submission_index = popup.selected_index()
@@ -247,7 +247,7 @@ def grade_pair_programming(first_submission, use_locks):
     fill_student_list(student_list, students, lab, use_locks)
     window.run_layer(student_list)
 
-    if student_list.was_canceled():
+    if student_list.canceled:
         return
 
     # Get student
@@ -299,7 +299,7 @@ def flag_submission(lab, student):
     text_input = ui.layers.TextInputLayer("Flag Note")
     text_input.set_prompt(["Enter a flag note"])
     window.run_layer(text_input)
-    if text_input.was_canceled():
+    if text_input.canceled:
         return
 
     data.flags.flag_submission(student, lab, text_input.get_text())

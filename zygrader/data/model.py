@@ -386,7 +386,7 @@ class Submission(Iterable):
         for part in part_names:
             popup.add_row_text(part)
         window.run_layer(popup)
-        if popup.was_canceled():
+        if popup.canceled:
             return None
 
         if pick_all:

@@ -89,7 +89,7 @@ def filename_input(purpose, text=""):
         [f"Enter the path and filename for {purpose} [~ is supported]"])
     path_input.set_text(text)
     window.run_layer(path_input)
-    if path_input.was_canceled():
+    if path_input.canceled:
         return None
 
     return path_input.get_path()

@@ -33,7 +33,7 @@ def authenticate(window: ui.Window, zy_api: Zybooks, email, password):
     popup.set_wait_fn(wait_fn)
     window.run_layer(popup)
 
-    if popup.was_canceled():
+    if popup.canceled:
         return False
 
     authenticated = popup.get_result()
@@ -52,7 +52,7 @@ def get_password(window: ui.Window):
     text_input.set_prompt(["Enter your zyBooks password"])
     window.run_layer(text_input, "Sign In")
 
-    if text_input.was_canceled():
+    if text_input.canceled:
         return False
 
     return text_input.get_text()
@@ -68,7 +68,7 @@ def create_account(window: ui.Window, zy_api):
         text_input.set_prompt(["Enter your zyBooks email"])
         window.run_layer(text_input, "Sign In")
 
-        if text_input.was_canceled():
+        if text_input.canceled:
             return False
 
         email = text_input.get_text()
@@ -184,7 +184,7 @@ def set_default_output_directory(row: ui.layers.Row):
     directory.set_prompt(["Specify the default directory for output files."])
     directory.set_text(preferences.get("output_dir"))
     window.run_layer(directory)
-    if directory.was_canceled():
+    if directory.canceled:
         return
 
     # Use get_text() instead of get_path() here so we can store ~

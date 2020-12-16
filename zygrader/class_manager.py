@@ -41,7 +41,7 @@ def setup_new_class():
     text_input = ui.layers.TextInputLayer("Class Code")
     text_input.set_prompt(["Enter class code"])
     window.run_layer(text_input)
-    if text_input.was_canceled():
+    if text_input.canceled:
         return
 
     # Check if class code is valid
@@ -76,7 +76,7 @@ def add_lab():
     text_input = ui.layers.TextInputLayer("Lab Name")
     text_input.set_prompt(["Enter the Lab Name"])
     window.run_layer(text_input)
-    if text_input.was_canceled():
+    if text_input.canceled:
         return
 
     lab_name = text_input.get_text()
@@ -141,7 +141,7 @@ def set_due_date(lab, row: ui.layers.Row):
     if old_date:
         date_spinner.set_initial_time(old_date)
     window.run_layer(date_spinner)
-    if date_spinner.was_canceled():
+    if date_spinner.canceled:
         return
 
     due_date = date_spinner.get_time()
@@ -167,7 +167,7 @@ def rename_lab(lab_list: ui.layers.ListLayer, lab):
     text_input.set_prompt(["Enter Lab's new name"])
     text_input.set_text(lab.name)
     window.run_layer(text_input)
-    if not text_input.was_canceled():
+    if not text_input.canceled:
         lab.name = text_input.get_text()
         data.write_labs(labs)
         fill_lab_list(lab_list, labs)
@@ -284,7 +284,7 @@ def get_class_section(old_section: data.model.ClassSection = None):
     text_input.set_prompt(["Enter the new section number for this section"])
     text_input.set_text(init_text)
     window.run_layer(text_input)
-    if text_input.was_canceled():
+    if text_input.canceled:
         return None
 
     # FIXME: This assumes the int parses correctly
@@ -322,7 +322,7 @@ def remove_class_section():
     for section in class_sections:
         popup.add_row_text(str(section))
     window.run_layer(popup)
-    if popup.was_canceled():
+    if popup.canceled:
         return
 
     selected_section = popup.selected_index()
@@ -411,7 +411,7 @@ def change_class():
     for code in class_codes:
         popup.add_row_text(code)
     window.run_layer(popup)
-    if popup.was_canceled():
+    if popup.canceled:
         return
 
     code_index = popup.selected_index()

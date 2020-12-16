@@ -102,7 +102,7 @@ def submission_search_init():
     for lab in labs:
         menu.add_row_text(str(lab))
     window.run_layer(menu, "Submissions Search")
-    if menu.was_canceled():
+    if menu.canceled:
         return
 
     assignment = labs[menu.selected_index()]
@@ -113,7 +113,7 @@ def submission_search_init():
         for part in assignment.parts:
             popup.add_row_text(part["name"])
         window.run_layer(popup, "Submissions Search")
-        if popup.was_canceled():
+        if popup.canceled:
             return
 
         part = assignment.parts[popup.selected_index()]
@@ -123,14 +123,14 @@ def submission_search_init():
     regex_input = ui.layers.BoolPopup("Use Regex")
     regex_input.set_message(["Would you like to use regex?"])
     window.run_layer(regex_input)
-    if regex_input.was_canceled():
+    if regex_input.canceled:
         return
     use_regex = regex_input.get_result()
 
     text_input = ui.layers.TextInputLayer("Search String")
     text_input.set_prompt(["Enter a search string"])
     window.run_layer(text_input, "Submissions Search")
-    if text_input.was_canceled():
+    if text_input.canceled:
         return
 
     search_string = text_input.get_text()
@@ -140,7 +140,7 @@ def submission_search_init():
     filename_input.set_prompt(["Enter the filename to save the search results"])
     filename_input.set_text(preferences.get("output_dir"))
     window.run_layer(filename_input, "Submissions Search")
-    if filename_input.was_canceled():
+    if filename_input.canceled:
         return
 
     logger = ui.layers.LoggerLayer()
@@ -176,7 +176,7 @@ def remove_locks():
 
     selected_locks = [lock for lock in all_locks if all_locks[lock]]
 
-    if not selected_locks or popup.was_canceled():
+    if not selected_locks or popup.canceled:
         return
 
     # Confirm
@@ -184,7 +184,7 @@ def remove_locks():
     popup.set_message(
         [f"Are you sure you want to remove {len(selected_locks)} lock(s)?"])
     window.run_layer(popup)
-    if not popup.get_result() or popup.was_canceled():
+    if not popup.get_result() or popup.canceled:
         return
 
     # Remove selected locked content

@@ -106,7 +106,7 @@ class GradePuller:
             assignment_list.add_row_text(assignment)
         self.window.run_layer(assignment_list)
 
-        if assignment_list.was_canceled():
+        if assignment_list.canceled:
             raise GradePuller.StoppingException()
         return real_assignments[assignment_list.selected_index()]
 
