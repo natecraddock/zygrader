@@ -1,6 +1,7 @@
 """Admin: Functions for more "administrator" users of zygrader to manage
 the class, scan through student submissions, and access to other menus"""
 import time
+from zygrader.ui import window
 from zygrader.config import preferences
 
 import requests
@@ -10,7 +11,7 @@ from zygrader import class_manager, data, grade_puller, ui, utils
 from zygrader.zybooks import Zybooks
 
 
-def check_student_submissions(zy_api, student_id, lab, search_string, use_regex):
+def check_student_submissions(zy_api, student_id, lab, search_pattern):
     """Search for a substring in all of a student's submissions for a given lab.
     Supports regular expressions.
     """
@@ -37,11 +38,8 @@ def check_student_submissions(zy_api, student_id, lab, search_string, use_regex)
         extracted_zip_files = utils.extract_zip(zip_file)
 
         # Check each file for the matched string
-        if use_regex:
-            pattern = re.compile(fr'{search_string}')
         for source_file in extracted_zip_files.keys():
-            if ((use_regex and pattern.search(extracted_zip_files[source_file]))
-                 or ((not use_regex) and extracted_zip_files[source_file].find(search_string) != -1)):
+            if search_pattern.search(extracted_zip_files[source_file]):
 
                 # Get the date and time of the submission and return it
                 response["time"] = zy_api.get_time_string(submission)
@@ -56,6 +54,9 @@ def submission_search_fn(logger, lab, search_string, output_path, use_regex):
     students = data.get_students()
     zy_api = Zybooks()
 
+    regex_str = search_string if use_regex else re.escape(search_string)
+    search_pattern = re.compile(regex_str)
+
     with open(output_path, "w") as log_file:
         student_num = 1
 
@@ -65,7 +66,7 @@ def submission_search_fn(logger, lab, search_string, output_path, use_regex):
                 logger.log(f"{counter:12} Checking {student.full_name}")
 
                 match_result = check_student_submissions(
-                    zy_api, str(student.id), lab, search_string, use_regex)
+                    zy_api, str(student.id), lab, search_pattern)
 
                 if match_result["code"] == Zybooks.DOWNLOAD_TIMEOUT:
                     logger.log(
