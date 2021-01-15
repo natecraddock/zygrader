@@ -316,6 +316,20 @@ class PathInputLayer(TextInputLayer):
             prompt += [f"[Invalid {TYPE_STR}]"]
         self.component.set_message(prompt)
 
+    def __autocomplete(self):
+        path = os.path.expanduser(self.component.text)
+        directory, partial_name = os.path.split(path)
+        possible_names = [
+            name for name in os.listdir(directory)
+            if name.startswith(partial_name)
+        ]
+        completion = os.path.commonprefix(possible_names)
+        missing_chars = completion[len(partial_name):]
+        for c in missing_chars:
+            self.component.addchar(c)
+        if completion and os.path.isdir(os.path.join(directory, completion)):
+            self.component.addchar(os.sep)
+
     def event_handler(self, event: Event, event_manager: EventManager):
         # Validate input on text changes
         if event.type in {Event.CHAR_INPUT, Event.BACKSPACE, Event.DELETE}:
@@ -324,6 +338,10 @@ class PathInputLayer(TextInputLayer):
         # Invalid text cannot be used; nullify event
         elif event.type == Event.ENTER and not self._valid:
             event.type = Event.NONE
+        # Use tab to autocomplete
+        elif event.type == Event.TAB:
+            self.__autocomplete()
+            self.rebuild = True
         else:
             # Handle all other events similar to text input
             super().event_handler(event, event_manager)
