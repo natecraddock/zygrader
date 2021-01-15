@@ -4,6 +4,7 @@ import time
 from zygrader.ui import window
 from zygrader.config import preferences
 
+import csv
 import requests
 import re
 
@@ -57,7 +58,13 @@ def submission_search_fn(logger, lab, search_string, output_path, use_regex):
     regex_str = search_string if use_regex else re.escape(search_string)
     search_pattern = re.compile(regex_str)
 
-    with open(output_path, "w") as log_file:
+    with open(output_path, "w", newline="") as log_file:
+        csv_log = csv.DictWriter(log_file,
+                                 fieldnames=[
+                                     "Name", "Submission",
+                                     f"(Searching for {search_string})"
+                                 ])
+        csv_log.writeheader()
         student_num = 1
 
         for student in students:
@@ -72,23 +79,24 @@ def submission_search_fn(logger, lab, search_string, output_path, use_regex):
                     logger.log(
                         "Download timed out... trying again after a few seconds"
                     )
-                    log_file.write(
-                        "Download timed out... trying again after a few seconds\n"
-                    )
                     time.sleep(5)
                 else:
                     break
 
             if match_result["code"] == Zybooks.NO_ERROR:
-                log_file.write(
-                    f"{student.full_name} matched {match_result['time']}\n")
+                csv_log.writerow({
+                    "Name": student.full_name,
+                    "Submission": match_result['time']
+                })
 
                 logger.append(f" found {search_string}")
 
             # Check for and log errors
             if "error" in match_result:
-                log_file.write(
-                    f"ERROR on {student.full_name}: {match_result['error']}\n")
+                csv_log.writerow({
+                    "Name": student.full_name,
+                    "Submission": f"ERROR: {match_result['error']}"
+                })
 
             student_num += 1
 
