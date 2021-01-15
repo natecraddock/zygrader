@@ -31,7 +31,7 @@ class Zybooks:
     def __init__(self):
         Zybooks.session = requests.session()
 
-    def authenticate(self, username, password):
+    def authenticate(self, username: str, password: str):
         """Authenticate a user to zyBooks"""
         auth_url = "https://zyserver.zybooks.com/v1/signin"
         payload = {"email": username, "password": password}
@@ -71,7 +71,7 @@ class Zybooks:
 
         return r.json()["ordering"]["content_ordering"]["chapters"]
 
-    def get_completion_report(self, due_time, zybook_sections):
+    def get_completion_report(self, due_time: datetime, zybook_sections):
         """Download a completion report for the whole class
 
         Previous versions of this software allowed for downloading completion by class section,
@@ -134,7 +134,7 @@ class Zybooks:
 
         return response
 
-    def check_valid_class(self, code):
+    def check_valid_class(self, code: str) -> bool:
         """Return a boolean indicating if the zybooks class code is valid
 
         The class code is of the format: BYUCS142Winter2020
@@ -148,17 +148,17 @@ class Zybooks:
 
         return False
 
-    def __get_time(self, submission):
+    def __get_time(self, submission: dict) -> datetime:
         time = submission["date_submitted"]
         date = datetime.strptime(time, "%Y-%m-%dT%H:%M:%SZ")
         date = date.replace(tzinfo=timezone.utc).astimezone(tz=None)
         return date
 
-    def get_time_string(self, submission):
+    def get_time_string(self, submission: dict) -> str:
         time = self.__get_time(submission)
         return time.strftime("%I:%M %p - %m-%d-%Y")
 
-    def _get_score(self, submission):
+    def _get_score(self, submission: dict) -> int:
         if "compile_error" in submission["results"]:
             return 0
 
@@ -172,7 +172,7 @@ class Zybooks:
 
         return score
 
-    def _get_max_score(self, submission):
+    def _get_max_score(self, submission: dict) -> int:
         if submission["error"]:
             return 0
 
@@ -196,7 +196,7 @@ class Zybooks:
 
         return r.json()["submissions"]
 
-    def get_submissions_list(self, part_id, user_id):
+    def get_submissions_list(self, part_id, user_id) -> list:
         submissions = self.get_all_submissions(part_id, user_id)
         if not submissions:
             return []
@@ -206,7 +206,8 @@ class Zybooks:
             for s in submissions
         ]
 
-    def __remove_late_submissions(self, submissions, due_time):
+    def __remove_late_submissions(self, submissions: list,
+                                  due_time: datetime) -> list:
         for submission in submissions[:]:
             submission_time = self.__get_time(submission)
 
@@ -215,13 +216,14 @@ class Zybooks:
 
         return submissions
 
-    def __get_submission_highest_score(self, submissions):
+    def __get_submission_highest_score(self, submissions) -> dict:
         return max(reversed(submissions), key=self._get_score)  # Thanks Teikn
 
-    def __get_submission_most_recent(self, submissions):
+    def __get_submission_most_recent(self, submissions) -> dict:
         return submissions[-1]
 
-    def download_submission(self, part_id, user_id, options, submission_index):
+    def download_submission(self, part_id, user_id, options,
+                            submission_index: int) -> dict:
         """Used for grading. Download a single submission and return information for grading.
         This is used together with self.download_assignment, as some labs have multiple submission "parts"
         (such as midterms)
@@ -273,7 +275,7 @@ class Zybooks:
                                  assignment,
                                  user_id,
                                  part,
-                                 submission_index=None):
+                                 submission_index=None) -> dict:
         response_part = {
             "code": Zybooks.NO_ERROR,
             "name": part["name"],
@@ -296,7 +298,7 @@ class Zybooks:
 
         return response_part
 
-    def download_assignment(self, student, assignment):
+    def download_assignment(self, student, assignment) -> dict:
         """Get information from a student's assignment
 
         An assignment can have multiple submissions within it (midterms...)
