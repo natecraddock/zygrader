@@ -59,11 +59,12 @@ def submission_search_fn(logger, lab, search_string, output_path, use_regex):
     search_pattern = re.compile(regex_str)
 
     with open(output_path, "w", newline="") as log_file:
-        csv_log = csv.DictWriter(log_file,
-                                 fieldnames=[
-                                     "Name", "Submission",
-                                     f"(Searching for {search_string})"
-                                 ])
+        csv_log = csv.DictWriter(
+            log_file,
+            fieldnames=[
+                "Name", "Submission",
+                f"(Searching for {search_string}){' as a regex' if use_regex else ''}"
+            ])
         csv_log.writeheader()
         student_num = 1
 
