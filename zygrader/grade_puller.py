@@ -122,32 +122,62 @@ class GradePuller:
             super().__init__()
             self.__index = index
             self.__data = data
-            self.get()
 
-        def get(self):
-            self._toggled = self.__data[self.__index]
+        def is_toggled(self):
+            return self.__data[self.__index]
 
         def toggle(self):
-            self.__data[self.__index] = not self.__data[self.__index]
-            self.get()
+            self.__data[self.__index] = not self.is_toggled()
+
+    class _SectionGroupLeadToggle(ui.layers.Toggle):
+        def __init__(self, index, data):
+            super().__init__()
+            self.__index = index
+            self.__data = data
+
+        def is_toggled(self):
+            return all([
+                selected for (i, _), selected in self.__data.items()
+                if i == self.__index
+            ])
+
+        def toggle(self):
+            new_value = not self.is_toggled()
+            for (i, j) in self.__data:
+                if i == self.__index:
+                    self.__data[(i, j)] = new_value
 
     def select_class_sections(self):
-        sections_list = [
-            section.section_number for section in data.get_class_sections()
-        ]
+        sections = data.get_class_sections()
+        section_groups = [(group_name, [
+            section.section_number for section in sections
+            if section.section_group == group_name
+        ]) for group_name in sorted(
+            {section.section_group
+             for section in sections})]
 
-        selected = [True] * len(sections_list)
+        selections = {(i, j): False
+                      for i, (_, group_list) in enumerate(section_groups)
+                      for j, _ in enumerate(group_list)}
 
         popup = ui.layers.ListLayer("Select Class Sections", popup=True)
         popup.set_exit_text("Done")
-        for i, section in enumerate(sections_list):
-            popup.add_row_toggle(str(section),
-                                 GradePuller._SectionToggle(i, selected))
+        for i, (group_name, group_sections) in enumerate(section_groups):
+            row = popup.add_row_parent(group_name)
+            row.add_row_toggle(
+                "(All)", GradePuller._SectionGroupLeadToggle(i, selections))
+            for j, section in enumerate(group_sections):
+                row.add_row_toggle(
+                    str(section), GradePuller._SectionToggle((i, j),
+                                                             selections))
         self.window.run_layer(popup)
 
-        if not any(selected):
+        if not any(selections.values()):
             raise GradePuller.StoppingException()
-        return [el for el, selected in zip(sections_list, selected) if selected]
+        return [
+            section_groups[i][1][j] for (i, j), selected in selections.items()
+            if selected
+        ]
 
     def select_due_times(self, class_sections):
         now = datetime.datetime.now()

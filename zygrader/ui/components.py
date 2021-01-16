@@ -296,6 +296,9 @@ class DatetimeSpinner(Popup):
         self.quickpicks = sorted(quickpicks)
 
     def set_time(self, time):
+        # Some methods expect the time to be a datetime.datetime
+        if isinstance(time, datetime.time):
+            time = datetime.datetime.combine(datetime.datetime.today(), time)
         self.time = time
 
     def set_optional(self, optional):

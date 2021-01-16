@@ -276,13 +276,10 @@ def edit_labs():
 def get_class_section(old_section: data.model.ClassSection = None):
     window = ui.get_window()
 
-    init_text = ""
-    if old_section:
-        init_text = str(old_section.section_number)
-
     text_input = ui.layers.TextInputLayer("Section Number")
     text_input.set_prompt(["Enter the new section number for this section"])
-    text_input.set_text(init_text)
+    if old_section:
+        text_input.set_text(str(old_section.section_number))
     window.run_layer(text_input)
     if text_input.canceled:
         return None
@@ -293,13 +290,26 @@ def get_class_section(old_section: data.model.ClassSection = None):
     date_spinner = ui.layers.DatetimeSpinner("Section Default Due Time")
     date_spinner.set_quickpicks([(50, 0), (59, 59), (0, 0)])
     date_spinner.set_include_date(False)
+    if old_section:
+        date_spinner.set_initial_time(old_section.default_due_time)
     window.run_layer(date_spinner)
 
     default_due_time = date_spinner.get_time()
     if default_due_time == ui.GO_BACK:
         return None
 
-    return data.model.ClassSection(section_num, default_due_time)
+    text_input = ui.layers.TextInputLayer("Section Group")
+    text_input.set_prompt(
+        ["Enter the name of the new section group for this section"])
+    if old_section:
+        text_input.set_text(old_section.section_group)
+    window.run_layer(text_input)
+    if text_input.canceled:
+        return None
+
+    section_group = text_input.get_text()
+
+    return data.model.ClassSection(section_num, default_due_time, section_group)
 
 
 def add_class_section():
