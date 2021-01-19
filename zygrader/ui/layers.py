@@ -319,6 +319,8 @@ class PathInputLayer(TextInputLayer):
     def __autocomplete(self):
         path = os.path.expanduser(self.component.text)
         directory, partial_name = os.path.split(path)
+        if not os.path.exists(directory):
+            return
         possible_names = [
             name for name in os.listdir(directory)
             if name.startswith(partial_name)
