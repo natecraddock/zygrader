@@ -1,8 +1,10 @@
 """Admin: Functions for more "administrator" users of zygrader to manage
 the class, scan through student submissions, and access to other menus"""
 import time
+from zygrader.ui import window
 from zygrader.config import preferences
 
+import csv
 import requests
 import re
 
@@ -10,7 +12,7 @@ from zygrader import class_manager, data, grade_puller, ui, utils
 from zygrader.zybooks import Zybooks
 
 
-def check_student_submissions(zy_api, student_id, lab, search_string, use_regex):
+def check_student_submissions(zy_api, student_id, lab, search_pattern):
     """Search for a substring in all of a student's submissions for a given lab.
     Supports regular expressions.
     """
@@ -37,11 +39,8 @@ def check_student_submissions(zy_api, student_id, lab, search_string, use_regex)
         extracted_zip_files = utils.extract_zip(zip_file)
 
         # Check each file for the matched string
-        if use_regex:
-            pattern = re.compile(fr'{search_string}')
         for source_file in extracted_zip_files.keys():
-            if ((use_regex and pattern.search(extracted_zip_files[source_file]))
-                 or ((not use_regex) and extracted_zip_files[source_file].find(search_string) != -1)):
+            if search_pattern.search(extracted_zip_files[source_file]):
 
                 # Get the date and time of the submission and return it
                 response["time"] = zy_api.get_time_string(submission)
@@ -56,7 +55,17 @@ def submission_search_fn(logger, lab, search_string, output_path, use_regex):
     students = data.get_students()
     zy_api = Zybooks()
 
-    with open(output_path, "w") as log_file:
+    regex_str = search_string if use_regex else re.escape(search_string)
+    search_pattern = re.compile(regex_str)
+
+    with open(output_path, "w", newline="") as log_file:
+        csv_log = csv.DictWriter(
+            log_file,
+            fieldnames=[
+                "Name", "Submission",
+                f"(Searching for {search_string}){' as a regex' if use_regex else ''}"
+            ])
+        csv_log.writeheader()
         student_num = 1
 
         for student in students:
@@ -65,29 +74,30 @@ def submission_search_fn(logger, lab, search_string, output_path, use_regex):
                 logger.log(f"{counter:12} Checking {student.full_name}")
 
                 match_result = check_student_submissions(
-                    zy_api, str(student.id), lab, search_string, use_regex)
+                    zy_api, str(student.id), lab, search_pattern)
 
                 if match_result["code"] == Zybooks.DOWNLOAD_TIMEOUT:
                     logger.log(
                         "Download timed out... trying again after a few seconds"
-                    )
-                    log_file.write(
-                        "Download timed out... trying again after a few seconds\n"
                     )
                     time.sleep(5)
                 else:
                     break
 
             if match_result["code"] == Zybooks.NO_ERROR:
-                log_file.write(
-                    f"{student.full_name} matched {match_result['time']}\n")
+                csv_log.writerow({
+                    "Name": student.full_name,
+                    "Submission": match_result['time']
+                })
 
                 logger.append(f" found {search_string}")
 
             # Check for and log errors
             if "error" in match_result:
-                log_file.write(
-                    f"ERROR on {student.full_name}: {match_result['error']}\n")
+                csv_log.writerow({
+                    "Name": student.full_name,
+                    "Submission": f"ERROR: {match_result['error']}"
+                })
 
             student_num += 1
 

@@ -97,7 +97,7 @@ class ClassSection:
 
     max_section_num = 0
 
-    def __init__(self, section_number, default_due_time):
+    def __init__(self, section_number, default_due_time, section_group=None):
         self.section_number = section_number
         if section_number > ClassSection.max_section_num:
             ClassSection.max_section_num = section_number
@@ -108,16 +108,23 @@ class ClassSection:
             raise TypeError()
         self.default_due_time = default_due_time
 
+        if section_group is None:
+            section_group = "Default Section Group"
+        self.section_group = section_group
+
     def copy(self, other):
         self.section_number = other.section_number
         self.default_due_time = other.default_due_time
+        self.section_group = other.section_group
 
     def __str__(self):
         time_str = self.default_due_time.strftime(
             ClassSection.DUE_TIME_DISPLAY_FORMAT)
         section_padding = len(str(ClassSection.max_section_num))
         section_str = f"{self.section_number:>{section_padding}}"
-        return f"Section {section_str} - Default Due Time: {time_str}"
+        return (f"Section {section_str} - "
+                f"Default Due Time: {time_str} - "
+                f"Group: {self.section_group}")
 
     @classmethod
     def from_json(cls, section_json):
@@ -126,14 +133,17 @@ class ClassSection:
         default_due_time = (datetime.datetime.strptime(
             default_due_time_str,
             ClassSection.DUE_TIME_STORAGE_FORMAT).astimezone(tz=None).time())
-        return ClassSection(section_number, default_due_time)
+        # Section Groups were added later, so do a safer get to avoid KeyError
+        section_group = section_json.get("section_group")
+        return ClassSection(section_number, default_due_time, section_group)
 
     def to_json(self):
         time_str = self.default_due_time.strftime(
             ClassSection.DUE_TIME_STORAGE_FORMAT)
         return {
             "section_number": self.section_number,
-            "default_due_time": time_str
+            "default_due_time": time_str,
+            "section_group": self.section_group
         }
 
 
