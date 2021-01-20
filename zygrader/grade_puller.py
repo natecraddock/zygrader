@@ -104,6 +104,7 @@ class GradePuller:
         # TODO: Cleanup setting rows from lists
         for assignment in real_assignments:
             assignment_list.add_row_text(assignment)
+        assignment_list.set_searchable("Assignment Name")
         self.window.run_layer(assignment_list)
 
         if assignment_list.canceled:
