@@ -1,5 +1,11 @@
 # Try to keep lines shorter than 70 characters
 
+5.3.0
+* Section Groups!
+  * Makes grade pulling much easier
+* Reformatted submission search output
+* Tab autocomplete in filepath entry
+
 5.2.0
 * New Features
   * Pick all latest submissions option.
@@ -283,4 +289,3 @@
 1.1
 * Labels were added to the text search filter boxes
 * to prompt for a filter string
-

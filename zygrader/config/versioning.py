@@ -138,7 +138,7 @@ def show_versioning_message(window: ui.Window):
     # Add a version string for this array for each version that will show an update popup
     update_versions = [
         "4.0.0", "4.1.0", "4.2.0", "4.7.1", "4.8.8", "4.9.0", "5.0.0", "5.1.0",
-        "5.2.0"
+        "5.2.0", "5.3.0"
     ]
 
     updated = False
