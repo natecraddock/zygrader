@@ -516,12 +516,15 @@ class GradePuller:
             mapping = GradePuller.StudentMapping(self.canvas_students,
                                                  zybooks_students)
 
-            unmatched_canvas_students = [
-                self.canvas_students[id] for id in mapping.unmatched_canvas_ids
-            ]
-            unmatched_zybook_students = [
-                zybooks_students[id] for id in mapping.unmatched_zybook_ids
-            ]
+            unmatched_canvas_students = sorted(
+                [
+                    self.canvas_students[id]
+                    for id in mapping.unmatched_canvas_ids
+                ],
+                key=lambda student: student['Student'].lower())
+            unmatched_zybook_students = sorted(
+                [zybooks_students[id] for id in mapping.unmatched_zybook_ids],
+                key=lambda student: student['Last name'].lower())
 
             num_id_columns = GradePuller.NUM_CANVAS_ID_COLUMNS
             canvas_report_headers = self.canvas_header[:num_id_columns]
