@@ -1,5 +1,6 @@
 """Lock files are created to prevent multiple people from grading an assignment simultaneously."""
 
+import csv
 import datetime
 import getpass
 import os
@@ -35,9 +36,11 @@ def log(name, lab, event_type, lock="LOCK"):
     # Get timestamp
     timestamp = datetime.datetime.now().isoformat()
 
-    line = f"{timestamp},{event_type},{name},{lab},{getpass.getuser()},{lock}\n"
-    with open(lock_log, "a") as _log:
-        _log.write(line)
+    with open(lock_log, "a", newline='') as _log:
+        # Use csv to properly write names with commas in them
+        csv.writer(_log).writerow(
+            [timestamp, event_type, name, lab,
+             getpass.getuser(), lock])
 
     logger.log(f"{name},{lab},{lock},{event_type}")
 
