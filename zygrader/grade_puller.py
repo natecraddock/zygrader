@@ -223,27 +223,21 @@ class GradePuller:
 
             # For convenience, allow the day or datetime to be carried across
             # all sections so that selecting due times is easier
-            # but only if the first section was just edited
-            if selected_index != 0 or len(class_sections) <= 1:
+            if len(class_sections) <= 1:
                 return
 
-            msg = DisplayStr("Set all sections to this due date [u:and time]?")
-            popup = ui.layers.BoolPopup("Set Due Time")
-            popup.set_message([msg])
+            msg = ["Set all selected sections to this due date and time?"]
+            popup = ui.layers.OptionsPopup("Copy Date and Time", message=msg)
+            popup.add_option("Date and Time")
+            popup.add_option("Date Only")
+            popup.add_option("Date Only")
             self.window.run_layer(popup)
 
-            if popup.get_result():
+            if popup.get_selected() == "Date and Time":
                 for i, section in enumerate(due_times):
                     due_times[section] = new_datetime
                     update_row_text(new_datetime, i)
-                return
-
-            popup = ui.layers.BoolPopup("Set Due Date")
-            popup.set_message(
-                ["Set all sections to this due date (but retain time)?"])
-            self.window.run_layer(popup)
-
-            if popup.get_result():
+            elif popup.get_selected() == "Date Only":
                 for i, section in enumerate(due_times):
                     old_datetime = due_times[section]
                     due_times[section] = datetime.datetime.combine(
