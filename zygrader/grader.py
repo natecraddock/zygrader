@@ -86,7 +86,7 @@ def pick_submission(submission_popup: ui.layers.OptionsPopup,
         if part_index is -1:
 
             def wait_fn():
-                for i in range(len(lab.parts)):
+                for i, _ in enumerate(lab.parts):
                     part = lab.parts[i]
                     part_submissions = zy_api.get_submissions_list(
                         part["id"], student.id)
