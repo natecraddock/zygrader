@@ -230,7 +230,6 @@ class GradePuller:
             popup = ui.layers.OptionsPopup("Copy Date and Time", message=msg)
             popup.add_option("Date and Time")
             popup.add_option("Date Only")
-            popup.add_option("Date Only")
             self.window.run_layer(popup)
 
             if popup.get_selected() == "Date and Time":
