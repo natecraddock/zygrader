@@ -1,5 +1,14 @@
 # Try to keep lines shorter than 70 characters
 
+5.4.0
+* Add tags to submission flags
+* Grade Puller
+  * Allow searching canvas assignment
+  * Single popup for date/time copy
+  * Changed default filename for csv
+  * Only put relevant students in upload file
+* Sort output of unmatched students
+
 5.3.0
 * Section Groups!
   * Makes grade pulling much easier
