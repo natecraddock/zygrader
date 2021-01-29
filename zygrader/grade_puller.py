@@ -34,6 +34,7 @@ class GradePuller:
         try:
             self.read_canvas_csv()
             self.selected_assignments = set()
+            self.involved_class_sections = set()
 
             more_assignments = True
             while more_assignments:
@@ -79,6 +80,8 @@ class GradePuller:
                     else:
                         bad_id_count += 1
                         row["id_number"] = f"bad_canvas_id_{bad_id_count}"
+                    row["section_number"] = (
+                        self.parse_section_from_canvas_student(row))
                     self.canvas_students[row["id_number"]] = row
         except FileNotFoundError:
             msg = [
@@ -349,21 +352,19 @@ class GradePuller:
 
         for canvas_student_id, zybook_student in mapping.mapping.items():
             canvas_student = self.canvas_students[canvas_student_id]
-            class_section = self.parse_section_from_canvas_student(
-                canvas_student)
-            if class_section in class_sections:
+            if canvas_student["section_number"] in class_sections:
                 grade = zybook_student["grade"]
                 canvas_student[canvas_assignment] = grade
             # else leave canvas grade as it was
         for canvas_student_id in mapping.unmatched_canvas_ids:
             canvas_student = self.canvas_students[canvas_student_id]
-            class_section = self.parse_section_from_canvas_student(
-                canvas_student)
-            if class_section in class_sections:
+            if canvas_student["section_number"] in class_sections:
                 canvas_student[canvas_assignment] = 0.0
             # else leave canvas grade as it was
 
         self.selected_assignments.add(canvas_assignment)
+        self.involved_class_sections = (
+            self.involved_class_sections.union(class_sections))
 
     def parse_section_from_canvas_student(self, student):
         section_str = student["Section"]
@@ -489,7 +490,10 @@ class GradePuller:
                                     extrasaction="ignore")
             writer.writeheader()
             writer.writerow(self.canvas_points_out_of)
-            writer.writerows(self.canvas_students.values())
+            for canvas_student in self.canvas_students.values():
+                if (canvas_student["section_number"]
+                        in self.involved_class_sections):
+                    writer.writerow(canvas_student)
 
     def find_unmatched_students(self):
         try:
