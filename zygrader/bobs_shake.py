@@ -72,13 +72,46 @@ class WorkEvent:
                 f"{f' {self.lab_name}' if self.event_type == 'LAB' else ''}")
 
 
+class EventStreamAnalyzer:
+    def __init__(self):
+        self.total_time = 0
+        self.total_num_openclosed = 0
+        self.num_unique_openclosed = 0
+
+    def analyze(events: typing.List[WorkEvent]):
+        pass
+
+
 class TA:
     def __init__(self, netid):
         self.netid = netid
-        self.events = []
+        self.events: typing.List[WorkEvent] = []
+        self.lab_events: typing.List[WorkEvent] = []
+        self.email_events: typing.List[WorkEvent] = []
 
-    def add_event(self, event):
+    def add_event(self, event: WorkEvent):
         self.events.append(event)
+        if event.event_type == 'LAB':
+            self.lab_events.append(event)
+        elif event.event_type == 'EMAIL':
+            self.email_events.append(event)
+        else:
+            raise ValueError(
+                f"Unknown event type '{event.event_type}' encountered")
+
+    def deduplicate_pairprogrammed_grading(self):
+        pass
+
+    def analyze_all_events(self):
+        self.deduplicate_pairprogrammed_grading()
+
+        self.total_stats = EventStreamAnalyzer()
+        self.lab_stats = EventStreamAnalyzer()
+        self.email_stats = EventStreamAnalyzer()
+
+        self.total_stats.analyze(self.events)
+        self.lab_stats.analyze(self.lab_events)
+        self.email_stats.analyze(self.email_events)
 
 
 class StudentAssignment:
@@ -109,7 +142,7 @@ class StatsWorker:
         debug_output.close()
 
         self.events = []
-        self.tas = dict()
+        self.tas: typing.Dict[str, TA] = dict()
 
     def select_start_time(self):
         self.start_time = select_time("Start Time")
@@ -134,7 +167,7 @@ class StatsWorker:
         with open(file_name, 'r', newline='') as csv_file:
             csv_reader = csv.reader(csv_file)
             for row in csv_reader:
-                event = StatsWorker.WorkEvent(row)
+                event = WorkEvent(row)
                 if (event.time_stamp > self.start_time
                         and event.time_stamp < self.end_time):
                     self.events.append(event)
@@ -143,12 +176,15 @@ class StatsWorker:
 
     def assign_events_to_tas(self):
         for event in self.events:
-            if event.ta_netid not in self.tas:
-                self.tas[event.ta_netid] = StatsWorker.TA(event.ta_netid)
-            self.tas[event.ta_netid].add_event(event)
+            self.tas.setdefault(event.ta_netid,
+                                TA(event.ta_netid)).add_event(event)
 
         # FIXME: Remove this arbitrary sleep (used for debugging)
         time.sleep(1)
+
+    def analyze_tas_individually(self):
+        for ta in self.tas.values():
+            ta.analyze_all_events()
 
     def show_events(self):
         list_layer = ui.layers.ListLayer("Lab events")
