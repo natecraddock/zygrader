@@ -86,7 +86,8 @@ class GradePuller:
         except FileNotFoundError:
             msg = [
                 f"Could not find {path}",
-                "Please download the gradebook from Canvas and put it in the place noted above",
+                "Please download the gradebook from Canvas"
+                " and put it in the place noted above",
             ]
             popup.set_message(msg)
             self.window.run_layer(popup)
@@ -250,7 +251,8 @@ class GradePuller:
         popup.set_exit_text("Done")
         index = 0
         for section, time in due_times.items():
-            row_text = f"Section {section:>{section_padding}}: {time.strftime('%b %d, %Y at %I:%M:%S%p')}"
+            row_text = (f"Section {section:>{section_padding}}:"
+                        f" {time.strftime('%b %d, %Y at %I:%M:%S%p')}")
             popup.add_row_text(row_text, select_due_times_fn, index, popup)
             index += 1
         self.window.run_layer(popup)
@@ -279,8 +281,8 @@ class GradePuller:
                 for j in range(1, len(seq1) + 1):
                     left_score = table[i][j - 1] + 1
                     up_score = table[i - 1][j] + 1
-                    diag_score = table[i - 1][j - 1] + (0 if seq2[i - 1]
-                                                        == seq1[j - 1] else 1)
+                    diag_score = (table[i - 1][j - 1] +
+                                  (0 if seq2[i - 1] == seq1[j - 1] else 1))
                     table[i][j] = min(left_score, up_score, diag_score)
             return table[-1][-1]
 
@@ -408,7 +410,8 @@ class GradePuller:
                                            if c.isdigit()]))
                 except ValueError:
                     bad_id_count += 1
-                    real_id = string_id if string_id else f"bad_zybooks_id_{bad_id_count}"
+                    real_id = (string_id if string_id else
+                               f"bad_zybooks_id_{bad_id_count}")
             while real_id in report:
                 real_id = str(real_id) + "(02)"
             row["id_number"] = real_id
