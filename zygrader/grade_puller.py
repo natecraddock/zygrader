@@ -469,11 +469,13 @@ class GradePuller:
         return zybooks_students
 
     def write_upload_file(self):
-        selected_assignments = "&".join(self.selected_assignments) + ".csv"
-        selected_assignments.replace(" ", "")
+        default_file_name = (
+            datetime.datetime.now().isoformat(timespec='seconds') + "--" +
+            "_&_".join(self.selected_assignments) + ".csv")
+        default_file_name = default_file_name.replace(" ", "_")
 
         default_path_str = os.path.join(preferences.get("output_dir"),
-                                        selected_assignments)
+                                        default_file_name)
 
         path = filename_input(purpose="the upload file", text=default_path_str)
         if path is None:
