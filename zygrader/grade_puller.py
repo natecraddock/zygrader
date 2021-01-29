@@ -33,7 +33,7 @@ class GradePuller:
     def pull(self):
         try:
             self.read_canvas_csv()
-            self.selected_assignments = []
+            self.selected_assignments = set()
 
             more_assignments = True
             while more_assignments:
@@ -363,7 +363,7 @@ class GradePuller:
                 canvas_student[canvas_assignment] = 0.0
             # else leave canvas grade as it was
 
-        self.selected_assignments.append(canvas_assignment)
+        self.selected_assignments.add(canvas_assignment)
 
     def parse_section_from_canvas_student(self, student):
         section_str = student["Section"]
@@ -481,7 +481,7 @@ class GradePuller:
 
         with open(path, "w", newline="") as out_file:
             id_columns = self.canvas_header[:GradePuller.NUM_CANVAS_ID_COLUMNS]
-            fieldnames = id_columns + self.selected_assignments
+            fieldnames = id_columns + list(self.selected_assignments)
             writer = csv.DictWriter(out_file,
                                     fieldnames=fieldnames,
                                     extrasaction="ignore")
