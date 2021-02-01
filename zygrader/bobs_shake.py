@@ -22,11 +22,15 @@ def start():
     steps = [
         Step(True, "start time", lambda: worker.select_start_time()),
         Step(True, "end time", lambda: worker.select_end_time()),
+        Step(True, "select helpqueue csv",
+             lambda: worker.select_help_queue_data_file()),
         Step(False, "Read data from the log file",
              lambda: worker.read_in_native_stats()),
-        Step(True, "Debug show events", lambda: worker.show_events()),
+        Step(False, "Read data from help queue file",
+             lambda: worker.read_in_help_queue_stats()),
         Step(False, "Assign events to individual tas",
-             lambda: worker.assign_events_to_tas())
+             lambda: worker.assign_events_to_tas()),
+        Step(True, "Debug show events", lambda: worker.show_events()),
     ]
 
     for step in steps:
@@ -42,34 +46,81 @@ def start():
 
 
 class WorkEvent:
-    def __init__(self, row):
+    def __init__(self, time_stamp, event_type, student_name, ta_netid, is_begin,
+                 og_data):
+        self.time_stamp = time_stamp
+        self.event_type = event_type
+        self.student_name = student_name
+        self.ta_netid = ta_netid
+        self.is_begin = is_begin
+        self.og_data = og_data
+
+    @classmethod
+    def from_native_data(cls, row):
         time_stamp_str = row[0]
         # TODO: convert to datetime.datetime.fromisoformat
         #   once we are using python 3.7
-        self.time_stamp = datetime.datetime.strptime(time_stamp_str,
-                                                     "%Y-%m-%dT%H:%M:%S.%f")
+        time_stamp = datetime.datetime.strptime(time_stamp_str,
+                                                "%Y-%m-%dT%H:%M:%S.%f")
 
         # The old lock format did not have an event_type field
         # (all locks were for labs)
         is_old_format = len(row) == 5
         if is_old_format:
-            self.event_type = 'LAB'
+            event_type = 'LAB'
         else:
-            self.event_type = row[1]
+            event_type = row[1]
 
         old_format_shift = 1 if is_old_format else 0
-        self.student_name = row[2 - old_format_shift]
-        self.lab_name = row[3 - old_format_shift]
-        self.ta_netid = row[4 - old_format_shift]
+        student_name = row[2 - old_format_shift]
+        ta_netid = row[4 - old_format_shift]
 
         lock_type = row[5 - old_format_shift]
-        self.is_lock = lock_type == "LOCK"
+        is_lock = lock_type == "LOCK"
+
+        return WorkEvent(time_stamp, event_type, student_name, ta_netid,
+                         is_lock, row)
+
+    @classmethod
+    def from_queue_data_start_and_end(cls, row):
+        student_name = row[1]
+        ta_name = row[2]
+        # TODO: add netid lookup table
+
+        begin_time_str = row[4]
+        begin_time = datetime.datetime.strptime(begin_time_str,
+                                                "%m/%d/%Y %I:%M:%S %p")
+
+        duration_str = row[7]
+        # duration = datetime.datetime.now()
+        if duration_str == "None":  # student helped themselves
+            return None, None
+        try:
+            duration = datetime.datetime.strptime(duration_str, "%M:%S")
+        except ValueError:
+            try:
+                duration = datetime.datetime.strptime(duration_str, "%H:%M:%S")
+            except ValueError:
+                # TODO: actually log this or present a warning or soemthing
+                return None, None
+
+        duration_delta = datetime.timedelta(hours=duration.hour,
+                                            minutes=duration.minute,
+                                            seconds=duration.second)
+        end_time = begin_time + duration_delta
+
+        begin_event = WorkEvent(begin_time, 'HELP', student_name, ta_name, True,
+                                row)
+        end_event = WorkEvent(end_time, 'HELP', student_name, ta_name, False,
+                              row)
+
+        return begin_event, end_event
 
     def __str__(self):
         return (f"At {self.time_stamp} {self.ta_netid} "
-                f"{'' if self.is_lock else 'un'}locked "
+                f"{'began' if self.is_begin else 'finished'} "
                 f"{self.student_name}'s {self.event_type}"
-                f"{f' {self.lab_name}' if self.event_type == 'LAB' else ''}")
+                f"({self.og_data})")
 
 
 class EventStreamAnalyzer:
@@ -88,6 +139,7 @@ class TA:
         self.events: typing.List[WorkEvent] = []
         self.lab_events: typing.List[WorkEvent] = []
         self.email_events: typing.List[WorkEvent] = []
+        self.help_events: typing.List[WorkEvent] = []
 
     def add_event(self, event: WorkEvent):
         self.events.append(event)
@@ -95,6 +147,8 @@ class TA:
             self.lab_events.append(event)
         elif event.event_type == 'EMAIL':
             self.email_events.append(event)
+        elif event.event_type == 'HELP':
+            self.help_events.append(event)
         else:
             raise ValueError(
                 f"Unknown event type '{event.event_type}' encountered")
@@ -108,10 +162,12 @@ class TA:
         self.total_stats = EventStreamAnalyzer()
         self.lab_stats = EventStreamAnalyzer()
         self.email_stats = EventStreamAnalyzer()
+        self.help_stats = EventStreamAnalyzer()
 
         self.total_stats.analyze(self.events)
         self.lab_stats.analyze(self.lab_events)
         self.email_stats.analyze(self.email_events)
+        self.help_stats.analyze(self.help_events)
 
 
 class StudentAssignment:
@@ -167,10 +223,34 @@ class StatsWorker:
         with open(file_name, 'r', newline='') as csv_file:
             csv_reader = csv.reader(csv_file)
             for row in csv_reader:
-                event = WorkEvent(row)
+                event = WorkEvent.from_native_data(row)
                 if (event.time_stamp > self.start_time
                         and event.time_stamp < self.end_time):
                     self.events.append(event)
+        # FIXME: Remove this arbitrary sleep (used for debugging)
+        time.sleep(1)
+
+    def select_help_queue_data_file(self):
+        filepath_entry = ui.layers.PathInputLayer("Help Queue Data")
+        ui.get_window().run_layer(filepath_entry)
+        if filepath_entry.was_canceled():
+            return False
+        self.help_queue_csv_filepath = filepath_entry.get_path()
+        return True
+
+    def read_in_help_queue_stats(self):
+        with open(self.help_queue_csv_filepath, 'r', newline='') as csv_file:
+            csv_reader = csv.reader(csv_file)
+            for row in csv_reader:
+                if not any(row):
+                    continue
+                begin_event, end_event = (
+                    WorkEvent.from_queue_data_start_and_end(row))
+                if (begin_event and end_event
+                        and begin_event.time_stamp > self.start_time
+                        and end_event.time_stamp < self.end_time):
+                    self.events.append(begin_event)
+                    self.events.append(end_event)
         # FIXME: Remove this arbitrary sleep (used for debugging)
         time.sleep(1)
 
