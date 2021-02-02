@@ -14,7 +14,10 @@ def load_students() -> list:
         return []
 
     with open(path, "r") as students_file:
-        students_json = json.load(students_file)
+        try:
+            students_json = json.load(students_file)
+        except json.decoder.JSONDecodeError:
+            students_json = []
 
     for student in students_json:
         SharedData.STUDENTS.append(

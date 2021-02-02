@@ -503,6 +503,9 @@ class GradePuller:
             self.read_canvas_csv()
             zybooks_toc = fetch_zybooks_toc()
 
+            if not zybooks_toc:
+                raise GradePuller.StoppingException
+
             zybook_section_1_1 = zybooks_toc[0]["sections"][0]
 
             fetch_report_fn = lambda: self.fetch_completion_report(
@@ -512,6 +515,9 @@ class GradePuller:
             popup.set_message(["Fetching a completion report from zyBooks"])
             popup.set_wait_fn(fetch_report_fn)
             self.window.run_layer(popup)
+
+            if popup.canceled:
+                raise GradePuller.StoppingException
 
             zybooks_students, zybooks_header = popup.get_result()
 
