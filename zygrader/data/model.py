@@ -148,31 +148,21 @@ class ClassSection:
 
 
 class TA:
-    def __init__(self, netid, queue_name, display_name=None):
-        if display_name is None:
-            display_name = queue_name
+    def __init__(self, netid, queue_name):
         self.netid = netid
         self.queue_name = queue_name
-        self.display_name = display_name
 
     def __repr__(self):
-        return (f"TA(netid={self.netid}, "
-                f"queue_name={self.queue_name}, "
-                f"display_name={self.display_name}")
+        return (f"TA(netid={self.netid}, queue_name={self.queue_name})")
 
     @classmethod
     def from_json(cls, ta_json):
         netid = ta_json["netid"]
         queue_name = ta_json["queue_name"]
-        display_name = ta_json["display_name"]
-        return TA(netid, queue_name, display_name)
+        return TA(netid, queue_name)
 
     def to_json(self):
-        return {
-            "netid": self.netid,
-            "queue_name": self.queue_name,
-            "display_name": self.display_name
-        }
+        return {"netid": self.netid, "queue_name": self.queue_name}
 
 
 class SubmissionFlag(enum.Flag):
