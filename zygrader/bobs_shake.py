@@ -8,7 +8,7 @@ import datetime
 import time
 import typing
 
-from zygrader import ui
+from zygrader import data, ui
 from zygrader.data.lock import get_lock_log_path
 
 
@@ -28,6 +28,7 @@ def start():
              lambda: worker.read_in_native_stats()),
         Step(False, "Read data from help queue file",
              lambda: worker.read_in_help_queue_stats()),
+        Step(True, "validate ta names", lambda: worker.validate_queue_names()),
         Step(False, "Assign events to individual tas",
              lambda: worker.assign_events_to_tas()),
         Step(True, "Debug show events", lambda: worker.show_events()),
@@ -46,12 +47,12 @@ def start():
 
 
 class WorkEvent:
-    def __init__(self, time_stamp, event_type, student_name, ta_netid, is_begin,
+    def __init__(self, time_stamp, event_type, student_name, ta_name, is_begin,
                  og_data):
         self.time_stamp = time_stamp
         self.event_type = event_type
         self.student_name = student_name
-        self.ta_netid = ta_netid
+        self.ta_name = ta_name
         self.is_begin = is_begin
         self.og_data = og_data
 
@@ -74,6 +75,13 @@ class WorkEvent:
         old_format_shift = 1 if is_old_format else 0
         student_name = row[2 - old_format_shift]
         ta_netid = row[4 - old_format_shift]
+
+        # FIXME: ta_netid is a lab name if student has a comman in their name
+        #  (this is somewhat fixed in data/lock.py by using csv to write data,
+        #   but old data might still have commas)
+        #  one possible fix (and what I'm thinking I'll do) is to modify the
+        #   the lock log files outside of zygrader,
+        #   just with some separate script, to keep this area clean
 
         lock_type = row[5 - old_format_shift]
         is_lock = lock_type == "LOCK"
@@ -117,7 +125,7 @@ class WorkEvent:
         return begin_event, end_event
 
     def __str__(self):
-        return (f"At {self.time_stamp} {self.ta_netid} "
+        return (f"At {self.time_stamp} {self.ta_name} "
                 f"{'began' if self.is_begin else 'finished'} "
                 f"{self.student_name}'s {self.event_type}"
                 f"({self.og_data})")
@@ -197,7 +205,8 @@ class StatsWorker:
         print("", file=debug_output)
         debug_output.close()
 
-        self.events = []
+        self.native_events = []
+        self.queuee_events = []
         self.tas: typing.Dict[str, TA] = dict()
 
     def select_start_time(self):
@@ -226,7 +235,7 @@ class StatsWorker:
                 event = WorkEvent.from_native_data(row)
                 if (event.time_stamp > self.start_time
                         and event.time_stamp < self.end_time):
-                    self.events.append(event)
+                    self.native_events.append(event)
         # FIXME: Remove this arbitrary sleep (used for debugging)
         time.sleep(1)
 
@@ -249,16 +258,75 @@ class StatsWorker:
                 if (begin_event and end_event
                         and begin_event.time_stamp > self.start_time
                         and end_event.time_stamp < self.end_time):
-                    self.events.append(begin_event)
-                    self.events.append(end_event)
+                    self.queuee_events.append(begin_event)
+                    self.queuee_events.append(end_event)
         # FIXME: Remove this arbitrary sleep (used for debugging)
         time.sleep(1)
 
+    def validate_queue_names(self):
+        """Make sure each TA name from the queue has a known netid"""
+        window = ui.get_window()
+        used_netids = {event.ta_name for event in self.native_events}
+        used_qnames = {event.ta_name for event in self.queuee_events}
+        stored_tas = data.get_tas().copy()
+        stored_netids = {ta.netid for ta in stored_tas}
+        stored_qnames = {ta.queue_name for ta in stored_tas}
+
+        unknown_netids = used_netids - stored_netids
+        unknown_qnames = used_qnames - stored_qnames
+
+        def create_new_ta(qname):
+            netid_input = ui.layers.TextInputLayer("Create New TA")
+            netid_input.set_prompt([f"Enter the netid for {qname}"])
+            window.run_layer(netid_input)
+            stored_tas.append(data.model.TA(netid_input.get_text(), qname))
+
+        for qname in unknown_qnames:
+            netid_selector = ui.layers.ListLayer(f"Select Netid/TA for {qname}",
+                                                 popup=True)
+            new_netids_row = netid_selector.add_row_parent("Newly Found netids")
+            existing_tas_row = netid_selector.add_row_parent("Existing TAs")
+            create_new_ta_row = netid_selector.add_row_text("Create New TA")
+
+            def match_new_netid(netid):
+                stored_tas.append(data.model.TA(netid, qname))
+                unknown_netids.remove(netid)
+
+            new_netids_row.clear_rows()
+            for netid in unknown_netids:
+                new_netids_row.add_row_text(netid, match_new_netid, netid)
+
+            def match_existing_ta(ta):
+                ta.queue_name = qname
+
+            existing_tas_row.clear_rows()
+            for ta in stored_tas:
+                existing_tas_row.add_row_text(str(ta), match_existing_ta, ta)
+
+            create_new_ta_row.set_callback_fn(create_new_ta, qname)
+
+            window.run_layer(netid_selector)
+            if netid_selector.was_canceled():
+                return False
+
+        qname_input = ui.layers.TextInputLayer("Create New TA")
+        for netid in unknown_netids:
+            qname_input.set_prompt([
+                f"There is no name information stored for {netid}.",
+                f"Please enter the name for {netid} as it appears on the queue."
+            ])
+            window.run_layer(qname_input)
+            if qname_input.was_canceled():
+                return False
+
+        data.write_tas(stored_tas)
+        return True
+
     def assign_events_to_tas(self):
-        for event in self.events:
+        for event in self.native_events:
             self.tas.setdefault(event.ta_netid,
                                 TA(event.ta_netid)).add_event(event)
-
+        # FIXME: Add assigning queuee events
         # FIXME: Remove this arbitrary sleep (used for debugging)
         time.sleep(1)
 
@@ -268,7 +336,8 @@ class StatsWorker:
 
     def show_events(self):
         list_layer = ui.layers.ListLayer("Lab events")
-        for event in self.events:
+        for event in self.native_events:
             list_layer.add_row_text(str(event))
+        # FIXME: Add the queuee events too
         ui.get_window().run_layer(list_layer)
         return not list_layer.was_canceled()
