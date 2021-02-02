@@ -29,6 +29,7 @@ class SharedData:
     LABS_FILE = "labs.json"
     CANVAS_MASTER_FILE = "canvas_master.csv"
     CLASS_SECTIONS_FILE = "class_sections.json"
+    TAS_FILE = "tas.json"
 
     # This is a global to represent if student code is being executed
     RUNNING_CODE = False
@@ -40,6 +41,7 @@ class SharedData:
     STUDENTS = []
     LABS = []
     CLASS_SECTIONS = []
+    TAS = []
 
     @classmethod
     def initialize_shared_data(cls, shared_data_path):
@@ -128,6 +130,10 @@ class SharedData:
     @classmethod
     def get_class_sections_data(cls):
         return os.path.join(cls.get_data_directory(), cls.CLASS_SECTIONS_FILE)
+
+    @classmethod
+    def get_ta_data(cls):
+        return os.path.join(cls.get_data_directory(), cls.TAS_FILE)
 
     @classmethod
     def create_shared_data_directory(cls, data_path):
