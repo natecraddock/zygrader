@@ -219,12 +219,6 @@ class TA:
                 f"Unknown event type '{event.event_type}' encountered")
 
     def analyze_all_events(self):
-        self.lab_events = self.deduplicate_nested_events(self.lab_events)
-
-        self.events = sorted(self.lab_events + self.email_events +
-                             self.help_events,
-                             key=lambda event: event.time_stamp)
-
         self.lab_stats = EventStreamStats()
         self.email_stats = EventStreamStats()
         self.help_stats = EventStreamStats()
@@ -232,6 +226,8 @@ class TA:
         self.lab_stats.analyze(self.lab_events)
         self.email_stats.analyze(self.email_events)
         self.help_stats.analyze(self.help_events)
+
+        # TODO: Join individual stats together in a useful manner
 
 
 def select_time(title: str):
