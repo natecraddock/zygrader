@@ -236,8 +236,6 @@ class StatsWorker:
                 if (event.time_stamp > self.start_time
                         and event.time_stamp < self.end_time):
                     self.native_events.append(event)
-        # FIXME: Remove this arbitrary sleep (used for debugging)
-        time.sleep(1)
 
     def select_help_queue_data_file(self):
         filepath_entry = ui.layers.PathInputLayer("Help Queue Data")
@@ -260,64 +258,34 @@ class StatsWorker:
                         and end_event.time_stamp < self.end_time):
                     self.queuee_events.append(begin_event)
                     self.queuee_events.append(end_event)
-        # FIXME: Remove this arbitrary sleep (used for debugging)
-        time.sleep(1)
 
     def validate_queue_names(self):
         """Make sure each TA name from the queue has a known netid"""
         window = ui.get_window()
-        used_netids = {event.ta_name for event in self.native_events}
         used_qnames = {event.ta_name for event in self.queuee_events}
         stored_tas = data.get_tas().copy()
-        stored_netids = {ta.netid for ta in stored_tas}
+        stored_netids = {ta.netid: ta for ta in stored_tas}
         stored_qnames = {ta.queue_name for ta in stored_tas}
 
-        unknown_netids = used_netids - stored_netids
         unknown_qnames = used_qnames - stored_qnames
 
-        def create_new_ta(qname):
-            netid_input = ui.layers.TextInputLayer("Create New TA")
-            netid_input.set_prompt([f"Enter the netid for {qname}"])
-            window.run_layer(netid_input)
-            stored_tas.append(data.model.TA(netid_input.get_text(), qname))
-
+        netid_input = ui.layers.TextInputLayer("Unknown Name in Queue Data")
         for qname in unknown_qnames:
-            netid_selector = ui.layers.ListLayer(f"Select Netid/TA for {qname}",
-                                                 popup=True)
-            new_netids_row = netid_selector.add_row_parent("Newly Found netids")
-            existing_tas_row = netid_selector.add_row_parent("Existing TAs")
-            create_new_ta_row = netid_selector.add_row_text("Create New TA")
-
-            def match_new_netid(netid):
-                stored_tas.append(data.model.TA(netid, qname))
-                unknown_netids.remove(netid)
-
-            new_netids_row.clear_rows()
-            for netid in unknown_netids:
-                new_netids_row.add_row_text(netid, match_new_netid, netid)
-
-            def match_existing_ta(ta):
-                ta.queue_name = qname
-
-            existing_tas_row.clear_rows()
-            for ta in stored_tas:
-                existing_tas_row.add_row_text(str(ta), match_existing_ta, ta)
-
-            create_new_ta_row.set_callback_fn(create_new_ta, qname)
-
-            window.run_layer(netid_selector)
-            if netid_selector.was_canceled():
-                return False
-
-        qname_input = ui.layers.TextInputLayer("Create New TA")
-        for netid in unknown_netids:
-            qname_input.set_prompt([
-                f"There is no name information stored for {netid}.",
-                f"Please enter the name for {netid} as it appears on the queue."
+            netid_input.set_prompt([
+                f"There is no stored TA with the name {qname}.",
+                f"Please enter the netid for {qname}."
             ])
-            window.run_layer(qname_input)
-            if qname_input.was_canceled():
+            netid_input.set_text("")
+            window.run_layer(netid_input)
+            if netid_input.was_canceled():
                 return False
+            netid = netid_input.get_text()
+            if netid in stored_netids:
+                stored_netids[netid].queue_name = qname
+            else:
+                new_ta = data.model.TA(netid, qname)
+                stored_netids[netid] = new_ta
+                stored_tas.append(new_ta)
 
         data.write_tas(stored_tas)
         return True
@@ -327,8 +295,6 @@ class StatsWorker:
             self.tas.setdefault(event.ta_netid,
                                 TA(event.ta_netid)).add_event(event)
         # FIXME: Add assigning queuee events
-        # FIXME: Remove this arbitrary sleep (used for debugging)
-        time.sleep(1)
 
     def analyze_tas_individually(self):
         for ta in self.tas.values():
@@ -338,6 +304,9 @@ class StatsWorker:
         list_layer = ui.layers.ListLayer("Lab events")
         for event in self.native_events:
             list_layer.add_row_text(str(event))
-        # FIXME: Add the queuee events too
+        for event in self.queuee_events:
+            list_layer.add_row_text(str(event))
+        if not self.native_events and not self.queuee_events:
+            list_layer.add_row_text("No events in that time frame")
         ui.get_window().run_layer(list_layer)
         return not list_layer.was_canceled()
