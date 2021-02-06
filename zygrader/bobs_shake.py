@@ -162,11 +162,33 @@ class TA:
             raise ValueError(
                 f"Unknown event type '{event.event_type}' encountered")
 
-    def deduplicate_pairprogrammed_grading(self):
-        pass
+    def deduplicate_nested_events(self, og_list):
+        new_list = []
+        unmatched_depth = 0
+
+        for event in og_list:
+            if unmatched_depth:
+                if event.is_begin:
+                    unmatched_depth += 1
+                else:
+                    unmatched_depth -= 1
+                    if unmatched_depth == 0:
+                        new_list.append(event)
+            else:
+                if event.is_begin:
+                    unmatched_depth += 1
+                    new_list.append(event)
+                else:
+                    pass
+
+        return new_list
 
     def analyze_all_events(self):
-        self.deduplicate_pairprogrammed_grading()
+        self.lab_events = self.deduplicate_nested_events(self.lab_events)
+
+        self.events = sorted(self.lab_events + self.email_events +
+                             self.help_events,
+                             key=lambda event: event.time_stamp)
 
         self.total_stats = EventStreamAnalyzer()
         self.lab_stats = EventStreamAnalyzer()
