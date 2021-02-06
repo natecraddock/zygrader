@@ -291,14 +291,14 @@ class StatsWorker:
 
     def assign_events_to_tas(self):
         for event in self.native_events:
-            self.tas.setdefault(event.ta_netid,
-                                TA(event.ta_netid)).add_event(event)
+            self.tas.setdefault(event.ta_name,
+                                TA(event.ta_name)).add_event(event)
 
         tas = data.get_tas()
         lookup = {ta.queue_name: ta.netid for ta in tas}
         for event in self.queuee_events:
-            real_netid = lookup[event.ta_netid]
-            self.tas.setdefault(real_netid, TA(real_netid)).add_event(event)
+            netid = lookup[event.ta_name]
+            self.tas.setdefault(netid, TA(netid)).add_event(event)
 
     def analyze_tas_individually(self):
         for ta in self.tas.values():
@@ -306,11 +306,9 @@ class StatsWorker:
 
     def show_events(self):
         list_layer = ui.layers.ListLayer("Lab events")
-        for event in self.native_events:
-            list_layer.add_row_text(str(event))
-        for event in self.queuee_events:
-            list_layer.add_row_text(str(event))
-        if not self.native_events and not self.queuee_events:
-            list_layer.add_row_text("No events in that time frame")
+        for netid, ta in self.tas.items():
+            parent = list_layer.add_row_parent(netid)
+            for event in ta.events:
+                parent.add_row_text(str(event))
         ui.get_window().run_layer(list_layer)
         return not list_layer.was_canceled()
