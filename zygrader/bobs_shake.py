@@ -187,13 +187,17 @@ class EventStreamStats:
 
         flat_events = deduplicate_nested_events(sorted_events)
 
+        new_time_pairs = []
         prev_event = flat_events[0]
         for event in flat_events[1:]:
             if prev_event.is_begin and not event.is_begin:
-                self.active_time_windows.append(
-                    (prev_event.time_stamp, event.time_stamp))
+                new_time_pairs.append((prev_event.time_stamp, event.time_stamp))
             prev_event = event
-        self.active_time_windows.sort()
+        self.active_time_windows = sorted(self.active_time_windows +
+                                          new_time_pairs)
+
+        for begin_time, end_time in new_time_pairs:
+            self.total_time += end_time - begin_time
 
 
 class TA:
