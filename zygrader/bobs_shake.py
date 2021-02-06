@@ -31,6 +31,8 @@ def start():
         Step(True, "validate ta names", lambda: worker.validate_queue_names()),
         Step(False, "Assign events to individual tas",
              lambda: worker.assign_events_to_tas()),
+        Step(False, "Analyze stats for each TA",
+             lambda: worker.analyze_tas_individually()),
         Step(True, "Debug show events", lambda: worker.show_events()),
     ]
 
