@@ -141,26 +141,69 @@ class WorkEvent:
                 f"({self.og_data})")
 
 
-class EventStreamAnalyzer:
-    def __init__(self):
-        self.total_time = 0
-        self.total_num_openclosed = 0
-        self.num_unique_openclosed = 0
+def deduplicate_nested_events(og_list):
+    new_list = []
+    unmatched_depth = 0
 
-    def analyze(events: typing.List[WorkEvent]):
-        pass
+    for event in og_list:
+        if unmatched_depth:
+            if event.is_begin:
+                unmatched_depth += 1
+            else:
+                unmatched_depth -= 1
+                if unmatched_depth == 0:
+                    new_list.append(event)
+        else:
+            if event.is_begin:
+                unmatched_depth += 1
+                new_list.append(event)
+            else:
+                pass
+
+    return new_list
+
+
+class EventStreamStats:
+    def __init__(self):
+        self.total_time = datetime.timedelta()
+        self.total_num_closed = 0
+        self.num_unique_closed = 0
+        self.active_time_windows = []
+        self.items_touched = set()
+
+    def analyze(self, events: typing.List[WorkEvent]):
+        if not events:
+            return
+        # pretty sure it'll be sorted, but as a sanity check
+        sorted_events = sorted(events, key=lambda event: event.time_stamp)
+
+        all_closed = [event for event in sorted_events if not event.is_begin]
+        self.total_num_closed += len(all_closed)
+
+        self.items_touched = self.items_touched.union(
+            {event.uniq_item
+             for event in all_closed})
+        self.num_unique_closed = len(self.items_touched)
+
+        flat_events = deduplicate_nested_events(sorted_events)
+
+        prev_event = flat_events[0]
+        for event in flat_events[1:]:
+            if prev_event.is_begin and not event.is_begin:
+                self.active_time_windows.append(
+                    (prev_event.time_stamp, event.time_stamp))
+            prev_event = event
+        self.active_time_windows.sort()
 
 
 class TA:
     def __init__(self, netid):
         self.netid = netid
-        self.events: typing.List[WorkEvent] = []
         self.lab_events: typing.List[WorkEvent] = []
         self.email_events: typing.List[WorkEvent] = []
         self.help_events: typing.List[WorkEvent] = []
 
     def add_event(self, event: WorkEvent):
-        self.events.append(event)
         if event.event_type == 'LAB':
             self.lab_events.append(event)
         elif event.event_type == 'EMAIL':
@@ -171,27 +214,6 @@ class TA:
             raise ValueError(
                 f"Unknown event type '{event.event_type}' encountered")
 
-    def deduplicate_nested_events(self, og_list):
-        new_list = []
-        unmatched_depth = 0
-
-        for event in og_list:
-            if unmatched_depth:
-                if event.is_begin:
-                    unmatched_depth += 1
-                else:
-                    unmatched_depth -= 1
-                    if unmatched_depth == 0:
-                        new_list.append(event)
-            else:
-                if event.is_begin:
-                    unmatched_depth += 1
-                    new_list.append(event)
-                else:
-                    pass
-
-        return new_list
-
     def analyze_all_events(self):
         self.lab_events = self.deduplicate_nested_events(self.lab_events)
 
@@ -199,26 +221,13 @@ class TA:
                              self.help_events,
                              key=lambda event: event.time_stamp)
 
-        self.total_stats = EventStreamAnalyzer()
-        self.lab_stats = EventStreamAnalyzer()
-        self.email_stats = EventStreamAnalyzer()
-        self.help_stats = EventStreamAnalyzer()
+        self.lab_stats = EventStreamStats()
+        self.email_stats = EventStreamStats()
+        self.help_stats = EventStreamStats()
 
-        self.total_stats.analyze(self.events)
         self.lab_stats.analyze(self.lab_events)
         self.email_stats.analyze(self.email_events)
         self.help_stats.analyze(self.help_events)
-
-
-class StudentAssignment:
-    def __init__(self, student, lab):
-        student_name = student
-        lab_name = lab
-
-    def __lt__(self, other_assignment):
-        if (self.student_name == other_assignment.student_name):
-            return self.lab_name < other_assignment.lab_name
-        return self.student_name < other_assignment.student_name
 
 
 def select_time(title: str):
