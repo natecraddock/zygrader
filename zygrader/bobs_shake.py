@@ -93,7 +93,6 @@ class WorkEvent:
     def from_queue_data_start_and_end(cls, row):
         student_name = row[1]
         ta_name = row[2]
-        # TODO: add netid lookup table
 
         begin_time_str = row[4]
         begin_time = datetime.datetime.strptime(begin_time_str,
@@ -294,7 +293,12 @@ class StatsWorker:
         for event in self.native_events:
             self.tas.setdefault(event.ta_netid,
                                 TA(event.ta_netid)).add_event(event)
-        # FIXME: Add assigning queuee events
+
+        tas = data.get_tas()
+        lookup = {ta.queue_name: ta.netid for ta in tas}
+        for event in self.queuee_events:
+            real_netid = lookup[event.ta_netid]
+            self.tas.setdefault(real_netid, TA(real_netid)).add_event(event)
 
     def analyze_tas_individually(self):
         for ta in self.tas.values():
