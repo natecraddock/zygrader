@@ -12,7 +12,7 @@ from zygrader import data, ui
 from zygrader.data.lock import get_lock_log_path
 
 
-def start():
+def shake():
     #call get get_lock_log_path()
     window = ui.get_window()
     wait_popup = ui.layers.WaitPopup("Bob's Shake")
