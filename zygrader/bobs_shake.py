@@ -50,13 +50,14 @@ def shake():
 
 class WorkEvent:
     def __init__(self, time_stamp, event_type, student_name, ta_name, is_begin,
-                 og_data):
+                 og_data, uniq_item):
         self.time_stamp = time_stamp
         self.event_type = event_type
         self.student_name = student_name
         self.ta_name = ta_name
         self.is_begin = is_begin
         self.og_data = og_data
+        self.uniq_item = uniq_item
 
     @classmethod
     def from_native_data(cls, row):
@@ -76,7 +77,10 @@ class WorkEvent:
 
         old_format_shift = 1 if is_old_format else 0
         student_name = row[2 - old_format_shift]
+        assignment_name = row[3 - old_format_shift]
         ta_netid = row[4 - old_format_shift]
+
+        uniq_item = event_type + student_name + assignment_name
 
         # FIXME: ta_netid is a lab name if student has a comman in their name
         #  (this is somewhat fixed in data/lock.py by using csv to write data,
@@ -89,7 +93,9 @@ class WorkEvent:
         is_lock = lock_type == "LOCK"
 
         return WorkEvent(time_stamp, event_type, student_name, ta_netid,
-                         is_lock, row)
+                         is_lock, row, uniq_item)
+
+    uniq_help_id = 0
 
     @classmethod
     def from_queue_data_start_and_end(cls, row):
@@ -118,10 +124,13 @@ class WorkEvent:
                                             seconds=duration.second)
         end_time = begin_time + duration_delta
 
+        uniq_item = f'HELP{cls.uniq_help_id}'
+        cls.uniq_help_id += 1
+
         begin_event = WorkEvent(begin_time, 'HELP', student_name, ta_name, True,
-                                row)
+                                row, uniq_item)
         end_event = WorkEvent(end_time, 'HELP', student_name, ta_name, False,
-                              row)
+                              row, uniq_item)
 
         return begin_event, end_event
 
