@@ -39,7 +39,9 @@ This will print each color to the screen, colored appreopriately.
 """
 
 import curses
-THEMES = ["Default", "Christmas", "Spooky", "Birthday", "Thanksgiving"]
+THEMES = [
+    "Default", "Christmas", "Spooky", "Birthday", "Thanksgiving", "Valentines"
+]
 
 
 class Theme:
@@ -67,7 +69,11 @@ class Theme:
                                   curses.color_pair(17)],
             "thanksgiving_light":
             [curses.color_pair(18),
-             curses.color_pair(19)]
+             curses.color_pair(19)],
+            "valentines_dark": [curses.color_pair(20),
+                                curses.color_pair(21)],
+            "valentines_light": [curses.color_pair(22),
+                                 curses.color_pair(23)],
         }
 
     THEME_SEPARATORS = {
@@ -75,14 +81,16 @@ class Theme:
         "spooky": "🎃",
         "christmas": "❄️",
         "birthday": "🎂",
-        "thanksgiving": "🦃"
+        "thanksgiving": "🦃",
+        "valentines": "💕",
     }
     THEME_BOOKENDS = {
         "default": "",
         "spooky": "👻",
         "christmas": "🎄",
         "birthday": "🎉",
-        "thanksgiving": "🍗"
+        "thanksgiving": "🍗",
+        "valentines": "❤️ ",
     }
 
     def __init_colors(self):
@@ -96,6 +104,9 @@ class Theme:
 
         CURSES_THXGVNG_BROWN = 130
         CURSES_THXGVNG_ORANGE = 208
+
+        VALENTINES_RED = 196
+        VALENTINES_PINK = 204
 
         #this line can't change
         curses.init_pair(1, curses.COLOR_WHITE, curses.COLOR_BLACK)
@@ -138,6 +149,14 @@ class Theme:
             # THanksgiving LIGHT
             curses.init_pair(18, CURSES_THXGVNG_BROWN, curses.COLOR_WHITE)
             curses.init_pair(19, CURSES_THXGVNG_ORANGE, curses.COLOR_WHITE)
+
+            # Valentines DARK
+            curses.init_pair(20, VALENTINES_RED, curses.COLOR_BLACK)
+            curses.init_pair(21, VALENTINES_PINK, curses.COLOR_BLACK)
+
+            # Valentines LIGHT
+            curses.init_pair(22, VALENTINES_RED, curses.COLOR_WHITE)
+            curses.init_pair(23, VALENTINES_PINK, curses.COLOR_WHITE)
 
     def get_colors(self, key: str):
         if key not in self.theme_colors:
