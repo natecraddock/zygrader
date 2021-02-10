@@ -39,7 +39,7 @@ def authenticate(window: ui.Window, zy_api: Zybooks, email, password):
     authenticated = popup.get_result()
     if not authenticated:
         popup = ui.layers.Popup("Error")
-        popup.set_message(["Invalid Credentials"])
+        popup.set_message(["Authentication Failure"])
         window.run_layer(popup)
     return authenticated
 
