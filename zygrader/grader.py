@@ -184,6 +184,33 @@ def pair_programming_submission_callback(lab, submission):
     SharedData.running_process = None
 
 
+def flag_submission(lab, student):
+    """Flag a submission with a note"""
+    window = ui.get_window()
+
+    flagtags = ["Needs Head TA", "Student Action Required", "Other"]
+
+    tag_input = ui.layers.ListLayer("Flag Tag", popup=True)
+    for flagtag in flagtags:
+        tag_input.add_row_text(flagtag)
+    window.run_layer(tag_input)
+    if tag_input.canceled:
+        return
+    flagtag = flagtags[tag_input.selected_index()]
+
+    text_input = ui.layers.TextInputLayer("Flag Note")
+    text_input.set_prompt(["Enter a flag note"])
+    window.run_layer(text_input)
+    if text_input.canceled:
+        return
+    flag_note = text_input.get_text()
+
+    full_message = f"[{flagtag}]: {flag_note}"
+    data.flags.flag_submission(student, lab, full_message)
+    events = ui.get_events()
+    events.push_layer_close_event()
+
+
 def can_get_through_locks(use_locks, student, lab):
     if not use_locks:
         return True
@@ -289,33 +316,6 @@ def grade_pair_programming(first_submission, use_locks):
     finally:
         if use_locks:
             data.lock.unlock(student, lab)
-
-
-def flag_submission(lab, student):
-    """Flag a submission with a note"""
-    window = ui.get_window()
-
-    flagtags = ["Needs Head TA", "Student Action Required", "Other"]
-
-    tag_input = ui.layers.ListLayer("Flag Tag", popup=True)
-    for flagtag in flagtags:
-        tag_input.add_row_text(flagtag)
-    window.run_layer(tag_input)
-    if tag_input.canceled:
-        return
-    flagtag = flagtags[tag_input.selected_index()]
-
-    text_input = ui.layers.TextInputLayer("Flag Note")
-    text_input.set_prompt(["Enter a flag note"])
-    window.run_layer(text_input)
-    if text_input.canceled:
-        return
-    flag_note = text_input.get_text()
-
-    full_message = f"{flagtag}: {flag_note}"
-    data.flags.flag_submission(student, lab, full_message)
-    events = ui.get_events()
-    events.push_layer_close_event()
 
 
 def diff_parts_fn(window, submission):
