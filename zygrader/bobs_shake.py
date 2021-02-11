@@ -113,17 +113,14 @@ class WorkEvent:
         if duration_str == "None":  # student helped themselves
             return None, None
         try:
-            duration = datetime.datetime.strptime(duration_str, "%M:%S")
+            minute_str, second_str = duration_str.split(":")
+            minutes = int(minute_str)
+            seconds = int(second_str)
         except ValueError:
-            try:
-                duration = datetime.datetime.strptime(duration_str, "%H:%M:%S")
-            except ValueError:
-                # TODO: actually log this or present a warning or soemthing
-                return None, None
+            # TODO: actually log this or present a warning or soemthing
+            return None, None
+        duration_delta = datetime.timedelta(minutes=minutes, seconds=seconds)
 
-        duration_delta = datetime.timedelta(hours=duration.hour,
-                                            minutes=duration.minute,
-                                            seconds=duration.second)
         end_time = begin_time + duration_delta
 
         uniq_item = f'HELP{cls.uniq_help_id}'
