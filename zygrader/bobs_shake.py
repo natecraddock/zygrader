@@ -163,40 +163,35 @@ def deduplicate_nested_events(og_list):
 
 
 class EventStreamStats:
+    REAL_WORK_THRESHOLD = datetime.timedelta(seconds=15)
+
     def __init__(self):
         self.total_time = datetime.timedelta()
         self.total_num_closed = 0
-        self.num_unique_closed = 0
-        self.active_time_windows = []
-        self.items_touched = set()
+        self.worked_event_pairs = []
 
     def analyze(self, events: typing.List[WorkEvent]):
         if not events:
             return
         # pretty sure it'll be sorted, but as a sanity check
         sorted_events = sorted(events, key=lambda event: event.time_stamp)
-
-        all_closed = [event for event in sorted_events if not event.is_begin]
-        self.total_num_closed += len(all_closed)
-
-        self.items_touched = self.items_touched.union(
-            {event.uniq_item
-             for event in all_closed})
-        self.num_unique_closed = len(self.items_touched)
-
         flat_events = deduplicate_nested_events(sorted_events)
 
-        new_time_pairs = []
+        new_worked_event_pairs = []
+
         prev_event = flat_events[0]
         for event in flat_events[1:]:
             if prev_event.is_begin and not event.is_begin:
-                new_time_pairs.append((prev_event.time_stamp, event.time_stamp))
+                time_spent = event.time_stamp - prev_event.time_stamp
+                if time_spent > EventStreamStats.REAL_WORK_THRESHOLD:
+                    new_worked_event_pairs.append((prev_event, event))
+                    self.total_time += time_spent
             prev_event = event
-        self.active_time_windows = sorted(self.active_time_windows +
-                                          new_time_pairs)
+        self.worked_event_pairs = sorted(
+            self.worked_event_pairs + new_worked_event_pairs,
+            key=lambda p: (p[0].time_stamp, p[1].time_stamp))
 
-        for begin_time, end_time in new_time_pairs:
-            self.total_time += end_time - begin_time
+        self.total_num_closed = len(self.worked_event_pairs)
 
 
 class TA:
@@ -225,8 +220,6 @@ class TA:
         self.lab_stats.analyze(self.lab_events)
         self.email_stats.analyze(self.email_events)
         self.help_stats.analyze(self.help_events)
-
-        # TODO: Join individual stats together in a useful manner
 
 
 def select_time(title: str):
@@ -353,7 +346,10 @@ class StatsWorker:
         list_layer = ui.layers.ListLayer("Lab events")
         for netid, ta in self.tas.items():
             parent = list_layer.add_row_parent(netid)
-            for event in ta.events:
-                parent.add_row_text(str(event))
+            for item in ta.__dict__:
+                if item.endswith("events"):
+                    for event in ta.__dict__[item]:
+                        # for event in ta.events:
+                        parent.add_row_text(str(event))
         ui.get_window().run_layer(list_layer)
         return not list_layer.was_canceled()
