@@ -1,3 +1,7 @@
+"""Bob's Shake: A tool to analyze TA work statistics.
+
+`shake` is the singular entry point to this module
+"""
 # TODO: Check this against the old Bob's Second
 
 # TODO: run my 'history fixer' on the lock log
@@ -16,10 +20,32 @@ from zygrader.ui.templates import filename_input
 
 
 def shake():
+    """Read TA work data, "shake" it, and report the shaken statistics.
+
+    Results summarize work in grading, answering emails, and helping students.
+    For each category of work, Bob's Shake reports the number of items finished
+    by a TA and the total time spent on those items.
+
+    Resulting summary statistics are written to a file chosen by the user.
+
+    Some TA data is read from zygrader's own native lock log,
+    and additional data is read from a csv file created by our help queue.
+
+    "shaking" occurs in a series of steps, roughly:
+        - user selects start and end time to include
+        - user points Bob to the data from the help queue
+        - data is read from zygrader's log and the queue info
+        - errors encountered and corrections that need to be made
+          are presented to the user
+        - input data is assigned to each TA appropriately
+        - each TA's events are analyzed to calculate the results summary
+        - user selects an output file
+        - the summary statistics are written to the file
+    """
     window = ui.get_window()
     wait_popup = ui.layers.WaitPopup("Bob's Shake")
 
-    worker = StatsWorker()
+    worker = _StatsWorker()
     Step = namedtuple('Step', ['interactive', 'msg', 'func'])
     steps = [
         Step(True, "start time", lambda: worker.select_start_time()),
@@ -42,7 +68,7 @@ def shake():
              lambda: worker.write_stats_to_file())
     ]
 
-    WorkEvent.queue_errors = []
+    _WorkEvent.queue_errors = []
 
     for step in steps:
         if step.interactive:
@@ -56,7 +82,7 @@ def shake():
                 return
 
 
-class WorkEvent:
+class _WorkEvent:
     queue_errors = []
 
     def __init__(self, time_stamp, event_type, student_name, ta_name, is_begin,
@@ -103,8 +129,8 @@ class WorkEvent:
         lock_type = row[5 - old_format_shift]
         is_lock = lock_type == "LOCK"
 
-        return WorkEvent(time_stamp, event_type, student_name, ta_netid,
-                         is_lock, row, uniq_item)
+        return _WorkEvent(time_stamp, event_type, student_name, ta_netid,
+                          is_lock, row, uniq_item)
 
     uniq_help_id = 0
 
@@ -136,10 +162,10 @@ class WorkEvent:
             uniq_item = f'HELP{cls.uniq_help_id}'
             cls.uniq_help_id += 1
 
-            begin_event = WorkEvent(begin_time, 'HELP', student_name, ta_name,
-                                    True, row, uniq_item)
-            end_event = WorkEvent(end_time, 'HELP', student_name, ta_name,
-                                  False, row, uniq_item)
+            begin_event = _WorkEvent(begin_time, 'HELP', student_name, ta_name,
+                                     True, row, uniq_item)
+            end_event = _WorkEvent(end_time, 'HELP', student_name, ta_name,
+                                   False, row, uniq_item)
 
             return begin_event, end_event
         except Exception:
@@ -153,7 +179,7 @@ class WorkEvent:
                 f"({self.og_data})")
 
 
-def deduplicate_nested_events(og_list):
+def _deduplicate_nested_events(og_list):
     new_list = []
     unmatched_depth = 0
 
@@ -175,7 +201,7 @@ def deduplicate_nested_events(og_list):
     return new_list
 
 
-class EventStreamStats:
+class _EventStreamStats:
     REAL_WORK_THRESHOLD = datetime.timedelta(seconds=15)
 
     def __init__(self):
@@ -183,12 +209,12 @@ class EventStreamStats:
         self.total_num_closed = 0
         self.worked_event_pairs = []
 
-    def analyze(self, events: typing.List[WorkEvent]):
+    def analyze(self, events: typing.List[_WorkEvent]):
         if not events:
             return
         # pretty sure it'll be sorted, but as a sanity check
         sorted_events = sorted(events, key=lambda event: event.time_stamp)
-        flat_events = deduplicate_nested_events(sorted_events)
+        flat_events = _deduplicate_nested_events(sorted_events)
         if not flat_events:
             return
 
@@ -198,7 +224,7 @@ class EventStreamStats:
         for event in flat_events[1:]:
             if prev_event.is_begin and not event.is_begin:
                 time_spent = event.time_stamp - prev_event.time_stamp
-                if time_spent > EventStreamStats.REAL_WORK_THRESHOLD:
+                if time_spent > _EventStreamStats.REAL_WORK_THRESHOLD:
                     new_worked_event_pairs.append((prev_event, event))
                     self.total_time += time_spent
             prev_event = event
@@ -210,14 +236,14 @@ class EventStreamStats:
         self.total_num_closed = len(self.worked_event_pairs)
 
 
-class TA:
+class _TA:
     def __init__(self, netid):
         self.netid = netid
-        self.lab_events: typing.List[WorkEvent] = []
-        self.email_events: typing.List[WorkEvent] = []
-        self.help_events: typing.List[WorkEvent] = []
+        self.lab_events: typing.List[_WorkEvent] = []
+        self.email_events: typing.List[_WorkEvent] = []
+        self.help_events: typing.List[_WorkEvent] = []
 
-    def add_event(self, event: WorkEvent):
+    def add_event(self, event: _WorkEvent):
         if event.event_type == 'LAB':
             self.lab_events.append(event)
         elif event.event_type == 'EMAIL':
@@ -229,16 +255,16 @@ class TA:
                 f"Unknown event type '{event.event_type}' encountered")
 
     def analyze_all_events(self):
-        self.lab_stats = EventStreamStats()
-        self.email_stats = EventStreamStats()
-        self.help_stats = EventStreamStats()
+        self.lab_stats = _EventStreamStats()
+        self.email_stats = _EventStreamStats()
+        self.help_stats = _EventStreamStats()
 
         self.lab_stats.analyze(self.lab_events)
         self.email_stats.analyze(self.email_events)
         self.help_stats.analyze(self.help_events)
 
 
-def select_time(title: str):
+def _select_time(title: str):
     time_selector = ui.layers.DatetimeSpinner(title)
     time_selector.set_quickpicks([(59, 59), (0, 0)])
     ui.get_window().run_layer(time_selector, "Bob's Shake")
@@ -246,18 +272,18 @@ def select_time(title: str):
     return (None if time_selector.canceled else time_selector.get_time())
 
 
-class StatsWorker:
+class _StatsWorker:
     def __init__(self):
         self.native_events = []
         self.queuee_events = []
-        self.tas: typing.Dict[str, TA] = dict()
+        self.tas: typing.Dict[str, _TA] = dict()
 
     def select_start_time(self):
-        self.start_time = select_time("Start Time")
+        self.start_time = _select_time("Start Time")
         return self.start_time
 
     def select_end_time(self):
-        self.end_time = select_time("End Time")
+        self.end_time = _select_time("End Time")
         return self.end_time
 
     def read_in_native_stats(self):
@@ -266,7 +292,7 @@ class StatsWorker:
         with open(file_name, 'r', newline='') as csv_file:
             csv_reader = csv.reader(csv_file)
             for row in csv_reader:
-                event = WorkEvent.from_native_data(row)
+                event = _WorkEvent.from_native_data(row)
                 if (event.time_stamp > self.start_time
                         and event.time_stamp < self.end_time):
                     self.native_events.append(event)
@@ -291,7 +317,7 @@ class StatsWorker:
                 if not any(row):
                     continue
                 begin_event, end_event = (
-                    WorkEvent.from_queue_data_start_and_end(row))
+                    _WorkEvent.from_queue_data_start_and_end(row))
                 if (begin_event and end_event
                         and begin_event.time_stamp > self.start_time
                         and end_event.time_stamp < self.end_time):
@@ -299,7 +325,7 @@ class StatsWorker:
                     self.queuee_events.append(end_event)
 
     def present_queue_errors(self):
-        error_rows = WorkEvent.queue_errors
+        error_rows = _WorkEvent.queue_errors
         if not error_rows:
             return True
 
@@ -360,13 +386,13 @@ class StatsWorker:
     def assign_events_to_tas(self):
         for event in self.native_events:
             self.tas.setdefault(event.ta_name,
-                                TA(event.ta_name)).add_event(event)
+                                _TA(event.ta_name)).add_event(event)
 
         tas = data.get_tas()
         lookup = {ta.queue_name: ta.netid for ta in tas}
         for event in self.queuee_events:
             netid = lookup[event.ta_name]
-            self.tas.setdefault(netid, TA(netid)).add_event(event)
+            self.tas.setdefault(netid, _TA(netid)).add_event(event)
 
     def analyze_tas_individually(self):
         for ta in self.tas.values():
