@@ -184,11 +184,11 @@ def pair_programming_submission_callback(lab, submission):
     SharedData.running_process = None
 
 
-def flag_submission(lab, student, flag_text="", flag_type=""):
+def flag_submission(lab, student, flag_text="", flagtag=""):
     """Flag a submission with a note"""
     window = ui.get_window()
 
-    if not flag_type:
+    if not flagtag:
         flagtags = ["Needs Head TA", "Student Action Required", "Other"]
         tag_input = ui.layers.ListLayer("Flag Tag", popup=True)
         for tag in flagtags:
@@ -196,7 +196,7 @@ def flag_submission(lab, student, flag_text="", flag_type=""):
         window.run_layer(tag_input)
         if tag_input.canceled:
             return
-        flag_type = flagtags[tag_input.selected_index()]
+        flagtag = flagtags[tag_input.selected_index()]
 
     text_input = ui.layers.TextInputLayer("Flag Note")
     text_input.set_prompt(["Enter a flag note"])
