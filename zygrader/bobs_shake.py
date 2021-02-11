@@ -107,37 +107,42 @@ class WorkEvent:
 
     @classmethod
     def from_queue_data_start_and_end(cls, row):
-        student_name = row[1]
-        ta_name = row[2]
-
-        begin_time_str = row[4]
-        begin_time = datetime.datetime.strptime(begin_time_str,
-                                                "%m/%d/%Y %I:%M:%S %p")
-
-        duration_str = row[7]
-        # duration = datetime.datetime.now()
-        if duration_str == "None":  # student helped themselves
-            return None, None
         try:
-            minute_str, second_str = duration_str.split(":")
-            minutes = int(minute_str)
-            seconds = int(second_str)
-        except ValueError:
+            student_name = row[1]
+            ta_name = row[2]
+
+            begin_time_str = row[4]
+            begin_time = datetime.datetime.strptime(begin_time_str,
+                                                    "%m/%d/%Y %I:%M:%S %p")
+
+            duration_str = row[7]
+            # duration = datetime.datetime.now()
+            if duration_str == "None":  # student helped themselves
+                return None, None
+            try:
+                minute_str, second_str = duration_str.split(":")
+                minutes = int(minute_str)
+                seconds = int(second_str)
+            except ValueError:
+                cls.queue_errors.append(row)
+                return None, None
+            duration_delta = datetime.timedelta(minutes=minutes,
+                                                seconds=seconds)
+
+            end_time = begin_time + duration_delta
+
+            uniq_item = f'HELP{cls.uniq_help_id}'
+            cls.uniq_help_id += 1
+
+            begin_event = WorkEvent(begin_time, 'HELP', student_name, ta_name,
+                                    True, row, uniq_item)
+            end_event = WorkEvent(end_time, 'HELP', student_name, ta_name,
+                                  False, row, uniq_item)
+
+            return begin_event, end_event
+        except Exception:
             cls.queue_errors.append(row)
             return None, None
-        duration_delta = datetime.timedelta(minutes=minutes, seconds=seconds)
-
-        end_time = begin_time + duration_delta
-
-        uniq_item = f'HELP{cls.uniq_help_id}'
-        cls.uniq_help_id += 1
-
-        begin_event = WorkEvent(begin_time, 'HELP', student_name, ta_name, True,
-                                row, uniq_item)
-        end_event = WorkEvent(end_time, 'HELP', student_name, ta_name, False,
-                              row, uniq_item)
-
-        return begin_event, end_event
 
     def __str__(self):
         return (f"At {self.time_stamp} {self.ta_name} "
