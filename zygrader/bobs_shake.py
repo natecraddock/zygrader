@@ -14,7 +14,6 @@ from zygrader.ui.templates import filename_input
 
 
 def shake():
-    #call get get_lock_log_path()
     window = ui.get_window()
     wait_popup = ui.layers.WaitPopup("Bob's Shake")
 
@@ -36,8 +35,7 @@ def shake():
              lambda: worker.analyze_tas_individually()),
         Step(True, "select output file", lambda: worker.select_output_file()),
         Step(False, "Write shaken stats to file",
-             lambda: worker.write_stats_to_file()),
-        Step(True, "Debug show events", lambda: worker.show_events()),
+             lambda: worker.write_stats_to_file())
     ]
 
     for step in steps:
