@@ -5,8 +5,6 @@ from collections import namedtuple
 import csv
 import datetime
 import os
-from os import path
-import time
 import typing
 from ui.templates import filename_input
 
@@ -241,12 +239,6 @@ def select_time(title: str):
 
 class StatsWorker:
     def __init__(self):
-        """This is supposed to clear the bob's output before
-         we start writing all the event to it again"""
-        debug_output = open("bobsOutput.txt", 'w')
-        print("", file=debug_output)
-        debug_output.close()
-
         self.native_events = []
         self.queuee_events = []
         self.tas: typing.Dict[str, TA] = dict()
@@ -258,14 +250,6 @@ class StatsWorker:
     def select_end_time(self):
         self.end_time = select_time("End Time")
         return self.end_time
-
-    def debug_grading(self, print_message):
-        """This is for debugging purposes. It will write out whatever you pass to it
-        to a file called bobsOutput.txt which is saved in your home directory. There
-         is no visual indication that you wrote to this file, so just check it with cat"""
-        debug_output = open("bobsOutput.txt", 'a')
-        print(print_message, file=debug_output)
-        debug_output.close()
 
     def read_in_native_stats(self):
         """goes through zygrader's lock log, using each row to make an event"""
@@ -373,15 +357,3 @@ class StatsWorker:
                 ta.email_stats.total_num_closed, ta.email_stats.total_time,
                 ta.help_stats.total_num_closed, ta.help_stats.total_time
             ] for netid, ta in self.tas.items()])
-
-    def show_events(self):
-        list_layer = ui.layers.ListLayer("Lab events")
-        for netid, ta in self.tas.items():
-            parent = list_layer.add_row_parent(netid)
-            for item in ta.__dict__:
-                if item.endswith("events"):
-                    for event in ta.__dict__[item]:
-                        # for event in ta.events:
-                        parent.add_row_text(str(event))
-        ui.get_window().run_layer(list_layer)
-        return not list_layer.was_canceled()
