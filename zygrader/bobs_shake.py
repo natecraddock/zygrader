@@ -280,6 +280,10 @@ class StatsWorker:
 
     def select_help_queue_data_file(self):
         filepath_entry = ui.layers.PathInputLayer("Help Queue Data")
+        filepath_entry.set_prompt([
+            "Enter the path to the queue data",
+            "(you should have copy-pasted the data from the queue into a file)"
+        ])
         ui.get_window().run_layer(filepath_entry)
         if filepath_entry.was_canceled():
             return False
