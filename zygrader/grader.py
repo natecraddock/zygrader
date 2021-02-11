@@ -206,7 +206,7 @@ def flag_submission(lab, student, flag_text="", flagtag=""):
         return
     flag_note = text_input.get_text()
 
-    full_message = f"[{flagtag}]: {flag_note}"
+    full_message = f"{flagtag}: {flag_note}"
     data.flags.flag_submission(student, lab, full_message)
 
 
