@@ -52,7 +52,7 @@ def shake():
             wait_popup.set_message([step.msg])
             wait_popup.set_wait_fn(step.func)
             window.run_layer(wait_popup)
-            if wait_popup.was_canceled():
+            if wait_popup.canceled:
                 return
 
 
@@ -243,7 +243,7 @@ def select_time(title: str):
     time_selector.set_quickpicks([(59, 59), (0, 0)])
     ui.get_window().run_layer(time_selector, "Bob's Shake")
 
-    return (None if time_selector.was_canceled() else time_selector.get_time())
+    return (None if time_selector.canceled else time_selector.get_time())
 
 
 class StatsWorker:
@@ -279,7 +279,7 @@ class StatsWorker:
             ""  # empty line
         ])
         ui.get_window().run_layer(filepath_entry)
-        if filepath_entry.was_canceled():
+        if filepath_entry.canceled:
             return False
         self.help_queue_csv_filepath = filepath_entry.get_path()
         return True
@@ -317,7 +317,7 @@ class StatsWorker:
                                     "bad-queue-data.csv")
         path_input.set_text(default_path)
         ui.get_window().run_layer(path_input)
-        if path_input.was_canceled():
+        if path_input.canceled:
             return False
 
         with open(path_input.get_path(), "w", newline="") as out_file:
@@ -344,7 +344,7 @@ class StatsWorker:
             ])
             netid_input.set_text("")
             window.run_layer(netid_input)
-            if netid_input.was_canceled():
+            if netid_input.canceled:
                 return False
             netid = netid_input.get_text()
             if netid in stored_netids:
