@@ -1,6 +1,5 @@
-#TODO: everything
-#make an event class
-#WorkEvent init doesn't work and gives all kinds of fun errors
+#TODO: everything that's not done
+#Check this against the old Bob's Second
 
 from collections import namedtuple
 import csv
