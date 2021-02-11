@@ -4,11 +4,15 @@
 from collections import namedtuple
 import csv
 import datetime
+import os
+from os import path
 import time
 import typing
+from ui.templates import filename_input
 
 from zygrader import data, ui
 from zygrader.data.lock import get_lock_log_path
+from zygrader.config import preferences
 
 
 def shake():
@@ -32,6 +36,9 @@ def shake():
              lambda: worker.assign_events_to_tas()),
         Step(False, "Analyze stats for each TA",
              lambda: worker.analyze_tas_individually()),
+        Step(True, "select output file", lambda: worker.select_output_file()),
+        Step(False, "Write shaken stats to file",
+             lambda: worker.write_stats_to_file()),
         Step(True, "Debug show events", lambda: worker.show_events()),
     ]
 
@@ -176,6 +183,8 @@ class EventStreamStats:
         # pretty sure it'll be sorted, but as a sanity check
         sorted_events = sorted(events, key=lambda event: event.time_stamp)
         flat_events = deduplicate_nested_events(sorted_events)
+        if not flat_events:
+            return
 
         new_worked_event_pairs = []
 
@@ -341,6 +350,29 @@ class StatsWorker:
     def analyze_tas_individually(self):
         for ta in self.tas.values():
             ta.analyze_all_events()
+
+    def select_output_file(self):
+        default_output_path = os.path.join(preferences.get("output_dir"),
+                                           "shaken_stats.csv")
+        path = filename_input(purpose="the shaken stats",
+                              text=default_output_path)
+        if path is None:
+            return False
+        self.output_path = path
+        return True
+
+    def write_stats_to_file(self):
+        with open(self.output_path, "w", newline="") as out_file:
+            writer = csv.writer(out_file)
+            writer.writerow([
+                "Netid", "Grading Count", "Grading Time", "Email Count",
+                "Email Time", "Help Count", "Help Time"
+            ])
+            writer.writerows([[
+                netid, ta.lab_stats.total_num_closed, ta.lab_stats.total_time,
+                ta.email_stats.total_num_closed, ta.email_stats.total_time,
+                ta.help_stats.total_num_closed, ta.help_stats.total_time
+            ] for netid, ta in self.tas.items()])
 
     def show_events(self):
         list_layer = ui.layers.ListLayer("Lab events")
