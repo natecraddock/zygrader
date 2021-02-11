@@ -28,6 +28,8 @@ def shake():
              lambda: worker.read_in_native_stats()),
         Step(False, "Read data from help queue file",
              lambda: worker.read_in_help_queue_stats()),
+        Step(True, "present queue data errors",
+             lambda: worker.present_queue_errors()),
         Step(True, "validate ta names", lambda: worker.validate_queue_names()),
         Step(False, "Assign events to individual tas",
              lambda: worker.assign_events_to_tas()),
@@ -37,6 +39,8 @@ def shake():
         Step(False, "Write shaken stats to file",
              lambda: worker.write_stats_to_file())
     ]
+
+    WorkEvent.queue_errors = []
 
     for step in steps:
         if step.interactive:
@@ -51,6 +55,8 @@ def shake():
 
 
 class WorkEvent:
+    queue_errors = []
+
     def __init__(self, time_stamp, event_type, student_name, ta_name, is_begin,
                  og_data, uniq_item):
         self.time_stamp = time_stamp
@@ -117,7 +123,7 @@ class WorkEvent:
             minutes = int(minute_str)
             seconds = int(second_str)
         except ValueError:
-            # TODO: actually log this or present a warning or soemthing
+            cls.queue_errors.append(row)
             return None, None
         duration_delta = datetime.timedelta(minutes=minutes, seconds=seconds)
 
@@ -284,6 +290,33 @@ class StatsWorker:
                     self.queuee_events.append(begin_event)
                     self.queuee_events.append(end_event)
 
+    def present_queue_errors(self):
+        error_rows = WorkEvent.queue_errors
+        if not error_rows:
+            return True
+
+        path_input = ui.layers.PathInputLayer("Queue Data Errors")
+        path_input.set_prompt([
+            "There were some queue data entries that caused errors.",
+            "Select a file to write them to so that"
+            " you can manually adjust the stats for them.",
+            "",  # empty line
+            "If you find common errors, please open an issue on the"
+            " github repo, or talk to a maintainer directly."
+        ])
+        default_path = os.path.join(preferences.get("output_dir"),
+                                    "bad-queue-data.csv")
+        path_input.set_text(default_path)
+        ui.get_window().run_layer(path_input)
+        if path_input.was_canceled():
+            return False
+
+        with open(path_input.get_path(), "w", newline="") as out_file:
+            writer = csv.writer(out_file)
+            writer.writerows(error_rows)
+
+        return True
+
     def validate_queue_names(self):
         """Make sure each TA name from the queue has a known netid"""
         window = ui.get_window()
@@ -332,7 +365,7 @@ class StatsWorker:
 
     def select_output_file(self):
         default_output_path = os.path.join(preferences.get("output_dir"),
-                                           "shaken_stats.csv")
+                                           "shaken-stats.csv")
         path = filename_input(purpose="the shaken stats",
                               text=default_output_path)
         if path is None:
