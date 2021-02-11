@@ -1,5 +1,6 @@
-#TODO: everything that's not done
-#Check this against the old Bob's Second
+#TODO: Check this against the old Bob's Second
+#TODO: run my 'history fixer' on the lock log
+# (explained in a FIXME below, which should also be removed)
 
 from collections import namedtuple
 import csv
@@ -116,7 +117,6 @@ class WorkEvent:
                                                     "%m/%d/%Y %I:%M:%S %p")
 
             duration_str = row[7]
-            # duration = datetime.datetime.now()
             if duration_str == "None":  # student helped themselves
                 return None, None
             try:
@@ -200,6 +200,7 @@ class EventStreamStats:
                     new_worked_event_pairs.append((prev_event, event))
                     self.total_time += time_spent
             prev_event = event
+
         self.worked_event_pairs = sorted(
             self.worked_event_pairs + new_worked_event_pairs,
             key=lambda p: (p[0].time_stamp, p[1].time_stamp))
@@ -260,7 +261,6 @@ class StatsWorker:
     def read_in_native_stats(self):
         """goes through zygrader's lock log, using each row to make an event"""
         file_name = get_lock_log_path()
-        # self.debug_grading(file_name)
         with open(file_name, 'r', newline='') as csv_file:
             csv_reader = csv.reader(csv_file)
             for row in csv_reader:
@@ -273,7 +273,8 @@ class StatsWorker:
         filepath_entry = ui.layers.PathInputLayer("Help Queue Data")
         filepath_entry.set_prompt([
             "Enter the path to the queue data",
-            "(you should have copy-pasted the data from the queue into a file)"
+            "(you should have copy-pasted the data from the queue into a file)",
+            ""  # empty line
         ])
         ui.get_window().run_layer(filepath_entry)
         if filepath_entry.was_canceled():
@@ -307,7 +308,8 @@ class StatsWorker:
             " you can manually adjust the stats for them.",
             "",  # empty line
             "If you find common errors, please open an issue on the"
-            " github repo, or talk to a maintainer directly."
+            " github repo, or talk to a maintainer directly.",
+            ""  # empty line
         ])
         default_path = os.path.join(preferences.get("output_dir"),
                                     "bad-queue-data.csv")
