@@ -184,6 +184,43 @@ def pair_programming_submission_callback(lab, submission):
     SharedData.running_process = None
 
 
+def flag_submission(lab, student, flag_text="", flagtag=""):
+    """Flag a submission with a note"""
+    window = ui.get_window()
+
+    if not flagtag:
+        flagtags = ["Needs Head TA", "Student Action Required", "Other"]
+        tag_input = ui.layers.ListLayer("Flag Tag", popup=True)
+        for tag in flagtags:
+            tag_input.add_row_text(tag)
+        window.run_layer(tag_input)
+        if tag_input.canceled:
+            return
+        flagtag = flagtags[tag_input.selected_index()]
+
+    text_input = ui.layers.TextInputLayer("Flag Note")
+    text_input.set_prompt(["Enter a flag note"])
+    text_input.set_text(flag_text)
+    window.run_layer(text_input)
+    if text_input.canceled:
+        return
+    flag_note = text_input.get_text()
+
+    full_message = f"{flagtag}: {flag_note}"
+    data.flags.flag_submission(student, lab, full_message)
+
+
+def edit_flag(flag_string: str, student: model.Student, lab: model.Lab):
+    """Edit the text in a flagged submission"""
+
+    # The note might contain `:` characters, so we handle that case
+    parts = flag_string.split(":")
+    tag_type = parts[0].strip()
+    tag_text = ":".join(parts[1:]).strip()
+
+    flag_submission(lab, student, tag_text, tag_type)
+
+
 def can_get_through_locks(use_locks, student, lab):
     if not use_locks:
         return True
@@ -201,18 +238,23 @@ def can_get_through_locks(use_locks, student, lab):
             return False
 
     if data.flags.is_submission_flagged(student, lab):
+        flag_message = data.flags.get_flag_message(student, lab)
         msg = [
             "This submission has been flagged",
             "",
-            data.flags.get_flag_message(student, lab),
+            flag_message,
         ]
         popup = ui.layers.OptionsPopup("Submission Flagged", msg)
+        popup.add_option("Edit")
         popup.add_option("Unflag")
         popup.add_option("View")
         window.run_layer(popup)
 
         choice = popup.get_selected()
-        if choice == "Unflag":
+        if choice == "Edit":
+            edit_flag(flag_message, student, lab)
+            return False
+        elif choice == "Unflag":
             data.flags.unflag_submission(student, lab)
         elif choice == "View":
             return True
@@ -291,33 +333,6 @@ def grade_pair_programming(first_submission, use_locks):
             data.lock.unlock(student, lab)
 
 
-def flag_submission(lab, student):
-    """Flag a submission with a note"""
-    window = ui.get_window()
-
-    flagtags = ["Needs Head TA", "Student Action Required", "Other"]
-
-    tag_input = ui.layers.ListLayer("Flag Tag", popup=True)
-    for flagtag in flagtags:
-        tag_input.add_row_text(flagtag)
-    window.run_layer(tag_input)
-    if tag_input.canceled:
-        return
-    flagtag = flagtags[tag_input.selected_index()]
-
-    text_input = ui.layers.TextInputLayer("Flag Note")
-    text_input.set_prompt(["Enter a flag note"])
-    window.run_layer(text_input)
-    if text_input.canceled:
-        return
-    flag_note = text_input.get_text()
-
-    full_message = f"{flagtag}: {flag_note}"
-    data.flags.flag_submission(student, lab, full_message)
-    events = ui.get_events()
-    events.push_layer_close_event()
-
-
 def diff_parts_fn(window, submission):
     """Callback for text diffing parts of a submission"""
     error = submission.diff_parts()
@@ -342,9 +357,15 @@ def student_select_fn(student, lab, use_locks):
         if submission is None:
             return
 
+        def flag_submission_fn():
+            flag_submission(lab, student)
+            # Return to the list of students
+            events = ui.get_events()
+            events.push_layer_close_event()
+
         popup = ui.layers.OptionsPopup("Submission")
         set_submission_message(popup, submission)
-        popup.add_option("Flag", lambda: flag_submission(lab, student))
+        popup.add_option("Flag", flag_submission_fn)
         popup.add_option(
             "Pick Submission",
             lambda: pick_submission(popup, lab, student, submission))
