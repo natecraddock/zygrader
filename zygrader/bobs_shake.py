@@ -6,11 +6,11 @@ import csv
 import datetime
 import os
 import typing
-from ui.templates import filename_input
 
 from zygrader import data, ui
 from zygrader.data.lock import get_lock_log_path
 from zygrader.config import preferences
+from zygrader.ui.templates import filename_input
 
 
 def shake():
