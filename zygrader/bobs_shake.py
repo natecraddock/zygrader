@@ -1,5 +1,6 @@
-#TODO: Check this against the old Bob's Second
-#TODO: run my 'history fixer' on the lock log
+# TODO: Check this against the old Bob's Second
+
+# TODO: run my 'history fixer' on the lock log
 # (explained in a FIXME below, which should also be removed)
 
 from collections import namedtuple
@@ -72,7 +73,7 @@ class WorkEvent:
     def from_native_data(cls, row):
         time_stamp_str = row[0]
         # TODO: convert to datetime.datetime.fromisoformat
-        #   once we are using python 3.7
+        # once we are using python 3.7
         time_stamp = datetime.datetime.strptime(time_stamp_str,
                                                 "%Y-%m-%dT%H:%M:%S.%f")
 
@@ -92,11 +93,12 @@ class WorkEvent:
         uniq_item = event_type + student_name + assignment_name
 
         # FIXME: ta_netid is a lab name if student has a comman in their name
-        #  (this is somewhat fixed in data/lock.py by using csv to write data,
-        #   but old data might still have commas)
-        #  one possible fix (and what I'm thinking I'll do) is to modify the
-        #   the lock log files outside of zygrader,
-        #   just with some separate script, to keep this area clean
+        # (this is somewhat fixed in data/lock.py by using csv to write data,
+        # but old data might still have commas)
+        #
+        # one possible fix (and what I'm thinking I'll do) is to modify the
+        # the lock log files outside of zygrader,
+        # just with some separate script, to keep this area clean
 
         lock_type = row[5 - old_format_shift]
         is_lock = lock_type == "LOCK"

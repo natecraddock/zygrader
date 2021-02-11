@@ -1031,8 +1031,7 @@ class TextInput(Popup):
             after_index = max(self.marks) + 1
             self.reset_marks()
 
-        # Insert character at cursor location
-        #  and set cursor one past insert
+        # Insert character at cursor location and set cursor one past insert
         self.text = self.text[:before_index] + c + self.text[after_index:]
         self.cursor_index = before_index
         self.right()

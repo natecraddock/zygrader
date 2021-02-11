@@ -308,7 +308,7 @@ class GradePuller:
                 id_str = zybook_student["Student ID"]
                 id_chrs = [c for c in id_str if c.isdigit()]
                 # the issue number is usually the last two digits
-                #  when students try to include it
+                # when students try to include it
                 real_id_chrs = id_chrs[:-2]
                 real_id = None
                 try:
@@ -341,7 +341,7 @@ class GradePuller:
                                 consider_pairs[canvas_id] = [zybook_id]
             for canvas_id, zybook_id_list in consider_pairs.items():
                 # don't fuzzy match ids if they're too close
-                #  to multiple students
+                # to multiple students
                 if len(zybook_id_list) == 1:
                     self._add_entry(canvas_id, zybook_id_list[0])
 
