@@ -103,14 +103,12 @@ class _WorkEvent:
         # (all locks were for labs)
         is_old_format = len(row) == 5
         if is_old_format:
-            event_type = 'LAB'
-        else:
-            event_type = row[1]
+            row.insert(1, "LAB")
 
-        old_format_shift = 1 if is_old_format else 0
-        student_name = row[2 - old_format_shift]
-        assignment_name = row[3 - old_format_shift]
-        ta_netid = row[4 - old_format_shift]
+        event_type = row[1]
+        student_name = row[2]
+        assignment_name = row[3]
+        ta_netid = row[4]
 
         uniq_item = event_type + student_name + assignment_name
 
@@ -122,7 +120,7 @@ class _WorkEvent:
         # the lock log files outside of zygrader,
         # just with some separate script, to keep this area clean
 
-        lock_type = row[5 - old_format_shift]
+        lock_type = row[5]
         is_lock = lock_type == "LOCK"
 
         return _WorkEvent(time_stamp, event_type, student_name, ta_netid,
