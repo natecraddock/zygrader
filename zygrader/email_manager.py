@@ -3,10 +3,15 @@
 import curses
 import getpass
 
-from zygrader import data, ui
+from zygrader import data, grader, ui
 
 
-def lock_student_callback(student):
+def view_email_submissions(student: data.Student):
+    """View submissions from the locked student"""
+    grader.grade(use_locks=False, student=student)
+
+
+def lock_student_callback(student: data.Student):
     window = ui.get_window()
 
     if data.lock.is_locked(student):
@@ -20,7 +25,8 @@ def lock_student_callback(student):
     try:
         data.lock.lock(student)
         msg = [f"You have locked {student.full_name} for emailing."]
-        popup = ui.layers.Popup("Student Locked", msg)
+        popup = ui.layers.OptionsPopup("Student Locked", msg)
+        popup.add_option("View Submitted Code", lambda: view_email_submissions(student))
         window.run_layer(popup)
     finally:
         data.lock.unlock(student)

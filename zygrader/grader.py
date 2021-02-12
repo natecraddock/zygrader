@@ -394,10 +394,16 @@ def watch_students(student_list, students, lab, use_locks):
                                     lab, use_locks, student_select_fn)
 
 
-def lab_select_fn(selected_index, use_locks):
-    """Create the list of labs to pick a student to grade"""
-    window = ui.get_window()
+def lab_select_fn(selected_index, use_locks, student: model.Student = None):
+    """Callback function that executes after selecting a lab"""
     lab = data.get_labs()[selected_index]
+
+    # Skip selecting a student and go immediately to the grader
+    if student:
+        student_select_fn(student, lab, use_locks)
+        return
+
+    window = ui.get_window()
     students = data.get_students()
 
     student_list = ui.layers.ListLayer()
@@ -414,7 +420,7 @@ def lab_select_fn(selected_index, use_locks):
     window.register_layer(student_list, lab.name)
 
 
-def grade(use_locks=True):
+def grade(use_locks=True, student: model.Student = None):
     """Create the list of labs to pick one to grade"""
     window = ui.get_window()
     labs = data.get_labs()
@@ -432,5 +438,6 @@ def grade(use_locks=True):
     lab_list = ui.layers.ListLayer()
     lab_list.set_searchable("Lab")
     for index, lab in enumerate(labs):
-        lab_list.add_row_text(str(lab), lab_select_fn, index, use_locks)
+        lab_list.add_row_text(str(lab), lab_select_fn, index, use_locks,
+                              student)
     window.register_layer(lab_list, title)
