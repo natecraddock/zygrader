@@ -453,6 +453,10 @@ class Row:
         self.__radio: RadioGroup = None
         self.__radio_id = ""
 
+        # Disable parent rows until children are added
+        if _type == Row.PARENT:
+            self.__disabled = True
+
     def __str__(self):
         """Render a textual representation of this row."""
         if self.__type == Row.TEXT:
@@ -479,6 +483,11 @@ class Row:
     def __add_row(self, text: str, _type=TEXT):
         row = Row(text, _type)
         self.__subrows.append(row)
+
+        # Enable parent rows when adding children
+        if self.__type == Row.PARENT and self.__disabled:
+            self.__disabled = False
+
         return row
 
     def add_row_text(self, text: str, callback_fn=None, *args):
