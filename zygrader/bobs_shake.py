@@ -48,24 +48,20 @@ def shake():
     worker = _StatsWorker()
     Step = namedtuple('Step', ['interactive', 'msg', 'func'])
     steps = [
-        Step(True, "start time", lambda: worker.select_start_time()),
-        Step(True, "end time", lambda: worker.select_end_time()),
-        Step(True, "select helpqueue csv",
-             lambda: worker.select_help_queue_data_file()),
-        Step(False, "Read data from the log file",
-             lambda: worker.read_in_native_stats()),
+        Step(True, None, worker.select_start_time),
+        Step(True, None, worker.select_end_time),
+        Step(True, None, worker.select_help_queue_data_file),
+        Step(False, "Read data from the log file", worker.read_in_native_stats),
         Step(False, "Read data from help queue file",
-             lambda: worker.read_in_help_queue_stats()),
-        Step(True, "present queue data errors",
-             lambda: worker.present_queue_errors()),
-        Step(True, "validate ta names", lambda: worker.validate_queue_names()),
+             worker.read_in_help_queue_stats),
+        Step(True, None, worker.present_queue_errors),
+        Step(True, None, worker.validate_queue_names),
         Step(False, "Assign events to individual tas",
-             lambda: worker.assign_events_to_tas()),
+             worker.assign_events_to_tas),
         Step(False, "Analyze stats for each TA",
-             lambda: worker.analyze_tas_individually()),
-        Step(True, "select output file", lambda: worker.select_output_file()),
-        Step(False, "Write shaken stats to file",
-             lambda: worker.write_stats_to_file())
+             worker.analyze_tas_individually),
+        Step(True, None, worker.select_output_file),
+        Step(False, "Write shaken stats to file", worker.write_stats_to_file)
     ]
 
     _WorkEvent.queue_errors = []
