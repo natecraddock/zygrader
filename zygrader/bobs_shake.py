@@ -189,8 +189,7 @@ def _deduplicate_nested_events(og_list):
             if event.is_begin:
                 unmatched_depth += 1
                 new_list.append(event)
-            else:
-                pass
+            # nothing to do here if event is not begin
 
     return new_list
 
