@@ -114,7 +114,7 @@ class _WorkEvent:
 
         uniq_item = event_type + student_name + assignment_name
 
-        # FIXME: ta_netid is a lab name if student has a comman in their name
+        # FIXME: ta_netid is a lab name if student has a comma in their name
         # (this is somewhat fixed in data/lock.py by using csv to write data,
         # but old data might still have commas)
         #
