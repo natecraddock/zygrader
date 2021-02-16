@@ -68,6 +68,8 @@ class ComponentLayer:
 
     def set_title(self, title: str):
         self.title = title
+
+        # Don't overwrite the stack_desc with an empty title
         if title:
             self.stack_desc = title
 
