@@ -54,6 +54,10 @@ def parse_args():
                         "--admin",
                         action="store_true",
                         help="Enable admin features")
+    parser.add_argument("-d",
+                        "--debug",
+                        action="store_true",
+                        help="Show the debug console")
     group = parser.add_mutually_exclusive_group()
     group.add_argument("-n",
                        "--no-update",

@@ -46,7 +46,7 @@ class Window:
         self.name = window_name
 
         # Debug console data
-        self.__debug_mode = True
+        self.__debug_mode = args.debug
         self.__debug_lines = []
         self.__debug_win = None
 
