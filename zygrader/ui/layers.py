@@ -37,10 +37,15 @@ class WorkerThread:
 
 
 class ComponentLayer:
-    def __init__(self):
+    def __init__(self, stack_desc: str = ""):
         # Title is used to set the header text when this component layer is active
         self.title: str = ""
         self.component: Component = None
+
+        # A message representing where this layer was instantiated from
+        self.stack_msg = ""
+        # Description for this layer on the stack
+        self.stack_desc = stack_desc
 
         self.blocking = False
         self.is_text_input = False
@@ -55,6 +60,18 @@ class ComponentLayer:
         self.redraw = False
 
         self.on_destroy_fn = None
+
+    def __repr__(self) -> str:
+        if self.stack_desc:
+            return f"[{self.stack_desc}]"
+        return ""
+
+    def set_title(self, title: str):
+        self.title = title
+
+        # Don't overwrite the stack_desc with an empty title
+        if title:
+            self.stack_desc = title
 
     def build(self):
         """An optional function to finalize construction of a Layer upon registration."""
@@ -95,7 +112,7 @@ class PopupLayer:
 class Popup(ComponentLayer, PopupLayer):
     """A popup that shows a message until the user presses Enter."""
     def __init__(self, title, message=[]):
-        super().__init__()
+        super().__init__(stack_desc=title)
 
         win = window.Window.get_window()
         self.component = components.Popup(win.rows, win.cols, title, message)
@@ -116,7 +133,7 @@ class BoolPopup(ComponentLayer, PopupLayer):
     __OPTIONS = ["Yes", "No"]
 
     def __init__(self, title, message=[]):
-        super().__init__()
+        super().__init__(stack_desc=title)
 
         win = window.Window.get_window()
         self.component = components.OptionsPopup(win.rows, win.cols, title,
@@ -142,7 +159,7 @@ class BoolPopup(ComponentLayer, PopupLayer):
 
 class OptionsPopup(ComponentLayer, PopupLayer):
     def __init__(self, title, message=[]):
-        super().__init__()
+        super().__init__(stack_desc=title)
         self.options = {}
 
         win = window.Window.get_window()
@@ -192,7 +209,7 @@ class OptionsPopup(ComponentLayer, PopupLayer):
 class WaitPopup(ComponentLayer, PopupLayer):
     """A popup that stays visibile until a process completes."""
     def __init__(self, title, message=[]):
-        super().__init__()
+        super().__init__(stack_desc=title)
         self.__result = None
 
         win = window.Window.get_window()
@@ -226,7 +243,7 @@ class WaitPopup(ComponentLayer, PopupLayer):
 class TextInputLayer(ComponentLayer, PopupLayer):
     """A popup that prompts the user for a string."""
     def __init__(self, title, mask=components.TextInput.TEXT_NORMAL):
-        super().__init__()
+        super().__init__(stack_desc=title)
         self.is_text_input = True
 
         win = window.Window.get_window()
@@ -358,7 +375,7 @@ class PathInputLayer(TextInputLayer):
 
 class DatetimeSpinner(ComponentLayer):
     def __init__(self, title):
-        super().__init__()
+        super().__init__(stack_desc=title)
 
         win = window.Window.get_window()
         self.component = components.DatetimeSpinner(win.rows, win.cols, title)
@@ -588,11 +605,12 @@ class Row:
 class ListLayer(ComponentLayer, PopupLayer):
     """A reusable list that supports searching the options."""
     def __init__(self, title="", popup=False):
-        ComponentLayer.__init__(self)
+        super().__init__(stack_desc=title)
         self.is_clearable = True
 
         self.__rows = Row(_type=Row.HOLDER)
         self._paged = False
+        self._is_popup = popup
 
         if popup:
             win = window.Window.get_window()
@@ -638,6 +656,8 @@ class ListLayer(ComponentLayer, PopupLayer):
         return text.lower().find(search_str.lower()) != -1
 
     def set_searchable(self, prompt: str, search_fn=__string_search_fn):
+        if not self._is_popup:
+            self.stack_desc = prompt
         self.component.set_searchable(prompt, search_fn)
 
     def clear_search_text(self) -> bool:
@@ -694,7 +714,7 @@ class ListLayer(ComponentLayer, PopupLayer):
 
 class LoggerLayer(ComponentLayer):
     def __init__(self):
-        super().__init__()
+        super().__init__(stack_desc="Logger")
 
         win = window.Window.get_window()
         self.component = components.Logger(win.rows - 1, win.cols, 1, 0)

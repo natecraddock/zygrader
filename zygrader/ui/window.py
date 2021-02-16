@@ -1,5 +1,6 @@
 """Window: The zygrader window manager and input handling"""
 import curses
+import inspect
 import typing
 
 from zygrader.ui import themes
@@ -7,8 +8,22 @@ from zygrader.config import preferences
 
 from . import events
 from .events import Event
-from .layers import ComponentLayer, Toggle
+from .layers import ComponentLayer
 from .utils import add_str, resize_window
+
+
+def get_stack_info(layer: ComponentLayer, skip=2):
+    # Ignore this and the previous stack frame by default (2)
+    stack = inspect.stack()[skip][0]
+    caller = inspect.getframeinfo(stack)
+
+    # Remove the beginning of the filepath
+    index = caller.filename.find("zygrader/zygrader/")
+    filename = caller.filename[index + len("zygrader/zygrader/"):]
+
+    class_type = layer.__class__
+
+    return f"{filename}:{caller.lineno} in {caller.function}\n\t{class_type} {layer}"
 
 
 class WinContext:
@@ -45,7 +60,14 @@ class Window:
         self.layers: typing.List[ComponentLayer] = []
         self.active_layer: ComponentLayer = None
 
-        curses.wrapper(self.__init_curses, callback, args)
+        try:
+            curses.wrapper(self.__init_curses, callback, args)
+        except Exception:
+            curses.endwin()
+            print("Zygrader layer stack:")
+            self.print_stack()
+            print()
+            raise
 
         # Cleanup when finished accepting input
         self.stdscr.clear()
@@ -133,7 +155,7 @@ class Window:
         add_str(self.header, 0, row, display_text)
 
         # Non-default theme
-        if self.theme is not "Default":
+        if self.theme != "Default":
             colors = self.get_header_colors()
             for row in range(self.cols):
                 if (row // 2) % 2 is 0:
@@ -161,19 +183,26 @@ class Window:
 
         self.__header_dirty = True
 
-    def register_layer(self, layer: ComponentLayer, header_title=""):
+    def print_stack(self):
+        for i, layer in enumerate(reversed(self.layers)):
+            print(f"[{i}]: {layer.stack_msg}")
+
+    def register_layer(self, layer: ComponentLayer, header_title="", skip=2):
         """Register a layer in the event loop."""
         # Always disable insert or visual mode from previous layers
         self.event_manager.disable_modes()
 
         self.layers.append(layer)
         self.active_layer = layer
-        layer.title = header_title
+        layer.set_title(header_title)
 
         self.__update_header_title()
 
         # Run any finalizing actions this layer needs
         layer.build()
+
+        # Create the stack message with the completed layer information
+        layer.stack_msg = get_stack_info(layer, skip)
 
         if layer.is_text_input:
             self.event_manager.insert_mode = True
@@ -198,7 +227,7 @@ class Window:
             self.active_layer.clear_search_text()
 
     def run_layer(self, layer: ComponentLayer, title=""):
-        self.register_layer(layer, title)
+        self.register_layer(layer, title, skip=3)
 
         while layer in self.layers:
             self.build()
