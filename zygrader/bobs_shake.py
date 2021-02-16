@@ -2,8 +2,6 @@
 
 `shake` is the singular entry point to this module
 """
-# TODO: Check this against the old Bob's Second
-
 # TODO: run my 'history fixer' on the lock log
 # (explained in a FIXME below, which should also be removed)
 
