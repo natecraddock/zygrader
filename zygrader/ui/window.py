@@ -20,6 +20,9 @@ class WinContext:
         self.data = custom_data
 
 
+DEBUG_CONSOLE_HEIGHT = 5
+
+
 class Window:
     INSTANCE = None
 
@@ -41,6 +44,11 @@ class Window:
         """Initialize screen and run callback function"""
         Window.INSTANCE = self
         self.name = window_name
+
+        # Debug console data
+        self.__debug_mode = True
+        self.__debug_lines = []
+        self.__debug_win = None
 
         self.layers: typing.List[ComponentLayer] = []
         self.active_layer: ComponentLayer = None
@@ -71,10 +79,19 @@ class Window:
         # All user input handling is done inside the EventManager class.
         self.event_manager = events.EventManager()
 
+        if self.__debug_mode:
+            self.__debug_win = curses.newwin(DEBUG_CONSOLE_HEIGHT, self.cols,
+                                             self.rows, 0)
+
         # Execute callback with a reference to the window object
         callback(self, args)
 
     def __get_window_dimensions(self):
+        # Restrict the window height if the debug console is open
+        if self.__debug_mode:
+            rows, cols = self.stdscr.getmaxyx()
+            self.rows, self.cols = rows - DEBUG_CONSOLE_HEIGHT, cols
+            return
         self.rows, self.cols = self.stdscr.getmaxyx()
 
     def __resize_terminal(self):
@@ -255,6 +272,8 @@ class Window:
         self.stdscr.noutrefresh()
 
         self.draw_header()
+        if self.__debug_mode:
+            self.draw_debug_console()
 
         self.__tag_visible_layers()
         for layer in self.layers:
@@ -264,6 +283,23 @@ class Window:
         # All windows have been tagged for redraw with noutrefresh,
         # now do a single draw pass with doupdate.
         curses.doupdate()
+
+    def draw_debug_console(self):
+        self.__debug_win.erase()
+
+        # First row is a separator line
+        self.__debug_win.hline(0, 0, "_", self.cols)
+
+        row_num = 1
+        display_rows = self.__debug_lines[-4:]
+        for row in display_rows:
+            add_str(self.__debug_win, row_num, 0, row)
+            row_num += 1
+
+        self.__debug_win.noutrefresh()
+
+    def debug(self, line: str):
+        self.__debug_lines.append(line)
 
     def update_window(self):
         if self.dark_mode:
