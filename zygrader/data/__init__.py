@@ -4,7 +4,7 @@ import os
 from zygrader.config.shared import SharedData
 
 from . import flags, fs_watch, lock
-from .model import ClassSection, Lab, Student
+from .model import ClassSection, Lab, Student, TA
 
 
 def load_students() -> list:
@@ -122,3 +122,38 @@ def write_class_sections(class_sections):
     path = SharedData.get_class_sections_data()
     with open(path, "w") as _file:
         json.dump(class_sections_json, _file, indent=2)
+
+
+def load_tas() -> list:
+    SharedData.TAS.clear()
+    path = SharedData.get_ta_data()
+    if not os.path.exists(path):
+        return []
+
+    with open(path, "r") as tas_file:
+        tas_json = json.load(tas_file)
+
+    for ta in tas_json:
+        SharedData.TAS.append(TA.from_json(ta))
+
+    return SharedData.TAS
+
+
+def get_tas() -> list:
+    if SharedData.TAS:
+        return SharedData.TAS
+
+    return load_tas()
+
+
+def write_tas(tas):
+    SharedData.TAS = tas
+
+    tas_json = []
+
+    for ta in tas:
+        tas_json.append(ta.to_json())
+
+    path = SharedData.get_ta_data()
+    with open(path, "w") as _file:
+        json.dump(tas_json, _file, indent=2)

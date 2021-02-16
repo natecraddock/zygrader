@@ -122,7 +122,7 @@ class Theme:
         curses.init_pair(6, curses.COLOR_RED, curses.COLOR_WHITE)
 
         # Flagged lines
-        #this line can't change
+        # this line can't change
         curses.init_pair(7, curses.COLOR_CYAN, curses.COLOR_BLACK)
 
         if curses.can_change_color():
@@ -162,7 +162,8 @@ class Theme:
         if key not in self.theme_colors:
             raise KeyError("Invalid Colors Key")
 
-        # curses can change the colors for Christmas theme, even if the terminal doesn't support the other ones.
+        # curses can change the colors for Christmas theme,
+        # even if the terminal doesn't support the other ones.
         # hence all this logic...
         if not curses.can_change_color():
             if "christmas" not in key:

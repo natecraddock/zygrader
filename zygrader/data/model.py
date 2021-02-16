@@ -147,6 +147,24 @@ class ClassSection:
         }
 
 
+class TA:
+    def __init__(self, netid, queue_name):
+        self.netid = netid
+        self.queue_name = queue_name
+
+    def __repr__(self):
+        return (f"TA(netid={self.netid}, queue_name={self.queue_name})")
+
+    @classmethod
+    def from_json(cls, ta_json):
+        netid = ta_json["netid"]
+        queue_name = ta_json["queue_name"]
+        return TA(netid, queue_name)
+
+    def to_json(self):
+        return {"netid": self.netid, "queue_name": self.queue_name}
+
+
 class SubmissionFlag(enum.Flag):
     NO_SUBMISSION = enum.auto()
     OK = enum.auto()
