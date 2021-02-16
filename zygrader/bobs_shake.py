@@ -173,25 +173,11 @@ class _WorkEvent:
                 f"({self.og_data})")
 
 
-def _deduplicate_nested_events(og_list):
-    new_list = []
-    unmatched_depth = 0
-
-    for event in og_list:
-        if unmatched_depth:
-            if event.is_begin:
-                unmatched_depth += 1
-            else:
-                unmatched_depth -= 1
-                if unmatched_depth == 0:
-                    new_list.append(event)
-        else:
-            if event.is_begin:
-                unmatched_depth += 1
-                new_list.append(event)
-            # nothing to do here if event is not begin
-
-    return new_list
+def _sandwiches(outer_pair, inner_pair):
+    outer_begin, outer_end = outer_pair
+    inner_begin, inner_end = inner_pair
+    return (outer_begin.time_stamp < inner_begin.time_stamp
+            and outer_end.time_stamp > inner_end.time_stamp)
 
 
 class _EventStreamStats:
@@ -205,22 +191,36 @@ class _EventStreamStats:
     def analyze(self, events: typing.List[_WorkEvent]):
         if not events:
             return
-        # pretty sure it'll be sorted, but as a sanity check
+        # events from queue data might not be sorted
         sorted_events = sorted(events, key=lambda event: event.time_stamp)
-        flat_events = _deduplicate_nested_events(sorted_events)
-        if not flat_events:
-            return
 
+        # maps from uniq_item key to begin event for that item
+        # until the close event is encountered
+        open_items = dict()
+        open_close_pairs = []
+
+        for event in sorted_events:
+            if event.is_begin:
+                if event.uniq_item not in open_items:
+                    open_items[event.uniq_item] = event
+            else:
+                if event.uniq_item in open_items:
+                    open_close_pairs.append(
+                        (open_items[event.uniq_item], event))
+                    del open_items[event.uniq_item]
+
+        # if an item was both locked and unlocked while another item was open,
+        # then it doesn't count, so we remove sandwiched items
         new_worked_event_pairs = []
-
-        prev_event = flat_events[0]
-        for event in flat_events[1:]:
-            if prev_event.is_begin and not event.is_begin:
-                time_spent = event.time_stamp - prev_event.time_stamp
+        for open_close_pair in open_close_pairs:
+            if not any(
+                    map(lambda outer: _sandwiches(outer, open_close_pair),
+                        open_close_pairs)):
+                open_event, close_event = open_close_pair
+                time_spent = close_event.time_stamp - open_event.time_stamp
                 if time_spent > _EventStreamStats.REAL_WORK_THRESHOLD:
-                    new_worked_event_pairs.append((prev_event, event))
+                    new_worked_event_pairs.append(open_close_pair)
                     self.total_time += time_spent
-            prev_event = event
 
         self.worked_event_pairs = sorted(
             self.worked_event_pairs + new_worked_event_pairs,
