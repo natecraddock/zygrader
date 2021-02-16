@@ -257,9 +257,12 @@ class _TA:
         self.help_stats.analyze(self.help_events)
 
 
-def _select_time(title: str):
+def _select_time(title: str, default_time: datetime.time):
     time_selector = ui.layers.DatetimeSpinner(title)
     time_selector.set_quickpicks([(59, 59), (0, 0)])
+    initial_time = datetime.datetime.combine(datetime.datetime.today(),
+                                             default_time)
+    time_selector.set_initial_time(initial_time)
     ui.get_window().run_layer(time_selector, "Bob's Shake")
 
     return (None if time_selector.canceled else time_selector.get_time())
@@ -272,11 +275,13 @@ class _StatsWorker:
         self.tas: typing.Dict[str, _TA] = dict()
 
     def select_start_time(self):
-        self.start_time = _select_time("Start Time")
+        self.start_time = _select_time(
+            "Start Time", datetime.time(hour=0, minute=0, second=0))
         return self.start_time
 
     def select_end_time(self):
-        self.end_time = _select_time("End Time")
+        self.end_time = _select_time(
+            "End Time", datetime.time(hour=23, minute=59, second=59))
         return self.end_time
 
     def read_in_native_stats(self):
