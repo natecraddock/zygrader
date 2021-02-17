@@ -291,7 +291,7 @@ class Window:
         self.__debug_win.hline(0, 0, "_", self.cols)
 
         row_num = 1
-        display_rows = self.__debug_lines[-4:]
+        display_rows = self.__debug_lines[-DEBUG_CONSOLE_HEIGHT:]
         for row in display_rows:
             add_str(self.__debug_win, row_num, 0, row)
             row_num += 1
