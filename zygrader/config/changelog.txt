@@ -1,5 +1,22 @@
 # Try to keep lines shorter than 70 characters
 
+5.6.0
+* Flag messages can now be edited after creation.
+* Student submissions can be viewed after locking a student
+  in the email manager with the option "View Submitted Code".
+* Lock messages show the TA's full name rather than netid.
+* Bob's shake added for TA statistics.
+* Added a debug console to the window. Show with -d or --debug.
+* Bugfixes and cleanups.
+
+5.5.0
+* Added valentines day theme.
+        ,d88b.d88b,
+        88888888888
+        `Y8888888Y'
+          `Y888Y'
+            `Y'
+
 5.4.0
 * Add tags to submission flags
 * Grade Puller
