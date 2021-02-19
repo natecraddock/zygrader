@@ -2,8 +2,6 @@
 
 `shake` is the singular entry point to this module
 """
-# TODO: run my 'history fixer' on the lock log
-# (explained in a FIXME below, which should also be removed)
 
 from collections import namedtuple
 import csv
@@ -109,14 +107,6 @@ class _WorkEvent:
         ta_netid = row[4]
 
         uniq_item = event_type + student_name + assignment_name
-
-        # FIXME: ta_netid is a lab name if student has a comma in their name
-        # (this is somewhat fixed in data/lock.py by using csv to write data,
-        # but old data might still have commas)
-        #
-        # one possible fix (and what I'm thinking I'll do) is to modify the
-        # the lock log files outside of zygrader,
-        # just with some separate script, to keep this area clean
 
         lock_type = row[5]
         is_lock = lock_type == "LOCK"
