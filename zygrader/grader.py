@@ -83,7 +83,7 @@ def pick_submission(submission_popup: ui.layers.OptionsPopup,
         part_index = submission.pick_part(pick_all=True)
         if part_index is None:
             return
-        if part_index is -1:
+        if part_index == -1:
 
             def wait_fn():
                 for i, part in enumerate(lab.parts):
