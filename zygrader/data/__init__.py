@@ -1,5 +1,6 @@
 import json
 import os
+import typing
 
 from zygrader.config.shared import SharedData
 
@@ -139,7 +140,7 @@ def load_tas() -> list:
     return SharedData.TAS
 
 
-def get_tas() -> list:
+def get_tas() -> typing.List[TA]:
     if SharedData.TAS:
         return SharedData.TAS
 
@@ -157,3 +158,15 @@ def write_tas(tas):
     path = SharedData.get_ta_data()
     with open(path, "w") as _file:
         json.dump(tas_json, _file, indent=2)
+
+
+def netid_to_name(netid: str) -> str:
+    """
+    Return the full name of the TA from the netid.
+    If it doesn't exit in the database then return only the netid.
+    """
+    tas = get_tas()
+    for ta in tas:
+        if ta.netid == netid:
+            return ta.queue_name
+    return netid

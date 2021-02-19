@@ -17,7 +17,8 @@ def lock_student_callback(student: data.Student):
     if data.lock.is_locked(student):
         netid = data.lock.get_locked_netid(student)
         if netid != getpass.getuser():
-            msg = [f"{netid} is replying to {student.first_name}'s email"]
+            name = data.netid_to_name(netid)
+            msg = [f"{name} is replying to {student.first_name}'s email"]
             popup = ui.layers.Popup("Student Locked", msg)
             window.run_layer(popup)
             return
@@ -26,7 +27,8 @@ def lock_student_callback(student: data.Student):
         data.lock.lock(student)
         msg = [f"You have locked {student.full_name} for emailing."]
         popup = ui.layers.OptionsPopup("Student Locked", msg)
-        popup.add_option("View Submitted Code", lambda: view_email_submissions(student))
+        popup.add_option("View Submitted Code",
+                         lambda: view_email_submissions(student))
         window.run_layer(popup)
     finally:
         data.lock.unlock(student)

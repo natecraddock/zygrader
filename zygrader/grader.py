@@ -232,7 +232,8 @@ def can_get_through_locks(use_locks, student, lab):
 
         # If being graded by the user who locked it, allow grading
         if netid != getpass.getuser():
-            msg = [f"This student is already being graded by {netid}"]
+            name = data.netid_to_name(netid)
+            msg = [f"This student is already being graded by {name}"]
             popup = ui.layers.Popup("Student Locked", msg)
             window.run_layer(popup)
             return False
