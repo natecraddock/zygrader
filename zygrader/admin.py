@@ -185,8 +185,7 @@ def remove_locks():
     window.run_layer(popup)
 
     selected_locks = [lock for lock in all_locks if all_locks[lock]]
-
-    if not selected_locks or popup.canceled:
+    if not selected_locks:
         return
 
     # Confirm
