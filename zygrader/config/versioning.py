@@ -115,7 +115,7 @@ def versioning_update_preferences():
 
     ##### Versioning code to run until next version bump ######
     if True:
-        pass
+        preferences.remove("dark_mode")
     #### Leave this `if True` block after bumping version! ####
 
 

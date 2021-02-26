@@ -48,7 +48,6 @@ class Window:
         return None
 
     def update_preferences(self):
-        self.dark_mode = preferences.get("dark_mode")
         self.theme = preferences.get("theme")
         self.unicode_mode = preferences.get("unicode_mode")
         self.clear_filter = preferences.get("clear_filter")
@@ -126,12 +125,7 @@ class Window:
             layer.resize_component(self.rows, self.cols)
 
     def get_header_colors(self):
-        # this is only for the terminals that don't support all the colors
-        if self.dark_mode:
-            theme_string = self.theme.lower() + "_dark"
-            return self.window_theme.get_colors(theme_string)
-        theme_string = self.theme.lower() + "_light"
-        return self.window_theme.get_colors(theme_string)
+        return self.window_theme.get_colors(self.theme.lower())
 
     def get_header_separator(self):
         if not self.unicode_mode:
@@ -331,12 +325,4 @@ class Window:
         self.__debug_lines.append(line)
 
     def update_window(self):
-        if self.dark_mode:
-            curses.init_pair(1, curses.COLOR_WHITE, curses.COLOR_BLACK)
-            curses.init_pair(7, curses.COLOR_CYAN, curses.COLOR_BLACK)
-            curses.init_pair(2, curses.COLOR_RED, curses.COLOR_BLACK)
-        else:
-            curses.init_pair(1, curses.COLOR_BLACK, curses.COLOR_WHITE)
-            curses.init_pair(7, curses.COLOR_CYAN, curses.COLOR_WHITE)
-            curses.init_pair(2, curses.COLOR_RED, curses.COLOR_WHITE)
         self.stdscr.bkgd(" ", curses.color_pair(1))

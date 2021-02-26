@@ -242,7 +242,6 @@ def preferences_menu():
 
     # Appearance sub-menu
     row = popup.add_row_parent("Appearance")
-    row.add_row_toggle("Dark Mode", PreferenceToggle("dark_mode"))
     row.add_row_toggle("Emojis", PreferenceToggle("unicode_mode"))
 
     # themes sub-sub-menu

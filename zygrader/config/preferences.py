@@ -27,7 +27,6 @@ DEFAULT_PREFERENCES = {
     "use_esc_back": False,
     "clear_filter": True,
     "vim_mode": False,
-    "dark_mode": True,
     "theme": "Default",
     "unicode_mode": False,
     "browser_diff": False,
