@@ -55,10 +55,11 @@ class Window:
 
         self.update_window()
 
-    def __init__(self, callback, window_name, args):
+    def __init__(self, callback, window_name, user_name, args):
         """Initialize screen and run callback function"""
         Window.INSTANCE = self
         self.name = window_name
+        self.__user_name = user_name
 
         # Debug console data
         self.__debug_mode = args.debug
@@ -143,12 +144,6 @@ class Window:
             return self.window_theme.get_bookends("default")
         return self.window_theme.get_bookends(self.theme.lower())
 
-    def __get_email_text(self):
-        email = preferences.get("email")
-        if not email:
-            email = "Logged Out"
-        return email
-
     def draw_header(self):
         """Set the header text"""
         self.header.erase()
@@ -157,7 +152,7 @@ class Window:
         # Store the cursor location
         loc = curses.getsyx()
 
-        display_text = f"{self.name} {separator} {self.__header_title} {separator} {self.__get_email_text()}"
+        display_text = f"{self.name} {separator} {self.__header_title} {separator} {self.__user_name}"
 
         if self.event_manager.insert_mode:
             display_text += f" {separator} INSERT"
@@ -175,7 +170,7 @@ class Window:
         if self.theme != "Default":
             colors = self.get_header_colors()
             for row in range(self.cols):
-                if (row // 2) % 2 is 0:
+                if (row // 2) % 2 == 0:
                     self.header.chgat(0, row, colors[0] | curses.A_BOLD)
                 else:
                     self.header.chgat(0, row, colors[1] | curses.A_BOLD)

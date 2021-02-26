@@ -21,8 +21,9 @@ EDITORS = {
 # Also used for determining if a key is valid for set() and get().
 DEFAULT_PREFERENCES = {
     "version": SharedData.VERSION.vstring,
-    "email": "",
-    "password": "",
+    # "email": "",
+    # "password": "",
+    "token": "",
     "left_right_arrow_nav": True,
     "use_esc_back": False,
     "clear_filter": True,

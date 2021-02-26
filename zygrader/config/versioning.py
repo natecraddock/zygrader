@@ -115,7 +115,8 @@ def versioning_update_preferences():
 
     ##### Versioning code to run until next version bump ######
     if True:
-        pass
+        preferences.remove("email")
+        preferences.remove("password")
     #### Leave this `if True` block after bumping version! ####
 
 
