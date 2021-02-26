@@ -101,7 +101,7 @@ def remove(key: str):
     """Remove a preference from the config file (deprecation)."""
     global PREFERENCES
 
-    if PREFERENCES[key]:
+    if PREFERENCES.get(key, None):
         del PREFERENCES[key]
 
     write_config(PREFERENCES)
