@@ -90,7 +90,7 @@ class Theme:
         "christmas": "🎄",
         "birthday": "🎉",
         "thanksgiving": "🍗",
-        "valentines": "❤️ ",
+        "valentines": "❤️",
     }
 
     def __init_colors(self):
