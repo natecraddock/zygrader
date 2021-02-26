@@ -2,10 +2,9 @@
 To add a new theme:
     1. use 'curses.init_pair()' with the 256-colors you would like (use constants).
     This needs to be INSIDE of 'if curses.can_change_colors()'
-    Make sure to define four color pairs: two for light and two for dark
+    In most cases, -1 should be the background color to use the terminal default
 
-    2. Then, add the theme with "{theme_name}_[light|dark]" convention to theme_colors,
-    along with the color pair you specified.
+    2. Then, add the theme THEME_COLORS with the color pair you specified.
 
     3. add the separator you want
 
@@ -33,7 +32,7 @@ def main(stdscr):
 
 curses.wrapper(main)
 #####
-This will print each color to the screen, colored appreopriately.
+This will print each color to the screen, colored appropriately.
 
 
 """
@@ -45,37 +44,6 @@ THEMES = [
 
 
 class Theme:
-    def __init__(self):
-        self.__init_colors()
-        # cannot declare this outside the function, since it requires curses to be initialized
-        self.theme_colors = {
-            "default_dark": [curses.color_pair(1),
-                             curses.color_pair(1)],
-            "default_light": [curses.color_pair(2),
-                              curses.color_pair(2)],
-            "christmas_dark": [curses.color_pair(3),
-                               curses.color_pair(4)],
-            "christmas_light": [curses.color_pair(5),
-                                curses.color_pair(6)],
-            "spooky_dark": [curses.color_pair(8),
-                            curses.color_pair(9)],
-            "spooky_light": [curses.color_pair(10),
-                             curses.color_pair(11)],
-            "birthday_dark": [curses.color_pair(12),
-                              curses.color_pair(13)],
-            "birthday_light": [curses.color_pair(14),
-                               curses.color_pair(15)],
-            "thanksgiving_dark": [curses.color_pair(16),
-                                  curses.color_pair(17)],
-            "thanksgiving_light":
-            [curses.color_pair(18),
-             curses.color_pair(19)],
-            "valentines_dark": [curses.color_pair(20),
-                                curses.color_pair(21)],
-            "valentines_light": [curses.color_pair(22),
-                                 curses.color_pair(23)],
-        }
-
     THEME_SEPARATORS = {
         "default": "|",
         "spooky": "🎃",
@@ -84,6 +52,7 @@ class Theme:
         "thanksgiving": "🦃",
         "valentines": "💕",
     }
+
     THEME_BOOKENDS = {
         "default": "",
         "spooky": "👻",
@@ -93,73 +62,70 @@ class Theme:
         "valentines": "❤️",
     }
 
+    THEME_COLORS = {}
+
+    def __init__(self):
+        self.__init_colors()
+
+        Theme.THEME_COLORS = {
+            "default": [curses.color_pair(2), curses.color_pair(2)],
+            "christmas": [curses.color_pair(5), curses.color_pair(6)],
+            "spooky": [curses.color_pair(10), curses.color_pair(11)],
+            "birthday": [curses.color_pair(14), curses.color_pair(15)],
+            "thanksgiving": [curses.color_pair(18), curses.color_pair(19)],
+            "valentines": [curses.color_pair(22), curses.color_pair(23)],
+        }
+
     def __init_colors(self):
-        CURSES_ORANGE = 202
-        CURSES_GREY = 240
+        # This allows the use of `-1` in `init_pair()` for accessing the
+        # default foreground and background terminal colors. It also enables
+        # transparency.
+        curses.use_default_colors()
+
         CURSES_GREEN = 34
         CURSES_PURPLE = 93
 
         CURSES_BDAY_BLUE = 45
         CURSES_BDAY_PINK = 207
 
-        CURSES_THXGVNG_BROWN = 130
-        CURSES_THXGVNG_ORANGE = 208
+        CURSES_THANKSGIVING_BROWN = 130
+        CURSES_THANKSGIVING_ORANGE = 208
 
         VALENTINES_RED = 196
         VALENTINES_PINK = 204
 
-        #this line can't change
-        curses.init_pair(1, curses.COLOR_WHITE, curses.COLOR_BLACK)
-        #this line can't change
-        curses.init_pair(2, curses.COLOR_RED, curses.COLOR_BLACK)
+        # Default colors from terminal preferences
+        curses.init_pair(1, -1, -1)
+        
+        # Locked data. Red on default background
+        curses.init_pair(2, curses.COLOR_RED, -1)
 
-        # Holiday DARK variant
-        curses.init_pair(3, curses.COLOR_GREEN, curses.COLOR_BLACK)
-        curses.init_pair(4, curses.COLOR_RED, curses.COLOR_BLACK)
+        # Flagged data
+        curses.init_pair(7, curses.COLOR_CYAN, -1)
 
-        # Holiday LIGHT variant
-        curses.init_pair(5, curses.COLOR_GREEN, curses.COLOR_WHITE)
-        curses.init_pair(6, curses.COLOR_RED, curses.COLOR_WHITE)
-
-        # Flagged lines
-        # this line can't change
-        curses.init_pair(7, curses.COLOR_CYAN, curses.COLOR_BLACK)
+        # Christmas variant
+        curses.init_pair(5, curses.COLOR_GREEN, -1)
+        curses.init_pair(6, curses.COLOR_RED, -1)
 
         if curses.can_change_color():
-            # Spooky variant DARK
-            curses.init_pair(8, CURSES_ORANGE, curses.COLOR_BLACK)
-            curses.init_pair(9, CURSES_GREY, curses.COLOR_BLACK)
+            # Spooky variant
+            curses.init_pair(10, CURSES_GREEN, -1)
+            curses.init_pair(11, CURSES_PURPLE, -1)
 
-            # Spooky variant LIGHT
-            curses.init_pair(10, CURSES_GREEN, curses.COLOR_WHITE)
-            curses.init_pair(11, CURSES_PURPLE, curses.COLOR_WHITE)
+            # Birthday
+            curses.init_pair(14, CURSES_BDAY_BLUE, -1)
+            curses.init_pair(15, CURSES_BDAY_PINK, -1)
 
-            # Birthday DARK
-            curses.init_pair(12, CURSES_BDAY_BLUE, curses.COLOR_BLACK)
-            curses.init_pair(13, CURSES_BDAY_PINK, curses.COLOR_BLACK)
+            # Thanksgiving
+            curses.init_pair(18, CURSES_THANKSGIVING_BROWN, -1)
+            curses.init_pair(19, CURSES_THANKSGIVING_ORANGE, -1)
 
-            # Birthday LIGHT
-            curses.init_pair(14, CURSES_BDAY_BLUE, curses.COLOR_WHITE)
-            curses.init_pair(15, CURSES_BDAY_PINK, curses.COLOR_WHITE)
-
-            # Thanksgiving DARK
-            curses.init_pair(16, CURSES_THXGVNG_BROWN, curses.COLOR_BLACK)
-            curses.init_pair(17, CURSES_THXGVNG_ORANGE, curses.COLOR_BLACK)
-
-            # THanksgiving LIGHT
-            curses.init_pair(18, CURSES_THXGVNG_BROWN, curses.COLOR_WHITE)
-            curses.init_pair(19, CURSES_THXGVNG_ORANGE, curses.COLOR_WHITE)
-
-            # Valentines DARK
-            curses.init_pair(20, VALENTINES_RED, curses.COLOR_BLACK)
-            curses.init_pair(21, VALENTINES_PINK, curses.COLOR_BLACK)
-
-            # Valentines LIGHT
-            curses.init_pair(22, VALENTINES_RED, curses.COLOR_WHITE)
-            curses.init_pair(23, VALENTINES_PINK, curses.COLOR_WHITE)
+            # Valentines
+            curses.init_pair(22, VALENTINES_RED, -1)
+            curses.init_pair(23, VALENTINES_PINK, -1)
 
     def get_colors(self, key: str):
-        if key not in self.theme_colors:
+        if key not in Theme.THEME_COLORS:
             raise KeyError("Invalid Colors Key")
 
         # curses can change the colors for Christmas theme,
@@ -170,7 +136,7 @@ class Theme:
                 index = key.find("_")
                 theme = key[:index]
                 key = key.replace(theme, "default")
-        return self.theme_colors[key]
+        return Theme.THEME_COLORS[key]
 
     def get_separator(self, key: str):
         if key not in self.THEME_SEPARATORS:
