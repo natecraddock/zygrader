@@ -116,6 +116,8 @@ def versioning_update_preferences():
     ##### Versioning code to run until next version bump ######
     if True:
         preferences.remove("dark_mode")
+        preferences.remove("email")
+        preferences.remove("password")
     #### Leave this `if True` block after bumping version! ####
 
 
