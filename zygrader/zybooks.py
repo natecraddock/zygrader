@@ -6,6 +6,7 @@ from datetime import datetime, timedelta, timezone
 import requests
 
 from zygrader.config.shared import SharedData
+from zygrader.config import preferences
 
 
 class SectionResponse:
@@ -31,8 +32,34 @@ class Zybooks:
     def __init__(self):
         Zybooks.session = requests.session()
 
+    def __load_session(self):
+        return preferences.get("token")
+
+    def __save_session(self, token: str):
+        preferences.set("token", token)
+
+    def __check_auth(self):
+        """Ensure the auth token is valid through a "useless" request"""
+        check_url = "https://zyserver.zybooks.com/v1/zybooks"
+        params = {
+            "zybooks": f'["{SharedData.CLASS_CODE}"]',
+            "auth_token": Zybooks.token
+        }
+        r = Zybooks.session.get(check_url, params=params)
+        if not r.ok:
+            return False
+        resp = r.json()
+        return resp.get("success")
+
     def authenticate(self, username: str, password: str):
         """Authenticate a user to zyBooks"""
+        if not username and not password:
+            token = self.__load_session()
+            Zybooks.token = token
+
+            # Ensure that this auth is valid
+            return self.__check_auth()
+
         auth_url = "https://zyserver.zybooks.com/v1/signin"
         payload = {"email": username, "password": password}
 
@@ -44,6 +71,7 @@ class Zybooks:
 
         # Store auth token
         Zybooks.token = r.json()["session"]["auth_token"]
+        self.__save_session(Zybooks.token)
         return True
 
     def get_roster(self):

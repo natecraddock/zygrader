@@ -7,7 +7,7 @@ import sys
 import time
 
 from zygrader import (admin, config, data, email_manager, grader, logger, ui,
-                      updater, user, utils)
+                      updater, user, utils, zybooks)
 from zygrader.config import preferences, versioning
 from zygrader.config.shared import SharedData
 
@@ -163,8 +163,10 @@ def main(window: ui.Window, args):
     data.fs_watch.start_fs_watch()
 
     # Authenticate the user
-    if not user.login(window):
-        return
+    zybooks_api = zybooks.Zybooks()
+    if not preferences.get("token") or not user.authenticate(
+            window, zybooks_api):
+        user.login(window)
 
     logger.log("zygrader started")
 
@@ -221,8 +223,10 @@ def start():
     # Change directory to the default output dir
     os.chdir(os.path.expanduser(preferences.get("output_dir")))
 
+    name = data.netid_to_name(getpass.getuser())
+
     # Create a zygrader window, callback to main function
-    ui.Window(main, f"zygrader {SharedData.VERSION}", args)
+    ui.Window(main, f"zygrader {SharedData.VERSION}", name, args)
 
     logger.log("zygrader exited normally")
 

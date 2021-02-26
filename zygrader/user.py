@@ -1,5 +1,4 @@
 """User: User preference window management"""
-import base64
 import os
 
 from zygrader import data, ui, zybooks
@@ -9,18 +8,7 @@ from zygrader.config.shared import SharedData
 from zygrader.zybooks import Zybooks
 
 
-def decode_password(password):
-    """Decode a base64 encoded password"""
-    decoded = base64.b64decode(password)
-    return decoded.decode("utf-8")
-
-
-def encode_password(password):
-    """Encode a password in base64 for slight security"""
-    return str(base64.b64encode(password.encode("ascii")), "utf-8")
-
-
-def authenticate(window: ui.Window, zy_api: Zybooks, email, password):
+def authenticate(window: ui.Window, zy_api: Zybooks, email="", password=""):
     """Authenticate to the zyBooks api with the email and password."""
     def wait_fn():
         success = zy_api.authenticate(email, password)
@@ -29,7 +17,10 @@ def authenticate(window: ui.Window, zy_api: Zybooks, email, password):
         return success
 
     popup = ui.layers.WaitPopup("Signing in")
-    popup.set_message([f"Signing into zyBooks as {email}..."])
+    popup.set_message([
+        f"Signing into zyBooks as {email}..."
+        if email else "Signing into zyBooks"
+    ])
     popup.set_wait_fn(wait_fn)
     window.run_layer(popup)
 
@@ -58,9 +49,9 @@ def get_password(window: ui.Window):
     return text_input.get_text()
 
 
-# Create a user account
-def create_account(window: ui.Window, zy_api):
-    """Create zybooks user account info (email & password) in config"""
+def login(window: ui.Window):
+    """Authenticate to zybooks with the user's email and password"""
+    zy_api = zybooks.Zybooks()
 
     while True:
         # Get user account information
@@ -79,68 +70,15 @@ def create_account(window: ui.Window, zy_api):
         if authenticate(window, zy_api, email, password):
             break
 
-    return email, password
-
-
-def login(window: ui.Window):
-    """Authenticate to zybooks with the user's email and password
-    or create an account if one does not exist"""
-    zy_api = zybooks.Zybooks()
-
-    email = preferences.get("email")
-    password = preferences.get("password")
-
-    # If user email and password exist, authenticate and return
-    if email and password:
-        password = decode_password(password)
-        authenticated = authenticate(window, zy_api, email, password)
-        return authenticated
-
-    # User does not have account created
-    if not email:
-        credentials = create_account(window, zy_api)
-        if not credentials:
-            return False
-
-        email, password = credentials
-        preferences.set("email", email)
-
-        popup = ui.layers.BoolPopup("Save Password")
-        popup.set_message(["Would you like to save your password?"])
-        window.run_layer(popup)
-
-        save_password = popup.get_result()
-        if save_password:
-            preferences.set("save_password", True)
-            password = encode_password(password)
-            preferences.set("password", password)
-        else:
-            preferences.set("save_password", False)
-
-    # User has account (email), but has not saved their password.
-    # Ask user for their password.
-    elif not password:
-        while True:
-            password = get_password(window)
-            if not password:
-                return False
-
-            if authenticate(window, zy_api, email, password):
-                if preferences.get("save_password"):
-                    password = encode_password(password)
-                    preferences.set("password", password)
-                break
-
     return True
 
 
 def logout():
-    """Log a user out by erasing their email and password from config"""
+    """Log a user out by erasing their token from config"""
     window = ui.get_window()
 
     # Clear account information
-    preferences.set("email", "")
-    preferences.set("password", "")
+    preferences.set("token", "")
 
     msg = [
         "You have been logged out. Would you like to sign in with different credentials?",
@@ -163,18 +101,6 @@ def update_course_data():
     data.load_students()
     data.load_labs()
     data.load_class_sections()
-
-
-def save_password_toggle():
-    """Toggle saving the user's password in their config file (encoded)"""
-    if not preferences.get("save_password"):
-        preferences.set("password", "")
-    else:
-        window = ui.get_window()
-        popup = ui.layers.Popup("Remember Password")
-        popup.set_message(
-            ["Next time you start zygrader your password will be saved."])
-        window.run_layer(popup)
 
 
 def set_default_output_directory(row: ui.layers.Row):
@@ -282,9 +208,6 @@ def preferences_menu():
         row.add_row_radio(code, radio, code)
 
     row = popup.add_row_parent("Account")
-    row.add_row_toggle(
-        "Remember Password",
-        PreferenceToggle("save_password", after_fn=save_password_toggle))
     row.add_row_text("Log Out", logout)
 
     window.register_layer(popup, "Preferences")
