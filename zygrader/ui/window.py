@@ -169,7 +169,7 @@ class Window:
         if self.theme != "Default":
             colors = self.get_header_colors()
             for row in range(self.cols):
-                if (row // 2) % 2 is 0:
+                if (row // 2) % 2 == 0:
                     self.header.chgat(0, row, colors[0] | curses.A_BOLD)
                 else:
                     self.header.chgat(0, row, colors[1] | curses.A_BOLD)
