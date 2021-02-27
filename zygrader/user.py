@@ -17,7 +17,10 @@ def authenticate(window: ui.Window, zy_api: Zybooks, email="", password=""):
         return success
 
     popup = ui.layers.WaitPopup("Signing in")
-    popup.set_message([f"Signing into zyBooks as {email}..."])
+    popup.set_message([
+        f"Signing into zyBooks as {email}..."
+        if email else "Signing into zyBooks"
+    ])
     popup.set_wait_fn(wait_fn)
     window.run_layer(popup)
 
