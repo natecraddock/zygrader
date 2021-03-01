@@ -129,19 +129,20 @@ class Theme:
             # Valentines
             curses.init_pair(22, VALENTINES_RED, -1)
             curses.init_pair(23, VALENTINES_PINK, -1)
+        else:
+            # Use fallback colors on non-supported terminals
+            curses.init_pair(10, curses.COLOR_RED, -1)
+            curses.init_pair(11, curses.COLOR_RED, -1)
+            curses.init_pair(14, curses.COLOR_BLUE, -1)
+            curses.init_pair(15, curses.COLOR_BLUE, -1)
+            curses.init_pair(18, curses.COLOR_YELLOW, -1)
+            curses.init_pair(19, curses.COLOR_RED, -1)
+            curses.init_pair(22, curses.COLOR_RED, -1)
+            curses.init_pair(23, curses.COLOR_RED, -1)
 
     def get_colors(self, key: str):
         if key not in Theme.THEME_COLORS:
             raise KeyError("Invalid Colors Key")
-
-        # curses can change the colors for Christmas theme,
-        # even if the terminal doesn't support the other ones.
-        # hence all this logic...
-        if not curses.can_change_color():
-            if "christmas" not in key:
-                index = key.find("_")
-                theme = key[:index]
-                key = key.replace(theme, "default")
         return Theme.THEME_COLORS[key]
 
     def get_separator(self, key: str):
