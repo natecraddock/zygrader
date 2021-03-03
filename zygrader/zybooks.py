@@ -40,9 +40,12 @@ class Zybooks:
 
     def __check_auth(self):
         """Ensure the auth token is valid through a "useless" request"""
-        check_url = f'https://zyserver.zybooks.com/v1/zybooks?zybooks=["{SharedData.CLASS_CODE}"]'
-        check_url += f"&auth_token={Zybooks.token}"
-        r = Zybooks.session.get(check_url)
+        check_url = "https://zyserver.zybooks.com/v1/zybooks"
+        params = {
+            "zybooks": f'["{SharedData.CLASS_CODE}"]',
+            "auth_token": Zybooks.token
+        }
+        r = Zybooks.session.get(check_url, params=params)
         if not r.ok:
             return False
         resp = r.json()
