@@ -78,7 +78,6 @@ def logout():
     window = ui.get_window()
 
     # Clear account information
-    # preferences.set("email", "")
     preferences.set("token", "")
 
     msg = [
@@ -209,9 +208,6 @@ def preferences_menu():
         row.add_row_radio(code, radio, code)
 
     row = popup.add_row_parent("Account")
-    # row.add_row_toggle(
-    #     "Remember Password",
-    #     PreferenceToggle("save_password", after_fn=save_password_toggle))
     row.add_row_text("Log Out", logout)
 
     window.register_layer(popup, "Preferences")
