@@ -39,7 +39,8 @@ This will print each color to the screen, colored appropriately.
 
 import curses
 THEMES = [
-    "Default", "Christmas", "Spooky", "Birthday", "Thanksgiving", "Valentines"
+    "Default", "Christmas", "Spooky", "Birthday", "Thanksgiving", "Valentines",
+    "America", "St Patricks", "Summer"
 ]
 
 
@@ -51,6 +52,9 @@ class Theme:
         "birthday": "🎂",
         "thanksgiving": "🦃",
         "valentines": "💕",
+        "america": "🎆",
+        "stpatricks": "🍀",
+        "summer": "☀️",
     }
 
     THEME_BOOKENDS = {
@@ -60,6 +64,9 @@ class Theme:
         "birthday": "🎉",
         "thanksgiving": "🍗",
         "valentines": "❤️",
+        "america": "🗽",
+        "stpatricks": "🌈",
+        "summer": "🌻",
     }
 
     THEME_COLORS = {}
@@ -80,6 +87,12 @@ class Theme:
                              curses.color_pair(19)],
             "valentines": [curses.color_pair(22),
                            curses.color_pair(23)],
+            "america": [curses.color_pair(7),
+                        curses.color_pair(8)],
+            "stpatricks": [curses.color_pair(12),
+                           curses.color_pair(13)],
+            "summer": [curses.color_pair(16),
+                       curses.color_pair(17)],
         }
 
     def __init_colors(self):
@@ -88,6 +101,7 @@ class Theme:
         # transparency.
         curses.use_default_colors()
 
+        LIGHT_GREEN = 82
         CURSES_GREEN = 34
         CURSES_PURPLE = 93
 
@@ -99,6 +113,9 @@ class Theme:
 
         VALENTINES_RED = 196
         VALENTINES_PINK = 204
+
+        WARM_ORANGE = 220
+        GOLDEN_YELLOW = 226
 
         # Default colors from terminal preferences
         curses.init_pair(1, -1, -1)
@@ -129,6 +146,18 @@ class Theme:
             # Valentines
             curses.init_pair(22, VALENTINES_RED, -1)
             curses.init_pair(23, VALENTINES_PINK, -1)
+
+            # America
+            curses.init_pair(7, curses.COLOR_RED, -1)
+            curses.init_pair(8, curses.COLOR_BLUE, -1)
+
+            # St Patricks
+            curses.init_pair(12, CURSES_GREEN, -1)
+            curses.init_pair(13, LIGHT_GREEN, -1)
+
+            # Summer
+            curses.init_pair(16, WARM_ORANGE, -1)
+            curses.init_pair(17, GOLDEN_YELLOW, -1)
         else:
             # Use fallback colors on non-supported terminals
             curses.init_pair(10, curses.COLOR_RED, -1)
@@ -140,17 +169,23 @@ class Theme:
             curses.init_pair(22, curses.COLOR_RED, -1)
             curses.init_pair(23, curses.COLOR_RED, -1)
 
+    def __format_key(self, key: str) -> str:
+        return key.replace(" ", "").lower()
+
     def get_colors(self, key: str):
+        key = self.__format_key(key)
         if key not in Theme.THEME_COLORS:
             raise KeyError("Invalid Colors Key")
         return Theme.THEME_COLORS[key]
 
     def get_separator(self, key: str):
+        key = self.__format_key(key)
         if key not in self.THEME_SEPARATORS:
-            raise KeyError("Invalid Separator Key")
+            raise KeyError(f"Invalid Separator Key {key}")
         return self.THEME_SEPARATORS[key]
 
     def get_bookends(self, key: str):
+        key = self.__format_key(key)
         if key not in self.THEME_BOOKENDS:
             raise KeyError("Invalid Bookend Key")
         return self.THEME_BOOKENDS[key]

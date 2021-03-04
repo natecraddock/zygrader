@@ -126,17 +126,17 @@ class Window:
             layer.resize_component(self.rows, self.cols)
 
     def get_header_colors(self):
-        return self.window_theme.get_colors(self.theme.lower())
+        return self.window_theme.get_colors(self.theme)
 
     def get_header_separator(self):
         if not self.unicode_mode:
             return self.window_theme.get_separator("default")
-        return self.window_theme.get_separator(self.theme.lower())
+        return self.window_theme.get_separator(self.theme)
 
     def get_header_bookends(self):
         if not self.unicode_mode:
             return self.window_theme.get_bookends("default")
-        return self.window_theme.get_bookends(self.theme.lower())
+        return self.window_theme.get_bookends(self.theme)
 
     def draw_header(self):
         """Set the header text"""
