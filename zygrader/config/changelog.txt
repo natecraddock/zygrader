@@ -1,5 +1,18 @@
 # Try to keep lines shorter than 70 characters
 
+5.7.0
+* Lots of changes to themes
+  * Added St. Patricks, America, and Summer themes
+  * Removed dark mode theme preference. The colors will now be selected
+    from your terminal's default foreground and background colors.
+    This means if your terminal is using a transparent background,
+    zygrader will be drawn transparent.
+* Fixed a bug where logs and .locks directories would be created in
+  the current directory.
+* Removed email and password from preferences. Instead of storing that
+  information in the config, the zyBooks auth token is stored. This
+  removes the Save Password preference.
+
 5.6.0
 * Flag messages can now be edited after creation.
 * Student submissions can be viewed after locking a student
