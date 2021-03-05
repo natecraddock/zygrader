@@ -176,7 +176,8 @@ class _EventStreamStats:
         self.total_num_closed = 0
         self.worked_event_pairs = []
 
-    def analyze(self, events: typing.List[_WorkEvent]):
+    def analyze(self, events: typing.List[_WorkEvent],
+                forgot_to_close_threshold, default_avg_time):
         if not events:
             return
         # events from queue data might not be sorted
@@ -197,10 +198,14 @@ class _EventStreamStats:
                         (open_items[event.uniq_item], event))
                     del open_items[event.uniq_item]
 
-        # if an item was both locked and unlocked while another item was open,
-        # then it doesn't count, so we remove sandwiched items
+        # if the total time is too long, the TA probably just forgot
+        # to close the item. keep track of this to account for it after
+        num_forgot_to_close = 0
+
         new_worked_event_pairs = []
         for open_close_pair in open_close_pairs:
+            # if an item was both locked and unlocked while another item was
+            # open, then it doesn't count, so we only count unsandwiched items
             if not any(
                     map(lambda outer: _sandwiches(outer, open_close_pair),
                         open_close_pairs)):
@@ -208,13 +213,22 @@ class _EventStreamStats:
                 time_spent = close_event.time_stamp - open_event.time_stamp
                 if time_spent > _EventStreamStats.REAL_WORK_THRESHOLD:
                     new_worked_event_pairs.append(open_close_pair)
-                    self.total_time += time_spent
+                    if time_spent < forgot_to_close_threshold:
+                        self.total_time += time_spent
+                    else:
+                        num_forgot_to_close += 1
 
         self.worked_event_pairs = sorted(
             self.worked_event_pairs + new_worked_event_pairs,
             key=lambda p: (p[0].time_stamp, p[1].time_stamp))
 
         self.total_num_closed = len(self.worked_event_pairs)
+
+        num_closed_added_to_time = self.total_num_closed - num_forgot_to_close
+        avg_time = (self.total_time / num_closed_added_to_time
+                    if num_closed_added_to_time != 0 else default_avg_time)
+
+        self.total_time += avg_time * num_forgot_to_close
 
 
 class _TA:
@@ -240,9 +254,26 @@ class _TA:
         self.email_stats = _EventStreamStats()
         self.help_stats = _EventStreamStats()
 
-        self.lab_stats.analyze(self.lab_events)
-        self.email_stats.analyze(self.email_events)
-        self.help_stats.analyze(self.help_events)
+        # the default average times were taken from the first seven weeks
+        # of the Winter 2021 semester
+        # they are the mean of the average time per item across all TAs
+        #
+        # the forgot to close thresholds were chosen arbitrarily but carefully
+        # the main rationale was finding a time where it could clearly be said
+        # "work events never take that long to finish, so if an item was open
+        # that long, it must have been a mistake"
+        self.lab_stats.analyze(
+            self.lab_events,
+            forgot_to_close_threshold=datetime.timedelta(minutes=30),
+            default_avg_time=datetime.timedelta(minutes=6, seconds=4))
+        self.email_stats.analyze(
+            self.email_events,
+            forgot_to_close_threshold=datetime.timedelta(minutes=30),
+            default_avg_time=datetime.timedelta(minutes=4, seconds=20))
+        self.help_stats.analyze(
+            self.help_events,
+            forgot_to_close_threshold=datetime.timedelta(hours=1),
+            default_avg_time=datetime.timedelta(minutes=9, seconds=42))
 
 
 def _select_time(title: str, default_time: datetime.time):
