@@ -13,7 +13,10 @@ from zygrader.config.shared import SharedData
 
 
 def lock_cleanup():
-    data.lock.unlock_all_labs_by_grader(getpass.getuser())
+    # If terminating before shared directories are initialized, the folders would be
+    # created in the current directory when removing locks. See #72 for more details.
+    if SharedData.is_initialized():
+        data.lock.unlock_all_labs_by_grader(getpass.getuser())
 
 
 def sighup_handler(signum, frame):

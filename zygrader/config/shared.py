@@ -25,6 +25,9 @@ class SharedData:
     LOCKS_DIRECTORY = ".locks"
     FLAGS_DIRECTORY = ".flags"
 
+    # Set to true once the data paths have been initialized
+    DIRECTORIES_INITIALIZED = False
+
     STUDENTS_FILE = "students.json"
     LABS_FILE = "labs.json"
     CANVAS_MASTER_FILE = "canvas_master.csv"
@@ -62,6 +65,8 @@ class SharedData:
 
         if current_class_code:
             cls.initialize_class_data(current_class_code)
+
+        cls.DIRECTORIES_INITIALIZED = True
 
         return True
 
@@ -114,6 +119,10 @@ class SharedData:
     @classmethod
     def get_flags_directory(cls):
         return cls.get_config_directory(cls.FLAGS_DIRECTORY)
+
+    @classmethod
+    def is_initialized(cls):
+        return cls.DIRECTORIES_INITIALIZED
 
     @classmethod
     def get_student_data(cls):
