@@ -168,6 +168,12 @@ class Theme:
             curses.init_pair(19, curses.COLOR_RED, -1)
             curses.init_pair(22, curses.COLOR_RED, -1)
             curses.init_pair(23, curses.COLOR_RED, -1)
+            curses.init_pair(7, curses.COLOR_RED, -1)
+            curses.init_pair(8, curses.COLOR_BLUE, -1)
+            curses.init_pair(12, curses.COLOR_GREEN, -1)
+            curses.init_pair(13, curses.COLOR_GREEN, -1)
+            curses.init_pair(16, curses.COLOR_YELLOW, -1)
+            curses.init_pair(17, curses.COLOR_WHITE, -1)
 
     def __format_key(self, key: str) -> str:
         return key.replace(" ", "").lower()
