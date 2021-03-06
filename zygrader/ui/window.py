@@ -23,7 +23,8 @@ def get_stack_info(layer: ComponentLayer, skip=2):
 
     class_type = layer.__class__
 
-    return f"{filename}:{caller.lineno} in {caller.function}\n\t{class_type} {layer}"
+    return (f"{filename}:{caller.lineno} in"
+            f" {caller.function}\n\t{class_type} {layer}")
 
 
 class WinContext:
@@ -48,7 +49,11 @@ class Window:
         return None
 
     def update_preferences(self):
-        self.theme = preferences.get("theme")
+        theme_key = preferences.get("theme")
+        new_theme = themes.THEMES[theme_key]
+        if new_theme is not self.theme:
+            new_theme.adjust_screen_colors()
+        self.theme = new_theme
         self.unicode_mode = preferences.get("unicode_mode")
         self.clear_filter = preferences.get("clear_filter")
 
@@ -59,6 +64,8 @@ class Window:
         Window.INSTANCE = self
         self.name = window_name
         self.__user_name = user_name
+
+        self.theme = None
 
         # Debug console data
         self.__debug_mode = args.debug
@@ -85,7 +92,8 @@ class Window:
     def __init_curses(self, stdscr, callback, args):
         """Configure basic curses settings"""
         self.stdscr = stdscr
-        self.window_theme = themes.Theme()
+
+        colors.init_colors()
 
         self.__get_window_dimensions()
 
@@ -127,13 +135,13 @@ class Window:
 
     def get_header_separator(self):
         if not self.unicode_mode:
-            return self.window_theme.get_separator("default")
-        return self.window_theme.get_separator(self.theme)
+            return themes.THEMES["Default"].separator
+        return self.theme.separator
 
     def get_header_bookends(self):
         if not self.unicode_mode:
-            return self.window_theme.get_bookends("default")
-        return self.window_theme.get_bookends(self.theme)
+            return themes.THEMES["Default"].bookends
+        return self.theme.bookends
 
     def draw_header(self):
         """Set the header text"""
@@ -143,7 +151,8 @@ class Window:
         # Store the cursor location
         loc = curses.getsyx()
 
-        display_text = f"{self.name} {separator} {self.__header_title} {separator} {self.__user_name}"
+        display_text = (f"{self.name} {separator} {self.__header_title}"
+                        f" {separator} {self.__user_name}")
 
         if self.event_manager.insert_mode:
             display_text += f" {separator} INSERT"
