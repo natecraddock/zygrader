@@ -6,11 +6,11 @@ class DisplayStr:
     """A Class to allow (basic) formatting of strings
      inside a curses display.
 
-    DStrs are created from strings with embedded format specifiers
+    DisplayStrs are created from strings with embedded format specifiers
      of the form `...[formatchars:text to format]...`
-    Valid formatchars are available in DStr.FORMAT_CODES
+    Valid formatchars are available in DisplayStr.FORMAT_CODES
     All '[' and ']' should be escaped with a \\ - note that two backslashes
-     are needed to create a literal backslash that DStr will interpret
+     are needed to create a literal backslash that DisplayStr will interpret
      as a single backslash.
     There is no need to escape ':' - the first ':' after an unescaped '['
      signifies the ending formatchars and all other ':'s are treated as text
