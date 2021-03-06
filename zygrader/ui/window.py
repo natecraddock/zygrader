@@ -3,7 +3,7 @@ import curses
 import inspect
 import typing
 
-from zygrader.ui import themes
+from zygrader.ui import themes, colors
 from zygrader.config import preferences
 
 from . import events
@@ -94,7 +94,7 @@ class Window:
 
         # Create header
         self.header = curses.newwin(1, self.cols, 0, 0)
-        self.header.bkgd(" ", curses.color_pair(1))
+        self.header.bkgd(" ", curses.color_pair(colors.COLOR_PAIR_DEFAULT))
         self.__header_title = "Main Menu"
         self.__header_dirty = True
 
@@ -124,9 +124,6 @@ class Window:
         resize_window(self.header, 1, self.cols)
         for layer in self.layers:
             layer.resize_component(self.rows, self.cols)
-
-    def get_header_colors(self):
-        return self.window_theme.get_colors(self.theme)
 
     def get_header_separator(self):
         if not self.unicode_mode:
@@ -160,14 +157,13 @@ class Window:
         row = self.cols // 2 - len(display_text) // 2
         add_str(self.header, 0, row, display_text)
 
-        # Non-default theme
-        if self.theme != "Default":
-            colors = self.get_header_colors()
-            for row in range(self.cols):
-                if (row // 2) % 2 == 0:
-                    self.header.chgat(0, row, colors[0] | curses.A_BOLD)
-                else:
-                    self.header.chgat(0, row, colors[1] | curses.A_BOLD)
+        color_a = curses.color_pair(colors.COLOR_PAIR_HEADER)
+        color_b = curses.color_pair(colors.COLOR_PAIR_HEADER_ALT)
+        for row in range(self.cols):
+            if (row // 2) % 2 == 0:
+                self.header.chgat(0, row, color_a | curses.A_BOLD)
+            else:
+                self.header.chgat(0, row, color_b | curses.A_BOLD)
 
         self.header.noutrefresh()
         self.__header_dirty = False
@@ -320,4 +316,4 @@ class Window:
         self.__debug_lines.append(line)
 
     def update_window(self):
-        self.stdscr.bkgd(" ", curses.color_pair(1))
+        self.stdscr.bkgd(" ", curses.color_pair(colors.COLOR_PAIR_DEFAULT))
