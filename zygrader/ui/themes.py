@@ -1,16 +1,17 @@
 """Defines all the color pairs and emojis for each theme.
+
 To add a new theme:
-    1. use 'curses.init_pair()' with the 256-colors you would like (use constants).
-    This needs to be INSIDE of 'if curses.can_change_colors()'
-    In most cases, -1 should be the background color to use the terminal default
+    1. add colors you would like to use to the list of constants
 
-    2. Then, add the theme to THEME_COLORS with the color pair you specified.
+    2. Then, add a theme object to the THEMES dict, specifying
+      - the separator for the header
+      - the bookends for the header
+      - the colors most desired for the theme
+      - fallback colors in case a terminal does not support all 255 colors
+          - these should be from the curses.COLOR_* set
 
-    3. add the separator you want
 
-    4. add the bookend you want
-
-    3. add the theme name to THEMES. This name will appear in the preferences menu,
+    3. This theme will appear in the preferences menu,
     and is used to get the theme colors and emojis
 
 To see what colors are assigned to a specific numeric value, run the following code:
