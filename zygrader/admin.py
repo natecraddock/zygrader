@@ -32,8 +32,8 @@ def check_student_submissions(zy_api, student_id, lab, search_pattern):
 
         # If there was an error
         if zip_file == Zybooks.ERROR:
-            response[
-                "error"] = f"Error fetching submission {zy_api.get_time_string(submission)}"
+            response["error"] = (f"Error fetching submission"
+                                 f" {zy_api.get_time_string(submission)}")
             continue
 
         extracted_zip_files = utils.extract_zip(zip_file)
@@ -59,12 +59,12 @@ def submission_search_fn(logger, lab, search_string, output_path, use_regex):
     search_pattern = re.compile(regex_str)
 
     with open(output_path, "w", newline="") as log_file:
-        csv_log = csv.DictWriter(
-            log_file,
-            fieldnames=[
-                "Name", "Submission",
-                f"(Searching for {search_string}){' as a regex' if use_regex else ''}"
-            ])
+        csv_log = csv.DictWriter(log_file,
+                                 fieldnames=[
+                                     "Name", "Submission",
+                                     (f"(Searching for {search_string})"
+                                      f"{' as a regex' if use_regex else ''}")
+                                 ])
         csv_log.writeheader()
         student_num = 1
 
