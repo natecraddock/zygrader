@@ -4,6 +4,7 @@ import curses
 import getpass
 
 from zygrader import data, grader, ui
+from zygrader.ui import colors
 
 
 def view_email_submissions(student: data.Student):
@@ -43,8 +44,8 @@ def watch_students(student_list, students):
 
 def get_student_row_color_sort_index(student):
     if data.lock.is_locked(student):
-        return curses.color_pair(2), 0
-    return curses.color_pair(1), 1
+        return curses.color_pair(colors.COLOR_PAIR_LOCKED), 0
+    return curses.color_pair(colors.COLOR_PAIR_DEFAULT), 1
 
 
 def fill_student_list(student_list: ui.layers.ListLayer, students):

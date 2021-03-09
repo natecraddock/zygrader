@@ -5,7 +5,6 @@ from zygrader.config import preferences
 
 from zygrader import data, ui
 from zygrader.config.shared import SharedData
-from zygrader.ui.displaystring import DisplayStr
 from zygrader.ui.templates import ZybookSectionSelector, filename_input
 from zygrader.utils import fetch_zybooks_toc
 from zygrader.zybooks import Zybooks
@@ -41,7 +40,8 @@ class GradePuller:
                 try:
                     canvas_assignment = self.select_canvas_assignment()
                 except GradePuller.StoppingException:
-                    # Canceling the operation, but not the grade-pulling operation
+                    # Canceling the operation,
+                    # but not the grade-pulling operation
                     break
                 zybook_sections = self.select_zybook_sections(canvas_assignment)
                 class_sections = self.select_class_sections()
@@ -208,9 +208,10 @@ class GradePuller:
 
         def select_due_times_fn(selected_index,
                                 due_time_popup: ui.layers.ListLayer):
-            update_row_text = lambda time, index: due_time_popup.set_subrow_text(
-                f"Section {section:>{section_padding}}: {time.strftime('%b %d, %Y at %I:%M:%S%p')}",
-                index)
+            update_row_text = (
+                lambda time, index: due_time_popup.set_subrow_text(
+                    (f"Section {section:>{section_padding}}:"
+                     f" {time.strftime('%b %d, %Y at %I:%M:%S%p')}"), index))
 
             section = class_sections[selected_index]
 
@@ -463,8 +464,8 @@ class GradePuller:
                         zybooks_students[key] = row
 
                 num_completed += 1
-                wait_msg[
-                    -1] = f"Completed {num_completed}/{len(unique_due_times)}"
+                wait_msg[-1] = (f"Completed {num_completed}"
+                                f"/{len(unique_due_times)}")
                 popup.set_message(wait_msg)
 
         popup.set_wait_fn(fetch_reports_fn)

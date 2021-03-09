@@ -163,7 +163,7 @@ def write_tas(tas):
 def netid_to_name(netid: str) -> str:
     """
     Return the full name of the TA from the netid.
-    If it doesn't exit in the database then return only the netid.
+    If it doesn't exist in the database then return only the netid.
     """
     tas = get_tas()
     for ta in tas:

@@ -7,16 +7,17 @@ from zygrader.config import preferences
 from zygrader.config.shared import SharedData
 from zygrader.data import model
 from zygrader.zybooks import Zybooks
+from zygrader.ui import colors
 
 
 def get_student_row_color_sort_index(lab, student):
     """Color the student names in the grader based on locked, flagged, or normal status"""
     if data.lock.is_locked(student, lab) and not isinstance(student, str):
-        return curses.color_pair(2), 0
+        return curses.color_pair(colors.COLOR_PAIR_LOCKED), 0
     if data.flags.is_submission_flagged(student,
                                         lab) and not isinstance(student, str):
-        return curses.color_pair(7), 1
-    return curses.color_pair(1), 2
+        return curses.color_pair(colors.COLOR_PAIR_FLAGGED), 1
+    return curses.color_pair(colors.COLOR_PAIR_DEFAULT), 2
 
 
 def fill_student_list(student_list: ui.layers.ListLayer,

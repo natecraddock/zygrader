@@ -3,7 +3,7 @@ import curses
 import inspect
 import typing
 
-from zygrader.ui import themes
+from zygrader.ui import themes, colors
 from zygrader.config import preferences
 
 from . import events
@@ -23,7 +23,8 @@ def get_stack_info(layer: ComponentLayer, skip=2):
 
     class_type = layer.__class__
 
-    return f"{filename}:{caller.lineno} in {caller.function}\n\t{class_type} {layer}"
+    return (f"{filename}:{caller.lineno} in"
+            f" {caller.function}\n\t{class_type} {layer}")
 
 
 class WinContext:
@@ -48,7 +49,11 @@ class Window:
         return None
 
     def update_preferences(self):
-        self.theme = preferences.get("theme")
+        theme_key = preferences.get("theme")
+        new_theme = themes.THEMES[theme_key]
+        if new_theme is not self.theme:
+            new_theme.adjust_screen_colors()
+        self.theme = new_theme
         self.unicode_mode = preferences.get("unicode_mode")
         self.clear_filter = preferences.get("clear_filter")
 
@@ -59,6 +64,8 @@ class Window:
         Window.INSTANCE = self
         self.name = window_name
         self.__user_name = user_name
+
+        self.theme = None
 
         # Debug console data
         self.__debug_mode = args.debug
@@ -85,7 +92,8 @@ class Window:
     def __init_curses(self, stdscr, callback, args):
         """Configure basic curses settings"""
         self.stdscr = stdscr
-        self.window_theme = themes.Theme()
+
+        colors.init_colors()
 
         self.__get_window_dimensions()
 
@@ -94,7 +102,7 @@ class Window:
 
         # Create header
         self.header = curses.newwin(1, self.cols, 0, 0)
-        self.header.bkgd(" ", curses.color_pair(1))
+        self.header.bkgd(" ", curses.color_pair(colors.COLOR_PAIR_DEFAULT))
         self.__header_title = "Main Menu"
         self.__header_dirty = True
 
@@ -125,18 +133,15 @@ class Window:
         for layer in self.layers:
             layer.resize_component(self.rows, self.cols)
 
-    def get_header_colors(self):
-        return self.window_theme.get_colors(self.theme)
-
     def get_header_separator(self):
         if not self.unicode_mode:
-            return self.window_theme.get_separator("default")
-        return self.window_theme.get_separator(self.theme)
+            return themes.THEMES["Default"].separator
+        return self.theme.separator
 
     def get_header_bookends(self):
         if not self.unicode_mode:
-            return self.window_theme.get_bookends("default")
-        return self.window_theme.get_bookends(self.theme)
+            return themes.THEMES["Default"].bookends
+        return self.theme.bookends
 
     def draw_header(self):
         """Set the header text"""
@@ -146,7 +151,8 @@ class Window:
         # Store the cursor location
         loc = curses.getsyx()
 
-        display_text = f"{self.name} {separator} {self.__header_title} {separator} {self.__user_name}"
+        display_text = (f"{self.name} {separator} {self.__header_title}"
+                        f" {separator} {self.__user_name}")
 
         if self.event_manager.insert_mode:
             display_text += f" {separator} INSERT"
@@ -160,14 +166,13 @@ class Window:
         row = self.cols // 2 - len(display_text) // 2
         add_str(self.header, 0, row, display_text)
 
-        # Non-default theme
-        if self.theme != "Default":
-            colors = self.get_header_colors()
-            for row in range(self.cols):
-                if (row // 2) % 2 == 0:
-                    self.header.chgat(0, row, colors[0] | curses.A_BOLD)
-                else:
-                    self.header.chgat(0, row, colors[1] | curses.A_BOLD)
+        color_a = curses.color_pair(colors.COLOR_PAIR_HEADER)
+        color_b = curses.color_pair(colors.COLOR_PAIR_HEADER_ALT)
+        for row in range(self.cols):
+            if (row // 2) % 2 == 0:
+                self.header.chgat(0, row, color_a | curses.A_BOLD)
+            else:
+                self.header.chgat(0, row, color_b | curses.A_BOLD)
 
         self.header.noutrefresh()
         self.__header_dirty = False
@@ -320,4 +325,4 @@ class Window:
         self.__debug_lines.append(line)
 
     def update_window(self):
-        self.stdscr.bkgd(" ", curses.color_pair(1))
+        self.stdscr.bkgd(" ", curses.color_pair(colors.COLOR_PAIR_DEFAULT))

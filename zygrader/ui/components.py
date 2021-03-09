@@ -3,10 +3,11 @@ import curses
 import datetime
 from collections import Iterable
 from typing import Callable, List
-from zygrader.ui.displaystring import DisplayStr
 
 from .utils import add_str, resize_window
 from zygrader.config import preferences
+from . import colors
+from zygrader.ui.displaystring import DisplayStr
 
 
 class Component:
@@ -40,7 +41,7 @@ class Popup(Component):
         self.__calculate_size()
 
         self.window = curses.newwin(self.rows, self.cols, self.y, self.x)
-        self.window.bkgd(" ", curses.color_pair(1))
+        self.window.bkgd(" ", curses.color_pair(colors.COLOR_PAIR_DEFAULT))
 
         curses.curs_set(0)
 
@@ -764,7 +765,7 @@ class ScrollableList(Component):
                 prefix = ScrollableList.SELECTED_PREFIX
 
                 # Don't make the line bold if it is dim (diabled)
-                if not attributes & curses.A_DIM:
+                if not (attributes & curses.A_DIM):
                     attributes = curses.A_BOLD
 
             add_str(window, y_start + line_number, x_start,
@@ -841,11 +842,11 @@ class FilteredList(ScrollableList):
 
         # List box
         self.window = curses.newwin(self._rows, self.cols, y, x)
-        self.window.bkgd(" ", curses.color_pair(1))
+        self.window.bkgd(" ", curses.color_pair(colors.COLOR_PAIR_DEFAULT))
 
         # Text input area
         self.text_input = curses.newwin(1, self.cols, self._rows, 0)
-        self.text_input.bkgd(" ", curses.color_pair(1))
+        self.text_input.bkgd(" ", curses.color_pair(colors.COLOR_PAIR_DEFAULT))
 
     def draw(self):
         self.window.erase()
@@ -893,7 +894,7 @@ class ListPopup(Popup, ScrollableList):
         self.text_input = curses.newwin(1, self.cols - Popup.PADDING * 2,
                                         self.y + self.rows - Popup.PADDING + 1,
                                         self.x + Popup.PADDING)
-        self.text_input.bkgd(" ", curses.color_pair(1))
+        self.text_input.bkgd(" ", curses.color_pair(colors.COLOR_PAIR_DEFAULT))
 
     def draw(self):
         self.window.erase()
@@ -954,7 +955,7 @@ class TextInput(Popup):
             self.__text_win_start_y(),
             self.__text_win_start_x(),
         )
-        self.text_input.bkgd(" ", curses.color_pair(1))
+        self.text_input.bkgd(" ", curses.color_pair(colors.COLOR_PAIR_DEFAULT))
         curses.curs_set(1)
 
     def set_text(self, text: str):
@@ -1052,8 +1053,8 @@ class TextInput(Popup):
             return
 
         # Remove character at cursor location
-        self.text = self.text[:self.cursor_index -
-                              1] + self.text[self.cursor_index:]
+        self.text = (self.text[:self.cursor_index - 1] +
+                     self.text[self.cursor_index:])
         self.left()
 
     def delcharforward(self):
@@ -1065,8 +1066,8 @@ class TextInput(Popup):
             return
 
         # Remove character just forward of cursor location
-        self.text = self.text[:self.
-                              cursor_index] + self.text[self.cursor_index + 1:]
+        self.text = (self.text[:self.cursor_index] +
+                     self.text[self.cursor_index + 1:])
 
     def _cursor_mover(move_func):
         """Wrap a cursor-moving function without moving marks"""
@@ -1125,7 +1126,7 @@ class Logger(Component):
         self.width = width
 
         self.window = curses.newwin(height, width, y, x)
-        self.window.bkgd(" ", curses.color_pair(1))
+        self.window.bkgd(" ", curses.color_pair(colors.COLOR_PAIR_DEFAULT))
         curses.curs_set(0)
 
         # Maintain a log (list) of data to display
