@@ -42,7 +42,7 @@ class Lab:
         name = assignment.name.lower()
         text = text.lower()
 
-        return name.find(text) is not -1
+        return name.find(text) != -1
 
     def to_json(self):
         lab = {
@@ -86,9 +86,8 @@ class Student:
         email = student.email.lower()
         text = text.lower()
 
-        return (first_name.find(text) is not -1
-                or last_name.find(text) is not -1
-                or full_name.find(text) is not -1 or email.find(text) is not -1)
+        return (first_name.find(text) != -1 or last_name.find(text) != -1
+                or full_name.find(text) != -1 or email.find(text) != -1)
 
 
 class ClassSection:
@@ -211,7 +210,7 @@ class Submission(Iterable):
         self.response["score"] = 0
         self.response["max_score"] = 0
         for part in self.response["parts"]:
-            if part["code"] is not Zybooks.NO_SUBMISSION:
+            if part["code"] != Zybooks.NO_SUBMISSION:
                 self.response["score"] += part["score"]
                 self.response["max_score"] += part["max_score"]
 
