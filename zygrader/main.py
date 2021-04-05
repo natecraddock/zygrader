@@ -167,7 +167,7 @@ def main(window: ui.Window, args):
 
     # Authenticate the user
     zybooks_api = zybooks.Zybooks()
-    if not preferences.get("token") or not user.authenticate(
+    if not preferences.get("refresh_token") or not user.authenticate(
             window, zybooks_api):
         user.login(window)
 

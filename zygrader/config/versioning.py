@@ -120,7 +120,9 @@ def versioning_update_preferences():
 
     ##### Versioning code to run until next version bump ######
     if True:
-        pass
+        # We no longer store the auth token, instead store the refresh token.
+        # Using this as an opportunity to use better naming.
+        preferences.remove("token")
     #### Leave this `if True` block after bumping version! ####
 
 

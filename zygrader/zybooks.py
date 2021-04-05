@@ -28,38 +28,61 @@ class Zybooks:
 
     session = None
     token = ""
+    refresh_token = ""
 
     def __init__(self):
         Zybooks.session = requests.session()
 
     def __load_session(self):
-        return preferences.get("token")
+        Zybooks.refresh_token = preferences.get("refresh_token")
 
-    def __save_session(self, token: str):
-        preferences.set("token", token)
+    def __save_session(self, token: str, refresh_token: str):
+        Zybooks.token = token
 
-    def __check_auth(self):
-        """Ensure the auth token is valid through a "useless" request"""
-        check_url = "https://zyserver.zybooks.com/v1/zybooks"
-        params = {
-            "zybooks": f'["{SharedData.CLASS_CODE}"]',
-            "auth_token": Zybooks.token
-        }
+        # We probably don't need to set this each time, but it also doesn't hurt
+        # in the case that it changes somehow.
+        preferences.set("refresh_token", refresh_token)
+
+    def __refresh_auth(self):
+        """zyBooks auth tokens expire after a short period of time (about 2 days).
+
+        The responses store two auth tokens, the refresh_token and the auth_token.
+        The refresh_token is unchanging per-session and is sent back to zyBooks to request a new
+        auth token after expiry
+
+        auth_token is the token that lasts about 2 days.
+
+        More careful experimentation may be needed, but for now I think we can always request a
+        new auth token with the refresh_token each time zygrader is started.
+        """
+
+        check_url = "https://zyserver.zybooks.com/v1/refresh"
+        params = {"refresh_token": Zybooks.refresh_token}
         r = Zybooks.session.get(check_url, params=params)
         if not r.ok:
             return False
         resp = r.json()
-        return resp.get("success")
+        if not resp.get("success"):
+            return False
+
+        # Retrieve and store the new auth token
+        session = resp["session"]
+        auth_token = session["auth_token"]
+        refresh_token = session["refresh_token"]
+
+        self.__save_session(auth_token, refresh_token)
+        return True
 
     def authenticate(self, username: str, password: str):
         """Authenticate a user to zyBooks"""
         if not username and not password:
-            token = self.__load_session()
-            Zybooks.token = token
+            self.__load_session()
 
             # Ensure that this auth is valid
-            return self.__check_auth()
+            return self.__refresh_auth()
 
+        # The user is signing in for the first time
+        # So we store their refresh token
         auth_url = "https://zyserver.zybooks.com/v1/signin"
         payload = {"email": username, "password": password}
 
@@ -70,8 +93,10 @@ class Zybooks:
             return False
 
         # Store auth token
-        Zybooks.token = r.json()["session"]["auth_token"]
-        self.__save_session(Zybooks.token)
+        session = r.json()["session"]
+        refresh_token = session["refresh_token"]
+        auth_token = session["auth_token"]
+        self.__save_session(auth_token, refresh_token)
         return True
 
     def get_roster(self):
