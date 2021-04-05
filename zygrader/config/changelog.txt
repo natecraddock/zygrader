@@ -1,5 +1,8 @@
 # Try to keep lines shorter than 70 characters
 
+5.7.2
+* Fixed auth token expiring after two days.
+
 5.7.0
 * Lots of changes to themes
   * Added St. Patricks, America, and Summer themes

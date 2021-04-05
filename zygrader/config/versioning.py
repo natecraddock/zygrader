@@ -118,11 +118,14 @@ def versioning_update_preferences():
         preferences.remove("email")
         preferences.remove("password")
 
-    ##### Versioning code to run until next version bump ######
-    if True:
+    if compare_versions("5.7.2", user_version):
         # We no longer store the auth token, instead store the refresh token.
         # Using this as an opportunity to use better naming.
         preferences.remove("token")
+
+    ##### Versioning code to run until next version bump ######
+    if True:
+        pass
     #### Leave this `if True` block after bumping version! ####
 
 
@@ -145,7 +148,7 @@ def show_versioning_message(window: ui.Window):
     # Add a version string for this array for each version that will show an update popup
     update_versions = [
         "4.0.0", "4.1.0", "4.2.0", "4.7.1", "4.8.8", "4.9.0", "5.0.0", "5.1.0",
-        "5.2.0", "5.3.0", "5.4.0", "5.6.0", "5.7.0"
+        "5.2.0", "5.3.0", "5.4.0", "5.6.0", "5.7.0", "5.7.2"
     ]
 
     updated = False
