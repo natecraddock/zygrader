@@ -57,7 +57,8 @@ class GradePuller:
                 self.window.run_layer(popup)
                 more_assignments = popup.get_result()
 
-            self.write_upload_file()
+            upload_file_path = self.select_upload_file_path()
+            self.write_upload_file(upload_file_path, restrict_sections=True)
         except GradePuller.StoppingException:
             popup = ui.layers.Popup("Grade Puller")
             popup.set_message(["Grade Puller stopped"])
@@ -74,6 +75,8 @@ class GradePuller:
                 self.canvas_header = canvas_reader.fieldnames
                 self.canvas_points_out_of = canvas_reader.__next__()
                 for row in canvas_reader:
+                    if row["Student"] == "Student, Test":
+                        continue
                     id_str = row["SIS User ID"]
                     if id_str:
                         row["id_number"] = int(id_str)
@@ -473,7 +476,7 @@ class GradePuller:
 
         return zybooks_students
 
-    def write_upload_file(self):
+    def select_upload_file_path(self):
         default_file_name = (
             datetime.datetime.now().isoformat(timespec='seconds') + "--" +
             "_&_".join(self.selected_assignments) + ".csv")
@@ -485,7 +488,10 @@ class GradePuller:
         path = filename_input(purpose="the upload file", text=default_path_str)
         if path is None:
             raise GradePuller.StoppingException()
+        return path
 
+    def write_upload_file(self, path, restrict_sections=False):
+        ui.get_window().debug(str(len(self.canvas_students)))
         with open(path, "w", newline="") as out_file:
             id_columns = self.canvas_header[:GradePuller.NUM_CANVAS_ID_COLUMNS]
             fieldnames = id_columns + list(self.selected_assignments)
@@ -494,10 +500,13 @@ class GradePuller:
                                     extrasaction="ignore")
             writer.writeheader()
             writer.writerow(self.canvas_points_out_of)
-            for canvas_student in self.canvas_students.values():
-                if (canvas_student["section_number"]
-                        in self.involved_class_sections):
-                    writer.writerow(canvas_student)
+            if restrict_sections:
+                for canvas_student in self.canvas_students.values():
+                    if (canvas_student["section_number"]
+                            in self.involved_class_sections):
+                        writer.writerow(canvas_student)
+            else:
+                writer.writerows(self.canvas_students.values())
 
     def find_unmatched_students(self):
         try:
