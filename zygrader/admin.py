@@ -256,14 +256,14 @@ def report_gaps():
     added = True
     while added:
         added = False
-        new_list = []
+        new_row = []
         for assignment in rows[0]:
             if all_gaps[assignment]:
-                new_list.append(all_gaps[assignment].pop(0))
+                new_row.append(all_gaps[assignment].pop(0))
                 added = True
             else:
-                new_list.append("")
-        rows.append(new_list)
+                new_row.append("")
+        rows.append(new_row)
 
     # select the output file and write to it
     out_path = filename_input(purpose="the gap report",
