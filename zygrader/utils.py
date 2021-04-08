@@ -14,6 +14,31 @@ from subprocess import DEVNULL, PIPE
 from zygrader import data, ui
 from zygrader.zybooks import Zybooks
 
+OPENED_DIRECTORES = []
+
+
+def create_tempdir(prefix="zy") -> str:
+    """Create and return a temporary directory with an optional prefix
+
+    We use this wrapper over tempfile.TemporaryDirectory() to avoid cluttering
+    the /tmp directory. Although this path is automatically cleared by the OS
+    regularly, we can easily clear these files on our own.
+
+    The files returned by TemporaryDirectory are automatically deleted when
+    the object is destroyed. So we keep a global list of all files and when
+    zygrader is closed these files are also deleted.
+
+    Because these directories are used in subprocesses we can't rely on the
+    directories being used before the Python objects are destroyed, so the
+    list prevents any issues.
+
+    See #94 for more information.
+    """
+
+    _file = tempfile.TemporaryDirectory(prefix=prefix)
+    OPENED_DIRECTORES.append(_file)
+    return _file.name
+
 
 def suspend_curses(callback_fn):
     """A decorator for any subprocess that must suspend access to curses (zygrader)"""
@@ -99,7 +124,7 @@ def make_diff_string(first, second, title_a, title_b, use_html=False):
 def view_string(string, file_name, use_html=False):
     """Given a string, open in `less` or the grader's default browser"""
 
-    tmp_dir = tempfile.mkdtemp()
+    tmp_dir = create_tempdir()
     file_path = f"{os.path.join(tmp_dir, file_name)}"
 
     with open(file_path, "w") as _file:
