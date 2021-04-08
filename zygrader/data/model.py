@@ -4,7 +4,6 @@ import enum
 import os
 import signal
 import subprocess
-import tempfile
 import time
 from collections import Iterable
 
@@ -287,7 +286,7 @@ class Submission(Iterable):
 
     def read_files(self, response):
         zy_api = Zybooks()
-        tmp_dir = tempfile.mkdtemp()
+        tmp_dir = utils.create_tempdir()
 
         # Look through each part
         for part in response["parts"]:
@@ -422,7 +421,7 @@ class Submission(Iterable):
 
     def compile_code(self):
         # Use a separate tmp dir to avoid opening the binary in a text editor
-        tmp_dir = tempfile.mkdtemp()
+        tmp_dir = utils.create_tempdir()
         executable_name = os.path.join(tmp_dir, "run")
 
         root_dir = self.files_directory
