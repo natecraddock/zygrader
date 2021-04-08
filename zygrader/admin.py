@@ -1,12 +1,14 @@
 """Admin: Functions for more "administrator" users of zygrader to manage
 the class, scan through student submissions, and access to other menus"""
-import time
+from zygrader.ui.templates import filename_input
 from zygrader.ui import window
 from zygrader.config import preferences
 
 import csv
+import os
 import requests
 import re
+import time
 
 from zygrader import bobs_shake, class_manager, data, grade_puller, ui, utils
 from zygrader.zybooks import Zybooks
@@ -202,6 +204,275 @@ def remove_locks():
             data.lock.remove_lock_file(lock)
 
 
+def _confirm_gradebook_ready():
+    window = ui.get_window()
+
+    confirmation = ui.layers.BoolPopup("Using canvas_master", [
+        "This operation requires an up-to date canvas_master.",
+        ("Please confirm that you have downloaded the gradebook"
+         " and put it in the right place."), "Have you done so?"
+    ])
+    window.run_layer(confirmation)
+    return (not confirmation.canceled) and confirmation.get_result()
+
+
+def report_gaps():
+    """Report any cells in the gradebook that do not have a score"""
+    window = ui.get_window()
+
+    if not _confirm_gradebook_ready():
+        return
+
+    # Use the Canvas parsing from the gradepuller to get the gradebook in
+    puller = grade_puller.GradePuller()
+    try:
+        puller.read_canvas_csv()
+    except grade_puller.GradePuller.StoppingException:
+        return
+
+    real_assignment_pattern = re.compile(r".*\([0-9]+\)")
+
+    # Create mapping from assignment names to lists of students
+    # with no grade for that assignment
+    all_gaps = dict()
+    for assignment in puller.canvas_header:
+        if real_assignment_pattern.match(assignment):
+            gaps = []
+            for student in puller.canvas_students.values():
+                if not student[assignment]:
+                    gaps.append(student['Student'])
+            if gaps:
+                all_gaps[assignment] = gaps
+
+    # Abort if no gaps present
+    if not all_gaps:
+        popup = ui.layers.Popup("Full Gradebook",
+                                ["There are no gaps in the gradebook"])
+        window.run_layer(popup)
+        return
+
+    # Transpose the data for easier reading
+    rows = [list(all_gaps.keys())]
+    added = True
+    while added:
+        added = False
+        new_row = []
+        for assignment in rows[0]:
+            if all_gaps[assignment]:
+                new_row.append(all_gaps[assignment].pop(0))
+                added = True
+            else:
+                new_row.append("")
+        rows.append(new_row)
+
+    # select the output file and write to it
+    out_path = filename_input(purpose="the gap report",
+                              text=os.path.join(preferences.get("output_dir"),
+                                                "gradebook_gaps.csv"))
+    if out_path is None:
+        return
+    with open(out_path, "w", newline="") as out_file:
+        writer = csv.writer(out_file)
+        writer.writerows(rows)
+
+
+def midterm_mercy():
+    """Replace the lower of the two midterm scores with the final exam score"""
+    window = ui.get_window()
+
+    if not _confirm_gradebook_ready():
+        return
+
+    # Use the Canvas parsing from the gradepuller to get the gradebook in
+    # also use the selection of canvas assignments from the gradepuller
+    puller = grade_puller.GradePuller()
+    try:
+        puller.read_canvas_csv()
+
+        popup = ui.layers.Popup("Selection")
+        popup.set_message(["First Select the Midterm 1 Assignment"])
+        window.run_layer(popup)
+        midterm_1_assignment = puller.select_canvas_assignment()
+
+        midterm_2_assignment = None
+        double_midterm_popup = ui.layers.BoolPopup("2 Midterms")
+        double_midterm_popup.set_message([
+            "Is there a second midterm this semester?",
+            "If so, select that assignment next."
+        ])
+        window.run_layer(double_midterm_popup)
+        if double_midterm_popup.canceled:
+            return
+        if double_midterm_popup.get_result():
+            midterm_2_assignment = puller.select_canvas_assignment()
+
+        popup.set_message(["Next Select the Final Exam Assignment"])
+        window.run_layer(popup)
+        final_exam_assignment = puller.select_canvas_assignment()
+
+    except grade_puller.GradePuller.StoppingException:
+        return
+
+    # Do the replacement for each student
+    for student in puller.canvas_students.values():
+        midterm_1_score = float(student[midterm_1_assignment])
+        midterm_2_score = (float(student[midterm_2_assignment])
+                           if midterm_2_assignment else None)
+        final_exam_score = float(student[final_exam_assignment])
+
+        if midterm_2_assignment:
+            # Figure out lower midterm, then if it should be replaced do so
+            if midterm_2_score < midterm_1_score:
+                if final_exam_score > midterm_2_score:
+                    student[midterm_2_assignment] = final_exam_score
+            else:
+                if final_exam_score > midterm_1_score:
+                    student[midterm_1_assignment] = final_exam_score
+        else:
+            # With only one midterm, just replace it if lower than final
+            if final_exam_score > midterm_1_score:
+                student[midterm_1_assignment] = final_exam_score
+
+    out_path = filename_input(purpose="the updated midterm scores",
+                              text=os.path.join(preferences.get("output_dir"),
+                                                "midterm_mercy.csv"))
+    if out_path is None:
+        return
+
+    # Again use the gradepuller functionality
+    # We just need to programmatically set the selected assignments
+    puller.selected_assignments = [midterm_1_assignment]
+    if midterm_2_assignment:
+        puller.selected_assignments.append(midterm_2_assignment)
+    puller.write_upload_file(out_path)
+
+    popup = ui.layers.Popup("Reminder")
+    popup.set_message([
+        "Don't forget to manually correct as necessary"
+        " (for any students who should not have a score replaced)."
+    ])
+    window.run_layer(popup)
+
+
+def attendance_score():
+    """Calculate the participation score from the attendance score columns"""
+    window = ui.get_window()
+
+    if not _confirm_gradebook_ready():
+        return
+
+    # Make use of many functions from gradepuller to avoid code duplication
+    puller = grade_puller.GradePuller()
+    try:
+        puller.read_canvas_csv()
+
+        popup = ui.layers.Popup("Selection")
+        popup.set_message(["First Select the Participation Score Assignment"])
+        window.run_layer(popup)
+        participation_score_assignment = puller.select_canvas_assignment()
+
+        popup.set_message(["Next Select the first Classes Missed Assignment"])
+        window.run_layer(popup)
+        start_classes_missed_assignment = puller.select_canvas_assignment()
+
+        popup.set_message(["Next Select the last Classes Missed Assignment"])
+        window.run_layer(popup)
+        end_classes_missed_assignment = puller.select_canvas_assignment()
+
+        class_sections = puller.select_class_sections()
+
+    except grade_puller.GradePuller.StoppingException:
+        return
+
+    # Get all of the assignments between the start and end
+    start_index = puller.canvas_header.index(start_classes_missed_assignment)
+    end_index = puller.canvas_header.index(end_classes_missed_assignment)
+    all_classes_missed_assignments = puller.canvas_header[
+        start_index:end_index + 1]
+
+    # Figure out the grading scheme - the mapping from classes missed to grade
+    builtin_schemes = [
+        ("TR", [100, 100, 98, 95, 91, 86, 80, 73, 65, 57, 49, 46]),
+        ("MWF", [100, 100, 99, 97, 94, 90, 85, 80, 75, 70, 65, 60, 55, 53]),
+    ]
+    scheme_selector = ui.layers.ListLayer("Scheme Selector", popup=True)
+    for name, scheme in builtin_schemes:
+        scheme_selector.add_row_text(f"{name}: {','.join(map(str,scheme))},...")
+    scheme_selector.add_row_text("Create New Scheme")
+
+    window.run_layer(scheme_selector)
+    if scheme_selector.canceled:
+        return
+
+    selected = scheme_selector.selected_index()
+    if selected < len(builtin_schemes):
+        points_by_classes_missed = builtin_schemes[selected][1]
+    else:
+        # Get the custom scheme
+        scheme_inputter = ui.layers.TextInputLayer("New Scheme")
+        scheme_inputter.set_prompt([
+            "Enter a new scheme as a comma-separated list",
+            "e.g. '100,100,95,90,85,80,78'",
+            "",
+            "The difference between the last two values will be repeated"
+            " until a score of 0 is reached",
+        ])
+        window.run_layer(scheme_inputter)
+        if scheme_inputter.canceled:
+            return
+        scheme_text = scheme_inputter.get_text()
+        points_by_classes_missed = list(map(int, scheme_text.split(',')))
+
+    # Extend the scheme until 0 is reached
+    delta = points_by_classes_missed[-2] - points_by_classes_missed[-1]
+    while points_by_classes_missed[-1] >= 0:
+        points_by_classes_missed.append(points_by_classes_missed[-1] - delta)
+    # Get rid of the negative element
+    del points_by_classes_missed[-1]
+
+    # Calculate and assign the grade for each student
+    for student in puller.canvas_students.values():
+        if student["section_number"] in class_sections:
+            total_classes_missed = 0
+            for assignment in all_classes_missed_assignments:
+                try:
+                    total_classes_missed += int(student[assignment])
+                except ValueError:
+                    total_classes_missed += int(
+                        puller.canvas_points_out_of[assignment])
+
+            try:
+                grade = points_by_classes_missed[total_classes_missed]
+            except IndexError:
+                grade = 0
+            student[participation_score_assignment] = grade
+
+    out_path = filename_input(purpose="the partipation score",
+                              text=os.path.join(preferences.get("output_dir"),
+                                                "participation.csv"))
+    if out_path is None:
+        return
+
+    # Again use the gradepuller functionality
+    # We just need to programmatically set the selected assignments
+    puller.selected_assignments = [participation_score_assignment]
+    # And the involved class sections
+    puller.involved_class_sections = set(class_sections)
+    puller.write_upload_file(out_path, restrict_sections=True)
+
+
+def end_of_semester_tools():
+    """Create the menu for end of semester tools"""
+    window = ui.get_window()
+
+    menu = ui.layers.ListLayer()
+    menu.add_row_text("Report Gaps", report_gaps)
+    menu.add_row_text("Midterm Mercy", midterm_mercy)
+    menu.add_row_text("Attendance Score", attendance_score)
+
+    window.register_layer(menu)
+
+
 def admin_menu():
     """Create the admin menu"""
     window = ui.get_window()
@@ -214,5 +485,6 @@ def admin_menu():
     menu.add_row_text("Remove Locks", remove_locks)
     menu.add_row_text("Class Management", class_manager.start)
     menu.add_row_text("Bob's Shake", bobs_shake.shake)
+    menu.add_row_text("End Of Semester Tools", end_of_semester_tools)
 
     window.register_layer(menu, "Admin")
