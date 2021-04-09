@@ -1,5 +1,10 @@
 # Try to keep lines shorter than 70 characters
 
+5.8.0
+* Add prep lab score calc to email manager popup.
+* Add end-of-semester grading helpers.
+* Cleanup tempfiles when closing zygrader.
+
 5.7.2
 * Fixed auth token expiring after two days.
 
