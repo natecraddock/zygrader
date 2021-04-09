@@ -140,7 +140,15 @@ def view_string(string, file_name, use_html=False):
 
 
 def __format_file(_file) -> str:
-    return _file.decode("UTF-8").replace("\r\n", "\n").replace("\r", "\n")
+    decoded = ""
+    try:
+        decoded = _file.decode("UTF-8")
+    except UnicodeDecodeError:
+        # Rarely a file may have some strange characters encoded in a Windows-
+        # specific format. In that case, try decoding this way.
+        decoded = _file.decode("windows-1252")
+
+    return decoded.replace("\r\n", "\n").replace("\r", "\n")
 
 
 def extract_zip(input_zip, file_prefix=None):
