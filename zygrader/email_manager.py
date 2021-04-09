@@ -3,7 +3,7 @@
 import curses
 import getpass
 
-from zygrader import data, grader, ui
+from zygrader import data, grader, ui, utils
 from zygrader.ui import colors
 
 
@@ -30,6 +30,7 @@ def lock_student_callback(student: data.Student):
         popup = ui.layers.OptionsPopup("Student Locked", msg)
         popup.add_option("View Submitted Code",
                          lambda: view_email_submissions(student))
+        popup.add_option("Prep Lab Calc", utils.prep_lab_score_calc)
         window.run_layer(popup)
     finally:
         data.lock.unlock(student)
