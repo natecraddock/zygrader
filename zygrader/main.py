@@ -21,6 +21,8 @@ def lock_cleanup():
 
 def sighup_handler(signum, frame):
     lock_cleanup()
+    # This ensures that terminating an SSH connection will indeed exit zygrader
+    sys.exit(1)
 
 
 def sigint_handler(signum, frame):
