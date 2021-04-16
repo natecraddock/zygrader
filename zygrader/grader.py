@@ -165,7 +165,8 @@ def run_code_fn(window, submission):
     use_gdb = False
 
     if not submission.compile_and_run_code(use_gdb):
-        popup = ui.layers.Popup("Error", ["Could not compile and run code"])
+        popup = ui.layers.OptionsPopup("Error", ["Could not compile code"])
+        popup.add_option("View Log", submission.view_stderr)
         window.run_layer(popup)
 
 

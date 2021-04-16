@@ -228,6 +228,9 @@ class Submission(Iterable):
         self.latest_submission = "No Submission"
         self.files_directory = ""
 
+        # For storing compilation errors
+        self.__stderr = ""
+
         # Save the response to be potentially updated later
         self.response = response
 
@@ -419,6 +422,12 @@ class Submission(Iterable):
             return popup.selected_index() - 1
         return popup.selected_index()
 
+    def save_stderr(self, stderr):
+        self.__stderr = stderr
+
+    def view_stderr(self):
+        utils.view_string(self.__stderr, "compile-error")
+
     def compile_code(self):
         # Use a separate tmp dir to avoid opening the binary in a text editor
         tmp_dir = utils.create_tempdir()
@@ -441,9 +450,11 @@ class Submission(Iterable):
                            ] + source_files
 
         compile_exit = subprocess.run(compile_command,
+                                      encoding="utf-8",
                                       stdout=subprocess.DEVNULL,
-                                      stderr=subprocess.DEVNULL)
+                                      stderr=subprocess.PIPE)
         if compile_exit.returncode != 0:
+            self.save_stderr(compile_exit.stderr)
             return False
 
         # Compiled successfully, run code
