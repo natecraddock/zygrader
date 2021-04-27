@@ -1,12 +1,36 @@
 # zygrader
-_Zygrader is a Python 3 ncurses tool to facilitate grading student submissions on the zyBooks online programming textbook system. It has been tested on Linux._
+_Zygrader is a tool developed for the BYU CS142 Introduction to Computer Programming teaching assistants by Nathan
+Craddock, and others have since contributed to the project. Rather than navigating the slow zyBooks website to
+review student code, zygrader assists the grader in downloading, running, reviewing, and comparing student code._
 
-Zygrader is a tool developed for the BYU CS142 Introduction to Computer Programming teaching assistants by Nathan Craddock, and others have since contributed to the project. Rather than navigating the slow zyBooks website to review student code, zygrader assists the grader in downloading, running, reviewing, and comparing student code.
+Now that I no longer work as a CS 142 Teaching Assistant, the development of zygrader has moved to
+https://github.com/cs142ta/zygrader. Because I have put so much work into this project, I have updated this readme
+with some images that demonstrate the features of zygrader. Due to FERPA regulations I cannot share images that contain
+student names, emails, or code, so all of the images contain mocked data, and the displayed source code is written
+by me.
 
+### Menu and Popup System
+In the **zygrader/ui/** module I developed a window manager based on curses. It has support for popups, filtered and
+sorted lists, nested menus, radio and checkbox toggles, and text inputs. There are also themes and emojis!
 ![Main menu](https://github.com/natecraddock/zygrader/blob/assets/zygrader-menu.gif)
+
+### Grading Labs
+The main purpose of zygrader is to make the grading process simpler. The lab then the student are picked, with many
+options like viewing source code in a user-defined editor, compiling and running student code, flagging for head TA review,
+and viewing diffs between submissions.
 ![View student code](https://github.com/natecraddock/zygrader/blob/assets/zygrader-view.gif)
+
+### Pair Programming
+One of the annoyances of grading that motivated zygrader was comparing submitted code between two students who pair
+programmed. On some labs that would require diffing of up to 11 files. Zygrader makes this process much easier.
 ![Diffing pair programming code](https://github.com/natecraddock/zygrader/blob/assets/zygrader-pair-programming.gif)
+
+### Class Management
+This shows the process of adding a new lab to zygrader's grading menu.
 ![Adding a new lab](https://github.com/natecraddock/zygrader/blob/assets/zygrader-add-lab.gif)
+
+I enjoyed developing zygrader during my time as a TA, and it did help make grading much more efficient! It also
+prevented me from grading for many months during development, proving https://xkcd.com/1319/ to be true.
 
 Contents:
 - [Installation](#installation)
